@@ -381,6 +381,30 @@ const REGION_CATALOG = {
     subRegions: {
       bike_republic: { label: "Bike Republic", color: "#2f6b8a" }
     }
+  },
+  // Third Alps bike park. Different data source than Leogang/Sölden: Saalbach's own official trails
+  // are individually mapped in OSM as numbered MTB route relations ("SH 02 Monti-Trail", "SH 35
+  // Hacklberg-Trail", ...) matching the resort's own "SH01-SH92" trail-board numbering, not just
+  // same-`name` way-chaining -- using the relations' member ways directly (chained end-to-end,
+  // bidirectional greedy extension) turned out far more reliable than the Leogang/Sölden
+  // graph-bridging method: it fixed two real blowup bugs the same graph-bridging approach had
+  // produced here (Monti-Line, Hacklberg-Trail both came out 130-160% of their official
+  // bikepark-life.com length; using the SH-relations instead landed both within ~100-125%).
+  // Worth checking for "route=mtb" relations named like the resort's own trail-board codes on any
+  // future park before falling back to plain name-tag chaining + bridging.
+  // "Hochalm Trail" was dropped from this build -- OSM only has a short fragment under that name, and
+  // the only relation matching "Hochalm" turned out to be an 80-member round-trip tour (23km), not the
+  // plain ~6.9km descent -- flagged for future research rather than publishing a misleading line.
+  // Two sub-regions per the user's convention (same split requested for Sölden): "Lines" (numbered
+  // lift-served lines) vs "Naturtrails" (named natural singletrails), following bikepark-life.com's
+  // own Parktrails/Singletrails categorization.
+  saalbach: {
+    label: "Bikecircus Saalbach Hinterglemm", file: "regions/saalbach.json", trailCount: 19,
+    bounds: [[47.3454532, 12.5682751], [47.4163187, 12.6925776]],
+    subRegions: {
+      shapes_lines: { label: "Shapes Lines", color: "#8a6a2f" },
+      naturtrails: { label: "Naturtrails", color: "#3a7a4a" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;
