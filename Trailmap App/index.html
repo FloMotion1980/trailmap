@@ -336,6 +336,33 @@ const REGION_CATALOG = {
       // lower-build-investment loops.
       weitere_touren: { label: "Weitere Runden", color: "#6b8a5a" }
     }
+  },
+  // First of the "big Alps bike parks" batch (2026-07-25) -- a user-curated list of ~17 parks/
+  // clusters (see project memory), started with Leogang since it has the best-documented official
+  // data of the batch. Unlike every other region so far, there's no recorded GPX loop to snap
+  // against here -- these are lift-served park lines, each ridden independently, not one continuous
+  // ride -- so trails were built directly from OSM: for each of the 13 confirmed named trails, all
+  // same-name ways were grouped by shared endpoints into contiguous chains, and where a real gap
+  // remained between chains (common at a park -- a named line often has a short fireroad/connector
+  // stretch partway down, not physically touching the next singletrack piece), bridged via an actual
+  // graph shortest-path over every path/track/cycleway way in the area (new `build_node_graph`/
+  // `graph_shortest_path` helpers) rather than a straight line -- same "real connector, not a fake
+  // jump" principle as the Eberbach fixes, just using OSM's own path network to bridge instead of a
+  // recorded GPX track. Elevation backfilled via OpenTopoData per node (no elevation in raw OSM
+  // geometry, as usual for a pure-OSM build). Difficulty taken from bikepark-life.com's own
+  // easy/medium/hard per-trail table (an official-adjacent aggregator, not the bikepark's own site
+  // directly -- its own page listed trail names but rendered difficulty as icons/images, not text)
+  // rather than OSM `mtb:scale`, per the project's standing rule to prefer a real difficulty source
+  // over a technical-grade tag when both exist. "Knappentrail - Easy line" (a short ~33m alternate
+  // bypass variant) was deliberately left out of the main Knappen-Trail entry -- it's a variant, not
+  // a continuation. No sub-region split by mountain/lift sector yet (one flat "epic_bikepark"
+  // sub-region for now) -- revisit if a clearer sector grouping emerges from further research.
+  leogang: {
+    label: "Bikepark Leogang", file: "regions/leogang.json", trailCount: 13,
+    bounds: [[47.40801, 12.7026], [47.44109, 12.74268]],
+    subRegions: {
+      epic_bikepark: { label: "The Epic Bikepark", color: "#8a3a3a" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;
