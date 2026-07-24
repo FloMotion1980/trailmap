@@ -1,0 +1,2166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="apple-mobile-web-app-title" content="Trailmap" />
+<meta name="theme-color" content="#1e3128" />
+<title>Trailmap</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<div id="fatalError">
+  <div class="box">
+    <h2>Karte konnte nicht geladen werden</h2>
+    <p id="fatalErrorMsg">Unbekannter Fehler.</p>
+    <p>Häufigste Ursache: Diese Seite lädt eine externe Kartenbibliothek nach; das scheitert manchmal, wenn eine Datei nur als reine Vorschau geöffnet wird (ohne JavaScript), statt richtig im Browser.</p>
+    <p><b>iPhone-Tipp:</b> Datei in der Dateien-App gedrückt halten → „Teilen" → <b>„In Safari öffnen"</b> wählen, statt sie nur anzutippen.</p>
+  </div>
+</div>
+<div id="regionDialog">
+  <div class="box">
+    <button class="rd-close" id="regionDialogClose" title="Schließen">&times;</button>
+    <h2>Regionen wählen</h2>
+    <p class="region-dialog-hint">Wähle, welche Regionen gleichzeitig auf der Karte angezeigt werden sollen (max. <span id="regionLimitText"></span>).</p>
+    <div class="region-dialog-limit-note" id="regionLimitNote">Limit erreicht — zuerst eine aktive Region abwählen, um eine andere hinzuzufügen.</div>
+    <div id="regionDialogList"></div>
+  </div>
+</div>
+<div class="app">
+  <header>
+    <h1 id="scrollTopBtn" title="Nach oben scrollen">Trailmap</h1>
+    <button id="regionsBtn">🌍 Regionen wählen</button>
+  </header>
+  <div class="layout">
+    <aside>
+      <div class="filters">
+        <details class="filter-section" id="secRegion" open>
+          <summary><span class="section-title-row"><span>Region</span><span class="section-meta" id="currentRegionLabel"></span></span></summary>
+          <div class="region-groups-container" id="regionChips"></div>
+        </details>
+        <details class="filter-section" id="secFilter" open>
+          <summary><span class="section-title-row"><span>Filter</span><span class="section-meta" id="filterCountLabel"></span></span></summary>
+          <div class="chip-row" id="diffChips">
+            <button class="chip diff-gruen active" data-diff="gruen">Sehr leicht</button>
+            <button class="chip diff-blau active" data-diff="blau">Leicht</button>
+            <button class="chip diff-rot active" data-diff="rot">Mittel</button>
+            <button class="chip diff-schwarz active" data-diff="schwarz">Schwer</button>
+          </div>
+          <div class="toggle-row-group">
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDownhillToggle" checked><span class="slider"></span></span>⬇ Downhill</label>
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showUphillToggle" checked><span class="slider"></span></span>⚡ Uphill</label>
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLoopToggle" checked><span class="slider"></span></span>🔁 Trailrunden</label>
+          </div>
+        </details>
+        <details class="filter-section" id="secMapOptions">
+          <summary>Kartenoptionen</summary>
+          <div class="chip-row" id="baseLayerControl">
+            <button class="chip active" data-layer="osm">Straße</button>
+            <button class="chip" data-layer="carto">Straße hell</button>
+            <button class="chip" data-layer="topo">Relief</button>
+            <button class="chip" data-layer="sat">Satellit</button>
+          </div>
+          <div class="toggle-row-group">
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showNamesToggle"><span class="slider"></span></span>Namen</label>
+          </div>
+          <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
+        </details>
+      </div>
+      <details class="filter-section" id="secTrails" open>
+        <summary>Trails</summary>
+        <div class="trail-list" id="trailList"></div>
+      </details>
+    </aside>
+    <div class="map-wrap">
+      <div id="map"></div>
+      <button id="sidebarToggle">☰ Trails</button>
+      <button id="locateBtn" title="Mein Standort">📍</button>
+      <div id="liveStatus"><span class="rec-dot"></span> Live-Tracking</div>
+      <div id="infoPanel">
+        <button class="ip-close" id="ipClose" title="Schließen">&times;</button>
+        <div id="ipContent"></div>
+      </div>
+      <div id="layerWarning"></div>
+      <div id="offlineBanner">📴 Offline-Modus</div>
+    </div>
+  </div>
+</div>
+<div id="sidebarBackdrop"></div>
+
+<script>
+if (window.navigator.standalone === true) {
+  document.documentElement.classList.add("is-standalone");
+}
+function updateLayoutModeClass(){
+  const isLandscapeCompact = window.innerHeight < 500 && window.innerWidth > window.innerHeight;
+  document.documentElement.classList.toggle("landscape-compact", isLandscapeCompact);
+}
+updateLayoutModeClass();
+window.addEventListener("resize", updateLayoutModeClass);
+window.addEventListener("orientationchange", updateLayoutModeClass);
+window.onerror = function(msg, url, line, col, err) {
+  var msgEl = document.getElementById('fatalErrorMsg');
+  var panel = document.getElementById('fatalError');
+  if (msgEl && panel && !panel.classList.contains('visible')) {
+    msgEl.textContent = String(msg) + (line ? ' (Zeile ' + line + ')' : '');
+    panel.classList.add('visible');
+  }
+};
+try {
+if (typeof L === 'undefined') { throw new Error('Kartenbibliothek (Leaflet) konnte nicht geladen werden – vermutlich wurde JavaScript beim Öffnen blockiert, oder es gibt keine Internetverbindung zur CDN.'); }
+const TRAIL_GEO = {};
+const ELEVATION_PROFILES = {};
+// Optional per-trail override for a Trailrunde (multi-trail loop route, e.g. Donnersberg's
+// "Wasser & Holz"): id -> [{coords, diff|null}, ...]. `diff` present = this stretch matches one of
+// the loop's component trails (rendered in that trail's own difficulty color); `diff` null = a
+// connecting fireroad/access stretch (rendered dashed/neutral via CONNECTOR_COLOR). TRAIL_GEO[id]
+// still holds the full flat coordinate list as normal for every trail (bounds/hit-testing/GPX
+// export/elevation profile all keep working unchanged) -- this is purely an additional rendering
+// hint consulted only by buildTrailLayer, same additive-flag pattern as `uphill`.
+const TRAIL_SEGMENTS = {};
+
+// Always-loaded catalog of every region group the app knows about (no trail geometry — that's
+// fetched lazily per-group from `file` when a group is activated). Add a region by adding an
+// entry here + a matching regions/<key>.json (see activateRegionGroup below).
+const REGION_CATALOG = {
+  paznaun: {
+    label: "Paznaun", file: "regions/paznaun.json", trailCount: 23,
+    bounds: [[46.8344, 10.14123], [47.07058, 10.4054]],
+    subRegions: {
+      ischgl:  { label: "Ischgl/Samnaun", color: "#3a7a4a" },
+      kappl:   { label: "Kappl",          color: "#3a6b8a" },
+      galtuer: { label: "Galtür",         color: "#8a3a63" }
+    }
+  },
+  dreilaender: {
+    label: "3-Länder Enduro Trails", file: "regions/dreilaender.json", trailCount: 29,
+    bounds: [[46.7593, 10.47113], [46.8925, 10.54674]],
+    subRegions: {
+      mutzkopf:   { label: "Mutzkopf",   color: "#4a6b3a" },
+      bergkastel: { label: "Bergkastel", color: "#8a5a2f" },
+      schoeneben: { label: "Schöneben",  color: "#2f6a6b" },
+      haideralm:  { label: "Haideralm",  color: "#6b3a4a" }
+    }
+  },
+  // Being built out region by region — sourcing methodology, lessons learned, and full status
+  // detail now live in docs/finale-ligure.md (moved out of this comment 2026-07-23 to keep this
+  // file lean; keep updating that file, not here, as more hubs get built).
+  // Status as of 2026-07-23: 182 trails across 12 sub-regions. The 11 original Infos-Finale.md areas
+  // (Spotorno still missing 1: Quadrato Rosso) plus 5 new user-defined sub-regions replacing the old
+  // zone-derived ones: Orco - Vezzi, Verezzi (replaced "Caprazoppa"), Feglino, Mallare, Quiliano, and
+  // — newest, now the largest sub-region — "Pietra Ligure - Val Maremola" (59 trails), which absorbed
+  // ALL of "Monte Carmo / Ranzi", "Monte Grosso", "Alta Val Bormida" and "Backcountry" (all 4 hubs
+  // now fully dissolved, entries removed) plus 4 trails from "Melogno" (incl. "Roll Up", matched to
+  // the user's "Issalo (#Uphill Trail)" — flag to confirm) and 5 freshly-sourced trails (Oltre
+  // Finale, Ranzi Uphill, Aleluya, Strada della Gatella, Mugugno — the last via OSM/Overpass, no
+  // official rating found, diff is a best guess). 2 requested names (Tampa, Justanice Trail) remain
+  // unsourceable (Trailforks-only, bot-blocked) — see docs/finale-ligure.md. "Bormida" (Melogno)
+  // resolved on the 3rd attempt via a user-supplied GPX exported from mtb.waymarkedtrails.org — see
+  // docs/finale-ligure.md. Full detail — including merges, corrections, and a short list of trails
+  // confirmed to exist but not yet sourceable (Sentiero Natura, Strada Beretta, Quadrato Rosso,
+  // Collegamento Vilmar, Vezzi - Monte Mao, Tampa, Justanice Trail) — all live in
+  // docs/finale-ligure.md — read it before adding or moving any Finale trail, this comment only
+  // keeps a short pointer from here on.
+  finale: {
+    label: "Finale Ligure", file: "regions/finale.json", trailCount: 182,
+    bounds: [[44.13673, 8.096665], [44.28989, 8.44941]],
+    subRegions: {
+      le_manie: { label: "Le Manie", color: "#7a2f6b" },
+      san_bernardino: { label: "San Bernardino", color: "#5a7a2f" },
+      melogno_isallo: { label: "Melogno", color: "#2f5a8a" },
+      nato_base: { label: "Nato Base", color: "#8a5a2f" },
+      spotorno: { label: "Spotorno", color: "#1f8fa3" },
+      madonna_della_guardia: { label: "Madonna della Guardia", color: "#8a3a6b" },
+      orco_vezzi: { label: "Orco - Vezzi", color: "#4a5a7a" },
+      verezzi: { label: "Verezzi", color: "#d9645a" },
+      feglino: { label: "Feglino", color: "#7a5a3a" },
+      mallare: { label: "Mallare", color: "#2f9e8a" },
+      quiliano: { label: "Quiliano", color: "#9e7a1f" },
+      val_maremola: { label: "Pietra Ligure - Val Maremola", color: "#a83232" }
+    }
+  },
+  // Source: https://www.mtb-donnersberger-land.de/portfolio_trail.html (4 individual trails, direct
+  // GPX links, elevation data missing/zeroed in all 4 -- backfilled via OpenTopoData mapzen lookup
+  // per point) plus one "Trailrunde" (multi-trail loop route, "Wasser & Holz", 21.84km combining
+  // all 4 trails with fireroad connectors) -- has real elevation in its own GPX. Difficulty for all
+  // 4 trails confirmed directly by the user (their home region), not sourced online -- Trailforks
+  // pages exist (linked via url) but are bot-blocked as usual, and the site itself shows no rating.
+  // The loop trail is the first use of loop:true + TRAIL_SEGMENTS[id] (see its definition next to
+  // TRAIL_GEO): its visible line is split into colored (matches a component trail, that trail's own
+  // diff color) and dashed-grey (connector fireroad) stretches, built once by clustering the loop's
+  // raw GPX track against each individual trail's raw track by proximity (~20m threshold, then
+  // smoothing short gaps) -- a one-off script, not yet a repo-tracked tool. Foundation for a future
+  // "build your own Trailrunde" feature (not implemented yet, per the user 2026-07-22).
+  donnersberg: {
+    label: "Donnersberg", file: "regions/donnersberg.json", trailCount: 27,
+    bounds: [[49.53555, 7.85592], [49.63851, 7.97392]],
+    subRegions: {
+      donnersberger_land: { label: "MTB Donnersberger Land", color: "#8a6a2f" },
+      donnersberg_gipfel: { label: "Donnersberg", color: "#4a6d8c" }
+    }
+  },
+  // Source: https://www.mountainbikepark-pfaelzerwald.de/touren.html -- all 20 official signposted
+  // tours ("Touren"), grouped by the site's own 3 areas (Touren 1-6 "Rund um Johanniskreuz", 7-10
+  // "Südliche Weinstraße", 11-20 "Wasgau"). Each tour is a big loop (loop:true, GPX via Outdooractive,
+  // route ID found through WebSearch, see docs/data-sourcing-general.md); trail-worthy stretches inside
+  // a tour are auto-detected, not hand-picked: GPX points snapped against nearby OSM path/footway/
+  // steps/bridleway ways (15m tolerance), stretches naturally named from whichever hiking-route
+  // relation (route=hiking, e.g. "Pfälzerwald Blaues Kreuz") the matched way belongs to -- picked from
+  // waymarkedtrails.org's own Wanderzeichen system, not invented by hand, per the user's explicit
+  // request for full automation over manual naming (2026-07-23). Unnamed matches fall back to
+  // "<Tour place> Trail N". highway=track is deliberately never promoted to a standalone trail (stays a
+  // plain dashed connector, regardless of tracktype) -- the user's instruction was to keep ambiguous
+  // stretches as ordinary connector line rather than try to guess where forest-road ends and trail
+  // begins. Stretches under 150m aren't promoted to their own trail either (folds back to connector) to
+  // avoid a cluttered sidebar full of few-dozen-meter slivers. An out-and-back spur ridden twice in one
+  // loop (same stretch, reversed) is deduplicated to one standalone trail entry, but still appears twice
+  // in that tour's own TRAIL_SEGMENTS (same trailId both times) since the loop really does ride it both
+  // ways. Different tours frequently reuse the exact same physical trail stretch (confirmed by the user
+  // up front, 2026-07-23) -- a newly-found stretch is matched against every already-built trail's own
+  // way-id set (>=50% overlap) before creating a new entry, so a shared stretch gets ONE lineTrails
+  // entry referenced by every tour's TRAIL_SEGMENTS that crosses it, not a duplicate per tour. Pilot:
+  // "Tour 4 - Hochspeyer" first (64km, official S2/rot), then all other 19 tours the same way. 209
+  // standalone trails total across all 20 loops, difficulty per-trail from OSM mtb:scale where tagged
+  // (0/1/2 -> gruen/blau/rot) else defaulted to blau, each loop's own diff from the site's published
+  // "Technical Difficulty X/6" (1-2->blau, 3-4->rot, 5-6->schwarz) -- no manual per-trail review, per
+  // the user -- "einige Fehler machen nix".
+  pfaelzerwald: {
+    label: "Pfälzer Wald", file: "regions/pfaelzerwald.json", trailCount: 437,
+    bounds: [[49.04013, 7.50087], [49.44465, 8.16781]],
+    subRegions: {
+      johanniskreuz: { label: "Rund um Johanniskreuz", color: "#5a7a3a" },
+      weinstrasse: { label: "Weinstraße", color: "#8a3a4a" },
+      wasgau: { label: "Wasgau", color: "#3a5a8a" },
+      kurztouren: { label: "Kurztouren", color: "#8a7a2f" },
+      fernwege_felsentouren: { label: "Wahrzeichen-Touren", color: "#5a3a8a" },
+      private_runden: { label: "Community", color: "#2f8a7a" },
+      // Split out from the "Empfehlungen" staging bucket 2026-07-24 into its own permanent sub-region
+      // once the user confirmed these 3 (Churchner, Drei Eichen, Pechstein -- RV Edelweiss 1924
+      // Deidesheim e.V.'s real "Naturtrail" network, opened Feb 2025) are correctly sourced/connected.
+      naturtrail_deidesheim: { label: "Naturtrail Deidesheim", color: "#c2185b" },
+      // Staging area for individually-researched, not-yet-fully-verified finds (started 2026-07-24,
+      // per the user -- known trails/areas they'd heard of, e.g. "Edelweiss Deidesheim", plus a
+      // general web search for other well-regarded MTB trails and bikeable scenic hiking routes not
+      // covered by the official 20 tours). Deliberately a lower-confidence bucket than the rest of
+      // this region -- see docs/pfaelzerwald.md (if present) or project memory for exactly what's in
+      // here and how each entry was sourced; expect this sub-region to keep growing/getting refined.
+      // The 10 "Eckkopf Trail N" auto-detected entries moved out to Weinstraße 2026-07-24 (same day,
+      // after their geometry was rebuilt via clean shortest-path graph routing instead of the original
+      // greedy nearest-endpoint chaining, which had produced visible backtracking "Schnörkel" and one
+      // reversed trail -- see project memory) -- only Dahner Felsenpfad remains here as genuinely
+      // still-provisional (unconfirmed difficulty).
+      empfehlungen: { label: "Empfehlungen (vorläufig)", color: "#a35a2f" }
+    }
+  },
+  // Source: https://www.bergstrasse-odenwald.de/mountainbiking/mountainkbikestrecken -- Durchstich
+  // pilot for this brand-new region, 2026-07-24, per the user. Started with Eberbach specifically
+  // ("wohl die bekannteste" MTB spot in the Odenwald) rather than the region's official tour list --
+  // its own "Eb3" MTB-Enduro-Rundstrecke BIKELÄND Eberbach (45.8km, official S3/schwarz, GPX as a
+  // direct zip download from mtb-geo-naturpark.de, no Outdooractive cookie-wall this time) combines
+  // 12 individually-named enduro trails maintained by Kanu-Club 1929 Eberbach, with an *official*
+  // name + Blue/Red/Black difficulty for each -- a stronger, more authoritative naming source than
+  // the waymarked-hiking-route-relation method used for Pfälzer Wald, so used directly instead: GPX
+  // snapped against OSM path/footway/track/bridleway/steps ways (same 15m-tolerance method), and
+  // wherever a matched way's own OSM name matches one of the 12 official trail names, that becomes
+  // the trail's name + the *official* difficulty is used verbatim (not re-derived from mtb:scale) --
+  // e.g. Captain Hiob/Coffee & Cream/Hebert Trail -> blau, Lumberjack/Wally/Woody/Alle Farben/Bock'n
+  // Soul/Neckarcoaster -> rot, Zweiarmiger Bandit/Bock'n Roll/Einarmiger Bandit -> schwarz.
+  // Corrected 2026-07-24 (same day) per the user, who rides this loop themselves: the pilot's first
+  // pass built each named trail from only the GPX-matched points literally tagged with that trail's
+  // own OSM name, which under-covered two real, recurring situations for this kind of purpose-built
+  // enduro-park trail -- (1) a single OSM way's own full node list can extend further than the subset
+  // of GPX points that happened to snap to it (Wally/Zweiarmiger Bandit were both missing a real end
+  // of the way -- fixed by using each way's complete geometry, not just the matched subset), and (2)
+  // a trail can legitimately be split across several separately-tagged OSM ways with a real, physical
+  // connecting stretch between them that must be rebuilt from the actual ridden GPX track between
+  // the two pieces, never a synthetic straight line (Lumberjack/Alle Farben/Neckarcoaster/Bock'n Roll
+  // all had this). This surfaces a data-model point the user made explicit: unlike a Trailrunde (whose
+  // TRAIL_SEGMENTS keeps trail-stretches and connectors as separate segments), a single standalone
+  // Trail's own geometry is allowed to already include its own internal connecting piece as part of
+  // one continuous entity. Woody's own two named ways were additionally chained in the wrong order
+  // (ridden backwards); "Herbert Trail" is renamed "Hebert Trail" to match its real OSM name -- the
+  // official site's own spelling was simply wrong. "Aussichtsweg" is no longer promoted to a
+  // standalone trail (not an official trail, per the user) -- its stretch is still ridden as part of
+  // the loop, just as a plain unnamed connector like any other fireroad linking piece.
+  // Second Durchstich pilot, same source (mtb-geo-naturpark.de) -- Michelstadt Mi1 (2026-07-24, per
+  // the user: "Mach mal Michelstadt. Da war ich letztens"). Unlike Eberbach, its own GPX zip carries
+  // 22 named *waypoints* marking exactly where each trail begins along the ride -- a more precise
+  // anchor than name-matching alone -- cross-checked against OSM naming (most of the 12 named
+  // descents/features ARE tagged in OSM too, confirming the waypoint boundaries) and against the
+  // page's own prose descriptions. No official per-trail difficulty exists here (only an overall
+  // S2/K1 rating for the whole loop) -- checked both mtb-geo-naturpark.de and the maintaining club's
+  // own detailed page (muemlingtalradler.de) per the user's own rule (always look there first) before
+  // falling back to each trail's own max OSM `mtb:scale`. "Das Enge Ding" is bumped to `rot` despite
+  // only tagging `mtb:scale=1` -- the page's own prose calls it out as the section "für Fahrtechniker,
+  // die alpines Feeling lieben", a strong enough qualitative signal to override the tag (same
+  // precedence as a user's own firsthand correction, just self-noticed from the source text this
+  // time) -- see project memory for the rest of this build's lower-confidence spots (Kreuzweg-Trail/
+  // Viehtrieb-Trail had no `mtb:scale` tag at all, defaulted to `blau`; Bürgermeister-Stück's own OSM
+  // tagging was too sparse to trust, boundaries come from the GPX waypoints + elevation profile
+  // instead). "Es Enge Ding"/"Es Dreggsding" are one merged trail (`Das Enge Ding`), not two --
+  // OSM only ever tags the combined stretch under one name, and the prose reads like "Dreggs-Ding" is
+  // a named feature *within* Enge Ding rather than a second standalone trail.
+  // Third batch, same day (2026-07-24), per the user: research pass first (checked all 47 remaining
+  // Bergstraße-Odenwald routes' own pages for real named-trail content vs plain forest-road/hiking
+  // tours -- the user's own framing: "abhängig davon... ob auf den Runden Trails sind" -- then built
+  // 6 more flagship loops (own sub-region each, named component trails extracted same as Eberbach/
+  // Michelstadt: Miltenberg/Collenberg/Großheubach/Amorbach via GPX+OSM name-tag snapping, Hardheim
+  // via GPX+OSM with elevation backfilled since its own GPX carries none, Steinbrecher Trails
+  // Dossenheim via its own dedicated community site steinbrecher-trails.de for exact per-trail
+  // lengths). Mömlingen Mö1 (DIMB "Premium Trail Tour", 51% singletrail) turned out to have NO
+  // individually-named OSM trail segments despite the award -- built as a single un-decomposed loop
+  // instead of its own flagship sub-region, alongside 5 similar moderate-trail-content loops
+  // (Bürgstadt/Gorxheimertal/Breuberg Bb1/Groß-Umstadt/Hammelbach), grouped geographically into 3
+  // small sub-regions rather than one each. ~30 remaining routes were plain S0-rated forest-road/
+  // hiking tours with no real trail content and were deliberately left out entirely, per the user.
+  odenwald: {
+    label: "Odenwald", file: "regions/odenwald.json", trailCount: 66,
+    bounds: [[49.43588, 8.68312], [49.88447, 9.47363]],
+    subRegions: {
+      eberbach: { label: "Eberbach", color: "#6b8a3a" },
+      michelstadt: { label: "Michelstadt", color: "#8a5a2f" },
+      miltenberg: { label: "Miltenberg", color: "#3a6b8a" },
+      collenberg: { label: "Collenberg", color: "#8a3a6b" },
+      grossheubach: { label: "Großheubach", color: "#5a8a3a" },
+      dossenheim: { label: "Steinbrecher Trails Dossenheim", color: "#8a6b3a" },
+      hardheim: { label: "Hardheim", color: "#3a8a7a" },
+      amorbach: { label: "Amorbach", color: "#7a3a8a" },
+      // Single catch-all for every loop that didn't earn its own flagship sub-region -- single-loop
+      // entries only, no named-trail decomposition (see comment above). Originally split into 3
+      // small geographic clusters (Bergstraße/Vorderer Odenwald/Untermain); merged into one 2026-07-24
+      // per the user -- simpler than maintaining several near-empty sub-regions for a handful of
+      // lower-build-investment loops.
+      weitere_touren: { label: "Weitere Runden", color: "#6b8a5a" }
+    }
+  }
+};
+const MAX_ACTIVE_REGION_GROUPS = 3;
+const REGION_GROUPS = {};
+const REGIONS = {};
+
+// ---- Trails mit echtem GPX ----
+const lineTrails = [];
+
+let activeRegionGroups = new Set(); // which REGION_CATALOG groups are currently fetched/loaded
+let activeRegions = new Set(Object.keys(REGIONS));
+let activeDiffs = new Set(["gruen","blau","rot","schwarz"]);
+let showNames = false;
+let showUphill = true; // hides/shows trails flagged uphill:true (EMTB uphill trails) — independent of diff
+let showLoop = true; // hides/shows trails flagged loop:true (Trailrunden) — independent of diff
+let showDownhill = true; // hides/shows "regular" trails (neither uphill nor loop) — independent of diff
+
+const regionChipRow = document.getElementById("regionChips");
+const regionsBtnEl = document.getElementById("regionsBtn");
+
+// Populated fresh by rebuildRegionChips() (whenever the chip DOM itself is rebuilt) and read/updated
+// by render() (on every filter change) to keep each region-group/sub-region chip's "(n sichtbar)"
+// count in sync without having to rebuild the whole chip DOM on every render() call.
+let regionGroupCountEls = {};
+let regionSubCountEls = {};
+
+// The header button doubles as a "what's currently active" indicator — its label is derived from
+// REGION_GROUPS (only activated groups), never hardcoded, so it keeps making sense no matter how
+// many regions the catalog eventually grows to.
+function updateHeaderRegionsLabel(){
+  const labels = Object.values(REGION_GROUPS).map(g => g.label);
+  regionsBtnEl.textContent = "🌍 " + (labels.length ? labels.join(" · ") : "Regionen wählen");
+  regionsBtnEl.title = labels.length ? "Aktive Regionen: " + labels.join(", ") + " — klicken zum Ändern" : "Regionen wählen";
+}
+
+// Rebuilds the sidebar's region chips from whatever is currently in REGION_GROUPS/REGIONS —
+// i.e. only the groups the user has actually activated (see activateRegionGroup/deactivateRegionGroup).
+// Called once at boot and again after every activate/deactivate, since the set of groups/sub-regions
+// shown here changes at runtime now (it used to be static).
+function rebuildRegionChips(){
+  updateHeaderRegionsLabel();
+  updateCurrentRegionLabel(); // the active-group set may have just changed (activate/deactivate)
+  regionChipRow.innerHTML = "";
+  regionGroupCountEls = {};
+  regionSubCountEls = {};
+  Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
+    // A bordered "fieldset"-style block per region group — the group label + fly button sit as a
+    // legend overlapping the top border (see .region-group-row's absolute positioning), and every
+    // sub-region chip belonging to this group lives visibly inside the same box, so it's clear at a
+    // glance which chips belong together (this was ambiguous before, per the user 2026-07-22).
+    const groupBlock = document.createElement("div");
+    groupBlock.className = "region-group-block";
+
+    const groupRow = document.createElement("div");
+    groupRow.className = "region-group-row";
+
+    const groupLabel = document.createElement("button");
+    groupLabel.className = "region-group-label";
+    const subKeys = Object.keys(REGIONS).filter(k => REGIONS[k].group === groupKey);
+    const syncAllActive = () => groupLabel.classList.toggle("all-active", subKeys.every(k => activeRegions.has(k)));
+    syncAllActive();
+    groupLabel.appendChild(document.createTextNode(groupInfo.label));
+    const groupCountEl = document.createElement("span");
+    groupCountEl.className = "region-count";
+    // Reserve width for the widest this count can ever be (the group's own total trail count, a
+    // fixed number) so toggling sub-regions on/off — which changes the *visible* count text length,
+    // e.g. " (0)" vs " (182)" — never changes this button's own footprint and shifts flex-wrapped
+    // siblings after it (found 2026-07-23, reported by the user as chips "jumping" on activation).
+    const groupTotalDigits = String(REGION_CATALOG[groupKey]?.trailCount ?? 0).length;
+    groupCountEl.style.minWidth = (groupTotalDigits + 3) + "ch";
+    groupLabel.appendChild(groupCountEl);
+    regionGroupCountEls[groupKey] = groupCountEl;
+    groupLabel.title = "Klicken, um alle Unterregionen dieser Region ein-/auszublenden";
+    groupLabel.addEventListener("click", () => {
+      const allActive = subKeys.every(k => activeRegions.has(k));
+      subKeys.forEach(k => { if (allActive) activeRegions.delete(k); else activeRegions.add(k); });
+      persistActiveState();
+      rebuildRegionChips();
+      render();
+    });
+    groupRow.appendChild(groupLabel);
+
+    // Separate button (own, generously-padded touch target) just for flying the map to this
+    // region's bounds — split out from the label's toggle-visibility click so a single tap target
+    // doesn't do two unrelated things (was hard to hit precisely on mobile too).
+    const flyBtn = document.createElement("button");
+    flyBtn.className = "region-group-fly-btn";
+    flyBtn.textContent = "📍";
+    flyBtn.title = "Zu dieser Region springen";
+    flyBtn.addEventListener("click", () => {
+      const catalogEntry = REGION_CATALOG[groupKey];
+      if (catalogEntry) flyToTrailBounds(L.latLngBounds(catalogEntry.bounds));
+    });
+    groupRow.appendChild(flyBtn);
+
+    groupBlock.appendChild(groupRow);
+
+    const chipsRow = document.createElement("div");
+    chipsRow.className = "region-group-chips";
+    subKeys.forEach(key => {
+      const r = REGIONS[key];
+      const btn = document.createElement("button");
+      btn.className = "chip" + (activeRegions.has(key) ? " active" : "");
+      btn.appendChild(document.createTextNode(r.label));
+      const subCountEl = document.createElement("span");
+      subCountEl.className = "region-count";
+      // Same fixed-width reservation as the group count above, sized to this sub-region's own total
+      // trail count (its visible count can never exceed that, whatever the current filters are).
+      const subTotalDigits = String(lineTrails.filter(t => t.region === key).length).length;
+      subCountEl.style.minWidth = (subTotalDigits + 3) + "ch";
+      btn.appendChild(subCountEl);
+      regionSubCountEls[key] = subCountEl;
+      btn.style.borderColor = r.color;
+      if (activeRegions.has(key)) { btn.style.background = r.color; btn.style.color = "#fff"; }
+      else { btn.style.background = "transparent"; btn.style.color = r.color; }
+      btn.addEventListener("click", () => {
+        if (activeRegions.has(key)) { activeRegions.delete(key); btn.classList.remove("active"); btn.style.background="transparent"; btn.style.color = r.color; }
+        else { activeRegions.add(key); btn.classList.add("active"); btn.style.background = r.color; btn.style.color = "#fff"; }
+        syncAllActive(); // keep the group label's filled/outline state in sync with individual chip toggles too
+        persistActiveState();
+        render();
+      });
+      chipsRow.appendChild(btn);
+    });
+    groupBlock.appendChild(chipsRow);
+
+    regionChipRow.appendChild(groupBlock);
+  });
+}
+
+document.querySelectorAll("#diffChips .chip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const d = btn.dataset.diff;
+    if (activeDiffs.has(d)) { activeDiffs.delete(d); btn.classList.remove("active"); }
+    else { activeDiffs.add(d); btn.classList.add("active"); }
+    persistActiveState();
+    render();
+  });
+});
+
+document.getElementById("showNamesToggle").addEventListener("change", (e) => {
+  showNames = e.target.checked;
+  applyNameLabels();
+});
+
+document.getElementById("showUphillToggle").addEventListener("change", (e) => {
+  showUphill = e.target.checked;
+  persistActiveState();
+  render();
+});
+
+document.getElementById("showLoopToggle").addEventListener("change", (e) => {
+  showLoop = e.target.checked;
+  persistActiveState();
+  render();
+});
+
+document.getElementById("showDownhillToggle").addEventListener("change", (e) => {
+  showDownhill = e.target.checked;
+  persistActiveState();
+  render();
+});
+
+// ---- Collapsible sidebar filter sections (added 2026-07-23, to free up vertical space above the
+// trail list) — plain <details>/<summary>, open/closed state persisted separately from the actual
+// filter values above (activeRegions/activeDiffs/etc.), since it's UI layout state, not a filter.
+const FILTER_SECTIONS_KEY = "trailmap-ui-sections-v1";
+function persistFilterSectionsState(){
+  try {
+    const state = {};
+    document.querySelectorAll("details.filter-section").forEach(d => { state[d.id] = d.open; });
+    localStorage.setItem(FILTER_SECTIONS_KEY, JSON.stringify(state));
+  } catch (e) { /* localStorage unavailable — open/closed state just won't persist */ }
+}
+(function initFilterSections(){
+  let saved = null;
+  try { const raw = localStorage.getItem(FILTER_SECTIONS_KEY); if (raw) saved = JSON.parse(raw); } catch (e) { /* ignore */ }
+  document.querySelectorAll("details.filter-section").forEach(d => {
+    if (saved && typeof saved[d.id] === "boolean") d.open = saved[d.id];
+    d.addEventListener("toggle", persistFilterSectionsState);
+  });
+})();
+
+// ---- Map + custom base layer switcher (own buttons, no Leaflet control-layers) ----
+// ---- Mobile sidebar toggle (list overlay) ----
+const asideEl = document.querySelector('aside');
+const sidebarToggleBtn = document.getElementById('sidebarToggle');
+const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+function openSidebar(){
+  asideEl.classList.add('open');
+  sidebarBackdrop.classList.add('visible');
+}
+function closeSidebar(){
+  asideEl.classList.remove('open');
+  sidebarBackdrop.classList.remove('visible');
+}
+sidebarToggleBtn.addEventListener('click', () => {
+  if (asideEl.classList.contains('open')) closeSidebar(); else openSidebar();
+});
+sidebarBackdrop.addEventListener('click', closeSidebar);
+
+// Scrolls the sidebar back to its very top (Region/Filter/Kartenoptionen/Trails accordions) -- handy
+// once a long trail list has been scrolled far down. The header title sits outside the scrollable
+// `aside` (it's part of the always-visible top-level <header>), so it doubles as this trigger without
+// adding any new floating UI element (2026-07-24, per the user -- rejected a floating scroll-to-top
+// button first, this reuses existing UI instead).
+document.getElementById('scrollTopBtn').addEventListener('click', () => {
+  asideEl.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+function isMobileLayout(){
+  return window.innerWidth <= 768 || window.matchMedia("(pointer: coarse)").matches;
+}
+
+function closeSidebarIfMobile(){
+  if (isMobileLayout()) closeSidebar();
+}
+
+const map = L.map('map', { scrollWheelZoom:true, zoomControl:false }).setView([46.99, 10.29], 12);
+
+// Shows which active region GROUP the map's current center falls into, in the "Region" heading row
+// (added 2026-07-23, per the user's request — first placed in "Trails"' own heading, moved here the
+// same day once the user said they preferred it next to "Region" after all). Only group-level
+// granularity is possible — sub-regions
+// don't carry their own bounding box, only a REGION_CATALOG[group].bounds — so this deliberately
+// checks against the catalog's group bounds, not anything finer. Re-checked on every "moveend" (not
+// "move", which fires continuously while dragging) plus whenever the active group set itself changes
+// (rebuildRegionChips already runs after every activate/deactivate).
+// Distance (in degrees, plenty precise for this "which region am I near" UI purpose -- no need for
+// real haversine) from a point to a lat/lng bounds rectangle: 0 if the point is inside, else the
+// distance to the nearest point on the rectangle's edge.
+function distToBounds(latlng, bounds){
+  const lat = Math.min(Math.max(latlng.lat, bounds.getSouth()), bounds.getNorth());
+  const lng = Math.min(Math.max(latlng.lng, bounds.getWest()), bounds.getEast());
+  return Math.hypot(latlng.lat - lat, latlng.lng - lng);
+}
+
+const currentRegionLabelEl = document.getElementById("currentRegionLabel");
+function updateCurrentRegionLabel(){
+  // Nearest-bounds rather than strict center-point containment: flyToTrailBounds' asymmetric
+  // UI-avoidance padding (lots of room reserved on one side for the info panel) shifts the map's
+  // actual center away from a region's geometric bounds center -- for a large region (Paznaun,
+  // Pfälzer Wald) that shift is a tiny fraction of the area and a plain center-in-bounds check still
+  // passed, but for a narrow one (3-Länder Enduro Trails, only ~14x6km) the shift was enough to push
+  // the center just outside its own bounds, so the label silently never showed for that region
+  // specifically (found 2026-07-24, reported by the user). Tried checking viewport-overlap instead,
+  // but that over-matched: 3-Länder and Paznaun sit close enough in real life (~5km apart) that after
+  // flying to the small 3-Länder bounds, the (zoomed-out-enough-to-include-padding) visible viewport
+  // still overlapped Paznaun's much larger bounds too, and Paznaun's earlier position in REGION_GROUPS
+  // key order won that tie. Picking whichever active group's bounds the center is *closest to*
+  // (0 if inside) fixes both: still exact for the normal contains-case, and for the narrow-region/
+  // padding-shift case the "just barely outside" region is still nearer than any unrelated one.
+  // Beyond this, don't guess -- the map has been panned somewhere not meaningfully "in" any active
+  // region anymore, and the label should go back to blank rather than confidently naming whichever
+  // region happens to be nearest (e.g. after zooming out to see the whole country).
+  const NEAR_THRESHOLD_DEG = 0.3;
+  const center = map.getCenter();
+  let bestKey = null, bestDist = Infinity;
+  Object.keys(REGION_GROUPS).forEach(groupKey => {
+    const catalogEntry = REGION_CATALOG[groupKey];
+    if (!catalogEntry) return;
+    const d = distToBounds(center, L.latLngBounds(catalogEntry.bounds));
+    if (d < bestDist) { bestDist = d; bestKey = groupKey; }
+  });
+  currentRegionLabelEl.textContent = (bestKey && bestDist <= NEAR_THRESHOLD_DEG) ? `· ${REGION_GROUPS[bestKey].label}` : "";
+}
+map.on("moveend", updateCurrentRegionLabel);
+map.on("zoomend", updateStartDotVisibility);
+
+const baseLayers = {
+  osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
+  }),
+  carto: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    maxZoom: 19, attribution: '&copy; OpenStreetMap contributors &copy; CARTO', subdomains: 'abcd'
+  }),
+  topo: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+    maxZoom: 17, attribution: '&copy; OpenTopoMap, OpenStreetMap contributors'
+  }),
+  sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19, attribution: 'Tiles &copy; Esri'
+  })
+};
+let currentBaseKey = "osm";
+baseLayers.osm.addTo(map);
+
+const layerWarningEl = document.getElementById("layerWarning");
+document.querySelectorAll("#baseLayerControl .chip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const key = btn.dataset.layer;
+    if (key === currentBaseKey) return;
+    map.removeLayer(baseLayers[currentBaseKey]);
+    baseLayers[key].addTo(map);
+    currentBaseKey = key;
+    document.querySelectorAll("#baseLayerControl .chip").forEach(b => b.classList.toggle("active", b === btn));
+    layerWarningEl.classList.remove("visible");
+  });
+});
+
+// Just report load problems — never auto-switch back, so the button click always visibly does something.
+function watchLayer(layer, label){
+  let ok = 0, fail = 0;
+  layer.on("tileload", () => { ok++; });
+  layer.on("tileerror", () => {
+    fail++;
+    if (fail >= 4 && ok === 0) {
+      layerWarningEl.textContent = `„${label}“ lädt hier nicht (Kachel-Server evtl. blockiert) — Kartenhintergrund bleibt leer, bis du eine andere Ebene wählst.`;
+      layerWarningEl.classList.add("visible");
+    }
+  });
+}
+watchLayer(baseLayers.topo, "Relief (Topo)");
+watchLayer(baseLayers.sat, "Satellit (Esri)");
+watchLayer(baseLayers.carto, "Straße hell (CARTO)");
+
+// ---- My Location (blue dot, accuracy ring, heading cone) ----
+const geoIcon = L.divIcon({
+  html: '<div class="geo-wrap"><div class="geo-cone" style="display:none;"></div><div class="geo-pulse"></div><div class="geo-dot"></div></div>',
+  className: "", iconSize: [40, 40], iconAnchor: [20, 20]
+});
+let userLocationMarker = null;
+let userAccuracyCircle = null;
+let geoWatchId = null;
+let followMode = false;
+const locateBtn = document.getElementById("locateBtn");
+
+let compassActive = false;
+let smoothedCompassHeading = null; // normalized 0-360, used only for computing the shortest-path delta
+let compassDisplayAngle = null;    // unbounded, ever-increasing/decreasing — this is what we actually render
+let orientationHandler = null;
+
+function updateHeadingCone(headingDeg){
+  if (!userLocationMarker) return;
+  const el = userLocationMarker.getElement();
+  if (!el) return;
+  const wrap = el.querySelector(".geo-wrap");
+  const cone = el.querySelector(".geo-cone");
+  cone.style.display = "block";
+  wrap.style.transform = `rotate(${headingDeg}deg)`;
+}
+
+function getScreenAngle(){
+  if (screen.orientation && typeof screen.orientation.angle === "number") return screen.orientation.angle;
+  if (typeof window.orientation === "number") return window.orientation;
+  return 0;
+}
+
+function handleOrientation(event){
+  let heading = null;
+  if (typeof event.webkitCompassHeading === "number" && !isNaN(event.webkitCompassHeading)) {
+    heading = event.webkitCompassHeading; // iOS Safari: already 0° = North, clockwise
+  } else if (event.absolute && event.alpha !== null && event.alpha !== undefined) {
+    heading = 360 - event.alpha; // Android absolute orientation: alpha is counter-clockwise from North
+  }
+  if (heading === null || isNaN(heading)) return;
+  // The sensor reports heading relative to the device's physical (portrait) top, not the
+  // current screen orientation — correct for landscape rotation so "up" on screen is right.
+  heading = (heading + getScreenAngle() + 360) % 360;
+  heading = (heading + 360) % 360;
+
+  if (smoothedCompassHeading === null) {
+    smoothedCompassHeading = heading;
+    compassDisplayAngle = heading;
+  } else {
+    // shortest signed angular difference, so we always turn the short way at the 0°/360° seam
+    const diff = ((heading - smoothedCompassHeading + 540) % 360) - 180;
+    smoothedCompassHeading = (smoothedCompassHeading + diff * 0.2 + 360) % 360;
+    // apply the same delta to an UNBOUNDED angle for rendering, so the CSS transition
+    // never has to jump ~360° backward when the normalized value wraps at 0/360
+    compassDisplayAngle += diff * 0.2;
+  }
+  compassActive = true;
+  updateHeadingCone(compassDisplayAngle);
+}
+
+function attachOrientationListener(){
+  orientationHandler = handleOrientation;
+  if ("ondeviceorientationabsolute" in window) {
+    window.addEventListener("deviceorientationabsolute", orientationHandler);
+  } else {
+    window.addEventListener("deviceorientation", orientationHandler);
+  }
+}
+
+function requestOrientationPermission(){
+  if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+    DeviceOrientationEvent.requestPermission()
+      .then((state) => { if (state === "granted") attachOrientationListener(); })
+      .catch((err) => console.warn("Kompass-Berechtigung nicht erteilt:", err));
+  } else if (window.DeviceOrientationEvent) {
+    attachOrientationListener();
+  }
+}
+
+function detachOrientationListener(){
+  if (orientationHandler) {
+    window.removeEventListener("deviceorientationabsolute", orientationHandler);
+    window.removeEventListener("deviceorientation", orientationHandler);
+    orientationHandler = null;
+  }
+  compassActive = false;
+  smoothedCompassHeading = null;
+  compassDisplayAngle = null;
+}
+
+function updateUserLocation(pos, isFirstFix){
+  const { latitude, longitude, accuracy, heading } = pos.coords;
+  const latlng = [latitude, longitude];
+
+  if (!userLocationMarker) {
+    userLocationMarker = L.marker(latlng, { icon: geoIcon, zIndexOffset: 1000, interactive:false }).addTo(map);
+  } else {
+    userLocationMarker.setLatLng(latlng);
+  }
+  if (!userAccuracyCircle) {
+    userAccuracyCircle = L.circle(latlng, {
+      radius: accuracy || 0, color:"#1a73e8", weight:1, fillColor:"#1a73e8", fillOpacity:0.12, interactive:false
+    }).addTo(map);
+  } else {
+    userAccuracyCircle.setLatLng(latlng);
+    userAccuracyCircle.setRadius(accuracy || 0);
+  }
+
+  const el = userLocationMarker.getElement();
+  if (el) {
+    const wrap = el.querySelector(".geo-wrap");
+    wrap.classList.toggle("live", followMode);
+  }
+  // Compass (if available) drives the cone continuously, including while stationary.
+  // GPS course-over-ground is only used as a fallback when no compass reading exists yet.
+  if (!compassActive) {
+    if (heading !== null && heading !== undefined && !isNaN(heading)) {
+      updateHeadingCone(heading);
+    } else if (userLocationMarker.getElement()) {
+      const cone = userLocationMarker.getElement().querySelector(".geo-cone");
+      if (cone) cone.style.display = "none";
+    }
+  }
+  if (isFirstFix) map.flyTo(getOffsetCenter(L.latLng(latlng), 15), 15, { duration: 0.8 });
+  else if (followMode) map.panTo(getOffsetCenter(L.latLng(latlng), map.getZoom()), { animate: true, duration: 0.5 });
+}
+
+let wakeLock = null;
+async function acquireWakeLock(){
+  if (!("wakeLock" in navigator)) return;
+  try {
+    wakeLock = await navigator.wakeLock.request("screen");
+    wakeLock.addEventListener("release", () => { wakeLock = null; });
+  } catch (err) {
+    console.warn("Wake Lock nicht verfügbar:", err);
+  }
+}
+function releaseWakeLock(){
+  if (wakeLock) { wakeLock.release(); wakeLock = null; }
+}
+document.addEventListener("visibilitychange", () => {
+  if (followMode && document.visibilityState === "visible" && wakeLock === null) {
+    acquireWakeLock();
+  }
+});
+
+const liveStatusEl = document.getElementById("liveStatus");
+
+function startFollowing(){
+  if (!navigator.geolocation) {
+    layerWarningEl.textContent = "Dieser Browser unterstützt keine Standortabfrage.";
+    layerWarningEl.classList.add("visible");
+    return;
+  }
+  followMode = true;
+  locateBtn.classList.add("active");
+  locateBtn.title = "Folgen beenden";
+  liveStatusEl.classList.add("visible");
+  acquireWakeLock();
+  requestOrientationPermission();
+  let firstFix = true;
+  geoWatchId = navigator.geolocation.watchPosition(
+    (pos) => { updateUserLocation(pos, firstFix); firstFix = false; },
+    (err) => {
+      stopFollowing();
+      layerWarningEl.textContent = "Standort nicht verfügbar: " + err.message;
+      layerWarningEl.classList.add("visible");
+    },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+  );
+}
+
+function stopFollowing(){
+  followMode = false;
+  locateBtn.classList.remove("active");
+  locateBtn.title = "Mein Standort";
+  liveStatusEl.classList.remove("visible");
+  if (userLocationMarker) {
+    const el = userLocationMarker.getElement();
+    if (el) { const wrap = el.querySelector(".geo-wrap"); if (wrap) wrap.classList.remove("live"); }
+  }
+  if (geoWatchId !== null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
+  detachOrientationListener();
+  releaseWakeLock();
+}
+
+locateBtn.addEventListener("click", () => {
+  if (followMode) stopFollowing();
+  else startFollowing();
+});
+
+
+// ---- Permanent place labels (village names) — always visible, independent of zoom.
+// Data comes from each activated region's JSON `places` field; see buildPlaceMarkers below.
+const placeMarkers = {}; // groupKey -> array of Leaflet markers, for teardown on deactivate
+
+function buildPlaceMarkers(groupKey, places){
+  placeMarkers[groupKey] = places.map(p => {
+    const m = L.circleMarker([p.lat, p.lng], {
+      radius: 4, color:"#f2f3ec", weight:2, fillColor:"#1c2620", fillOpacity:1
+    }).addTo(map);
+    m.bindTooltip(p.name, { permanent:true, direction:"top", offset:[0,-4], className:"place-label-tooltip", interactive:false }).openTooltip();
+    return m;
+  });
+}
+function destroyPlaceMarkers(groupKey){
+  (placeMarkers[groupKey] || []).forEach(m => map.removeLayer(m));
+  delete placeMarkers[groupKey];
+}
+
+const diffColor = { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" };
+const BASE_WEIGHT = 3.5;
+const HOVER_WEIGHT = 6.5;
+// Neutral mid-grey, deliberately far from every diffColor tone (especially schwarz #1c1c1c, which
+// the old #222222 was nearly indistinguishable from on the map and the elevation chart) -- a
+// connector's dash pattern alone wasn't a reliable-enough visual cue that it isn't a black-rated
+// trail stretch (2026-07-24, per the user).
+const CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a Trailrunde, see TRAIL_SEGMENTS
+// Below this zoom, a trail's own line is already too small to read and the (fixed-pixel-size,
+// non-scaling) startDot markers stop being a helpful "here's where it begins" cue and instead just
+// read as a field of white dots -- most noticeable in a large region like Pfälzer Wald (264 trails)
+// zoomed out to see the whole area at once (2026-07-24). Threshold picked to roughly match "a single
+// hub/tour area fills the screen", not the whole-region overview.
+const START_DOT_MIN_ZOOM = 13;
+function updateStartDotVisibility(){
+  const zoomOk = map.getZoom() >= START_DOT_MIN_ZOOM;
+  Object.values(lineLayers).forEach(layer => {
+    if (!layer.startDot) return;
+    const filterVisible = map.hasLayer(layer.line);
+    const shouldShow = filterVisible && zoomOk;
+    const isShown = map.hasLayer(layer.startDot);
+    if (shouldShow && !isShown) map.addLayer(layer.startDot);
+    else if (!shouldShow && isShown) map.removeLayer(layer.startDot);
+  });
+}
+
+// ---- Info panel logic (replaces Leaflet popups so nothing covers the trail) ----
+const infoPanel = document.getElementById("infoPanel");
+const ipContent = document.getElementById("ipContent");
+
+let soloId = null;
+const SOLO_DIM_OPACITY = 0.15;
+
+function applySolo(id){
+  Object.entries(lineLayers).forEach(([lid, layer]) => {
+    if (lid === id) {
+      layer.line.setStyle({ opacity: 0.9 });
+      layer.startDot.setStyle({ opacity:1, fillOpacity:1 });
+      layer.startMarker.setStyle({ opacity:1, fillOpacity:1 });
+      layer.endMarker.setStyle({ opacity:1, fillOpacity:1 });
+    } else {
+      layer.line.setStyle({ opacity: SOLO_DIM_OPACITY });
+      layer.startDot.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
+      layer.startMarker.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
+      layer.endMarker.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
+      layer.hitLine.closeTooltip();
+    }
+  });
+  soloId = id;
+  syncSelectedCardSoloBtn();
+}
+function clearSolo(){
+  Object.values(lineLayers).forEach(layer => {
+    layer.line.setStyle({ opacity: 0.85 });
+    layer.startDot.setStyle({ opacity:1, fillOpacity:1 });
+    layer.startMarker.setStyle({ opacity:1, fillOpacity:1 });
+    layer.endMarker.setStyle({ opacity:1, fillOpacity:1 });
+  });
+  soloId = null;
+  applyNameLabels();
+  syncSelectedCardSoloBtn();
+}
+// Keeps the sidebar's own card-solo-btn (only ever visible on the currently-selected card, via the
+// ".trail-card.selected .card-solo-btn" CSS rule, not a render()-time check) in sync with the real
+// soloId -- needed because selecting a trail or toggling solo neither one goes through a full
+// render(), so nothing else would ever refresh this one button's active state/label otherwise.
+function syncSelectedCardSoloBtn(){
+  if (!currentSelectedId) return;
+  const card = lineLayers[currentSelectedId] && lineLayers[currentSelectedId].card;
+  const btn = card && card.querySelector(".card-solo-btn");
+  if (!btn) return;
+  const active = soloId === currentSelectedId;
+  btn.classList.toggle("active", active);
+  btn.title = active ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen";
+}
+
+function handleInfoPanelClick(e){
+  const soloBtn = e.target.closest(".solo-btn");
+  if (soloBtn) {
+    const id = soloBtn.dataset.id;
+    if (soloId === id) clearSolo(); else applySolo(id);
+    const t = lineTrails.find(tr => tr.id === openTrailId);
+    if (t) showTrailInfo(t);
+    return;
+  }
+  const dlBtn = e.target.closest(".gpx-download-btn");
+  if (dlBtn) { downloadTrailGpx(dlBtn.dataset.id); return; }
+  const revBtn = e.target.closest(".reverse-btn");
+  if (revBtn) {
+    const id = revBtn.dataset.id;
+    reversedId = (reversedId === id) ? null : id;
+    applyReversedEndpoints(id);
+    const t = lineTrails.find(tr => tr.id === openTrailId);
+    if (t) showTrailInfo(t);
+    return;
+  }
+  const locBtn = e.target.closest(".locate-btn");
+  if (locBtn) {
+    const layer = lineLayers[locBtn.dataset.id];
+    if (layer) flyToTrailBounds(layer.bounds);
+  }
+}
+ipContent.addEventListener("click", handleInfoPanelClick);
+
+document.getElementById("ipClose").addEventListener("click", () => {
+  infoPanel.classList.remove("visible");
+  openTrailId = null;
+  selectedSegmentId = null;
+  clearSolo();
+});
+// Full "nothing is selected/open/soloed anymore" reset -- shared by clicking empty map space and by
+// render()'s filter-driven hide branch (a filter change hiding the currently-selected trail needs the
+// exact same reset, not just the map highlight: leaving the info panel open and solo still engaged for
+// a trail that's no longer even shown left every *other* trail stuck dimmed at 15% opacity, invisibly,
+// until the user happened to re-solo something else -- found by the user 2026-07-24, one narrower fix
+// already went in for just the highlight before this fuller one).
+function closeInfoPanelAndDeselect(){
+  infoPanel.classList.remove("visible");
+  openTrailId = null;
+  selectedSegmentId = null;
+  clearSolo();
+  clearSelection();
+}
+map.on("click", closeInfoPanelAndDeselect);
+
+// `highlight` (optional {distStart, distEnd, color}, in the same km units as the profile's own
+// x-axis) draws a shaded band over that distance range — used to show which stretch of a
+// Trailrunde's elevation profile belongs to whichever of its component trails was last clicked.
+function hexToRgba(hex, alpha){
+  const n = parseInt(hex.replace("#", ""), 16);
+  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${alpha})`;
+}
+
+// Interpolated elevation at distance `d` along `profile` (a [dist,ele] pair list) — used to cut a
+// clean sub-slice of the profile at a segment boundary that doesn't necessarily land on an existing
+// profile point.
+function elevationAtDistance(profile, d){
+  for (let i = 1; i < profile.length; i++){
+    if (profile[i][0] >= d) {
+      const d0 = profile[i-1][0], d1 = profile[i][0];
+      const frac = d1 > d0 ? (d - d0) / (d1 - d0) : 0;
+      return profile[i-1][1] + (profile[i][1] - profile[i-1][1]) * frac;
+    }
+  }
+  return profile[profile.length - 1][1];
+}
+// The sub-range of `profile` spanning [distStart, distEnd], with interpolated endpoints so adjacent
+// per-segment polylines share an exact boundary point (no visible gap/overlap between colors).
+function profileSlice(profile, distStart, distEnd){
+  const pts = [[distStart, elevationAtDistance(profile, distStart)]];
+  for (const p of profile) if (p[0] > distStart && p[0] < distEnd) pts.push(p);
+  pts.push([distEnd, elevationAtDistance(profile, distEnd)]);
+  return pts;
+}
+
+// `color` is the trail's own difficulty color (added 2026-07-23 — the chart used to always draw in
+// a fixed green, which is misleading since green is itself one of the difficulty colors here and a
+// schwarz/rot trail's profile showing green looked like it was claiming to be easy). For a
+// Trailrunde, pass `segments` instead (an array of `{distStart, distEnd, color}` mirroring the map's
+// own per-segment coloring, `color` is CONNECTOR_COLOR for connector stretches) — `color` is then
+// only the fallback used if `segments` isn't given. `trailId`/`reversed` are stamped onto the SVG as
+// data-attributes purely so the hover-sync handler below can look up which trail's coords to walk
+// without needing them threaded through as extra parameters.
+function buildElevationSvg(profile, highlight, color, trailId, reversed, segments){
+  if (!profile || profile.length < 2) return "";
+  const W = 240, H = 48, padTop = 5, padBottom = 9;
+  const distMax = profile[profile.length - 1][0] || 1;
+  const eles = profile.map(p => p[1]);
+  const eleMin = Math.min(...eles), eleMax = Math.max(...eles);
+  const eleRange = Math.max(eleMax - eleMin, 1);
+  const x = (d) => (d / distMax) * W;
+  const y = (e) => padTop + (H - padTop - padBottom) * (1 - (e - eleMin) / eleRange);
+
+  let lines = "";
+  if (segments && segments.length) {
+    lines = segments.map(seg => {
+      const slice = profileSlice(profile, seg.distStart, seg.distEnd);
+      const pathPts = slice.map(p => `${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(" ");
+      const areaPts = `${x(seg.distStart).toFixed(1)},${(H - padBottom).toFixed(1)} ${pathPts} ${x(seg.distEnd).toFixed(1)},${(H - padBottom).toFixed(1)}`;
+      return `<polygon points="${areaPts}" fill="${hexToRgba(seg.color, 0.25)}"></polygon>
+              <polyline points="${pathPts}" fill="none" stroke="${seg.color}" stroke-width="1.5"></polyline>`;
+    }).join("");
+  } else {
+    const lineColor = color || "#3f8a4c";
+    const pathPts = profile.map(p => `${x(p[0]).toFixed(1)},${y(p[1]).toFixed(1)}`).join(" ");
+    const areaPts = `0,${(H - padBottom).toFixed(1)} ${pathPts} ${W},${(H - padBottom).toFixed(1)}`;
+    lines = `<polygon points="${areaPts}" fill="${hexToRgba(lineColor, 0.25)}"></polygon>
+             <polyline points="${pathPts}" fill="none" stroke="${lineColor}" stroke-width="1.5"></polyline>`;
+  }
+
+  const highlightRect = highlight
+    ? `<rect x="${x(highlight.distStart).toFixed(1)}" y="0" width="${(x(highlight.distEnd) - x(highlight.distStart)).toFixed(1)}" height="${H}" fill="${highlight.color}" opacity="0.28"></rect>`
+    : "";
+  return `
+    <svg viewBox="0 0 ${W} ${H}" class="ele-chart" preserveAspectRatio="none"
+         data-trail-id="${trailId || ""}" data-reversed="${reversed ? "1" : ""}"
+         data-dist-max="${distMax}" data-pad-top="${padTop}" data-pad-bottom="${padBottom}" data-h="${H}"
+         data-ele-min="${eleMin}" data-ele-range="${eleRange}" data-profile='${JSON.stringify(profile)}'>
+      ${lines}
+      ${highlightRect}
+      <text x="2" y="${(y(eleMax) + 8).toFixed(1)}" class="ele-label">${Math.round(eleMax)} m</text>
+      <text x="2" y="${(y(eleMin) - 2).toFixed(1)}" class="ele-label">${Math.round(eleMin)} m</text>
+      <circle class="ele-hover-dot" r="4.5" cx="0" cy="0" style="display:none"></circle>
+    </svg>`;
+}
+
+// Reverses an elevation profile so it reads as if the trail were ridden in the opposite
+// direction: distance still runs 0 -> total (left to right in the chart), but the elevation
+// sequence itself is flipped. Used for "andersrum anzeigen" on EMTB uphill trails, since those
+// can often also be ridden downhill.
+function reverseElevationProfile(profile){
+  const totalDist = profile[profile.length - 1][0];
+  return profile.slice().reverse().map(([d, e]) => [round3(totalDist - d), e]);
+}
+function round3(n){ return Math.round(n * 1000) / 1000; }
+
+function haversineM(a, b){
+  const R = 6371000, toRad = (d) => d * Math.PI / 180;
+  const dLat = toRad(b[0] - a[0]), dLon = toRad(b[1] - a[1]);
+  const s = Math.sin(dLat/2)**2 + Math.cos(toRad(a[0])) * Math.cos(toRad(b[0])) * Math.sin(dLon/2)**2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+}
+// Cumulative distance (km) at each point of `coords`; coords[0] is 0.
+function cumulativeDistanceKm(coords){
+  const cum = [0];
+  for (let i = 1; i < coords.length; i++) cum.push(cum[i-1] + haversineM(coords[i-1], coords[i]) / 1000);
+  return cum;
+}
+// Interpolated [lat,lon] at `targetKm` along `coords` (using its matching `cumDist`). `reversed`
+// measures from the END of coords instead — the array itself is never physically reordered (see
+// applyReversedEndpoints), so this is the one place that has to account for viewing it backwards.
+function latLngAtDistance(coords, cumDist, targetKm, reversed){
+  const total = cumDist[cumDist.length - 1];
+  const d = Math.max(0, Math.min(total, reversed ? (total - targetKm) : targetKm));
+  let lo = 0, hi = cumDist.length - 1;
+  while (lo < hi - 1) {
+    const mid = (lo + hi) >> 1;
+    if (cumDist[mid] <= d) lo = mid; else hi = mid;
+  }
+  const d0 = cumDist[lo], d1 = cumDist[hi];
+  const frac = d1 > d0 ? (d - d0) / (d1 - d0) : 0;
+  const a = coords[lo], b = coords[hi];
+  return [a[0] + (b[0]-a[0])*frac, a[1] + (b[1]-a[1])*frac];
+}
+
+// Small marker that tracks the mouse while hovering a trail's elevation chart, showing where that
+// point in the profile actually is on the map — added 2026-07-23 per the user. Interactive:false so
+// it never itself intercepts clicks meant for the trail/loop underneath it.
+const eleHoverMapMarker = L.circleMarker([0, 0], {
+  radius: 8, color: "#fff", weight: 2, fillColor: "#1f5f9e", fillOpacity: 1, interactive: false
+});
+// Caches the (potentially expensive-ish to compute) cumulative-distance array per trail so it's
+// only recomputed when the hovered chart actually belongs to a different trail, not on every
+// mousemove pixel.
+let eleHoverCache = { trailId: null, coords: null, cumDist: null, profile: null };
+function getEleHoverData(svg){
+  const trailId = svg.dataset.trailId;
+  if (eleHoverCache.trailId !== trailId) {
+    const coords = TRAIL_GEO[trailId];
+    eleHoverCache = {
+      trailId,
+      coords,
+      cumDist: coords ? cumulativeDistanceKm(coords) : null,
+      profile: JSON.parse(svg.dataset.profile || "null"),
+    };
+  }
+  return eleHoverCache;
+}
+function hideEleHoverChart(svg){
+  const dot = svg.querySelector(".ele-hover-dot");
+  if (dot) dot.style.display = "none";
+}
+function handleEleChartHover(e){
+  const svg = e.target.closest(".ele-chart");
+  if (!svg) {
+    const prevSvg = ipContent.querySelector(".ele-chart");
+    if (prevSvg) hideEleHoverChart(prevSvg);
+    if (map.hasLayer(eleHoverMapMarker)) map.removeLayer(eleHoverMapMarker);
+    return;
+  }
+  const { coords, cumDist, profile } = getEleHoverData(svg);
+  if (!coords || !profile) return;
+  const rect = svg.getBoundingClientRect();
+  if (!rect.width) return;
+
+  const W = 240; // matches buildElevationSvg's fixed viewBox width
+  const H = parseFloat(svg.dataset.h), padTop = parseFloat(svg.dataset.padTop), padBottom = parseFloat(svg.dataset.padBottom);
+  const eleMin = parseFloat(svg.dataset.eleMin), eleRange = parseFloat(svg.dataset.eleRange);
+  const distMax = parseFloat(svg.dataset.distMax);
+  const reversed = svg.dataset.reversed === "1";
+
+  const targetKm = Math.max(0, Math.min(distMax, ((e.clientX - rect.left) / rect.width) * distMax));
+
+  let elevation = profile[0][1];
+  for (let i = 1; i < profile.length; i++) {
+    elevation = profile[i][1];
+    if (profile[i][0] >= targetKm) {
+      const d0 = profile[i-1][0], d1 = profile[i][0];
+      const frac = d1 > d0 ? (targetKm - d0) / (d1 - d0) : 0;
+      elevation = profile[i-1][1] + (profile[i][1] - profile[i-1][1]) * frac;
+      break;
+    }
+  }
+  const chartX = (targetKm / distMax) * W;
+  const chartY = padTop + (H - padTop - padBottom) * (1 - (elevation - eleMin) / eleRange);
+
+  const dot = svg.querySelector(".ele-hover-dot");
+  dot.setAttribute("cx", chartX.toFixed(1)); dot.setAttribute("cy", chartY.toFixed(1)); dot.style.display = "";
+
+  eleHoverMapMarker.setLatLng(latLngAtDistance(coords, cumDist, targetKm, reversed));
+  if (!map.hasLayer(eleHoverMapMarker)) eleHoverMapMarker.addTo(map);
+  eleHoverMapMarker.bringToFront();
+}
+ipContent.addEventListener("mousemove", handleEleChartHover);
+ipContent.addEventListener("mouseleave", () => {
+  const svg = ipContent.querySelector(".ele-chart");
+  if (svg) hideEleHoverChart(svg);
+  if (map.hasLayer(eleHoverMapMarker)) map.removeLayer(eleHoverMapMarker);
+});
+
+let reversedId = null; // trail id currently shown in "reversed direction" view, or null
+
+// Moves a trail's start/end markers (and the always-visible startDot) to the opposite ends of its
+// line when reversed — actually riding it backwards, not just mirroring the numbers/profile (which
+// is all the reverse button used to do, before the user pointed out that was pointless on its own).
+function applyReversedEndpoints(id){
+  const layer = lineLayers[id];
+  if (!layer) return;
+  const coords = layer.coords;
+  const isReversed = reversedId === id;
+  const startPt = isReversed ? coords[coords.length - 1] : coords[0];
+  const endPt = isReversed ? coords[0] : coords[coords.length - 1];
+  layer.startDot.setLatLng(startPt);
+  layer.startMarker.setLatLng(startPt);
+  layer.endMarker.setLatLng(endPt);
+}
+
+let openTrailId = null;       // trail currently shown in #infoPanel, or null
+let selectedSegmentId = null; // for a loop: which component trail's segment was last clicked, or null
+
+function buildInfoPanelHtml(t){
+  const isSolo = soloId === t.id;
+  const isReversed = reversedId === t.id;
+  const rawProfile = ELEVATION_PROFILES[t.id];
+  const profile = (isReversed && rawProfile) ? reverseElevationProfile(rawProfile) : rawProfile;
+  const upShown = isReversed ? t.down : t.up;
+  const downShown = isReversed ? t.up : t.down;
+  const uphillBadge = t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⚡</span>` : "";
+  const loopBadge = t.loop ? ` <span class="badge-loop" title="Trailrunde (mehrere Trails kombiniert)">🔁</span>` : "";
+
+  // If this is a loop and one of its segments was last clicked, highlight that stretch in the
+  // elevation profile and add a small section below the GPX button with that trail's own stats —
+  // simpler than a separate info panel (tried first, then dropped per the user, 2026-07-23) since
+  // it needs none of the buttons (solo/reverse/GPX) a full second panel would have had.
+  let highlight = null, segmentInfoHtml = "";
+  if (t.loop && selectedSegmentId) {
+    const segs = TRAIL_SEGMENTS[t.id] || [];
+    const seg = segs.find(s => s.trailId === selectedSegmentId);
+    const segTrail = lineTrails.find(tr => tr.id === selectedSegmentId);
+    if (seg && segTrail && seg.distStart != null) {
+      highlight = { distStart: seg.distStart, distEnd: seg.distEnd, color: diffColor[segTrail.diff] };
+      segmentInfoHtml = `
+        <div class="ip-segment-info" style="border-left:3px solid ${diffColor[segTrail.diff]}">
+          <b>${segTrail.name}</b><br>
+          ${segTrail.len} km &middot; ${segTrail.up} m ↑ / ${segTrail.down} m ↓
+        </div>`;
+    }
+  }
+
+  // For a loop, color the elevation profile itself per-stretch exactly like the map (that trail's
+  // own difficulty color, CONNECTOR_COLOR for connector stretches) rather than one flat color for
+  // the whole thing — added 2026-07-23 per the user. `highlight` (above) still separately overlays
+  // whichever segment was clicked, now on top of an already-colored chart rather than a plain one.
+  let chartSegments = null;
+  if (t.loop && profile) {
+    const segs = TRAIL_SEGMENTS[t.id] || [];
+    const totalDist = profile[profile.length - 1][0];
+    chartSegments = segs.filter(s => s.distStart != null).map(s => {
+      const refTrail = s.trailId ? lineTrails.find(tr => tr.id === s.trailId) : null;
+      const color = refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR;
+      // Segment distances are recorded along the *unreversed* track — flip them the same way
+      // reverseElevationProfile() flips the profile itself, so both stay aligned on the x-axis.
+      return isReversed
+        ? { distStart: totalDist - s.distEnd, distEnd: totalDist - s.distStart, color }
+        : { distStart: s.distStart, distEnd: s.distEnd, color };
+    });
+  }
+
+  return `
+    <h3>${t.name}${uphillBadge}${loopBadge} <button class="locate-btn" data-id="${t.id}" title="Zum Trail springen">📍</button></h3>
+    <div class="ip-trail">
+      <span class="dot-start">●</span> → ${t.len} km → <span class="dot-end">●</span>
+      &middot; ${upShown} m ↑ / ${downShown} m ↓
+      <button class="solo-btn${isSolo ? " active" : ""}" data-id="${t.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button>
+      <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">🔄</button>
+      ${profile ? buildElevationSvg(profile, highlight, diffColor[t.diff], t.id, isReversed, chartSegments) : ""}
+      <div class="ip-actions">
+        ${t.url ? `<a class="ip-link" href="${t.url}" target="_blank" rel="noopener">Zur Tour auf der Website ↗</a>` : ""}
+        <button class="ip-link gpx-download-btn" data-id="${t.id}" title="GPX herunterladen">GPX ⬇</button>
+      </div>
+      ${segmentInfoHtml}
+    </div>`;
+}
+
+function showTrailInfo(t){
+  const isNewSelection = openTrailId !== t.id;
+  if (isNewSelection) selectedSegmentId = null; // switching to a genuinely different trail/loop
+  openTrailId = t.id;
+  if (soloId && soloId !== t.id) clearSolo();
+  // Selecting a Trailrunde auto-enables solo (not for a regular trail) -- with dozens of loops now
+  // sharing the map (Pfälzer Wald alone has 41), picking out "which line is my selected loop" among
+  // all the others was hard without it; a regular trail rarely overlaps this much, so it's left as a
+  // manual choice there (2026-07-24, per the user). Gated on isNewSelection, not just "is this a
+  // loop" -- handleInfoPanelClick's own solo-btn handler re-calls showTrailInfo(t) on the *same*
+  // already-open loop just to refresh the button's label after a manual toggle, which would
+  // otherwise instantly re-force solo back on and make the manual off-toggle a no-op.
+  if (isNewSelection && t.loop) applySolo(t.id);
+  if (reversedId && reversedId !== t.id) {
+    const oldReversedId = reversedId;
+    reversedId = null;
+    applyReversedEndpoints(oldReversedId); // put the previously-reversed trail's markers back
+  }
+  ipContent.innerHTML = buildInfoPanelHtml(t);
+  infoPanel.classList.add("visible");
+}
+
+function downloadTrailGpx(id){
+  const layer = lineLayers[id];
+  const t = lineTrails.find(tr => tr.id === id);
+  if (!layer || !t) return;
+  const trkpts = layer.coords.map(([lat, lon]) => `      <trkpt lat="${lat}" lon="${lon}"></trkpt>`).join("\n");
+  const gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Trailmap" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk>
+    <name>${t.name}</name>
+    <trkseg>
+${trkpts}
+    </trkseg>
+  </trk>
+</gpx>`;
+  const blob = new Blob([gpx], { type: "application/gpx+xml" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${t.name.replace(/[^\w\-]+/g, "_")}.gpx`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ---- Render polylines for GPX trails ----
+let currentSelectedId = null;
+function showEndpoints(id){
+  const layer = lineLayers[id];
+  if (!layer) return;
+  if (!map.hasLayer(layer.startMarker)) layer.startMarker.addTo(map);
+  if (!map.hasLayer(layer.endMarker)) layer.endMarker.addTo(map);
+  layer.startMarker.bringToFront();
+  layer.endMarker.bringToFront();
+}
+function hideEndpoints(id){
+  const layer = lineLayers[id];
+  if (!layer) return;
+  // Belt-and-suspenders against a pre-existing "Start"/"Ziel" tooltip getting stuck open (reported
+  // by the user 2026-07-23, but present before the segment-click work too): if the marker is removed
+  // from the map while its non-permanent tooltip happens to be open (no natural mouseout ever fires
+  // for a layer that's yanked out from under a stationary cursor), close it explicitly first rather
+  // than relying on Leaflet's own remove-triggered cleanup.
+  layer.startMarker.closeTooltip();
+  layer.endMarker.closeTooltip();
+  map.removeLayer(layer.startMarker);
+  map.removeLayer(layer.endMarker);
+}
+
+const lineLayers = {};
+
+// Base (non-hover) line opacity for a trail, accounting for solo mode: dimmed for everything
+// except the soloed trail while solo mode is active, normal 0.85 otherwise. Used by both
+// resetAllHoverStyles and setHover's "off" branch so that hovering a trail (even just passing the
+// mouse over it, no click needed) never overrides/undoes solo mode's dimming of the other trails.
+function baselineLineOpacity(lid){
+  if (!soloId) return 0.85;
+  return lid === soloId ? 0.9 : SOLO_DIM_OPACITY;
+}
+
+function resetAllHoverStyles(exceptId){
+  Object.entries(lineLayers).forEach(([lid, layer]) => {
+    if (lid !== exceptId) {
+      layer.line.setStyle({ weight: BASE_WEIGHT, opacity: baselineLineOpacity(lid) });
+      if (layer.card) layer.card.classList.remove("hovered");
+      if (currentSelectedId !== lid) hideEndpoints(lid);
+    }
+  });
+}
+
+// Builds all Leaflet layers for one trail and registers them in lineLayers[t.id]. Called once per
+// trail when its region group is activated (see activateRegionGroup); destroyTrailLayer undoes it.
+function buildTrailLayer(t){
+  const coords = TRAIL_GEO[t.id];
+  if (!coords) return;
+  const segments = TRAIL_SEGMENTS[t.id];
+  // Normally a single polyline. For a Trailrunde with segment data, render each stretch in its own
+  // referenced trail's difficulty color (or dashed/neutral for connector stretches, trailId null)
+  // via a featureGroup — L.FeatureGroup forwards setStyle/bringToFront to every child, so every
+  // other call site below (hover weight/opacity, solo-mode dimming, selection bringToFront,
+  // destroyTrailLayer's removeLayer) keeps working unchanged whether `line` is a single polyline or
+  // a group of them. Each segment's `coords` are the exact, already-simplified geometry of the
+  // referenced trail (not independently re-derived from the loop's own GPX) — see
+  // "Material/Donnersberg" rebuild note in CLAUDE.md — so a colored segment lines up pixel-for-pixel
+  // with that trail's own polyline when both happen to be visible at once.
+  const segmentHitLines = []; // one invisible wide hitline per trailId-carrying segment, see below
+  const segmentNameLabels = []; // one standalone permanent name tooltip per trailId-carrying segment
+  const line = segments
+    ? L.featureGroup(segments.map(seg => {
+        const refTrail = seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
+        const visibleSeg = L.polyline(seg.coords, {
+          color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
+          dashArray: refTrail ? null : "6,6",
+          weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false
+        });
+        // A connector stretch (no refTrail) has nothing of its own to show — clicks/hovers there
+        // fall through to the loop's own whole-track hitLine below, same as always. A stretch that
+        // *is* one of the loop's component trails gets its own invisible wide hit-line (kept OUT of
+        // this featureGroup deliberately — the group's setStyle({opacity}) calls, used for hover/
+        // solo-dimming the whole loop, would otherwise clobber this hitline's always-0 opacity and
+        // make it visible) so that trail's own name/info panel is reachable straight from the loop,
+        // which matters most when the trail itself isn't separately shown right now (added 2026-07-23
+        // per the user's request — "Segmente jetzt klickbar/hoverbar machen").
+        if (refTrail) {
+          const segHit = L.polyline(seg.coords, { color:"#000", weight: 18, opacity: 0, bubblingMouseEvents:false }).addTo(map);
+          // Bound as permanent (like hitLine above) so Leaflet doesn't auto-wire its own hover-driven
+          // open/close — instead opened/closed manually below, gated on `!showNames`, so a segment's
+          // hover tooltip never doubles up with its always-on permanent name label (segmentNameLabels)
+          // when "Namen" is toggled on.
+          segHit.bindTooltip(refTrail.name, { permanent:true, direction:"top", className:"trail-label-tooltip", interactive:false });
+          segHit.closeTooltip();
+          segHit.on("mouseover", () => {
+            visibleSeg.setStyle({ weight: HOVER_WEIGHT });
+            if (!showNames) segHit.openTooltip();
+          });
+          segHit.on("mouseout", () => {
+            visibleSeg.setStyle({ weight: BASE_WEIGHT });
+            segHit.closeTooltip();
+          });
+          // Keeps the loop itself as the selection/highlight (per the user, 2026-07-23: clicking one
+          // of the loop's own trails shouldn't lose the loop's context) — toggles that trail's own
+          // stats + a highlighted stretch in the loop's own elevation profile on/off (see
+          // buildInfoPanelHtml's selectedSegmentId handling), rather than opening a separate panel.
+          segHit.on("click", () => {
+            const wasOpen = openTrailId === t.id;
+            openTrailId = t.id; // pre-empt showTrailInfo's own "switched to a different trail" reset below
+            selectedSegmentId = (wasOpen && selectedSegmentId === refTrail.id) ? null : refTrail.id;
+            showTrailInfo(t);
+            selectCardFor(t.id);
+          });
+          segmentHitLines.push(segHit);
+          // Standalone (not bound to any layer) permanent tooltip for the "Namen" toggle — added
+          // 2026-07-23 per the user, so a Trailrunde's own component trails show their names too,
+          // not just the loop's own name at the loop's midpoint. Kept out of the map until
+          // applyNameLabels() decides to show it — see its own comment for why it's suppressed
+          // whenever that trail is also independently visible right now (same name would otherwise
+          // appear twice at almost the same spot, since the segment reuses that trail's own geometry).
+          const midCoord = seg.coords[Math.floor(seg.coords.length / 2)];
+          // direction:"top" + offset (not "center") so the label sits just above its anchor point
+          // rather than directly on top of it — the actual line stays visible underneath instead of
+          // being covered by its own name, which matters most for short segments (2026-07-23, per the
+          // user: "Könnte man den Tooltip nicht so positionieren, dass man den Trail sieht?").
+          const nameLabel = L.tooltip({ permanent:true, direction:"top", offset:[0,-6], className:"trail-label-tooltip", interactive:false })
+            .setLatLng(midCoord).setContent(refTrail.name);
+          segmentNameLabels.push({ trailId: refTrail.id, label: nameLabel });
+        }
+        return visibleSeg;
+      })).addTo(map)
+    : L.polyline(coords, { color: diffColor[t.diff], weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }).addTo(map);
+  // Invisible, much wider line laid over the visible one — makes tapping on touch screens far easier
+  // without changing how thin the trail looks. All interaction happens on this one. Also carries the
+  // name-label tooltip (rather than `line`, which for a Trailrunde is a featureGroup without tooltip
+  // support) so tooltip behavior is identical for every trail regardless of segments.
+  const hitLine = L.polyline(coords, { color:"#000", weight: 22, opacity: 0, bubblingMouseEvents:false }).addTo(map);
+  // segmentHitLines were added to the map before hitLine (built earlier, while constructing `line`
+  // above) — since Leaflet's default SVG renderer stacks later-added paths on top, hitLine would
+  // otherwise sit above them and swallow every real pointer event across the whole track, so the
+  // more specific per-segment hit-areas never actually receive clicks/hovers in a real browser (only
+  // in a test that fires events directly on the layer objects, bypassing hit-testing entirely — which
+  // is exactly how this bug slipped through). Bring them back above hitLine now that it exists.
+  segmentHitLines.forEach(h => h.bringToFront());
+  const startDot = L.circleMarker(coords[0], { radius:5, color:"#22301f", weight:1.5, fillColor:"#fff", fillOpacity:1, bubblingMouseEvents:false }).addTo(map);
+  const startMarker = L.circleMarker(coords[0], { radius:5, color:"#0d3d1a", weight:1.5, fillColor:"#3fbf5e", fillOpacity:1, bubblingMouseEvents:false });
+  const endMarker = L.circleMarker(coords[coords.length - 1], { radius:5, color:"#5c0f0a", weight:1.5, fillColor:"#e0392b", fillOpacity:1, bubblingMouseEvents:false });
+  const bounds = L.latLngBounds(coords);
+  const midIdx = Math.floor(coords.length / 2);
+
+  // direction:"top" + offset (not "center") so the name sits just above the point it's anchored to
+  // rather than directly on top of it — keeps the actual trail line visible underneath instead of
+  // covering it with its own label, most noticeable on short trails (2026-07-23).
+  hitLine.bindTooltip(t.name, { permanent:true, direction:"top", offset:[0,-6], className:"trail-label-tooltip", interactive:false });
+  hitLine.closeTooltip();
+  startMarker.bindTooltip("Start", { permanent:false, direction:"top", className:"trail-label-tooltip", interactive:false });
+  endMarker.bindTooltip("Ziel", { permanent:false, direction:"top", className:"trail-label-tooltip", interactive:false });
+
+  function setHover(on){
+    if (on) resetAllHoverStyles(t.id); // force any stuck "fat" trail (common on touch, missed mouseout) back to normal first
+    line.setStyle({ weight: on ? HOVER_WEIGHT : BASE_WEIGHT, opacity: on ? 1 : baselineLineOpacity(t.id) });
+    const card = lineLayers[t.id].card;
+    if (card) card.classList.toggle("hovered", on);
+    if (on) {
+      showEndpoints(t.id);
+      // Hover-triggered name tooltip — only when "Namen" is off. When it's on, hitLine's tooltip is
+      // already held open permanently by applyNameLabels(), so touching it here too would be redundant
+      // (and closing it below on mouseout would wrongly fight that permanent state).
+      if (!showNames) hitLine.openTooltip(coords[midIdx]);
+    }
+    else {
+      // Force-close the Start/Ziel tooltips here (not just inside hideEndpoints, and not just in
+      // startMarker/endMarker's own mouseout handlers) — startDot/startMarker sit at the exact same
+      // coordinate, and a real mouseout landing on whichever of them the browser currently considers
+      // "hovered" doesn't reliably match which one's tooltip is actually open, so any mouseout for
+      // this trail closes both unconditionally rather than relying on it being the "right" element.
+      startMarker.closeTooltip();
+      endMarker.closeTooltip();
+      if (!showNames) hitLine.closeTooltip();
+      if (currentSelectedId !== t.id) hideEndpoints(t.id);
+    }
+  }
+  hitLine.on("mouseover", () => setHover(true));
+  hitLine.on("mouseout", () => setHover(false));
+  hitLine.on("click", () => { setHover(true); showTrailInfo(t); selectCardFor(t.id); });
+  startDot.on("click", () => { showTrailInfo(t); selectCardFor(t.id); });
+  startDot.on("mouseover", () => setHover(true));
+  startDot.on("mouseout", () => setHover(false));
+  startMarker.on("click", () => { showTrailInfo(t); selectCardFor(t.id); });
+  startMarker.on("mouseover", () => setHover(true));
+  startMarker.on("mouseout", () => setHover(false)); // tooltip close now lives in setHover(false) itself, see above
+  endMarker.on("click", () => { showTrailInfo(t); selectCardFor(t.id); });
+  endMarker.on("mouseover", () => setHover(true));
+  endMarker.on("mouseout", () => setHover(false));
+
+  lineLayers[t.id] = { line, hitLine, segmentHitLines, segmentNameLabels, startDot, startMarker, endMarker, bounds, setHover, midIdx, coords, card:null };
+}
+
+// Undoes buildTrailLayer: removes every layer this trail owns from the map and forgets it.
+function destroyTrailLayer(id){
+  const layer = lineLayers[id];
+  if (!layer) return;
+  if (currentSelectedId === id) clearSelection();
+  map.removeLayer(layer.line);
+  map.removeLayer(layer.hitLine);
+  (layer.segmentHitLines || []).forEach(h => map.removeLayer(h));
+  (layer.segmentNameLabels || []).forEach(({ label }) => map.removeLayer(label));
+  map.removeLayer(layer.startDot);
+  map.removeLayer(layer.startMarker);
+  map.removeLayer(layer.endMarker);
+  delete lineLayers[id];
+}
+
+// ---- Region activation (fetch + merge / teardown a region group's data on demand) ----
+const STORAGE_KEY = "trailmap-active-state-v1";
+
+function persistActiveState(){
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      activeRegionGroups: [...activeRegionGroups],
+      activeRegions: [...activeRegions],
+      activeDiffs: [...activeDiffs],
+      showUphill,
+      showLoop,
+      showDownhill
+    }));
+  } catch (e) { /* localStorage unavailable (private mode etc.) — filters just won't persist */ }
+}
+
+function restoreActiveState(){
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    // Forward-compat: silently drop any saved group key that no longer exists in the catalog
+    // (e.g. a region got renamed/removed since the user last visited).
+    saved.activeRegionGroups = (saved.activeRegionGroups || []).filter(g => REGION_CATALOG[g]);
+    if (typeof saved.showUphill !== "boolean") saved.showUphill = true;
+    if (typeof saved.showLoop !== "boolean") saved.showLoop = true;
+    if (typeof saved.showDownhill !== "boolean") saved.showDownhill = true;
+    return saved;
+  } catch (e) { return null; }
+}
+
+const pendingActivation = {}; // groupKey -> in-flight activation Promise, dedupes rapid double-clicks
+
+// Fetches a region group's JSON and merges its trails/geometry/places into the live app state.
+// All-or-nothing: if the fetch/parse fails, nothing is mutated and the group stays inactive.
+async function activateRegionGroup(groupKey){
+  if (activeRegionGroups.has(groupKey)) return "already-active";
+  if (pendingActivation[groupKey]) return pendingActivation[groupKey];
+  if (activeRegionGroups.size >= MAX_ACTIVE_REGION_GROUPS) return "limit-reached";
+  const catalogEntry = REGION_CATALOG[groupKey];
+  if (!catalogEntry) return "unknown-region";
+
+  const promise = (async () => {
+    let data;
+    try {
+      const resp = await fetch(catalogEntry.file);
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+      data = await resp.json();
+    } catch (e) {
+      console.warn("Region konnte nicht geladen werden:", groupKey, e);
+      return "fetch-failed";
+    }
+
+    REGION_GROUPS[groupKey] = { label: catalogEntry.label };
+    Object.entries(catalogEntry.subRegions).forEach(([subKey, sub]) => {
+      REGIONS[subKey] = { label: sub.label, color: sub.color, group: groupKey };
+      activeRegions.add(subKey); // visible by default when a region is freshly activated
+    });
+    lineTrails.push(...data.lineTrails);
+    Object.assign(TRAIL_GEO, data.trailGeo);
+    Object.assign(ELEVATION_PROFILES, data.elevationProfiles);
+    if (data.trailSegments) Object.assign(TRAIL_SEGMENTS, data.trailSegments);
+    data.lineTrails.forEach(buildTrailLayer);
+    buildPlaceMarkers(groupKey, data.places);
+
+    activeRegionGroups.add(groupKey);
+    persistActiveState();
+    rebuildRegionChips();
+    render();
+    return "activated";
+  })();
+
+  pendingActivation[groupKey] = promise;
+  try {
+    return await promise;
+  } finally {
+    delete pendingActivation[groupKey];
+  }
+}
+
+// Undoes activateRegionGroup: removes this group's trails/layers/markers/sub-regions entirely.
+function deactivateRegionGroup(groupKey){
+  if (!activeRegionGroups.has(groupKey)) return;
+  const catalogEntry = REGION_CATALOG[groupKey];
+  const subKeys = catalogEntry ? Object.keys(catalogEntry.subRegions) : [];
+
+  for (let i = lineTrails.length - 1; i >= 0; i--) {
+    if (subKeys.includes(lineTrails[i].region)) {
+      const id = lineTrails[i].id;
+      destroyTrailLayer(id);
+      delete TRAIL_GEO[id];
+      delete ELEVATION_PROFILES[id];
+      delete TRAIL_SEGMENTS[id];
+      lineTrails.splice(i, 1);
+    }
+  }
+  subKeys.forEach(subKey => { delete REGIONS[subKey]; activeRegions.delete(subKey); });
+  destroyPlaceMarkers(groupKey);
+  delete REGION_GROUPS[groupKey];
+  activeRegionGroups.delete(groupKey);
+
+  persistActiveState();
+  rebuildRegionChips();
+  render();
+}
+
+// ---- "Regionen wählen" dialog: lists every catalog region group, lets the user (de)activate ----
+const regionDialogEl = document.getElementById("regionDialog");
+const regionDialogListEl = document.getElementById("regionDialogList");
+const regionLimitNoteEl = document.getElementById("regionLimitNote");
+document.getElementById("regionLimitText").textContent = MAX_ACTIVE_REGION_GROUPS;
+
+// groupKey -> error message from the last failed activation attempt. Kept outside
+// renderRegionDialog() (which fully rebuilds the list on every call, e.g. right after an
+// activation attempt finishes) so the message actually stays visible instead of being wiped
+// the instant it's shown.
+const regionActivationErrors = {};
+
+function renderRegionDialog(){
+  regionDialogListEl.innerHTML = "";
+  const atLimit = activeRegionGroups.size >= MAX_ACTIVE_REGION_GROUPS;
+  regionLimitNoteEl.classList.toggle("visible", atLimit);
+
+  Object.entries(REGION_CATALOG).forEach(([groupKey, entry]) => {
+    const row = document.createElement("div");
+    row.className = "region-dialog-row";
+
+    const info = document.createElement("div");
+    info.className = "rd-info";
+    info.innerHTML = `<div class="rd-label">${entry.label}</div><div class="rd-count">${entry.trailCount} Trails</div>`;
+    if (regionActivationErrors[groupKey]) {
+      const err = document.createElement("div");
+      err.className = "rd-error";
+      err.textContent = regionActivationErrors[groupKey];
+      info.appendChild(err);
+    }
+    row.appendChild(info);
+
+    const isActive = activeRegionGroups.has(groupKey);
+    const isPending = !!pendingActivation[groupKey];
+    const btn = document.createElement("button");
+    btn.className = "rd-toggle" + (isActive ? " active" : "");
+    btn.textContent = isPending ? "Lädt…" : (isActive ? "Aktiv" : "Aktivieren");
+    btn.disabled = isPending || (!isActive && atLimit);
+    btn.addEventListener("click", async () => {
+      if (isActive) {
+        deactivateRegionGroup(groupKey);
+        renderRegionDialog();
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = "Lädt…";
+      const result = await activateRegionGroup(groupKey);
+      if (result === "fetch-failed") {
+        regionActivationErrors[groupKey] = (location.protocol === "file:")
+          ? "Laden fehlgeschlagen — diese Seite muss über einen lokalen Server (nicht als Datei geöffnet) laufen, damit Regionen nachgeladen werden können."
+          : "Laden fehlgeschlagen — offline oder Netzwerkfehler.";
+      } else if (result === "activated") {
+        delete regionActivationErrors[groupKey];
+      }
+      renderRegionDialog();
+    });
+    row.appendChild(btn);
+    regionDialogListEl.appendChild(row);
+  });
+}
+
+document.getElementById("regionsBtn").addEventListener("click", () => {
+  renderRegionDialog();
+  regionDialogEl.classList.add("visible");
+});
+document.getElementById("regionDialogClose").addEventListener("click", () => {
+  regionDialogEl.classList.remove("visible");
+});
+regionDialogEl.addEventListener("click", (e) => {
+  if (e.target === regionDialogEl) regionDialogEl.classList.remove("visible"); // click on backdrop
+});
+
+// ---- Name labels toggle ----
+function applyNameLabels(){
+  Object.values(lineLayers).forEach(layer => {
+    if (showNames) layer.hitLine.openTooltip(layer.coords[layer.midIdx]);
+    else layer.hitLine.closeTooltip();
+    // A Trailrunde's own per-segment name labels (added 2026-07-23) — suppressed whenever that
+    // specific component trail is *also* independently visible right now (map.hasLayer on its own
+    // line), since the segment reuses that trail's exact geometry and would otherwise show the same
+    // name twice at almost the same spot. `render()` has already applied this run's region/diff/
+    // category filters (via map.addLayer/removeLayer) by the time it calls this at the very end, so
+    // map.hasLayer(...) here always reflects the current, up-to-date visibility.
+    (layer.segmentNameLabels || []).forEach(({ trailId, label }) => {
+      const otherLayer = lineLayers[trailId];
+      const otherVisible = otherLayer && map.hasLayer(otherLayer.line);
+      const shouldShow = showNames && !otherVisible;
+      if (shouldShow && !map.hasLayer(label)) label.addTo(map);
+      else if (!shouldShow && map.hasLayer(label)) map.removeLayer(label);
+    });
+  });
+}
+
+// ---- Sidebar ----
+const listEl = document.getElementById("trailList");
+const countEl = document.getElementById("filterCountLabel");
+let selectedCard = null;
+
+const selectionOutline = L.polyline([], {
+  color: "#fff200", weight: HOVER_WEIGHT + 3, opacity: 1, lineCap: "round", interactive: false
+});
+
+function highlightSelectedTrail(id){
+  const layer = lineLayers[id];
+  if (currentSelectedId && currentSelectedId !== id) hideEndpoints(currentSelectedId);
+  if (!layer) { if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline); currentSelectedId = null; return; }
+  selectionOutline.setLatLngs(layer.coords);
+  if (!map.hasLayer(selectionOutline)) selectionOutline.addTo(map);
+  selectionOutline.bringToBack();
+  layer.line.bringToFront();
+  showEndpoints(id);
+  currentSelectedId = id;
+  syncSelectedCardSoloBtn(); // a loop's own auto-solo (showTrailInfo) may have run before currentSelectedId
+                             // pointed at this trail yet -- re-sync now that it's the current selection
+}
+
+function clearSelection(){
+  if (selectedCard) { selectedCard.classList.remove("selected"); selectedCard = null; }
+  if (currentSelectedId) { hideEndpoints(currentSelectedId); currentSelectedId = null; }
+  if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline);
+}
+
+function selectTrail(id, card){
+  if (selectedCard) selectedCard.classList.remove("selected");
+  if (card) {
+    card.classList.add("selected");
+    selectedCard = card;
+    // Scrolls the sidebar so the newly-selected trail's card is visible — matters most when the
+    // selection came from clicking the trail on the map rather than the list itself, where the card
+    // could be scrolled off-screen in a different region/hub group entirely.
+    card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }
+  highlightSelectedTrail(id);
+}
+function selectCardFor(id){
+  const layer = lineLayers[id];
+  selectTrail(id, layer ? layer.card : null);
+}
+
+function isLandscapeShort(){
+  return window.innerHeight < 500 && window.innerWidth > window.innerHeight;
+}
+
+function getFlyPadding(){
+  if (isLandscapeShort()) {
+    // landscape phone: info panel docks on the right, so reserve space there instead of at the bottom
+    return { paddingTopLeft: L.point(20, 70), paddingBottomRight: L.point(320, 20) };
+  }
+  if (isMobileLayout()) {
+    // mobile portrait: info panel + locate button sit near the bottom, sidebar is an overlay (closed)
+    return { paddingTopLeft: L.point(20, 70), paddingBottomRight: L.point(20, 240) };
+  }
+  // desktop: info panel sits top-right
+  return { paddingTopLeft: L.point(40, 80), paddingBottomRight: L.point(340, 40) };
+}
+
+// Adjust a target lat/lng so that, once centered in the map container, it visually lands
+// in the middle of the space that ISN'T covered by our floating UI (info panel etc.),
+// rather than the true geometric center of the whole container.
+function getOffsetCenter(latlng, zoom){
+  const pad = getFlyPadding();
+  const targetPoint = map.project(latlng, zoom);
+  const shiftX = (pad.paddingBottomRight.x - pad.paddingTopLeft.x) / 2;
+  const shiftY = (pad.paddingBottomRight.y - pad.paddingTopLeft.y) / 2;
+  return map.unproject(targetPoint.subtract([shiftX, shiftY]), zoom);
+}
+
+function flyToTrailBounds(bounds){
+  const pad = getFlyPadding();
+  map.flyToBounds(bounds, { paddingTopLeft: pad.paddingTopLeft, paddingBottomRight: pad.paddingBottomRight, duration:0.6 });
+}
+
+function render(){
+  listEl.innerHTML = "";
+  let shown = 0, total = 0;
+  // Tallies for the "(n sichtbar)" counts on each region-group/sub-region chip (see
+  // rebuildRegionChips's regionGroupCountEls/regionSubCountEls) — same "visible" definition as the
+  // global shown/total line below (region + diff + category filters all applied), not just a raw
+  // per-region trail count, so a chip reads "how many would you actually see right now".
+  const regionVisibleCounts = {};
+  const groupVisibleCounts = {};
+
+  Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
+    groupVisibleCounts[groupKey] = 0;
+    const regionKeysInGroup = Object.keys(REGIONS).filter(k => REGIONS[k].group === groupKey);
+    let groupTitleAdded = false;
+    let groupTitleEl = null;
+
+    regionKeysInGroup.forEach(regionKey => {
+      regionVisibleCounts[regionKey] = 0;
+      const DIFF_ORDER = { gruen:0, blau:1, rot:2, schwarz:3 };
+      const regionLineTrails = lineTrails
+        .filter(t => t.region === regionKey)
+        .sort((a, b) => DIFF_ORDER[a.diff] - DIFF_ORDER[b.diff]);
+      if (regionLineTrails.length === 0) return;
+
+      const regionOk = activeRegions.has(regionKey);
+
+      const group = document.createElement("div");
+      group.className = "hub-group";
+      const title = document.createElement("div");
+      title.className = "hub-title";
+      title.textContent = REGIONS[regionKey].label;
+      title.style.color = REGIONS[regionKey].color;
+      group.appendChild(title);
+
+      let anyVisibleInRegion = false;
+      regionLineTrails.forEach(t => {
+        total++;
+        const layer = lineLayers[t.id];
+        const categoryOk = t.loop ? showLoop : (t.uphill ? showUphill : showDownhill);
+        const visible = regionOk && activeDiffs.has(t.diff) && categoryOk;
+        if (visible) { regionVisibleCounts[regionKey]++; groupVisibleCounts[groupKey]++; }
+        if (layer) {
+          if (visible) {
+            map.addLayer(layer.line); map.addLayer(layer.hitLine);
+            if (map.getZoom() >= START_DOT_MIN_ZOOM) map.addLayer(layer.startDot);
+            // Leaflet auto-opens a `permanent:true` tooltip whenever its layer is (re-)added to the
+            // map -- buildTrailLayer() only closes it once, right after building, so a segment hit-line
+            // that gets removed then re-added later (e.g. a Trailrunde toggled hidden->visible via a
+            // filter, not just at boot) had its name tooltip pop back open with no hover involved (found
+            // 2026-07-23, reported by the user). Close it again on every re-add, same as applyNameLabels
+            // already does for the plain hitLine tooltip.
+            (layer.segmentHitLines || []).forEach(h => { map.addLayer(h); h.closeTooltip(); });
+            shown++;
+          } else {
+            map.removeLayer(layer.line); map.removeLayer(layer.hitLine); map.removeLayer(layer.startDot);
+            (layer.segmentHitLines || []).forEach(h => map.removeLayer(h));
+            hideEndpoints(t.id);
+            // A filter change (not just deactivating a whole region, which destroyTrailLayer already
+            // handled this way) can just as easily hide the currently-selected trail out from under
+            // its own yellow selection-highlight polyline -- that's a separate layer from `line`, so
+            // removing `line` above doesn't clean it up on its own, and it was found still sitting on
+            // the map pointing at a trail that's no longer shown (2026-07-24, reported by the user).
+            // Full reset (info panel + solo too, not just the highlight) -- leaving solo engaged for a
+            // trail that's now hidden left every *other* trail invisibly stuck dimmed until the filter
+            // was flipped back and only that one trail reappeared at full opacity (same day, same user).
+            if (currentSelectedId === t.id) closeInfoPanelAndDeselect();
+          }
+        }
+        if (!visible) { if (layer) layer.card = null; return; } // filtered out — don't add a list card at all
+        anyVisibleInRegion = true;
+        const card = document.createElement("div");
+        card.className = "trail-card";
+        const regionColor = REGIONS[regionKey] && REGIONS[regionKey].color;
+        if (regionColor) card.style.setProperty("--card-tint", `color-mix(in srgb, ${regionColor} 16%, white)`);
+        // The card-solo-btn is rendered on every card (cheap, one small button) but only ever shown
+        // via CSS (".trail-card.selected .card-solo-btn") -- selecting a trail toggles the "selected"
+        // class directly (selectTrail/clearSelection), with no full render() in between, so gating its
+        // visibility on a one-time isSelectedCard check baked in at render time would go stale the
+        // instant selection changes without also re-rendering the whole list (2026-07-24, found while
+        // testing -- the button never appeared until some unrelated re-render happened to run later).
+        card.innerHTML = `
+          <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⚡</span>` : ""}${t.loop ? ` <span class="badge-loop" title="Trailrunde (mehrere Trails kombiniert)">🔁</span>` : ""}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button></div>
+          <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span></div>`;
+        card.addEventListener("click", (e) => {
+          const soloBtn = e.target.closest(".card-solo-btn");
+          if (soloBtn) {
+            e.stopPropagation();
+            if (soloId === t.id) clearSolo(); else applySolo(t.id); // each syncs this button itself
+            if (openTrailId === t.id) showTrailInfo(t); // keep an already-open panel's own solo button in sync
+            return;
+          }
+          if (!layer) return;
+          flyToTrailBounds(layer.bounds);
+          showTrailInfo(t);
+          selectTrail(t.id, card);
+          closeSidebarIfMobile();
+        });
+        card.addEventListener("mouseenter", () => { if (layer) layer.setHover(true); });
+        card.addEventListener("mouseleave", () => { if (layer) layer.setHover(false); });
+        if (layer) layer.card = card;
+        group.appendChild(card);
+      });
+      // Same "(n)" visible-count convention as the sidebar filter chips (regionVisibleCounts is now
+      // final for this region — the forEach above has fully run) — added here too per the user
+      // 2026-07-23: they wanted the count in the trail list itself, not just the filter chips above.
+      const hubCount = document.createElement("span");
+      hubCount.className = "region-count";
+      hubCount.textContent = ` (${regionVisibleCounts[regionKey]})`;
+      title.appendChild(hubCount);
+      if (anyVisibleInRegion) {
+        if (!groupTitleAdded) {
+          const groupTitle = document.createElement("div");
+          groupTitle.className = "region-group-title";
+          groupTitle.textContent = groupInfo.label;
+          listEl.appendChild(groupTitle);
+          groupTitleAdded = true;
+          groupTitleEl = groupTitle;
+        }
+        listEl.appendChild(group);
+      }
+    });
+    if (groupTitleEl) {
+      const groupCount = document.createElement("span");
+      groupCount.className = "region-count";
+      groupCount.textContent = ` (${groupVisibleCounts[groupKey]})`;
+      groupTitleEl.appendChild(groupCount);
+    }
+  });
+
+  countEl.textContent = `${shown}/${total} sichtbar`;
+
+  Object.entries(regionSubCountEls).forEach(([key, el]) => { el.textContent = ` (${regionVisibleCounts[key] || 0})`; });
+  Object.entries(regionGroupCountEls).forEach(([key, el]) => { el.textContent = ` (${groupVisibleCounts[key] || 0})`; });
+
+  applyNameLabels();
+}
+
+// ---- Boot: restore last session's active regions/filters (or default to Paznaun), fetch them,
+// then fit the map to whatever ended up loaded. The map's initial setView([46.99,10.29],12) above
+// stays on screen as a placeholder while these fetches are in flight, and as the fallback view if
+// every fetch fails (e.g. first-ever visit, offline, no cache yet).
+async function boot(){
+  // Region data (even the default region) is now loaded via fetch(), which browsers block when a
+  // page is opened directly as a file (file://) instead of served over http(s). Fail loudly and
+  // early here instead of leaving the user staring at an empty map wondering why nothing loads.
+  if (location.protocol === "file:") {
+    document.getElementById('fatalErrorMsg').textContent =
+      "Diese Seite lädt Regionsdaten per Netzwerk-Anfrage nach (fetch) — das funktioniert nicht, wenn die Datei direkt geöffnet wird. Bitte über einen (auch lokalen) Webserver öffnen, z.B. \"python3 -m http.server\" in diesem Ordner, dann http://localhost:8000/ aufrufen.";
+    document.getElementById('fatalError').classList.add('visible');
+    return;
+  }
+
+  const saved = restoreActiveState();
+  const initialGroups = (saved && saved.activeRegionGroups.length) ? saved.activeRegionGroups : ["paznaun"];
+
+  await Promise.all(initialGroups.map(activateRegionGroup));
+
+  // Saved fine-grained filters take precedence over activateRegionGroup's "everything active by
+  // default" behavior — but only restore sub-region keys that actually got loaded just now.
+  if (saved) {
+    activeRegions = new Set(saved.activeRegions.filter(k => REGIONS[k]));
+    activeDiffs = new Set(saved.activeDiffs);
+    showUphill = saved.showUphill;
+    showLoop = saved.showLoop;
+    showDownhill = saved.showDownhill;
+    // rebuildRegionChips() re-derives region-chip DOM from activeRegions fresh, but the difficulty
+    // chips (and the uphill/loop/downhill toggles) are static markup (all "active"/checked by
+    // default) — sync here.
+    document.querySelectorAll("#diffChips .chip").forEach(btn => {
+      btn.classList.toggle("active", activeDiffs.has(btn.dataset.diff));
+    });
+    document.getElementById("showUphillToggle").checked = showUphill;
+    document.getElementById("showLoopToggle").checked = showLoop;
+    document.getElementById("showDownhillToggle").checked = showDownhill;
+  }
+  rebuildRegionChips();
+  render();
+
+  const combinedBounds = L.latLngBounds([]);
+  activeRegionGroups.forEach(g => combinedBounds.extend(L.latLngBounds(REGION_CATALOG[g].bounds)));
+  if (combinedBounds.isValid()) {
+    const pad = getFlyPadding();
+    map.fitBounds(combinedBounds, { paddingTopLeft: pad.paddingTopLeft, paddingBottomRight: pad.paddingBottomRight });
+  }
+  updateStartDotVisibility(); // fitBounds only fires "zoomend" if the zoom level actually changes
+
+  // First-ever visit (nothing saved yet) — open the region picker right away so the user
+  // consciously chooses their region(s) instead of just landing on the Paznaun default unasked.
+  if (!saved) {
+    renderRegionDialog();
+    regionDialogEl.classList.add("visible");
+  }
+}
+boot();
+
+// ---- Offline support: service worker + online/offline indicator + manual tile preload ----
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch((err) => console.warn("Service Worker Fehler:", err));
+  });
+}
+
+const offlineBannerEl = document.getElementById("offlineBanner");
+function updateOnlineStatus(){
+  offlineBannerEl.classList.toggle("visible", !navigator.onLine);
+}
+window.addEventListener("online", updateOnlineStatus);
+window.addEventListener("offline", updateOnlineStatus);
+updateOnlineStatus();
+
+const preloadBtn = document.getElementById("preloadBtn");
+let preloadRunning = false;
+let preloadCancelled = false;
+
+preloadBtn.addEventListener("click", async () => {
+  if (preloadRunning) {
+    preloadCancelled = true;
+    preloadBtn.textContent = "⏳ Breche ab…";
+    return;
+  }
+  if (!navigator.onLine) {
+    layerWarningEl.textContent = "Zum Vorladen brauchst du gerade Internet — offline lässt sich nichts Neues laden.";
+    layerWarningEl.classList.add("visible");
+    return;
+  }
+  const activeLayer = baseLayers[currentBaseKey];
+  const ZOOMS = [12, 13, 14, 15, 16];   // regional overview down to good trail-level detail
+  const TILE_BUFFER = 1;                // ring of extra tiles around the line, in tile units
+
+  // Only trails currently passing the region/difficulty filters — narrow the filters
+  // first (e.g. to just one region) to shrink scope and download size.
+  const activeTrails = lineTrails.filter(t => activeRegions.has(t.region) && activeDiffs.has(t.diff));
+  console.log(`Vorladen: ${activeTrails.length} Trails —`, activeTrails.map(t => t.name));
+
+  preloadRunning = true;
+  preloadCancelled = false;
+  preloadBtn.textContent = `📥 Berechne für ${activeTrails.length} Trails… (Tippen zum Abbrechen)`;
+  await new Promise(r => setTimeout(r, 0)); // let the button repaint before the heavy loop
+
+  try {
+
+  const tileKeys = new Set();
+  const tileCoords = [];
+  function addTile(x, y, z){
+    const key = `${z}/${x}/${y}`;
+    if (!tileKeys.has(key)) { tileKeys.add(key); tileCoords.push({ x, y, z }); }
+  }
+
+  activeTrails.forEach(t => {
+    const coords = TRAIL_GEO[t.id];
+    if (!coords) return;
+    ZOOMS.forEach(z => {
+      const pts = coords.map(c => map.project(L.latLng(c[0], c[1]), z));
+      for (let i = 0; i < pts.length; i++) {
+        // sample along each segment finely enough that no tile in between gets skipped
+        const a = pts[i];
+        const b = pts[i + 1] || pts[i];
+        const segLen = a.distanceTo(b);
+        const steps = Math.max(1, Math.ceil(segLen / 200));
+        for (let s = 0; s <= steps; s++) {
+          const px = a.x + (b.x - a.x) * (s / steps);
+          const py = a.y + (b.y - a.y) * (s / steps);
+          const tx = Math.floor(px / 256), ty = Math.floor(py / 256);
+          for (let dx = -TILE_BUFFER; dx <= TILE_BUFFER; dx++) {
+            for (let dy = -TILE_BUFFER; dy <= TILE_BUFFER; dy++) {
+              addTile(tx + dx, ty + dy, z);
+            }
+          }
+        }
+      }
+    });
+  });
+
+  // Also grab the currently visible map area across a few zoom levels around the current
+  // one, so the general overview around where you're looking works offline too — not
+  // just the narrow trail corridors.
+  const viewBounds = map.getBounds();
+  const curZoom = map.getZoom();
+  const viewZooms = [curZoom - 1, curZoom, curZoom + 1].filter(z => z >= 0 && z <= 19);
+  viewZooms.forEach(z => {
+    const nw = map.project(viewBounds.getNorthWest(), z).divideBy(256).floor();
+    const se = map.project(viewBounds.getSouthEast(), z).divideBy(256).floor();
+    for (let x = nw.x; x <= se.x; x++) {
+      for (let y = nw.y; y <= se.y; y++) {
+        addTile(x, y, z);
+      }
+    }
+  });
+
+  function finish(msg){
+    preloadRunning = false;
+    preloadBtn.textContent = msg;
+    setTimeout(() => { preloadBtn.textContent = "📥 Trail-Umgebung vorladen"; preloadBtn.disabled = false; }, 4000);
+  }
+
+  const total = tileCoords.length;
+  preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
+
+  // Skip tiles we already have — only fetch what's genuinely missing.
+  const PRELOAD_CACHE_NAME = "trailmap-v1"; // must match CACHE_NAME in sw.js
+  let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
+  if ("caches" in window) {
+    try {
+      const cache = await caches.open(PRELOAD_CACHE_NAME);
+      const checked = [];
+      let checkedCount = 0;
+      const CHECK_CONCURRENCY = 20;
+      let ci = 0;
+      async function checkWorker(){
+        while (ci < toFetch.length) {
+          if (preloadCancelled) return;
+          const i = ci++;
+          const hit = await cache.match(toFetch[i]);
+          if (!hit) checked.push(toFetch[i]);
+          checkedCount++;
+          if (checkedCount % 50 === 0 || checkedCount === toFetch.length) {
+            preloadBtn.textContent = `📥 Prüfe Cache (${checkedCount}/${toFetch.length})… (Tippen zum Abbrechen)`;
+          }
+        }
+      }
+      await Promise.all(Array.from({ length: Math.min(CHECK_CONCURRENCY, toFetch.length || 1) }, checkWorker));
+      if (preloadCancelled) { finish(`⏹ Abgebrochen (Cache-Prüfung)`); return; }
+      toFetch = checked;
+    } catch (e) { /* if cache check fails for some reason, just fetch everything */ }
+  }
+
+  const alreadyCached = total - toFetch.length;
+  const missing = toFetch.length;
+  let done = 0;
+  preloadBtn.textContent = missing === 0 ? `✅ Schon alles da (${total})` : `📥 Lade 0/${missing} neue… (Tippen zum Abbrechen)`;
+  if (missing === 0) { finish(`✅ Schon alles da (${total})`); return; }
+
+  // Fetch with limited concurrency so it's reasonably fast without hammering the tile server
+  const CONCURRENCY = 8;
+  let idx = 0;
+  async function worker(){
+    while (idx < toFetch.length) {
+      if (preloadCancelled) return;
+      const url = toFetch[idx++];
+      try { await fetch(url, { mode: "no-cors" }); } catch (e) { /* ignore individual failures */ }
+      done++;
+      if (done % 10 === 0 || done === missing) preloadBtn.textContent = `📥 Lade ${done}/${missing} neue… (Tippen zum Abbrechen)`;
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, missing || 1) }, worker));
+
+  if (preloadCancelled) { finish(`⏹ Abgebrochen (${done}/${missing} geladen, ${alreadyCached} schon vorhanden)`); return; }
+  finish(`✅ ${missing} neu, ${alreadyCached} schon vorhanden`);
+
+  } catch (err) {
+    console.error("Vorladen-Fehler:", err);
+    preloadRunning = false;
+    preloadBtn.disabled = false;
+    preloadBtn.textContent = "📥 Trail-Umgebung vorladen";
+    layerWarningEl.textContent = "Vorladen abgebrochen wegen eines Fehlers: " + (err && err.message ? err.message : err);
+    layerWarningEl.classList.add("visible");
+  }
+});
+} catch (err) {
+  console.error(err);
+  var msgEl = document.getElementById('fatalErrorMsg');
+  if (msgEl) msgEl.textContent = (err && err.message) ? err.message : String(err);
+  var panel = document.getElementById('fatalError');
+  if (panel) panel.classList.add('visible');
+}
+</script>
+</body>
+</html>

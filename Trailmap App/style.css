@@ -1,0 +1,432 @@
+:root{
+  --ink: #1c2620;
+  --paper: #eef1e8;
+  --contour: #c9d3c0;
+  --forest: #2f4a3a;
+  --forest-dark: #1e3128;
+  --rust: #b5501f;
+  --rust-light: #e07a3f;
+  --stone: #7a8a7d;
+  --gruen: #3f8a4c;
+  --blau: #1f5f9e;
+  --rot: #c23b30;
+  --schwarz: #1c1c1c;
+  --highlight: #e0a326;
+  --select-yellow: #fff200;
+  --card-bg: #ffffff;
+}
+*{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; height:100%; background:var(--paper); color:var(--ink);
+  font-family: 'Iowan Old Style','Palatino Linotype',Georgia,serif; }
+body{
+  background-image:
+    repeating-radial-gradient(circle at 20% 30%, transparent 0, transparent 38px, var(--contour) 39px, transparent 40px),
+    repeating-radial-gradient(circle at 80% 75%, transparent 0, transparent 54px, var(--contour) 55px, transparent 56px);
+  background-size: 420px 420px, 520px 520px;
+}
+.app{ display:flex; flex-direction:column; height:100vh; height:100dvh; }
+header{ padding: calc(14px + env(safe-area-inset-top, 0px)) 22px 12px; background: var(--forest-dark); color: #f2f3ec;
+  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; border-bottom: 3px solid var(--rust); }
+header h1{ font-family: 'Copperplate','Trebuchet MS',sans-serif; letter-spacing: 1.5px; font-size: 20px; margin:0; text-transform: uppercase; cursor:pointer; }
+header h1:hover{ color: var(--rust-light); }
+header .sub{ font-family: Arial, sans-serif; font-size: 12.5px; color: #b9c6b6; }
+.layout{ flex:1; display:flex; min-height:0; }
+aside{ width: 350px; min-width: 300px; background: var(--card-bg); border-right: 1px solid #d8ddd0;
+  display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; transition: transform .25s ease;
+  scrollbar-width: none; -ms-overflow-style: none; }
+/* A classic (non-overlay) scrollbar reserves ~15-17px of width only while content actually
+   overflows -- on Windows Chrome (no OS-level overlay scrollbars) that width would appear/
+   disappear as the sidebar's own content height changes (e.g. deactivating regions shortens the
+   trail list below), which shifted how many region-chip buttons fit per row even though the
+   chips' own size never changed (found 2026-07-23). Hidden entirely (still fully scrollable via
+   wheel/trackpad/touch) so the available width -- and therefore the chip wrapping -- never
+   depends on whether a scrollbar happens to be needed at that moment. */
+aside::-webkit-scrollbar{ display:none; width:0; height:0; }
+
+#sidebarToggle{
+  display:none; position:absolute;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  z-index:1900;
+  background: var(--forest-dark); color:#f2f3ec; border:none; border-radius:8px;
+  padding: 9px 14px; font-family: Arial, sans-serif; font-size:13px; font-weight:600;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.25); cursor:pointer; align-items:center; gap:6px;
+}
+#sidebarBackdrop{ display:none; position:fixed; inset:0; background:rgba(15,20,16,0.45); z-index:2400; }
+#sidebarBackdrop.visible{ display:block; }
+
+@media (max-width: 768px), (pointer: coarse){
+  aside{
+    position: fixed; top:0; left:0; bottom:0;
+    width: min(88vw, 340px); min-width:0;
+    z-index: 2500;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 20px rgba(0,0,0,0.3);
+  }
+  aside.open{ transform: translateX(0); }
+  #sidebarToggle{ display:flex; }
+}
+.filters{ padding: 14px 16px 10px; border-bottom: 1px solid #e3e6da; font-family: Arial, sans-serif; flex-shrink:0; }
+.filters h2{ font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--stone); margin: 0 0 8px; font-weight:700; }
+/* Collapsible filter sections (added 2026-07-23 to reclaim vertical space above the trail list) —
+   plain <details>/<summary>, no JS needed for the open/close animation itself; open state is just
+   persisted separately (see persistFilterSectionsState) so it survives a reload. */
+details.filter-section{ border-bottom: 1px solid #e3e6da; padding: 8px 0; }
+details.filter-section:last-of-type{ border-bottom: none; padding-bottom: 0; }
+/* margin lives on summary (like the old .filters h2 it replaced), not as a blanket margin-top on
+   every child — a blanket rule here previously fought with .region-groups-container's own, larger
+   margin-top (needed so the first region-group-block's legend, which overlaps its box's top border
+   via a negative translateY, has room to sit without covering this "Region" heading — regression
+   found by the user 2026-07-23, fixed by going back to per-child margins instead of a generic one). */
+details.filter-section summary{ font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--stone);
+  font-weight:700; cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between;
+  margin: 0 0 8px; -webkit-tap-highlight-color: transparent; }
+details.filter-section summary::-webkit-details-marker{ display:none; }
+/* #secTrails (the trail-list's own collapsible wrapper) sits OUTSIDE .filters, unlike the other
+   three sections — so its summary doesn't get .filters' own 16px horizontal padding for free, and
+   sat flush against the sidebar edge while its own content (.hub-title/.trail-card etc., which each
+   carry their own left padding/margin already) stayed correctly indented — found by the user
+   2026-07-23 ("Trails ist nicht richtig eingerückt"). Padding only the summary, not the whole
+   #secTrails container, since the content below already supplies its own indentation and doubling
+   it up would misalign things the other way. */
+#secTrails > summary{ padding: 0 16px; }
+details.filter-section summary::after{ content:"▸"; font-size:22px; font-weight:700; line-height:1; color: var(--forest); transition: transform .15s ease; }
+details.filter-section[open] summary::after{ transform: rotate(90deg); }
+/* Wraps a summary's label + dynamic meta text (visible-count / current-region) as ONE flex item, so
+   justify-content:space-between on the summary still only ever spaces two things apart — this group
+   vs. the arrow — instead of spreading label/meta/arrow apart individually (added 2026-07-23). */
+.section-title-row{ display:flex; align-items:baseline; gap:8px; min-width:0; }
+.section-title-row > span:first-child{ flex-shrink:0; }
+.section-meta{ font-weight:400; text-transform:none; letter-spacing:normal; opacity:0.75; font-size:10.5px;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; flex:1 1 auto; }
+.region-count{ font-weight:400; opacity:0.75; display:inline-block; font-variant-numeric: tabular-nums; }
+.chip-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.chip{ border: 1.5px solid var(--forest); color: var(--forest); background: transparent; border-radius: 20px;
+  padding: 4px 11px; font-size: 12px; cursor: pointer; transition: all .15s ease; font-family: Arial, sans-serif; }
+.chip.active{ background: var(--forest); color: #fff; }
+.chip.diff-gruen.active{ background:var(--gruen); border-color:var(--gruen); }
+.chip.diff-blau.active{ background:var(--blau); border-color:var(--blau); }
+.chip.diff-rot.active{ background:var(--rot); border-color:var(--rot); }
+.chip.diff-schwarz.active{ background:var(--schwarz); border-color:var(--schwarz); }
+.toggle-row-group{ display:flex; gap:16px; flex-wrap:wrap; margin-top:4px; }
+.toggle-row{ display:flex; align-items:center; gap:6px; font-family: Arial, sans-serif; font-size:12.5px; color:var(--ink); cursor:pointer; }
+.ios-switch{ position:relative; display:inline-block; width:34px; height:20px; flex-shrink:0; }
+.ios-switch input{ opacity:0; width:0; height:0; position:absolute; }
+.ios-switch .slider{ position:absolute; inset:0; background:#d3d8cd; border-radius:20px; transition: background .15s ease; }
+.ios-switch .slider::before{ content:""; position:absolute; width:16px; height:16px; left:2px; top:2px;
+  background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3); transition: transform .15s ease; }
+.ios-switch input:checked + .slider{ background: var(--forest); }
+.ios-switch input:checked + .slider::before{ transform: translateX(14px); }
+.trail-list{ padding: 4px 0 16px; }
+.region-group-title{ padding: 12px 16px 2px; font-family: 'Copperplate','Trebuchet MS',sans-serif; font-size: 12.5px;
+  text-transform: uppercase; letter-spacing: 1px; color: var(--forest-dark); font-weight: 700;
+  border-top: 2px solid #e3e6da; margin-top: 6px; }
+.region-group-title:first-child{ border-top: none; margin-top: 0; }
+.region-groups-container{ display:flex; flex-direction:column; gap: 18px; margin-top: 14px; margin-bottom: 10px; }
+.region-group-block{ position: relative; border: 1.5px solid #d3d9c9; border-radius: 10px;
+  padding: 14px 10px 10px; }
+.region-group-row{ position: absolute; top: 0; left: 8px; transform: translateY(-50%);
+  display:flex; align-items:center; gap: 4px; background: var(--card-bg); padding: 0 4px; }
+.region-group-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+.region-group-label{ font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px;
+  color: var(--forest); font-weight: 700; font-family: Arial, sans-serif;
+  cursor: pointer; padding: 6px 13px; border: 1.5px solid var(--forest); border-radius: 20px;
+  background: transparent; transition: all .15s ease; }
+.region-group-label:hover{ background: var(--forest); color: #fff; }
+.region-group-label.all-active{ background: var(--forest); color: #fff; }
+.region-group-fly-btn{ border:none; background:none; cursor:pointer; font-size:14px; line-height:1;
+  padding: 7px 6px; color: var(--stone); border-radius: 6px; }
+.region-group-fly-btn:hover{ background: #e4ece0; color: var(--forest-dark); }
+.hub-group{ border-bottom: 1px solid #eceee4; }
+.hub-title{ padding: 10px 16px 4px; font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase;
+  letter-spacing: .6px; color: var(--rust); font-weight: 700; cursor:pointer; }
+.trail-card{ margin: 4px 12px 8px; padding: 8px 10px; border-radius: 6px; border: 1px solid #e3e6da;
+  cursor: pointer; transition: background .12s ease, border-color .12s ease;
+  background: var(--card-tint, transparent); }
+.trail-card:hover, .trail-card.hovered{ background: #fbf1de; border-color: var(--highlight); }
+.trail-card.dimmed{ opacity: .28; pointer-events:none; }
+.trail-card.selected{ background:#fffbe6; border-color: var(--select-yellow); border-width:2px; box-shadow: 0 0 0 1px var(--select-yellow); }
+.trail-name{ font-size: 14.5px; font-weight: 600; margin: 0 0 3px; }
+.trail-meta{ font-family: Arial, sans-serif; font-size: 11.5px; color: #4c574d; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.badge{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; vertical-align:middle; }
+.badge.gruen{ background:var(--gruen); }
+.badge.blau{ background:var(--blau); }
+.badge.rot{ background:var(--rot); }
+.badge.schwarz{ background:var(--schwarz); }
+.badge-uphill{ font-size:11px; vertical-align:middle; margin-left:2px; }
+.badge-loop{ font-size:11px; vertical-align:middle; margin-left:2px; }
+.tag-geo{ font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; background:#e4ece0; color:var(--forest); padding:1px 5px; border-radius:3px; }
+.tag-approx{ font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; background:#f3e6da; color:var(--rust); padding:1px 5px; border-radius:3px; }
+.map-wrap{ flex:1; position:relative; }
+#map{ position:absolute; inset:0; background:#dfe6d8; }
+/* Leaflet marks every clickable vector layer (polylines, circleMarkers) with tabindex for keyboard
+   accessibility — clicking one gives it browser focus, and the default focus ring follows the
+   path's rectangular SVG bounding box rather than its actual (often irregular) shape, showing up
+   as a stray black "frame" around the trail/loop. Most noticeable on a Trailrunde's segment
+   hitlines, whose bounding box can span a large area. Suppress the ring; nothing here relies on
+   visible keyboard-focus styling. */
+.leaflet-interactive:focus{ outline:none; }
+.approx-note{ font-family: Arial, sans-serif; font-size: 10.5px; color: var(--stone); padding: 8px 16px 12px;
+  border-top: 1px solid #eceee4; line-height:1.4; }
+::-webkit-scrollbar{ width:8px; }
+::-webkit-scrollbar-thumb{ background:#c7cec0; border-radius:4px; }
+
+/* Floating info panel over the map (instead of covering popups) */
+#infoPanel{
+  position:absolute;
+  top:60px; right:16px;
+  width: 280px;
+  max-height: calc(100% - 76px);
+  overflow-y:auto;
+  background: rgba(255,255,255,0.97);
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.22);
+  padding: 14px 16px 10px;
+  font-family: Arial, sans-serif;
+  display:none;
+  z-index: 1000;
+}
+#infoPanel.visible{ display:block; }
+#infoPanel .ip-close{
+  position:absolute; top:8px; right:10px;
+  border:none; background:none; font-size:18px; line-height:1;
+  color: var(--stone); cursor:pointer; padding:4px;
+}
+#infoPanel .ip-close:hover{ color: var(--rust); }
+#infoPanel h3{
+  font-family:'Copperplate','Trebuchet MS',sans-serif; font-size:14px; text-transform:uppercase;
+  letter-spacing:.5px; color:var(--forest-dark); margin:0 22px 8px 0; border-bottom:1px solid #ddd; padding-bottom:6px;
+}
+#infoPanel .ip-trail{ font-size:12.5px; margin-bottom:10px; line-height:1.5; }
+.ele-chart{ display:block; width:100%; height:46px; margin:4px 0 0; }
+.ele-chart .ele-label{ font-size:7px; fill:#4c574d; font-family:Arial, sans-serif; }
+.ele-chart .ele-hover-dot{ fill:var(--blau); stroke:#fff; stroke-width:1.2; }
+#infoPanel .ip-actions{ margin-top:2px; line-height:1; }
+#infoPanel .ip-segment-info{ margin-top:8px; padding:4px 0 4px 8px; font-size:11.5px; line-height:1.4; }
+#infoPanel .ip-segment-info b{ font-size:12.5px; }
+#infoPanel .ip-actions .ip-link,
+#infoPanel .ip-actions .gpx-download-btn{ vertical-align:middle; }
+#infoPanel .ip-trail .dot-start{ color:#3fbf5e; font-size:19px; vertical-align:middle; }
+#infoPanel .ip-trail .dot-end{ color:#e0392b; font-size:19px; vertical-align:middle; }
+#infoPanel .ip-trail b{ font-size:13.5px; }
+#infoPanel .ip-trail .ip-link{
+  display:inline-block; margin-top:4px; color:#fff; background: var(--rust); text-decoration:none;
+  font-size:11.5px; padding:4px 10px; border-radius:14px;
+}
+#infoPanel .ip-trail .ip-link:hover{ background: var(--rust-light); }
+#infoPanel .ip-trail .gpx-download-btn{
+  background: var(--forest); font-size:10.5px; padding:3px 8px; border:none; cursor:pointer; font-family:Arial, sans-serif;
+}
+#infoPanel .ip-trail .gpx-download-btn:hover{ background: var(--forest-dark); }
+#infoPanel .ip-trail .solo-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; margin-left:4px; vertical-align:middle;
+  border:none; border-radius:50%; cursor:pointer; font-size:12px; line-height:1;
+  background: var(--forest); color:#fff; padding:0;
+}
+#infoPanel .ip-trail .solo-btn:hover{ background: var(--forest-dark); }
+#infoPanel .ip-trail .solo-btn.active{ background: var(--select-yellow); color: var(--ink); }
+/* Same solo toggle, reachable straight from the selected trail's own sidebar card -- added so
+   soloing doesn't require opening the info panel first (2026-07-24, per the user). Only the
+   currently-selected card ever renders one (see render()'s card-building code), so it doesn't need
+   its own persistent layout slot on every card. */
+.trail-card .card-solo-btn{
+  display:none; align-items:center; justify-content:center;
+  width:20px; height:20px; margin-left:6px; vertical-align:middle; flex-shrink:0;
+  border:none; border-radius:50%; cursor:pointer; font-size:11px; line-height:1;
+  background: var(--forest); color:#fff; padding:0;
+}
+.trail-card.selected .card-solo-btn{ display:inline-flex; }
+.trail-card .card-solo-btn:hover{ background: var(--forest-dark); }
+.trail-card .card-solo-btn.active{ background: var(--select-yellow); color: var(--ink); }
+#infoPanel .ip-trail .reverse-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; margin-left:4px; vertical-align:middle;
+  border:none; border-radius:50%; cursor:pointer; font-size:12px; line-height:1;
+  background: var(--forest); color:#fff; padding:0;
+}
+#infoPanel .ip-trail .reverse-btn:hover{ background: var(--forest-dark); }
+#infoPanel .ip-trail .reverse-btn.active{ background: var(--select-yellow); color: var(--ink); }
+#infoPanel h3 .locate-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:18px; height:18px; margin-left:4px; vertical-align:middle;
+  border:none; border-radius:50%; cursor:pointer; font-size:10px; line-height:1;
+  background: var(--forest); color:#fff; padding:0;
+}
+#infoPanel h3 .locate-btn:hover{ background: var(--forest-dark); }
+
+.trail-label-tooltip{
+  background: rgba(255,255,255,0.9); border: 1px solid #99a596; color: var(--ink);
+  font-family: Arial, sans-serif; font-size: 11px; font-weight:600; padding: 1px 6px; border-radius: 4px;
+  box-shadow:none;
+}
+.trail-label-tooltip::before{ display:none; }
+
+.place-label-tooltip{
+  background: var(--forest-dark); border: none; color: #fff;
+  font-family: 'Copperplate','Trebuchet MS',sans-serif; font-size: 12px; font-weight:700; letter-spacing:.4px;
+  padding: 3px 9px; border-radius: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+.place-label-tooltip::before{ display:none; }
+
+#locateBtn{
+  display:none; position:absolute; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: calc(16px + env(safe-area-inset-right, 0px)); z-index:1000;
+  width:46px; height:46px; border-radius:50%;
+  background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  font-size:22px; align-items:center; justify-content:center;
+  cursor:pointer;
+}
+#locateBtn:hover{ background:#f5f7ef; }
+#locateBtn.active{ background: var(--forest); }
+.geo-wrap{ position:relative; width:40px; height:40px; }
+.geo-cone{
+  position:absolute; left:50%; top:50%;
+  width:26px; height:34px;
+  margin-left:-13px; margin-top:-34px;
+  clip-path: polygon(50% 100%, 0% 0%, 100% 0%);
+  background: rgba(26,115,232,0.35);
+}
+.geo-dot{
+  position:absolute; left:50%; top:50%; width:16px; height:16px;
+  margin:-8px 0 0 -8px; background:#1a73e8; border:3px solid #fff; border-radius:50%;
+  box-shadow: 0 0 4px rgba(0,0,0,0.5); z-index:2;
+}
+.geo-pulse{
+  position:absolute; left:50%; top:50%; width:16px; height:16px;
+  margin:-8px 0 0 -8px; border-radius:50%; background:#1a73e8; opacity:0;
+}
+.geo-wrap.live .geo-pulse{ animation: geoPulse 1.8s ease-out infinite; }
+@keyframes geoPulse{
+  0%   { transform: scale(1);   opacity:0.55; }
+  100% { transform: scale(3.2); opacity:0; }
+}
+#liveStatus{
+  display:none; position:absolute; top: calc(16px + env(safe-area-inset-top, 0px)); left:50%; transform:translateX(-50%); z-index:1500;
+  background: rgba(28,38,32,0.92); color:#f2f3ec; font-family: Arial, sans-serif; font-size:12.5px; font-weight:600;
+  padding:6px 14px; border-radius:16px; box-shadow:0 3px 10px rgba(0,0,0,0.25); align-items:center; gap:6px;
+}
+#liveStatus.visible{ display:flex; }
+#liveStatus .rec-dot{
+  width:8px; height:8px; border-radius:50%; background:#e0392b; animation: recBlink 1.2s ease-in-out infinite;
+}
+@keyframes recBlink{ 0%,100%{ opacity:1; } 50%{ opacity:0.25; } }
+#layerWarning{
+  position:absolute;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  left: calc(16px + env(safe-area-inset-left, 0px));
+  z-index:1000;
+  background: rgba(28,38,32,0.92); color:#f2f3ec; font-family: Arial, sans-serif; font-size: 12px;
+  padding: 8px 12px; border-radius: 8px; max-width: 300px; display:none; line-height:1.4;
+}
+#layerWarning.visible{ display:block; }
+
+#offlineBanner{
+  display:none; position:absolute;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  z-index:1500;
+  max-width: 150px;
+  background: rgba(194,59,48,0.95); color:#fff; font-family: Arial, sans-serif; font-size:11.5px; font-weight:600;
+  padding:6px 10px; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.25); line-height:1.35;
+}
+#offlineBanner.visible{ display:block; }
+#preloadBtn{
+  width:100%; margin-top:8px;
+  background: rgba(255,255,255,0.97); border:1px solid #d8ddd0; border-radius:8px;
+  padding:7px 12px; font-family:Arial, sans-serif; font-size:11.5px; font-weight:600; color:var(--forest);
+  cursor:pointer;
+}
+#preloadBtn:hover{ background:#f5f7ef; }
+#preloadBtn:disabled{ opacity:0.6; cursor:default; }
+
+#fatalError{
+  position:fixed; inset:0; z-index:5000; background: var(--paper);
+  display:none; align-items:center; justify-content:center; padding:24px;
+  font-family: Arial, sans-serif;
+}
+#fatalError.visible{ display:flex; }
+#fatalError .box{
+  max-width:480px; background:#fff; border:2px solid var(--rust); border-radius:10px;
+  padding:20px 22px; box-shadow:0 6px 20px rgba(0,0,0,0.25);
+}
+#fatalError h2{ margin:0 0 10px; color:var(--rust); font-size:16px; }
+#fatalError p{ margin:0 0 8px; font-size:13.5px; line-height:1.5; color:var(--ink); }
+#fatalError code{ background:#f3e6da; padding:1px 5px; border-radius:4px; font-size:12px; }
+
+#regionsBtn{
+  background: var(--rust); color:#fff; border:none; border-radius:14px;
+  padding:5px 13px; font-family: Arial, sans-serif; font-size:12.5px; font-weight:600;
+  cursor:pointer; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  align-self:center;
+}
+#regionsBtn:hover{ background: var(--rust-light); }
+#regionDialog{
+  position:fixed; inset:0; z-index:4000; background: rgba(15,20,16,0.5);
+  display:none; align-items:center; justify-content:center; padding:24px;
+  font-family: Arial, sans-serif;
+}
+#regionDialog.visible{ display:flex; }
+#regionDialog .box{
+  width:100%; max-width:420px; max-height:80vh; overflow-y:auto;
+  background:#fff; border-radius:12px; padding:20px 22px 16px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.3); position:relative;
+}
+#regionDialog h2{
+  font-family:'Copperplate','Trebuchet MS',sans-serif; text-transform:uppercase; letter-spacing:.5px;
+  font-size:15px; color:var(--forest-dark); margin:0 22px 4px 0;
+}
+#regionDialog .region-dialog-hint{ font-size:12px; color:var(--stone); line-height:1.4; margin:0 0 14px; }
+#regionDialog .rd-close{
+  position:absolute; top:10px; right:12px; border:none; background:none; font-size:20px;
+  line-height:1; color:var(--stone); cursor:pointer; padding:4px;
+}
+#regionDialog .rd-close:hover{ color:var(--rust); }
+.region-dialog-row{
+  display:flex; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid #eceee4;
+}
+.region-dialog-row:last-child{ border-bottom:none; }
+.rd-info{ flex:1; min-width:0; }
+.rd-label{ font-size:14px; font-weight:600; color:var(--ink); }
+.rd-count{ font-size:11.5px; color:var(--stone); margin-top:1px; }
+.rd-error{ font-size:11px; color:var(--rust); margin-top:2px; }
+.rd-toggle{
+  flex-shrink:0; border:1.5px solid var(--forest); color:var(--forest); background:transparent;
+  border-radius:16px; padding:5px 13px; font-size:12px; font-weight:600; cursor:pointer;
+  font-family: Arial, sans-serif; min-width:76px;
+}
+.rd-toggle.active{ background: var(--forest); color:#fff; }
+.rd-toggle:disabled{ opacity:0.45; cursor:default; }
+.region-dialog-limit-note{ font-size:11.5px; color:var(--rust); margin:2px 0 10px; display:none; }
+.region-dialog-limit-note.visible{ display:block; }
+@media (max-width: 768px), (pointer: coarse){
+  #infoPanel{
+    top:auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px) + 54px); left:50%; right:auto;
+    transform: translateX(-50%);
+    width:max-content; max-width:min(92vw, 360px);
+    max-height:min(38vh, 300px);
+  }
+  #locateBtn{
+    display:flex;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px) + 54px);
+  }
+}
+html.is-standalone #infoPanel{
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+}
+html.is-standalone #locateBtn{
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+}
+html.landscape-compact #infoPanel{
+  top: calc(70px + env(safe-area-inset-top, 0px)) !important;
+  right: calc(6px + env(safe-area-inset-right, 0px)) !important;
+  bottom: auto !important;
+  left: auto !important;
+  transform: none !important;
+  width: min(34vw, 230px) !important;
+  max-width: none !important;
+  max-height: calc(100vh - 90px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
+  height: auto !important;
+  overflow-y: auto;
+}
+html.landscape-compact .ele-chart{ height:40px; }

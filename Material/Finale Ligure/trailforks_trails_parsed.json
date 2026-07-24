@@ -1,0 +1,1127 @@
+[
+ {
+  "name": "Roller Coaster",
+  "closed": false,
+  "popularity_pct": 100,
+  "rating": 4.5,
+  "distance": "6 km",
+  "elevation_m": "29",
+  "rides": 8643
+ },
+ {
+  "name": "Ingegnere",
+  "closed": false,
+  "popularity_pct": 100,
+  "rating": 4.8,
+  "distance": "3 km",
+  "elevation_m": "5",
+  "rides": 6680
+ },
+ {
+  "name": "Madre Natura",
+  "closed": false,
+  "popularity_pct": 100,
+  "rating": 4.6,
+  "distance": "2 km",
+  "elevation_m": "0",
+  "rides": 7356
+ },
+ {
+  "name": "Base Nato",
+  "closed": false,
+  "popularity_pct": 95,
+  "rating": 4.7,
+  "distance": "3 km",
+  "elevation_m": "0",
+  "rides": 5654
+ },
+ {
+  "name": "Little Champery",
+  "closed": false,
+  "popularity_pct": 90,
+  "rating": 4.8,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 3769
+ },
+ {
+  "name": "Madonna della Guardia",
+  "closed": false,
+  "popularity_pct": 95,
+  "rating": 4.8,
+  "distance": "817 m",
+  "elevation_m": "0",
+  "rides": 4284
+ },
+ {
+  "name": "Cà Bianca",
+  "closed": false,
+  "popularity_pct": 100,
+  "rating": 4.6,
+  "distance": "1 km",
+  "elevation_m": "2",
+  "rides": 4549
+ },
+ {
+  "name": "Pino Morto",
+  "closed": false,
+  "popularity_pct": 95,
+  "rating": 4.7,
+  "distance": "847 m",
+  "elevation_m": "0",
+  "rides": 3996
+ },
+ {
+  "name": "Cravarezza",
+  "closed": false,
+  "popularity_pct": 100,
+  "rating": 4.7,
+  "distance": "915 m",
+  "elevation_m": "0",
+  "rides": 5825
+ },
+ {
+  "name": "Crestino Pt. 1",
+  "closed": false,
+  "popularity_pct": 95,
+  "rating": 4.2,
+  "distance": "4 km",
+  "elevation_m": "34",
+  "rides": 4924
+ },
+ {
+  "name": "H Veloce",
+  "closed": true,
+  "popularity_pct": 65,
+  "rating": 4.2,
+  "distance": "1 km",
+  "elevation_m": "1",
+  "rides": 6699
+ },
+ {
+  "name": "Cacciatore",
+  "closed": false,
+  "popularity_pct": 95,
+  "rating": 4.6,
+  "distance": "3 km",
+  "elevation_m": "0",
+  "rides": 3819
+ },
+ {
+  "name": "Revenant",
+  "closed": false,
+  "popularity_pct": 100,
+  "rating": 4.8,
+  "distance": "2 km",
+  "elevation_m": "15",
+  "rides": 4732
+ },
+ {
+  "name": "Kill Bill 2",
+  "closed": false,
+  "popularity_pct": 95,
+  "rating": 4.8,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 4036
+ },
+ {
+  "name": "Sentiero delle Neviere",
+  "closed": false,
+  "popularity_pct": 100,
+  "rating": 4.3,
+  "distance": "559 m",
+  "elevation_m": "1",
+  "rides": 4142
+ },
+ {
+  "name": "Toboga di Canova",
+  "closed": false,
+  "popularity_pct": 90,
+  "rating": 4.6,
+  "distance": "4 km",
+  "elevation_m": "0",
+  "rides": 3217
+ },
+ {
+  "name": "H trail",
+  "closed": false,
+  "popularity_pct": 90,
+  "rating": 4.5,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 3795
+ },
+ {
+  "name": "DH Uomini",
+  "closed": false,
+  "popularity_pct": 85,
+  "rating": 4.6,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 2923
+ },
+ {
+  "name": "X-Men",
+  "closed": false,
+  "popularity_pct": 75,
+  "rating": 4.3,
+  "distance": "2 km",
+  "elevation_m": "11",
+  "rides": 3367
+ },
+ {
+  "name": "Crestino Pt. 2",
+  "closed": false,
+  "popularity_pct": 85,
+  "rating": 4.5,
+  "distance": "4 km",
+  "elevation_m": "9",
+  "rides": 3084
+ },
+ {
+  "name": "Toboga Canova New",
+  "closed": false,
+  "popularity_pct": 95,
+  "rating": 4.6,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 2752
+ },
+ {
+  "name": "Bondi Traverse",
+  "closed": false,
+  "popularity_pct": 75,
+  "rating": 3.4,
+  "distance": "2 km",
+  "elevation_m": "23",
+  "rides": 2233
+ },
+ {
+  "name": "Briga Destra",
+  "closed": false,
+  "popularity_pct": 75,
+  "rating": 4.0,
+  "distance": "3 km",
+  "elevation_m": "25",
+  "rides": 2490
+ },
+ {
+  "name": "Hiroshima Mon Amour",
+  "closed": false,
+  "popularity_pct": 90,
+  "rating": 4.8,
+  "distance": "2 km",
+  "elevation_m": "1",
+  "rides": 2822
+ },
+ {
+  "name": "Kill Bill 1",
+  "closed": false,
+  "popularity_pct": 90,
+  "rating": 4.6,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 2856
+ },
+ {
+  "name": "Fast and Furious",
+  "closed": false,
+  "popularity_pct": 85,
+  "rating": 4.6,
+  "distance": "3 km",
+  "elevation_m": "2",
+  "rides": 2227
+ },
+ {
+  "name": "Supergroppo",
+  "closed": false,
+  "popularity_pct": 60,
+  "rating": 4.0,
+  "distance": "6 km",
+  "elevation_m": "40",
+  "rides": 2371
+ },
+ {
+  "name": "Cromagnon",
+  "closed": false,
+  "popularity_pct": 55,
+  "rating": 4.2,
+  "distance": "859 m",
+  "elevation_m": "7",
+  "rides": 1836
+ },
+ {
+  "name": "Dog Eat Dog",
+  "closed": false,
+  "popularity_pct": 85,
+  "rating": 4.8,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 2256
+ },
+ {
+  "name": "Hell Boy part 2",
+  "closed": false,
+  "popularity_pct": 90,
+  "rating": 4.8,
+  "distance": "1 km",
+  "elevation_m": "1",
+  "rides": 2810
+ },
+ {
+  "name": "Hell Boy part 1",
+  "closed": false,
+  "popularity_pct": 90,
+  "rating": 4.6,
+  "distance": "1 km",
+  "elevation_m": "11",
+  "rides": 2815
+ },
+ {
+  "name": "Oltrefinale",
+  "closed": true,
+  "popularity_pct": 75,
+  "rating": 4.4,
+  "distance": "4 km",
+  "elevation_m": "25",
+  "rides": 2197
+ },
+ {
+  "name": "Martina",
+  "closed": false,
+  "popularity_pct": 95,
+  "rating": 4.2,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 3243
+ },
+ {
+  "name": "Ruote di Pietra",
+  "closed": false,
+  "popularity_pct": 55,
+  "rating": 4.6,
+  "distance": "2 km",
+  "elevation_m": "0",
+  "rides": 677
+ },
+ {
+  "name": "Appendaun",
+  "closed": false,
+  "popularity_pct": 70,
+  "rating": 4.7,
+  "distance": "2 km",
+  "elevation_m": "1",
+  "rides": 1070
+ },
+ {
+  "name": "Ruggetta",
+  "closed": false,
+  "popularity_pct": 55,
+  "rating": 4.4,
+  "distance": "2 km",
+  "elevation_m": "4",
+  "rides": 1514
+ },
+ {
+  "name": "Grollon 2°pt",
+  "closed": false,
+  "popularity_pct": 70,
+  "rating": 4.7,
+  "distance": "786 m",
+  "elevation_m": "5",
+  "rides": 924
+ },
+ {
+  "name": "DH Donne",
+  "closed": false,
+  "popularity_pct": 85,
+  "rating": 4.3,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 2267
+ },
+ {
+  "name": "Oribago",
+  "closed": false,
+  "popularity_pct": 75,
+  "rating": 4.3,
+  "distance": "817 m",
+  "elevation_m": "18",
+  "rides": 2041
+ },
+ {
+  "name": "Bianca Alternative",
+  "closed": false,
+  "popularity_pct": 80,
+  "rating": 4.7,
+  "distance": "593 m",
+  "elevation_m": "0",
+  "rides": 783
+ },
+ {
+  "name": "Karma Trail",
+  "closed": false,
+  "popularity_pct": 35,
+  "rating": 4.1,
+  "distance": "6 km",
+  "elevation_m": "17",
+  "rides": 693
+ },
+ {
+  "name": "Pian Marino Top",
+  "closed": false,
+  "popularity_pct": 75,
+  "rating": 4.0,
+  "distance": "777 m",
+  "elevation_m": "1",
+  "rides": 2616
+ },
+ {
+  "name": "Castel Gavone second part",
+  "closed": false,
+  "popularity_pct": 45,
+  "rating": 4.6,
+  "distance": "505 m",
+  "elevation_m": "7",
+  "rides": 610
+ },
+ {
+  "name": "Muro Nero",
+  "closed": false,
+  "popularity_pct": 65,
+  "rating": 3.8,
+  "distance": "274 m",
+  "elevation_m": "30",
+  "rides": 854
+ },
+ {
+  "name": "Dolmen",
+  "closed": false,
+  "popularity_pct": 50,
+  "rating": 4.1,
+  "distance": "2 km",
+  "elevation_m": "0",
+  "rides": 1203
+ },
+ {
+  "name": "Rock'n'Rolla",
+  "closed": false,
+  "popularity_pct": 85,
+  "rating": 4.5,
+  "distance": "562 m",
+  "elevation_m": "0",
+  "rides": 2051
+ },
+ {
+  "name": "Briga Sinistra",
+  "closed": false,
+  "popularity_pct": 80,
+  "rating": 3.6,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 1907
+ },
+ {
+  "name": "Collegamento Vilmar",
+  "closed": false,
+  "popularity_pct": 70,
+  "rating": 4.0,
+  "distance": "837 m",
+  "elevation_m": "37",
+  "rides": 793
+ },
+ {
+  "name": "Ponti Romani",
+  "closed": false,
+  "popularity_pct": 75,
+  "rating": 3.9,
+  "distance": "4 km",
+  "elevation_m": "174",
+  "rides": 2137
+ },
+ {
+  "name": "Cucco",
+  "closed": true,
+  "popularity_pct": 55,
+  "rating": 3.3,
+  "distance": "4 km",
+  "elevation_m": "113",
+  "rides": 1924
+ },
+ {
+  "name": "Monte Alto",
+  "closed": false,
+  "popularity_pct": 60,
+  "rating": 3.5,
+  "distance": "306 m",
+  "elevation_m": "0",
+  "rides": 672
+ },
+ {
+  "name": "Via degli Alpini",
+  "closed": false,
+  "popularity_pct": 65,
+  "rating": 2.8,
+  "distance": "2 km",
+  "elevation_m": "9",
+  "rides": 952
+ },
+ {
+  "name": "Andrassa",
+  "closed": false,
+  "popularity_pct": 70,
+  "rating": 4.1,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 1452
+ },
+ {
+  "name": "U maxin de pippe",
+  "closed": true,
+  "popularity_pct": 45,
+  "rating": 4.7,
+  "distance": "450 m",
+  "elevation_m": "0",
+  "rides": 294
+ },
+ {
+  "name": "Partigiano",
+  "closed": false,
+  "popularity_pct": 80,
+  "rating": 3.8,
+  "distance": "3 km",
+  "elevation_m": "157",
+  "rides": 1855
+ },
+ {
+  "name": "La Rete",
+  "closed": false,
+  "popularity_pct": 80,
+  "rating": 4.9,
+  "distance": "1 km",
+  "elevation_m": "3",
+  "rides": 1099
+ },
+ {
+  "name": "Val Nava",
+  "closed": false,
+  "popularity_pct": 65,
+  "rating": 4.2,
+  "distance": "2 km",
+  "elevation_m": "10",
+  "rides": 1240
+ },
+ {
+  "name": "Rocche Gianche",
+  "closed": false,
+  "popularity_pct": 50,
+  "rating": 4.1,
+  "distance": "2 km",
+  "elevation_m": "22",
+  "rides": 857
+ },
+ {
+  "name": "Cuore di Cervo",
+  "closed": false,
+  "popularity_pct": 65,
+  "rating": 4.5,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 937
+ },
+ {
+  "name": "Legnino",
+  "closed": false,
+  "popularity_pct": 35,
+  "rating": 4.0,
+  "distance": "600 m",
+  "elevation_m": "58",
+  "rides": 267
+ },
+ {
+  "name": "Cà du Puncin",
+  "closed": true,
+  "popularity_pct": 40,
+  "rating": 3.3,
+  "distance": "2 km",
+  "elevation_m": "0",
+  "rides": 494
+ },
+ {
+  "name": "Titalana",
+  "closed": false,
+  "popularity_pct": 65,
+  "rating": 4.9,
+  "distance": "2 km",
+  "elevation_m": "4",
+  "rides": 1065
+ },
+ {
+  "name": "Via Caffaro",
+  "closed": false,
+  "popularity_pct": 35,
+  "rating": 4.1,
+  "distance": "2 km",
+  "elevation_m": "0",
+  "rides": 786
+ },
+ {
+  "name": "Ca del Vacchè",
+  "closed": false,
+  "popularity_pct": 45,
+  "rating": 3.9,
+  "distance": "3 km",
+  "elevation_m": "0",
+  "rides": 815
+ },
+ {
+  "name": "Pianarella",
+  "closed": false,
+  "popularity_pct": 25,
+  "rating": 4.2,
+  "distance": "2 km",
+  "elevation_m": "51",
+  "rides": 458
+ },
+ {
+  "name": "Megalithic",
+  "closed": false,
+  "popularity_pct": 35,
+  "rating": 4.3,
+  "distance": "2 km",
+  "elevation_m": "9",
+  "rides": 725
+ },
+ {
+  "name": "A.N.A.",
+  "closed": true,
+  "popularity_pct": 30,
+  "rating": 2.0,
+  "distance": "1 km",
+  "elevation_m": "213",
+  "rides": 270
+ },
+ {
+  "name": "Caprazoppa",
+  "closed": false,
+  "popularity_pct": 35,
+  "rating": 3.8,
+  "distance": "1 km",
+  "elevation_m": "16",
+  "rides": 757
+ },
+ {
+  "name": "Mao Crest",
+  "closed": false,
+  "popularity_pct": 50,
+  "rating": 4.3,
+  "distance": "3 km",
+  "elevation_m": "9",
+  "rides": 726
+ },
+ {
+  "name": "Pernice Rossa",
+  "closed": false,
+  "popularity_pct": 65,
+  "rating": 4.7,
+  "distance": "195 m",
+  "elevation_m": "1",
+  "rides": 947
+ },
+ {
+  "name": "Brighella",
+  "closed": false,
+  "popularity_pct": 45,
+  "rating": 4.4,
+  "distance": "828 m",
+  "elevation_m": "0",
+  "rides": 559
+ },
+ {
+  "name": "La Folia",
+  "closed": false,
+  "popularity_pct": 70,
+  "rating": 4.2,
+  "distance": "2 km",
+  "elevation_m": "10",
+  "rides": 787
+ },
+ {
+  "name": "Sentiero del Fieno",
+  "closed": false,
+  "popularity_pct": 45,
+  "rating": 4.1,
+  "distance": "1 km",
+  "elevation_m": "209",
+  "rides": 585
+ },
+ {
+  "name": "Ludi Trail",
+  "closed": true,
+  "popularity_pct": 65,
+  "rating": 3.3,
+  "distance": "403 m",
+  "elevation_m": "1",
+  "rides": 997
+ },
+ {
+  "name": "Ciappi",
+  "closed": false,
+  "popularity_pct": 30,
+  "rating": 2.8,
+  "distance": "2 km",
+  "elevation_m": "66",
+  "rides": 327
+ },
+ {
+  "name": "Gabry",
+  "closed": false,
+  "popularity_pct": 65,
+  "rating": 4.0,
+  "distance": "543 m",
+  "elevation_m": "3",
+  "rides": 587
+ },
+ {
+  "name": "Ciottolato",
+  "closed": true,
+  "popularity_pct": 70,
+  "rating": 2.9,
+  "distance": "437 m",
+  "elevation_m": "0",
+  "rides": 1359
+ },
+ {
+  "name": "Monte Grosso Uphill",
+  "closed": false,
+  "popularity_pct": 10,
+  "rating": 3.0,
+  "distance": "440 m",
+  "elevation_m": "75",
+  "rides": 92
+ },
+ {
+  "name": "Carbuta",
+  "closed": false,
+  "popularity_pct": 60,
+  "rating": 3.5,
+  "distance": "347 m",
+  "elevation_m": "0",
+  "rides": 994
+ },
+ {
+  "name": "Foresto",
+  "closed": false,
+  "popularity_pct": 60,
+  "rating": 4.2,
+  "distance": "658 m",
+  "elevation_m": "1",
+  "rides": 552
+ },
+ {
+  "name": "Black Mamba",
+  "closed": false,
+  "popularity_pct": 35,
+  "rating": 4.5,
+  "distance": "2 km",
+  "elevation_m": "1",
+  "rides": 412
+ },
+ {
+  "name": "Aleluia",
+  "closed": true,
+  "popularity_pct": 35,
+  "rating": 4.2,
+  "distance": "933 m",
+  "elevation_m": "6",
+  "rides": 620
+ },
+ {
+  "name": "Little Dog",
+  "closed": false,
+  "popularity_pct": 65,
+  "rating": 3.6,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 922
+ },
+ {
+  "name": "Neverland",
+  "closed": false,
+  "popularity_pct": 55,
+  "rating": 4.1,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 787
+ },
+ {
+  "name": "Armuin",
+  "closed": false,
+  "popularity_pct": 55,
+  "rating": 3.6,
+  "distance": "1 km",
+  "elevation_m": "21",
+  "rides": 452
+ },
+ {
+  "name": "San Michele",
+  "closed": false,
+  "popularity_pct": 25,
+  "rating": 4.3,
+  "distance": "2 km",
+  "elevation_m": "3",
+  "rides": 450
+ },
+ {
+  "name": "Sporting",
+  "closed": false,
+  "popularity_pct": 45,
+  "rating": 4.0,
+  "distance": "644 m",
+  "elevation_m": "19",
+  "rides": 652
+ },
+ {
+  "name": "Terra di Mezzo",
+  "closed": false,
+  "popularity_pct": 40,
+  "rating": 3.7,
+  "distance": "1 km",
+  "elevation_m": "12",
+  "rides": 534
+ },
+ {
+  "name": "Via Antica Romana",
+  "closed": false,
+  "popularity_pct": 40,
+  "rating": 4.6,
+  "distance": "3 km",
+  "elevation_m": "16",
+  "rides": 298
+ },
+ {
+  "name": "Semaforo",
+  "closed": false,
+  "popularity_pct": 45,
+  "rating": 3.2,
+  "distance": "3 km",
+  "elevation_m": "14",
+  "rides": 690
+ },
+ {
+  "name": "Sentiero indiano",
+  "closed": false,
+  "popularity_pct": 35,
+  "rating": 3.2,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 470
+ },
+ {
+  "name": "Anello dell'Arma",
+  "closed": true,
+  "popularity_pct": 50,
+  "rating": 3.4,
+  "distance": "2 km",
+  "elevation_m": "87",
+  "rides": 603
+ },
+ {
+  "name": "Pian Marino - Cia",
+  "closed": false,
+  "popularity_pct": 35,
+  "rating": 4.0,
+  "distance": "3 km",
+  "elevation_m": "44",
+  "rides": 1009
+ },
+ {
+  "name": "Borderline",
+  "closed": true,
+  "popularity_pct": 10,
+  "rating": 3.8,
+  "distance": "2 km",
+  "elevation_m": "3",
+  "rides": 205
+ },
+ {
+  "name": "Ale &amp; Ale",
+  "closed": true,
+  "popularity_pct": 5,
+  "rating": 3.7,
+  "distance": "2 km",
+  "elevation_m": "0",
+  "rides": 304
+ },
+ {
+  "name": "Cave",
+  "closed": true,
+  "popularity_pct": 25,
+  "rating": 3.9,
+  "distance": "1 km",
+  "elevation_m": "3",
+  "rides": 215
+ },
+ {
+  "name": "Parsifal",
+  "closed": false,
+  "popularity_pct": 40,
+  "rating": 3.8,
+  "distance": "1 km",
+  "elevation_m": "34",
+  "rides": 430
+ },
+ {
+  "name": "Variante Rocche Gianche",
+  "closed": false,
+  "popularity_pct": 40,
+  "rating": 4.0,
+  "distance": "770 m",
+  "elevation_m": "15",
+  "rides": 283
+ },
+ {
+  "name": "Sugheri",
+  "closed": false,
+  "popularity_pct": 20,
+  "rating": 3.8,
+  "distance": "2 km",
+  "elevation_m": "253",
+  "rides": 267
+ },
+ {
+  "name": "Traliccio",
+  "closed": true,
+  "popularity_pct": 20,
+  "rating": 4.8,
+  "distance": "389 m",
+  "elevation_m": "3",
+  "rides": 136
+ },
+ {
+  "name": "Calvisio",
+  "closed": false,
+  "popularity_pct": 35,
+  "rating": 3.0,
+  "distance": "585 m",
+  "elevation_m": "5",
+  "rides": 522
+ },
+ {
+  "name": "Ötzi",
+  "closed": false,
+  "popularity_pct": 10,
+  "rating": 3.5,
+  "distance": "2 km",
+  "elevation_m": "95",
+  "rides": 189
+ },
+ {
+  "name": "Monte Grosso Trail",
+  "closed": false,
+  "popularity_pct": 25,
+  "rating": 3.7,
+  "distance": "272 m",
+  "elevation_m": "0",
+  "rides": 296
+ },
+ {
+  "name": "Sentiero Amico",
+  "closed": false,
+  "popularity_pct": 25,
+  "rating": 3.7,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 193
+ },
+ {
+  "name": "Justanice Trail",
+  "closed": true,
+  "popularity_pct": 5,
+  "rating": 3.8,
+  "distance": "2 km",
+  "elevation_m": "37",
+  "rides": 314
+ },
+ {
+  "name": "Route Bella",
+  "closed": true,
+  "popularity_pct": 25,
+  "rating": 2.7,
+  "distance": "1 km",
+  "elevation_m": "155",
+  "rides": 252
+ },
+ {
+  "name": "A Carbonera",
+  "closed": false,
+  "popularity_pct": 15,
+  "rating": 4.3,
+  "distance": "2 km",
+  "elevation_m": "6",
+  "rides": 135
+ },
+ {
+  "name": "Acquedotto",
+  "closed": false,
+  "popularity_pct": 15,
+  "rating": 4.0,
+  "distance": "648 m",
+  "elevation_m": "0",
+  "rides": 156
+ },
+ {
+  "name": "Borgata Costa",
+  "closed": false,
+  "popularity_pct": 30,
+  "rating": 2.7,
+  "distance": "877 m",
+  "elevation_m": "22",
+  "rides": 367
+ },
+ {
+  "name": "Black &amp; White",
+  "closed": true,
+  "popularity_pct": 10,
+  "rating": 3.8,
+  "distance": "1 km",
+  "elevation_m": "9",
+  "rides": 200
+ },
+ {
+  "name": "Vaixella",
+  "closed": false,
+  "popularity_pct": 15,
+  "rating": 2.8,
+  "distance": "777 m",
+  "elevation_m": "14",
+  "rides": 179
+ },
+ {
+  "name": "Benevento Beeches",
+  "closed": false,
+  "popularity_pct": 10,
+  "rating": 3.4,
+  "distance": "2 km",
+  "elevation_m": "4",
+  "rides": 436
+ },
+ {
+  "name": "Tampa",
+  "closed": true,
+  "popularity_pct": 5,
+  "rating": 3.7,
+  "distance": "3 km",
+  "elevation_m": "10",
+  "rides": 153
+ },
+ {
+  "name": "Ciapin Lodge",
+  "closed": true,
+  "popularity_pct": 5,
+  "rating": 2.9,
+  "distance": "2 km",
+  "elevation_m": "6",
+  "rides": 273
+ },
+ {
+  "name": "Via Laiolo",
+  "closed": false,
+  "popularity_pct": 20,
+  "rating": 3.0,
+  "distance": "2 km",
+  "elevation_m": "0",
+  "rides": 166
+ },
+ {
+  "name": "Gorra",
+  "closed": false,
+  "popularity_pct": 30,
+  "rating": 2.7,
+  "distance": "806 m",
+  "elevation_m": "102",
+  "rides": 262
+ },
+ {
+  "name": "Trincea",
+  "closed": true,
+  "popularity_pct": 5,
+  "rating": 3.2,
+  "distance": "3 km",
+  "elevation_m": "45",
+  "rides": 172
+ },
+ {
+  "name": "Voltage",
+  "closed": true,
+  "popularity_pct": 25,
+  "rating": 1.0,
+  "distance": "808 m",
+  "elevation_m": "0",
+  "rides": 167
+ },
+ {
+  "name": "Madonnina",
+  "closed": false,
+  "popularity_pct": 40,
+  "rating": 4.0,
+  "distance": "414 m",
+  "elevation_m": "44",
+  "rides": 195
+ },
+ {
+  "name": "Cava - Tappeto Verde",
+  "closed": false,
+  "popularity_pct": 10,
+  "rating": 0.0,
+  "distance": "672 m",
+  "elevation_m": "37",
+  "rides": 54
+ },
+ {
+  "name": "CNC",
+  "closed": false,
+  "popularity_pct": 15,
+  "rating": 2.0,
+  "distance": "690 m",
+  "elevation_m": "0",
+  "rides": 98
+ },
+ {
+  "name": "Carcere duro",
+  "closed": false,
+  "popularity_pct": 5,
+  "rating": 0.0,
+  "distance": "1 km",
+  "elevation_m": "0",
+  "rides": 4
+ },
+ {
+  "name": "Cavatappi",
+  "closed": true,
+  "popularity_pct": 15,
+  "rating": 4.3,
+  "distance": "2 km",
+  "elevation_m": "1",
+  "rides": 504
+ },
+ {
+  "name": "Poste",
+  "closed": true,
+  "popularity_pct": 5,
+  "rating": 4.0,
+  "distance": "3 km",
+  "elevation_m": "2",
+  "rides": 64
+ },
+ {
+  "name": "Lupin Feglino",
+  "closed": false,
+  "popularity_pct": 40,
+  "rating": 5.0,
+  "distance": "264 m",
+  "elevation_m": "0",
+  "rides": 87
+ }
+]

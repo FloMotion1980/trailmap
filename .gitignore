@@ -1,0 +1,10 @@
+# Local Claude Code artifacts, not part of the project
+.claude/
+scratch/
+
+# Paznaun App has its own separate repository already
+/Paznaun App/
+
+# OS junk
+.DS_Store
+Thumbs.db
