@@ -255,6 +255,17 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 }
 #infoPanel h3 .locate-btn:hover{ background: var(--forest-dark); }
 
+/* Small chevrons along a trail's own line showing ride direction on the map itself, not just at the
+   Start/Ziel dots (added 2026-07-25, per the user). Neutral dark colour (independent of the trail's
+   own difficulty colour) with a white halo so it stays legible over any base layer/line colour;
+   pointer-events:none since these are purely informational, never a click/hover target. */
+.direction-arrow-icon{ background:none; border:none; pointer-events:none; }
+.direction-arrow{
+  font-size: 13px; line-height:1; color:#22301f;
+  text-shadow: 0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff, 0 0 2px #fff;
+  transform-origin:center; text-align:center;
+}
+
 .trail-label-tooltip{
   background: rgba(255,255,255,0.9); border: 1px solid #99a596; color: var(--ink);
   font-family: Arial, sans-serif; font-size: 11px; font-weight:600; padding: 1px 6px; border-radius: 4px;

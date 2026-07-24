@@ -885,6 +885,13 @@ function updateStartDotVisibility(){
     const isShown = map.hasLayer(layer.startDot);
     if (shouldShow && !isShown) map.addLayer(layer.startDot);
     else if (!shouldShow && isShown) map.removeLayer(layer.startDot);
+    // Direction arrows are exactly as fixed-pixel-size as startDot, so they clutter a zoomed-out
+    // view the same way -- same threshold, same filter-visibility gate.
+    (layer.directionArrows || []).forEach(({ marker }) => {
+      const arrowShown = map.hasLayer(marker);
+      if (shouldShow && !arrowShown) map.addLayer(marker);
+      else if (!shouldShow && arrowShown) map.removeLayer(marker);
+    });
   });
 }
 
@@ -895,6 +902,12 @@ const ipContent = document.getElementById("ipContent");
 let soloId = null;
 const SOLO_DIM_OPACITY = 0.15;
 
+function setArrowOpacity(layer, opacity){
+  (layer.directionArrows || []).forEach(({ marker }) => {
+    const el = marker.getElement();
+    if (el) el.style.opacity = opacity;
+  });
+}
 function applySolo(id){
   Object.entries(lineLayers).forEach(([lid, layer]) => {
     if (lid === id) {
@@ -902,11 +915,13 @@ function applySolo(id){
       layer.startDot.setStyle({ opacity:1, fillOpacity:1 });
       layer.startMarker.setStyle({ opacity:1, fillOpacity:1 });
       layer.endMarker.setStyle({ opacity:1, fillOpacity:1 });
+      setArrowOpacity(layer, 1);
     } else {
       layer.line.setStyle({ opacity: SOLO_DIM_OPACITY });
       layer.startDot.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
       layer.startMarker.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
       layer.endMarker.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
+      setArrowOpacity(layer, SOLO_DIM_OPACITY);
       layer.hitLine.closeTooltip();
     }
   });
@@ -919,6 +934,7 @@ function clearSolo(){
     layer.startDot.setStyle({ opacity:1, fillOpacity:1 });
     layer.startMarker.setStyle({ opacity:1, fillOpacity:1 });
     layer.endMarker.setStyle({ opacity:1, fillOpacity:1 });
+    setArrowOpacity(layer, 1);
   });
   soloId = null;
   applyNameLabels();
@@ -1107,6 +1123,53 @@ function latLngAtDistance(coords, cumDist, targetKm, reversed){
   return [a[0] + (b[0]-a[0])*frac, a[1] + (b[1]-a[1])*frac];
 }
 
+// Compass bearing (0=north, 90=east, clockwise) from a to b -- matches CSS rotate()'s own clockwise
+// convention directly, so an arrow glyph drawn pointing "up" just needs rotate(bearingDeg).
+function bearingDeg(a, b){
+  const toRad = d => d * Math.PI/180, toDeg = r => r * 180/Math.PI;
+  const lat1 = toRad(a[0]), lat2 = toRad(b[0]), dLon = toRad(b[1] - a[1]);
+  const y = Math.sin(dLon) * Math.cos(lat2);
+  const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+  return (toDeg(Math.atan2(y, x)) + 360) % 360;
+}
+
+// Small rotated chevrons along a trail's own line showing which way it's ridden, on the map itself
+// rather than only at the Start/Ziel dots -- added 2026-07-25 per the user, who wanted direction
+// visible even when only part of a trail (or a long Trailrunde) is in view. One arrow every ~300m by
+// distance (capped at 40 for very long loops, floored at 1 so even a short trail gets one), each
+// rotated to the local bearing sampled slightly ahead/behind its own position for a smoothed angle
+// rather than a single noisy segment. Built once per trail from its natural (never-reordered) coords
+// order -- see applyReversedEndpoints for how these visually flip when the 🔄 toggle is active.
+const ARROW_SPACING_KM = 0.3, ARROW_MAX_COUNT = 40;
+function buildDirectionArrows(coords){
+  const cumDist = cumulativeDistanceKm(coords);
+  const totalKm = cumDist[cumDist.length - 1];
+  if (totalKm <= 0) return [];
+  const count = Math.max(1, Math.min(ARROW_MAX_COUNT, Math.round(totalKm / ARROW_SPACING_KM)));
+  const arrows = [];
+  for (let i = 0; i < count; i++) {
+    const targetKm = (i + 0.5) / count * totalKm;
+    const pos = latLngAtDistance(coords, cumDist, targetKm, false);
+    const behind = latLngAtDistance(coords, cumDist, Math.max(0, targetKm - 0.02), false);
+    const ahead = latLngAtDistance(coords, cumDist, Math.min(totalKm, targetKm + 0.02), false);
+    arrows.push({ pos, baseAngle: bearingDeg(behind, ahead) });
+  }
+  return arrows;
+}
+function makeArrowIcon(angle){
+  return L.divIcon({
+    className: "direction-arrow-icon",
+    html: `<div class="direction-arrow" style="transform:rotate(${angle}deg)">▲</div>`,
+    iconSize: [14, 14], iconAnchor: [7, 7]
+  });
+}
+function buildDirectionArrowMarkers(coords){
+  return buildDirectionArrows(coords).map(({ pos, baseAngle }) => ({
+    marker: L.marker(pos, { icon: makeArrowIcon(baseAngle), interactive:false, keyboard:false }),
+    baseAngle
+  }));
+}
+
 // Small marker that tracks the mouse while hovering a trail's elevation chart, showing where that
 // point in the profile actually is on the map — added 2026-07-23 per the user. Interactive:false so
 // it never itself intercepts clicks meant for the trail/loop underneath it.
@@ -1197,6 +1260,12 @@ function applyReversedEndpoints(id){
   layer.startDot.setLatLng(startPt);
   layer.startMarker.setLatLng(startPt);
   layer.endMarker.setLatLng(endPt);
+  // Direction arrows were built once from coords' own natural (never-reordered) order -- flip each
+  // one's displayed rotation by 180° while reversed, same "only the view changes, not the underlying
+  // data" rule as the rest of this reversed-direction feature.
+  (layer.directionArrows || []).forEach(({ marker, baseAngle }) => {
+    marker.setIcon(makeArrowIcon(baseAngle + (isReversed ? 180 : 0)));
+  });
 }
 
 let openTrailId = null;       // trail currently shown in #infoPanel, or null
@@ -1461,6 +1530,8 @@ function buildTrailLayer(t){
   const startDot = L.circleMarker(coords[0], { radius:5, color:"#22301f", weight:1.5, fillColor:"#fff", fillOpacity:1, bubblingMouseEvents:false }).addTo(map);
   const startMarker = L.circleMarker(coords[0], { radius:5, color:"#0d3d1a", weight:1.5, fillColor:"#3fbf5e", fillOpacity:1, bubblingMouseEvents:false });
   const endMarker = L.circleMarker(coords[coords.length - 1], { radius:5, color:"#5c0f0a", weight:1.5, fillColor:"#e0392b", fillOpacity:1, bubblingMouseEvents:false });
+  const directionArrows = buildDirectionArrowMarkers(coords);
+  directionArrows.forEach(({ marker }) => marker.addTo(map));
   const bounds = L.latLngBounds(coords);
   const midIdx = Math.floor(coords.length / 2);
 
@@ -1509,7 +1580,7 @@ function buildTrailLayer(t){
   endMarker.on("mouseover", () => setHover(true));
   endMarker.on("mouseout", () => setHover(false));
 
-  lineLayers[t.id] = { line, hitLine, segmentHitLines, segmentNameLabels, startDot, startMarker, endMarker, bounds, setHover, midIdx, coords, card:null };
+  lineLayers[t.id] = { line, hitLine, segmentHitLines, segmentNameLabels, startDot, startMarker, endMarker, directionArrows, bounds, setHover, midIdx, coords, card:null };
 }
 
 // Undoes buildTrailLayer: removes every layer this trail owns from the map and forgets it.
@@ -1524,6 +1595,7 @@ function destroyTrailLayer(id){
   map.removeLayer(layer.startDot);
   map.removeLayer(layer.startMarker);
   map.removeLayer(layer.endMarker);
+  (layer.directionArrows || []).forEach(({ marker }) => map.removeLayer(marker));
   delete lineLayers[id];
 }
 
@@ -1865,7 +1937,10 @@ function render(){
         if (layer) {
           if (visible) {
             map.addLayer(layer.line); map.addLayer(layer.hitLine);
-            if (map.getZoom() >= START_DOT_MIN_ZOOM) map.addLayer(layer.startDot);
+            if (map.getZoom() >= START_DOT_MIN_ZOOM) {
+              map.addLayer(layer.startDot);
+              (layer.directionArrows || []).forEach(({ marker }) => map.addLayer(marker));
+            }
             // Leaflet auto-opens a `permanent:true` tooltip whenever its layer is (re-)added to the
             // map -- buildTrailLayer() only closes it once, right after building, so a segment hit-line
             // that gets removed then re-added later (e.g. a Trailrunde toggled hidden->visible via a
@@ -1876,6 +1951,7 @@ function render(){
             shown++;
           } else {
             map.removeLayer(layer.line); map.removeLayer(layer.hitLine); map.removeLayer(layer.startDot);
+            (layer.directionArrows || []).forEach(({ marker }) => map.removeLayer(marker));
             (layer.segmentHitLines || []).forEach(h => map.removeLayer(h));
             hideEndpoints(t.id);
             // A filter change (not just deactivating a whole region, which destroyTrailLayer already
