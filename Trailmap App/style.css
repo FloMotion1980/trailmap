@@ -379,9 +379,13 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 }
 #regionDialog.visible{ display:flex; }
 #regionDialog .box{
-  width:100%; max-width:420px; max-height:80vh; overflow-y:auto;
+  width:100%; max-width:420px; max-height:80vh;
   background:#fff; border-radius:12px; padding:20px 22px 16px;
   box-shadow:0 10px 30px rgba(0,0,0,0.3); position:relative;
+  display:flex; flex-direction:column;
+}
+#regionDialogList{
+  overflow-y:auto; flex:1; min-height:0;
 }
 #regionDialog h2{
   font-family:'Copperplate','Trebuchet MS',sans-serif; text-transform:uppercase; letter-spacing:.5px;
