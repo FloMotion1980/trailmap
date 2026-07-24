@@ -66,6 +66,7 @@
           </div>
           <div class="toggle-row-group">
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showNamesToggle"><span class="slider"></span></span>Namen</label>
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDirectionArrowsToggle"><span class="slider"></span></span>Richtungspfeile</label>
           </div>
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
         </details>
@@ -396,6 +397,11 @@ let showNames = false;
 let showUphill = true; // hides/shows trails flagged uphill:true (EMTB uphill trails) — independent of diff
 let showLoop = true; // hides/shows trails flagged loop:true (Trailrunden) — independent of diff
 let showDownhill = true; // hides/shows "regular" trails (neither uphill nor loop) — independent of diff
+// Direction arrows (added 2026-07-25) are off by default -- per the user, "so gefallen sie mir noch
+// nicht" (not happy with how they look yet) -- kept in the app as a Kartenoptionen toggle rather than
+// removed outright, in case the look gets refined later. Persisted like the other Kartenoptionen/
+// filter toggles.
+let showDirectionArrows = false;
 
 const regionChipRow = document.getElementById("regionChips");
 const regionsBtnEl = document.getElementById("regionsBtn");
@@ -523,6 +529,12 @@ document.querySelectorAll("#diffChips .chip").forEach(btn => {
 document.getElementById("showNamesToggle").addEventListener("change", (e) => {
   showNames = e.target.checked;
   applyNameLabels();
+});
+
+document.getElementById("showDirectionArrowsToggle").addEventListener("change", (e) => {
+  showDirectionArrows = e.target.checked;
+  persistActiveState();
+  updateStartDotVisibility();
 });
 
 document.getElementById("showUphillToggle").addEventListener("change", (e) => {
@@ -930,11 +942,13 @@ function updateStartDotVisibility(){
     if (shouldShow && !isShown) map.addLayer(layer.startDot);
     else if (!shouldShow && isShown) map.removeLayer(layer.startDot);
     // Direction arrows are exactly as fixed-pixel-size as startDot, so they clutter a zoomed-out
-    // view the same way -- same threshold, same filter-visibility gate.
+    // view the same way -- same threshold, same filter-visibility gate -- plus their own dedicated
+    // on/off toggle (off by default, see showDirectionArrows) on top of that.
+    const arrowsShouldShow = shouldShow && showDirectionArrows;
     (layer.directionArrows || []).forEach(({ marker }) => {
       const arrowShown = map.hasLayer(marker);
-      if (shouldShow && !arrowShown) map.addLayer(marker);
-      else if (!shouldShow && arrowShown) map.removeLayer(marker);
+      if (arrowsShouldShow && !arrowShown) map.addLayer(marker);
+      else if (!arrowsShouldShow && arrowShown) map.removeLayer(marker);
     });
   });
 }
@@ -1575,7 +1589,9 @@ function buildTrailLayer(t){
   const startMarker = L.circleMarker(coords[0], { radius:5, color:"#0d3d1a", weight:1.5, fillColor:"#3fbf5e", fillOpacity:1, bubblingMouseEvents:false });
   const endMarker = L.circleMarker(coords[coords.length - 1], { radius:5, color:"#5c0f0a", weight:1.5, fillColor:"#e0392b", fillOpacity:1, bubblingMouseEvents:false });
   const directionArrows = buildDirectionArrowMarkers(coords);
-  directionArrows.forEach(({ marker }) => marker.addTo(map));
+  if (showDirectionArrows && map.getZoom() >= START_DOT_MIN_ZOOM) {
+    directionArrows.forEach(({ marker }) => marker.addTo(map));
+  }
   const bounds = L.latLngBounds(coords);
   const midIdx = Math.floor(coords.length / 2);
 
@@ -1654,7 +1670,8 @@ function persistActiveState(){
       activeDiffs: [...activeDiffs],
       showUphill,
       showLoop,
-      showDownhill
+      showDownhill,
+      showDirectionArrows
     }));
   } catch (e) { /* localStorage unavailable (private mode etc.) — filters just won't persist */ }
 }
@@ -1670,6 +1687,7 @@ function restoreActiveState(){
     if (typeof saved.showUphill !== "boolean") saved.showUphill = true;
     if (typeof saved.showLoop !== "boolean") saved.showLoop = true;
     if (typeof saved.showDownhill !== "boolean") saved.showDownhill = true;
+    if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = false;
     return saved;
   } catch (e) { return null; }
 }
@@ -1983,7 +2001,7 @@ function render(){
             map.addLayer(layer.line); map.addLayer(layer.hitLine);
             if (map.getZoom() >= START_DOT_MIN_ZOOM) {
               map.addLayer(layer.startDot);
-              (layer.directionArrows || []).forEach(({ marker }) => map.addLayer(marker));
+              if (showDirectionArrows) (layer.directionArrows || []).forEach(({ marker }) => map.addLayer(marker));
             }
             // Leaflet auto-opens a `permanent:true` tooltip whenever its layer is (re-)added to the
             // map -- buildTrailLayer() only closes it once, right after building, so a segment hit-line
@@ -2106,6 +2124,7 @@ async function boot(){
     showUphill = saved.showUphill;
     showLoop = saved.showLoop;
     showDownhill = saved.showDownhill;
+    showDirectionArrows = saved.showDirectionArrows;
     // rebuildRegionChips() re-derives region-chip DOM from activeRegions fresh, but the difficulty
     // chips (and the uphill/loop/downhill toggles) are static markup (all "active"/checked by
     // default) — sync here.
@@ -2115,6 +2134,7 @@ async function boot(){
     document.getElementById("showUphillToggle").checked = showUphill;
     document.getElementById("showLoopToggle").checked = showLoop;
     document.getElementById("showDownhillToggle").checked = showDownhill;
+    document.getElementById("showDirectionArrowsToggle").checked = showDirectionArrows;
   }
   rebuildRegionChips();
   render();
