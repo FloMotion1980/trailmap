@@ -1656,6 +1656,22 @@ function renderRegionDialog(){
     }
     row.appendChild(info);
 
+    // Lets you peek at where a region actually is before deciding to activate it (or just re-locate
+    // one that's already active) straight from this dialog, without closing it first -- the dialog's
+    // own backdrop is a translucent overlay (not fully opaque), so the map really is visible moving
+    // underneath. Added 2026-07-25 per the user: the sidebar's own region-group fly button does the
+    // same thing once a region is active, but isn't discoverable ("nicht eingängig") for someone who
+    // hasn't activated anything yet -- this dialog is the first thing every user sees.
+    const locateBtn = document.createElement("button");
+    locateBtn.className = "rd-locate-btn";
+    locateBtn.textContent = "📍";
+    locateBtn.title = "Zu dieser Region springen";
+    locateBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      flyToTrailBounds(L.latLngBounds(entry.bounds));
+    });
+    row.appendChild(locateBtn);
+
     const isActive = activeRegionGroups.has(groupKey);
     const isPending = !!pendingActivation[groupKey];
     const btn = document.createElement("button");
