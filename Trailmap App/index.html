@@ -1436,7 +1436,16 @@ function buildTrailLayer(t){
         }
         return visibleSeg;
       })).addTo(map)
-    : L.polyline(coords, { color: diffColor[t.diff], weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }).addTo(map);
+    // A loop with no TRAIL_SEGMENTS data (no named-component-trail breakdown, e.g. the Odenwald
+    // "grouped cluster" loops like Gorxheimertal/Hammelbach) has no real single difficulty of its
+    // own — its `diff` is just an overall-route approximation, not a claim about every stretch. Drawn
+    // in the same dashed neutral CONNECTOR_COLOR already used for "no specific trail info here"
+    // elsewhere, rather than a solid diffColor that would misleadingly read as one uniform-difficulty
+    // trail (found 2026-07-25, per the user, after noticing GO1 rendered as a plain solid blue line).
+    : L.polyline(coords, t.loop
+        ? { color: CONNECTOR_COLOR, dashArray: "6,6", weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
+        : { color: diffColor[t.diff], weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
+      ).addTo(map);
   // Invisible, much wider line laid over the visible one — makes tapping on touch screens far easier
   // without changing how thin the trail looks. All interaction happens on this one. Also carries the
   // name-label tooltip (rather than `line`, which for a Trailrunde is a featureGroup without tooltip
