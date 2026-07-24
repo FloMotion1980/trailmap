@@ -363,6 +363,23 @@ const REGION_CATALOG = {
     subRegions: {
       epic_bikepark: { label: "The Epic Bikepark", color: "#8a3a3a" }
     }
+  },
+  // Second Alps bike park, same day/method as Leogang -- 11 official "shaped lines" (bikepark-life.com's
+  // own name+difficulty+length table) plus 3 named natural singletrails (Kleble Alm/Leiterberg/Nene,
+  // difficulty from mtb:scale since no official rating exists for these). OSM naming here is even
+  // stronger than Leogang -- most ways carry the same numeric trail code bikepark-life uses (e.g.
+  // "Teäre Line (6003)"), a strong cross-check that the mapping is deliberately kept in sync with the
+  // official trail network. One real graph-bridging failure caught and fixed here: Ollweite Line's
+  // naive shortest-path bridge for a ~150m gap blew up to +3.4km (a bad detour through the wider path
+  // network) -- added a sanity cap (reject a bridge unless it's within ~5x the straight-line gap or
+  // 300m, whichever is larger; fall back to a direct join otherwise) plus a small-fragment-drop
+  // threshold (~20m) to `bridge_chains()` in the build script, both worth reusing for future parks.
+  soelden: {
+    label: "Bike Republic Sölden", file: "regions/soelden.json", trailCount: 14,
+    bounds: [[46.94098, 10.95355], [46.98732, 11.02762]],
+    subRegions: {
+      bike_republic: { label: "Bike Republic", color: "#2f6b8a" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;
