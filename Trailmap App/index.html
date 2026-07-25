@@ -53,7 +53,7 @@
           <div class="toggle-row-group">
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDownhillToggle" checked><span class="slider"></span></span>⬇ Downhill</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showUphillToggle" checked><span class="slider"></span></span>⚡ Uphill</label>
-            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLoopToggle" checked><span class="slider"></span></span>🔁 Trailrunden</label>
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLoopToggle" checked><span class="slider"></span></span>🔁 Touren</label>
           </div>
         </details>
         <details class="filter-section" id="secMapOptions">
@@ -412,7 +412,8 @@ const REGION_CATALOG = {
     subRegions: {
       saalbach: { label: "Saalbach Hinterglemm", color: "#8a6a2f" },
       leogang: { label: "Leogang", color: "#8a3a3a" },
-      fieberbrunn: { label: "Fieberbrunn", color: "#2f6b8a" }
+      fieberbrunn: { label: "Fieberbrunn", color: "#2f6b8a" },
+      challenges: { label: "Challenges", color: "#6b3a8a" }
     }
   }
 };
@@ -1370,7 +1371,7 @@ function buildInfoPanelHtml(t){
   const upShown = isReversed ? t.down : t.up;
   const downShown = isReversed ? t.up : t.down;
   const uphillBadge = t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⚡</span>` : "";
-  const loopBadge = t.loop ? ` <span class="badge-loop" title="Trailrunde (mehrere Trails kombiniert)">🔁</span>` : "";
+  const loopBadge = t.loop ? ` <span class="badge-loop" title="Tour (mehrere Trails kombiniert)">🔁</span>` : "";
 
   // If this is a loop and one of its segments was last clicked, highlight that stretch in the
   // elevation profile and add a small section below the GPX button with that trail's own stats —
@@ -2073,7 +2074,7 @@ function render(){
         // instant selection changes without also re-rendering the whole list (2026-07-24, found while
         // testing -- the button never appeared until some unrelated re-render happened to run later).
         card.innerHTML = `
-          <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⚡</span>` : ""}${t.loop ? ` <span class="badge-loop" title="Trailrunde (mehrere Trails kombiniert)">🔁</span>` : ""}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button></div>
+          <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⚡</span>` : ""}${t.loop ? ` <span class="badge-loop" title="Tour (mehrere Trails kombiniert)">🔁</span>` : ""}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button></div>
           <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span></div>`;
         card.addEventListener("click", (e) => {
           const soloBtn = e.target.closest(".card-solo-btn");
