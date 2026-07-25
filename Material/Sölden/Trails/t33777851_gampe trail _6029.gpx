@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Gampe Trail (6029)</name>
+    <author>
+      <name>Jakob Falkner - Ötztal</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/33777851"/>
+    <time>2025-10-16T06:23:47.738Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Gampe Trail (6029)</name>
+    <desc><![CDATA[Der rote Gampe Trail ist ein kurzer, aber knackiger Single Trail, der dich zu den Gampe Almen und anschließend zur Ohn Line oder Langegglift (Ollweite LIne) bringt. Er ist ein wichtiger Zubringer in das Gebiet "Gaislachkogl": Nimm den Forstweg von Hochsölden (Einstieg Gahe Line) Richtung taleinwärts so gelangt man auf den Gampe Trail. ]]></desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="46.967156" lon="10.98144">
+        <ele>2096.79789</ele>
+        <name>46.967156,10.981440</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>18</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.967176" lon="10.981524">
+        <ele>2095.3672</ele>
+      </trkpt>
+      <trkpt lat="46.967187" lon="10.981578">
+        <ele>2094.29314</ele>
+      </trkpt>
+      <trkpt lat="46.967212" lon="10.981645">
+        <ele>2093.04357</ele>
+      </trkpt>
+      <trkpt lat="46.967248" lon="10.981716">
+        <ele>2091.38773</ele>
+      </trkpt>
+      <trkpt lat="46.967295" lon="10.981801">
+        <ele>2089.06928</ele>
+      </trkpt>
+      <trkpt lat="46.967343" lon="10.981887">
+        <ele>2086.4788</ele>
+      </trkpt>
+      <trkpt lat="46.967353" lon="10.982004">
+        <ele>2082.2092</ele>
+      </trkpt>
+      <trkpt lat="46.967372" lon="10.982085">
+        <ele>2080.06945</ele>
+      </trkpt>
+      <trkpt lat="46.967401" lon="10.982171">
+        <ele>2078.20105</ele>
+      </trkpt>
+      <trkpt lat="46.96743" lon="10.982262">
+        <ele>2076.00155</ele>
+      </trkpt>
+      <trkpt lat="46.967463" lon="10.982332">
+        <ele>2074.40572</ele>
+      </trkpt>
+      <trkpt lat="46.967507" lon="10.982364">
+        <ele>2074.19019</ele>
+      </trkpt>
+      <trkpt lat="46.96754" lon="10.982418">
+        <ele>2072.95351</ele>
+      </trkpt>
+      <trkpt lat="46.967582" lon="10.982468">
+        <ele>2071.63723</ele>
+      </trkpt>
+      <trkpt lat="46.967591" lon="10.982481">
+        <ele>2071.22426</ele>
+      </trkpt>
+      <trkpt lat="46.967603" lon="10.982507">
+        <ele>2070.28152</ele>
+      </trkpt>
+      <trkpt lat="46.967613" lon="10.982518">
+        <ele>2069.9253</ele>
+      </trkpt>
+      <trkpt lat="46.967634" lon="10.982532">
+        <ele>2069.55087</ele>
+      </trkpt>
+      <trkpt lat="46.967665" lon="10.982541">
+        <ele>2069.51908</ele>
+      </trkpt>
+      <trkpt lat="46.967678" lon="10.982548">
+        <ele>2069.3801</ele>
+      </trkpt>
+      <trkpt lat="46.967728" lon="10.982592">
+        <ele>2068.16749</ele>
+      </trkpt>
+      <trkpt lat="46.967773" lon="10.982617">
+        <ele>2067.79396</ele>
+      </trkpt>
+      <trkpt lat="46.967782" lon="10.982627">
+        <ele>2067.50205</ele>
+      </trkpt>
+      <trkpt lat="46.967797" lon="10.982649">
+        <ele>2066.80819</ele>
+      </trkpt>
+      <trkpt lat="46.967862" lon="10.982732">
+        <ele>2065.01944</ele>
+      </trkpt>
+      <trkpt lat="46.967888" lon="10.982769">
+        <ele>2064.43079</ele>
+      </trkpt>
+      <trkpt lat="46.967914" lon="10.982809">
+        <ele>2063.76296</ele>
+      </trkpt>
+      <trkpt lat="46.967932" lon="10.98284">
+        <ele>2063.25442</ele>
+      </trkpt>
+      <trkpt lat="46.967947" lon="10.982871">
+        <ele>2062.76725</ele>
+      </trkpt>
+      <trkpt lat="46.967998" lon="10.982987">
+        <ele>2060.98551</ele>
+      </trkpt>
+      <trkpt lat="46.968013" lon="10.983023">
+        <ele>2060.44248</ele>
+      </trkpt>
+      <trkpt lat="46.968023" lon="10.983057">
+        <ele>2059.79945</ele>
+      </trkpt>
+      <trkpt lat="46.968026" lon="10.983083">
+        <ele>2059.17067</ele>
+      </trkpt>
+      <trkpt lat="46.968033" lon="10.98311">
+        <ele>2058.62429</ele>
+      </trkpt>
+      <trkpt lat="46.968037" lon="10.983124">
+        <ele>2058.34364</ele>
+      </trkpt>
+      <trkpt lat="46.968049" lon="10.983151">
+        <ele>2057.87985</ele>
+      </trkpt>
+      <trkpt lat="46.968065" lon="10.98318">
+        <ele>2057.33659</ele>
+      </trkpt>
+      <trkpt lat="46.968097" lon="10.983228">
+        <ele>2056.16626</ele>
+      </trkpt>
+      <trkpt lat="46.968138" lon="10.983283">
+        <ele>2054.54901</ele>
+      </trkpt>
+      <trkpt lat="46.968171" lon="10.983324">
+        <ele>2053.31348</ele>
+      </trkpt>
+      <trkpt lat="46.968217" lon="10.983362">
+        <ele>2052.52738</ele>
+      </trkpt>
+      <trkpt lat="46.968276" lon="10.98341">
+        <ele>2051.45661</ele>
+      </trkpt>
+      <trkpt lat="46.968391" lon="10.983515">
+        <ele>2047.41437</ele>
+      </trkpt>
+      <trkpt lat="46.968421" lon="10.983543">
+        <ele>2046.35825</ele>
+      </trkpt>
+      <trkpt lat="46.968463" lon="10.983587">
+        <ele>2044.93356</ele>
+      </trkpt>
+      <trkpt lat="46.968486" lon="10.983609">
+        <ele>2044.26881</ele>
+      </trkpt>
+      <trkpt lat="46.968526" lon="10.983641">
+        <ele>2043.2157</ele>
+      </trkpt>
+      <trkpt lat="46.968615" lon="10.983701">
+        <ele>2041.2642</ele>
+      </trkpt>
+      <trkpt lat="46.96864" lon="10.983722">
+        <ele>2040.62699</ele>
+      </trkpt>
+      <trkpt lat="46.968674" lon="10.983752">
+        <ele>2039.7381</ele>
+      </trkpt>
+      <trkpt lat="46.968709" lon="10.98379">
+        <ele>2038.39788</ele>
+      </trkpt>
+      <trkpt lat="46.968745" lon="10.98384">
+        <ele>2036.20368</ele>
+      </trkpt>
+      <trkpt lat="46.968766" lon="10.98386">
+        <ele>2035.36923</ele>
+      </trkpt>
+      <trkpt lat="46.968797" lon="10.983885">
+        <ele>2034.51658</ele>
+      </trkpt>
+      <trkpt lat="46.968813" lon="10.983904">
+        <ele>2033.8359</ele>
+      </trkpt>
+      <trkpt lat="46.968836" lon="10.983943">
+        <ele>2032.3672</ele>
+      </trkpt>
+      <trkpt lat="46.968884" lon="10.984011">
+        <ele>2030.65347</ele>
+      </trkpt>
+      <trkpt lat="46.968924" lon="10.984102">
+        <ele>2028.33406</ele>
+      </trkpt>
+      <trkpt lat="46.968954" lon="10.984276">
+        <ele>2023.00013</ele>
+      </trkpt>
+      <trkpt lat="46.968962" lon="10.984311">
+        <ele>2022.00209</ele>
+      </trkpt>
+      <trkpt lat="46.969001" lon="10.984397">
+        <ele>2020.30311</ele>
+      </trkpt>
+      <trkpt lat="46.969074" lon="10.98451">
+        <ele>2018.89074</ele>
+      </trkpt>
+      <trkpt lat="46.968971" lon="10.98451">
+        <ele>2015.19726</ele>
+      </trkpt>
+      <trkpt lat="46.968887" lon="10.984547">
+        <ele>2012.42727</ele>
+      </trkpt>
+      <trkpt lat="46.968835" lon="10.984637">
+        <ele>2009.88042</ele>
+      </trkpt>
+      <trkpt lat="46.968804" lon="10.984696">
+        <ele>2008.7937</ele>
+      </trkpt>
+      <trkpt lat="46.968741" lon="10.9848">
+        <ele>2007.25389</ele>
+      </trkpt>
+      <trkpt lat="46.968689" lon="10.98488">
+        <ele>2006.3709</ele>
+      </trkpt>
+      <trkpt lat="46.968674" lon="10.984899">
+        <ele>2006.06932</ele>
+      </trkpt>
+      <trkpt lat="46.968665" lon="10.984907">
+        <ele>2005.92512</ele>
+      </trkpt>
+      <trkpt lat="46.968642" lon="10.984919">
+        <ele>2005.66942</ele>
+      </trkpt>
+      <trkpt lat="46.968597" lon="10.984933">
+        <ele>2005.4</ele>
+        <name>Almhütte, Sölden</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>18</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

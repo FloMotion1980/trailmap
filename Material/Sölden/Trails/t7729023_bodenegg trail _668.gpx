@@ -1,0 +1,514 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Bodenegg Trail (668)</name>
+    <author>
+      <name>Bergbahnen Sölden, Mag.. Jakob Falkner - Ötztal</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/7729023"/>
+    <time>2025-12-02T11:32:02.748Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Bodenegg Trail (668)</name>
+    <desc>Spitzkehren, abschüssiges Gelände, verblockte &amp; feuchte Passagen – der schwarze Bodenegg Trail bietet alles, was sich Top-Biker von einem naturbelassenen Pfad erträumen.</desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="46.934071" lon="10.998134">
+        <ele>1955.7</ele>
+        <name>Gaislachalm, Sölden</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>16</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.93406" lon="10.99804">
+        <ele>1955.7</ele>
+      </trkpt>
+      <trkpt lat="46.93404" lon="10.997914">
+        <ele>1956.4</ele>
+      </trkpt>
+      <trkpt lat="46.93402" lon="10.997806">
+        <ele>1956.9</ele>
+      </trkpt>
+      <trkpt lat="46.933868" lon="10.997541">
+        <ele>1953.3</ele>
+      </trkpt>
+      <trkpt lat="46.933717" lon="10.997276">
+        <ele>1950.3</ele>
+      </trkpt>
+      <trkpt lat="46.933647" lon="10.997152">
+        <ele>1948.5</ele>
+      </trkpt>
+      <trkpt lat="46.933594" lon="10.997083">
+        <ele>1947.4</ele>
+      </trkpt>
+      <trkpt lat="46.933537" lon="10.997058">
+        <ele>1946.7</ele>
+      </trkpt>
+      <trkpt lat="46.933444" lon="10.997056">
+        <ele>1945.9</ele>
+      </trkpt>
+      <trkpt lat="46.933344" lon="10.997077">
+        <ele>1944.4</ele>
+      </trkpt>
+      <trkpt lat="46.933273" lon="10.99712">
+        <ele>1943.5</ele>
+      </trkpt>
+      <trkpt lat="46.933218" lon="10.997139">
+        <ele>1943.0</ele>
+      </trkpt>
+      <trkpt lat="46.93311" lon="10.997125">
+        <ele>1940.9</ele>
+      </trkpt>
+      <trkpt lat="46.932987" lon="10.99706">
+        <ele>1939.6</ele>
+      </trkpt>
+      <trkpt lat="46.932906" lon="10.996986">
+        <ele>1938.4</ele>
+      </trkpt>
+      <trkpt lat="46.932748" lon="10.996815">
+        <ele>1934.8</ele>
+      </trkpt>
+      <trkpt lat="46.932689" lon="10.996729">
+        <ele>1933.6</ele>
+      </trkpt>
+      <trkpt lat="46.932639" lon="10.996619">
+        <ele>1932.8</ele>
+      </trkpt>
+      <trkpt lat="46.932604" lon="10.996461">
+        <ele>1931.2</ele>
+      </trkpt>
+      <trkpt lat="46.932539" lon="10.995849">
+        <ele>1927.6</ele>
+      </trkpt>
+      <trkpt lat="46.932518" lon="10.995728">
+        <ele>1926.2</ele>
+        <name>Gaislachweg, Sölden</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>16</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.932461" lon="10.995393">
+        <ele>1922.3</ele>
+      </trkpt>
+      <trkpt lat="46.932391" lon="10.995104">
+        <ele>1918.9</ele>
+      </trkpt>
+      <trkpt lat="46.932358" lon="10.995014">
+        <ele>1917.7</ele>
+      </trkpt>
+      <trkpt lat="46.932287" lon="10.99488">
+        <ele>1916.1</ele>
+      </trkpt>
+      <trkpt lat="46.932168" lon="10.994724">
+        <ele>1914.7</ele>
+      </trkpt>
+      <trkpt lat="46.931899" lon="10.994322">
+        <ele>1910.4</ele>
+      </trkpt>
+      <trkpt lat="46.931794" lon="10.99414">
+        <ele>1907.6</ele>
+      </trkpt>
+      <trkpt lat="46.931782" lon="10.99411">
+        <ele>1907.1</ele>
+        <name>Gaislachweg, Sölden</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>16</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.931702" lon="10.993897">
+        <ele>1903.7</ele>
+      </trkpt>
+      <trkpt lat="46.931629" lon="10.993647">
+        <ele>1902.0</ele>
+      </trkpt>
+      <trkpt lat="46.931625" lon="10.993473">
+        <ele>1900.2</ele>
+      </trkpt>
+      <trkpt lat="46.931711" lon="10.993052">
+        <ele>1895.3</ele>
+      </trkpt>
+      <trkpt lat="46.931769" lon="10.992729">
+        <ele>1892.4</ele>
+      </trkpt>
+      <trkpt lat="46.9318" lon="10.992581">
+        <ele>1891.3</ele>
+      </trkpt>
+      <trkpt lat="46.931828" lon="10.992452">
+        <ele>1890.4</ele>
+      </trkpt>
+      <trkpt lat="46.931838" lon="10.992393">
+        <ele>1889.9</ele>
+      </trkpt>
+      <trkpt lat="46.93183" lon="10.992339">
+        <ele>1889.3</ele>
+      </trkpt>
+      <trkpt lat="46.931814" lon="10.992301">
+        <ele>1888.9</ele>
+      </trkpt>
+      <trkpt lat="46.931791" lon="10.992284">
+        <ele>1888.4</ele>
+        <name>Gaislachweg, Sölden</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.931778" lon="10.992275">
+        <ele>1888.2</ele>
+      </trkpt>
+      <trkpt lat="46.931748" lon="10.992273">
+        <ele>1887.9</ele>
+      </trkpt>
+      <trkpt lat="46.931717" lon="10.992285">
+        <ele>1887.7</ele>
+      </trkpt>
+      <trkpt lat="46.931621" lon="10.992445">
+        <ele>1886.0</ele>
+      </trkpt>
+      <trkpt lat="46.931596" lon="10.992453">
+        <ele>1885.2</ele>
+      </trkpt>
+      <trkpt lat="46.93159" lon="10.992424">
+        <ele>1884.8</ele>
+      </trkpt>
+      <trkpt lat="46.931591" lon="10.992383">
+        <ele>1884.5</ele>
+      </trkpt>
+      <trkpt lat="46.931581" lon="10.992352">
+        <ele>1883.7</ele>
+      </trkpt>
+      <trkpt lat="46.931522" lon="10.992308">
+        <ele>1881.2</ele>
+      </trkpt>
+      <trkpt lat="46.931503" lon="10.992249">
+        <ele>1879.8</ele>
+      </trkpt>
+      <trkpt lat="46.931495" lon="10.992228">
+        <ele>1879.1</ele>
+      </trkpt>
+      <trkpt lat="46.931476" lon="10.992209">
+        <ele>1878.0</ele>
+      </trkpt>
+      <trkpt lat="46.931478" lon="10.991932">
+        <ele>1874.2</ele>
+      </trkpt>
+      <trkpt lat="46.93145" lon="10.991886">
+        <ele>1872.7</ele>
+      </trkpt>
+      <trkpt lat="46.931415" lon="10.991844">
+        <ele>1871.1</ele>
+      </trkpt>
+      <trkpt lat="46.931234" lon="10.991871">
+        <ele>1864.6</ele>
+      </trkpt>
+      <trkpt lat="46.931171" lon="10.991832">
+        <ele>1862.1</ele>
+      </trkpt>
+      <trkpt lat="46.931112" lon="10.991828">
+        <ele>1859.8</ele>
+      </trkpt>
+      <trkpt lat="46.930845" lon="10.99206">
+        <ele>1849.7</ele>
+      </trkpt>
+      <trkpt lat="46.930639" lon="10.992271">
+        <ele>1843.1</ele>
+      </trkpt>
+      <trkpt lat="46.930558" lon="10.9923">
+        <ele>1840.4</ele>
+      </trkpt>
+      <trkpt lat="46.930414" lon="10.992425">
+        <ele>1835.1</ele>
+      </trkpt>
+      <trkpt lat="46.930349" lon="10.992613">
+        <ele>1832.1</ele>
+      </trkpt>
+      <trkpt lat="46.93025" lon="10.9927">
+        <ele>1828.7</ele>
+      </trkpt>
+      <trkpt lat="46.930257" lon="10.992357">
+        <ele>1825.4</ele>
+      </trkpt>
+      <trkpt lat="46.930278" lon="10.992053">
+        <ele>1822.8</ele>
+      </trkpt>
+      <trkpt lat="46.930284" lon="10.991892">
+        <ele>1820.7</ele>
+      </trkpt>
+      <trkpt lat="46.930282" lon="10.99178">
+        <ele>1820.1</ele>
+      </trkpt>
+      <trkpt lat="46.930273" lon="10.991711">
+        <ele>1820.2</ele>
+      </trkpt>
+      <trkpt lat="46.930249" lon="10.99168">
+        <ele>1819.8</ele>
+      </trkpt>
+      <trkpt lat="46.930248" lon="10.991679">
+        <ele>1819.8</ele>
+        <name>Gaislachweg, Sölden</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.930222" lon="10.991674">
+        <ele>1819.4</ele>
+      </trkpt>
+      <trkpt lat="46.930192" lon="10.991682">
+        <ele>1819.0</ele>
+      </trkpt>
+      <trkpt lat="46.930166" lon="10.991709">
+        <ele>1818.8</ele>
+      </trkpt>
+      <trkpt lat="46.930146" lon="10.991756">
+        <ele>1818.2</ele>
+      </trkpt>
+      <trkpt lat="46.930119" lon="10.991936">
+        <ele>1816.2</ele>
+      </trkpt>
+      <trkpt lat="46.9301" lon="10.99201">
+        <ele>1815.7</ele>
+      </trkpt>
+      <trkpt lat="46.930074" lon="10.992073">
+        <ele>1815.1</ele>
+      </trkpt>
+      <trkpt lat="46.930035" lon="10.992142">
+        <ele>1814.2</ele>
+      </trkpt>
+      <trkpt lat="46.929921" lon="10.992295">
+        <ele>1812.2</ele>
+      </trkpt>
+      <trkpt lat="46.929859" lon="10.992393">
+        <ele>1810.7</ele>
+      </trkpt>
+      <trkpt lat="46.929802" lon="10.992531">
+        <ele>1809.6</ele>
+      </trkpt>
+      <trkpt lat="46.929785" lon="10.992592">
+        <ele>1809.2</ele>
+      </trkpt>
+      <trkpt lat="46.929771" lon="10.992661">
+        <ele>1809.0</ele>
+      </trkpt>
+      <trkpt lat="46.929763" lon="10.992734">
+        <ele>1808.9</ele>
+      </trkpt>
+      <trkpt lat="46.929755" lon="10.992804">
+        <ele>1808.8</ele>
+      </trkpt>
+      <trkpt lat="46.929741" lon="10.992847">
+        <ele>1808.0</ele>
+      </trkpt>
+      <trkpt lat="46.929718" lon="10.992872">
+        <ele>1807.0</ele>
+      </trkpt>
+      <trkpt lat="46.929703" lon="10.992881">
+        <ele>1806.7</ele>
+      </trkpt>
+      <trkpt lat="46.929682" lon="10.992883">
+        <ele>1806.4</ele>
+      </trkpt>
+      <trkpt lat="46.92966" lon="10.99288">
+        <ele>1806.2</ele>
+      </trkpt>
+      <trkpt lat="46.92964" lon="10.99287">
+        <ele>1805.8</ele>
+      </trkpt>
+      <trkpt lat="46.929616" lon="10.992838">
+        <ele>1805.1</ele>
+      </trkpt>
+      <trkpt lat="46.929599" lon="10.992778">
+        <ele>1804.4</ele>
+      </trkpt>
+      <trkpt lat="46.929582" lon="10.992675">
+        <ele>1803.5</ele>
+      </trkpt>
+      <trkpt lat="46.929577" lon="10.9926">
+        <ele>1802.9</ele>
+      </trkpt>
+      <trkpt lat="46.929579" lon="10.992489">
+        <ele>1801.7</ele>
+      </trkpt>
+      <trkpt lat="46.929591" lon="10.992365">
+        <ele>1800.1</ele>
+      </trkpt>
+      <trkpt lat="46.929611" lon="10.992242">
+        <ele>1799.0</ele>
+      </trkpt>
+      <trkpt lat="46.929643" lon="10.992045">
+        <ele>1797.9</ele>
+      </trkpt>
+      <trkpt lat="46.929644" lon="10.99201">
+        <ele>1797.8</ele>
+      </trkpt>
+      <trkpt lat="46.929638" lon="10.991966">
+        <ele>1797.6</ele>
+      </trkpt>
+      <trkpt lat="46.929623" lon="10.991935">
+        <ele>1797.3</ele>
+      </trkpt>
+      <trkpt lat="46.929601" lon="10.991917">
+        <ele>1796.8</ele>
+      </trkpt>
+      <trkpt lat="46.929577" lon="10.991914">
+        <ele>1796.4</ele>
+      </trkpt>
+      <trkpt lat="46.929552" lon="10.991918">
+        <ele>1796.1</ele>
+      </trkpt>
+      <trkpt lat="46.929533" lon="10.991933">
+        <ele>1795.8</ele>
+      </trkpt>
+      <trkpt lat="46.929517" lon="10.991957">
+        <ele>1795.6</ele>
+      </trkpt>
+      <trkpt lat="46.9295" lon="10.992002">
+        <ele>1795.2</ele>
+      </trkpt>
+      <trkpt lat="46.929453" lon="10.992175">
+        <ele>1793.5</ele>
+      </trkpt>
+      <trkpt lat="46.929346" lon="10.992568">
+        <ele>1790.8</ele>
+      </trkpt>
+      <trkpt lat="46.929255" lon="10.992247">
+        <ele>1787.5</ele>
+      </trkpt>
+      <trkpt lat="46.929165" lon="10.991925">
+        <ele>1784.0</ele>
+      </trkpt>
+      <trkpt lat="46.928928" lon="10.991596">
+        <ele>1776.5</ele>
+      </trkpt>
+      <trkpt lat="46.928692" lon="10.991267">
+        <ele>1773.1</ele>
+      </trkpt>
+      <trkpt lat="46.92856" lon="10.990986">
+        <ele>1769.3</ele>
+      </trkpt>
+      <trkpt lat="46.928462" lon="10.990777">
+        <ele>1764.4</ele>
+        <name>Bodenegg Trail (668), Sölden</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.928428" lon="10.990705">
+        <ele>1762.7</ele>
+      </trkpt>
+      <trkpt lat="46.928069" lon="10.990361">
+        <ele>1750.7</ele>
+      </trkpt>
+      <trkpt lat="46.927709" lon="10.990017">
+        <ele>1742.9</ele>
+      </trkpt>
+      <trkpt lat="46.927573" lon="10.989983">
+        <ele>1738.7</ele>
+        <name>Bodenegg Trail (668), Sölden</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.92754" lon="10.989974">
+        <ele>1737.6</ele>
+      </trkpt>
+      <trkpt lat="46.927312" lon="10.990077">
+        <ele>1728.9</ele>
+      </trkpt>
+      <trkpt lat="46.927084" lon="10.99018">
+        <ele>1722.3</ele>
+      </trkpt>
+      <trkpt lat="46.926932" lon="10.99018">
+        <ele>1715.9</ele>
+      </trkpt>
+      <trkpt lat="46.926734" lon="10.989745">
+        <ele>1704.8</ele>
+      </trkpt>
+      <trkpt lat="46.926551" lon="10.989546">
+        <ele>1699.0</ele>
+      </trkpt>
+      <trkpt lat="46.926491" lon="10.989567">
+        <ele>1696.0</ele>
+      </trkpt>
+      <trkpt lat="46.9266" lon="10.990176">
+        <ele>1684.8</ele>
+      </trkpt>
+      <trkpt lat="46.926557" lon="10.990113">
+        <ele>1683.7</ele>
+      </trkpt>
+      <trkpt lat="46.926318" lon="10.990084">
+        <ele>1675.1</ele>
+      </trkpt>
+      <trkpt lat="46.926151" lon="10.989924">
+        <ele>1671.9</ele>
+      </trkpt>
+      <trkpt lat="46.926097" lon="10.99006">
+        <ele>1667.4</ele>
+      </trkpt>
+      <trkpt lat="46.92587" lon="10.989791">
+        <ele>1657.3</ele>
+      </trkpt>
+      <trkpt lat="46.925669" lon="10.989552">
+        <ele>1652.9</ele>
+        <name>46.925663,10.989563</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>16</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.925643" lon="10.989522">
+        <ele>1652.3</ele>
+      </trkpt>
+      <trkpt lat="46.925249" lon="10.989239">
+        <ele>1642.0</ele>
+      </trkpt>
+      <trkpt lat="46.924855" lon="10.988957">
+        <ele>1630.0</ele>
+      </trkpt>
+      <trkpt lat="46.924462" lon="10.988675">
+        <ele>1618.4</ele>
+      </trkpt>
+      <trkpt lat="46.924303" lon="10.988625">
+        <ele>1614.6</ele>
+        <name>Bodenegg Trail (668), Sölden</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>16</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.924238" lon="10.988605">
+        <ele>1613.1</ele>
+      </trkpt>
+      <trkpt lat="46.924015" lon="10.988535">
+        <ele>1605.6</ele>
+      </trkpt>
+      <trkpt lat="46.923783" lon="10.988387">
+        <ele>1593.2</ele>
+      </trkpt>
+      <trkpt lat="46.923551" lon="10.988239">
+        <ele>1581.3</ele>
+      </trkpt>
+      <trkpt lat="46.923477" lon="10.988247">
+        <ele>1578.1</ele>
+        <name>46.923476,10.988232</name>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
