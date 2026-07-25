@@ -33,6 +33,22 @@ self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
 
+  // Region version manifest: network-first (it's tiny), so the per-file content versions are always
+  // fresh online and the app re-fetches only the region files whose hash changed. Falls back to the
+  // cached manifest when offline. This is what drives cache invalidation, independent of SW updates.
+  if (new URL(req.url).pathname.endsWith("/regions/version.json")) {
+    event.respondWith(
+      fetch(req)
+        .then((resp) => {
+          const clone = resp.clone();
+          event.waitUntil(caches.open(CACHE_NAME).then((c) => c.put(req, clone)));
+          return resp;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
   // App shell / navigation: network-first, so updates (new trails etc.) are picked up
   // when online, but it still opens from cache when there's no connection at all.
   if (req.mode === "navigate") {

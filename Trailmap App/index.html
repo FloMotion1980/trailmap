@@ -1745,6 +1745,28 @@ const pendingActivation = {}; // groupKey -> in-flight activation Promise, dedup
 
 // Fetches a region group's JSON and merges its trails/geometry/places into the live app state.
 // All-or-nothing: if the fetch/parse fails, nothing is mutated and the group stays inactive.
+// Per-region-file content versions, loaded from regions/version.json (a tiny hash-per-file manifest).
+// Each region is fetched as regions/<file>.json?v=<hash>: a changed file gets a fresh URL that misses
+// the (cache-first) cache and re-fetches ONLY that file, while unchanged files keep serving from cache.
+// The manifest itself is served network-first by the service worker (see sw.js), so invalidation is
+// driven by the always-fresh manifest, not by service-worker update timing — which is unreliable on
+// iOS standalone PWAs, where a stale region could otherwise linger indefinitely. Offline: the manifest
+// fetch fails, regionVersions stays empty, and we fall back to the unversioned URL (still cache-first,
+// and the default region is precached under that base URL), so offline use keeps working.
+let regionVersions = {};
+async function loadRegionVersions(){
+  try {
+    const resp = await fetch("regions/version.json", { cache: "no-cache" });
+    if (resp.ok) regionVersions = await resp.json();
+  } catch (e) { /* offline / no manifest yet — fall back to unversioned (cache-first) URLs */ }
+}
+function versionedRegionUrl(groupKey){
+  const file = REGION_CATALOG[groupKey].file;
+  const base = file.split("/").pop().replace(/\.json$/, "");
+  const v = regionVersions[base];
+  return v ? file + "?v=" + v : file;
+}
+
 async function activateRegionGroup(groupKey){
   if (activeRegionGroups.has(groupKey)) return "already-active";
   if (pendingActivation[groupKey]) return pendingActivation[groupKey];
@@ -1755,7 +1777,7 @@ async function activateRegionGroup(groupKey){
   const promise = (async () => {
     let data;
     try {
-      const resp = await fetch(catalogEntry.file);
+      const resp = await fetch(versionedRegionUrl(groupKey));
       if (!resp.ok) throw new Error("HTTP " + resp.status);
       data = await resp.json();
     } catch (e) {
@@ -2163,6 +2185,7 @@ async function boot(){
   const saved = restoreActiveState();
   const initialGroups = (saved && saved.activeRegionGroups.length) ? saved.activeRegionGroups : ["paznaun"];
 
+  await loadRegionVersions(); // fresh per-file versions before any region fetch (see versionedRegionUrl)
   await Promise.all(initialGroups.map(activateRegionGroup));
 
   // Saved fine-grained filters take precedence over activateRegionGroup's "everything active by

@@ -25,6 +25,22 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # Regenerate the region version manifest (a hash per region JSON) on every deploy, so a changed
+      # region file gets a fresh content hash -> a fresh ?v= URL in the app -> clients re-fetch only
+      # that file, no matter whether/when the service worker itself updates. Fully automatic; never
+      # needs to be hand-maintained.
+      - name: Generate region version manifest
+        run: |
+          python3 - <<'PY'
+          import json, hashlib, os
+          d = "Trailmap App/regions"
+          m = {}
+          for fn in sorted(os.listdir(d)):
+              if fn.endswith(".json") and fn != "version.json":
+                  m[fn[:-5]] = hashlib.md5(open(os.path.join(d, fn), "rb").read()).hexdigest()[:10]
+          json.dump(m, open(os.path.join(d, "version.json"), "w"), separators=(",", ":"), sort_keys=True)
+          print("region version manifest:", m)
+          PY
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
