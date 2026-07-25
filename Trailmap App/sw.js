@@ -3,7 +3,7 @@
 // and caches map tiles as they are viewed (or explicitly preloaded) so the map background
 // keeps working without a connection.
 
-const CACHE_NAME = "trailmap-v1";
+const CACHE_NAME = "trailmap-v2";
 const APP_SHELL = [
   "./",
   "./index.html",

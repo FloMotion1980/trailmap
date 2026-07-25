@@ -395,15 +395,16 @@ const REGION_CATALOG = {
   // "Hochalm Trail" was dropped from this build -- OSM only has a short fragment under that name, and
   // the only relation matching "Hochalm" turned out to be an 80-member round-trip tour (23km), not the
   // plain ~6.9km descent -- flagged for future research rather than publishing a misleading line.
-  // Two sub-regions per the user's convention (same split requested for Sölden): "Lines" (numbered
-  // lift-served lines) vs "Naturtrails" (named natural singletrails), following bikepark-life.com's
-  // own Parktrails/Singletrails categorization.
+  // Single sub-region "Bikecircus" -- the earlier Shapes-Lines/Naturtrails split was dropped 2026-07-25
+  // per the user (found the sub-region division unnecessary in practice), collapsing all 19 trails into
+  // one hub like Leogang/Sölden. Also 2026-07-25: 12er Sky-Line, ScheeLeitn Line and Wildenkaramba Line
+  // were digitized bottom-to-top (climbing) and got reversed (geometry+profile mirrored, up/down
+  // swapped) so they read as the descents they are; Wurzel-Trail was left as-is (rideable both ways).
   saalbach: {
     label: "Bikecircus Saalbach Hinterglemm", file: "regions/saalbach.json", trailCount: 19,
     bounds: [[47.3454532, 12.5682751], [47.4163187, 12.6925776]],
     subRegions: {
-      shapes_lines: { label: "Shapes Lines", color: "#8a6a2f" },
-      naturtrails: { label: "Naturtrails", color: "#3a7a4a" }
+      bikecircus: { label: "Bikecircus", color: "#8a6a2f" }
     }
   }
 };
@@ -2284,7 +2285,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v1"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v2"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
