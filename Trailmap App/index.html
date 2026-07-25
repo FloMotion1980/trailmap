@@ -1289,14 +1289,29 @@ function hideEleHoverChart(svg){
   const dot = svg.querySelector(".ele-hover-dot");
   if (dot) dot.style.display = "none";
 }
+function hideEleHover(){
+  const svg = ipContent.querySelector(".ele-chart");
+  if (svg) hideEleHoverChart(svg);
+  if (map.hasLayer(eleHoverMapMarker)) map.removeLayer(eleHoverMapMarker);
+}
+// Works for both mouse (mousemove) and touch (touchstart/touchmove) — on mobile, dragging a finger
+// across the profile moves the dot along the chart and the marker along the trail (added 2026-07-25
+// per the user, since phones have no hover). For touch we read the point from e.touches[0] and locate
+// the chart via elementFromPoint (touchmove's e.target stays the touchstart element), and preventDefault
+// so dragging along the profile pans the dot instead of scrolling the panel/page.
 function handleEleChartHover(e){
-  const svg = e.target.closest(".ele-chart");
+  const touch = e.touches && e.touches[0];
+  const clientX = touch ? touch.clientX : e.clientX;
+  const clientY = touch ? touch.clientY : e.clientY;
+  const el = touch ? document.elementFromPoint(clientX, clientY) : e.target;
+  const svg = el && el.closest ? el.closest(".ele-chart") : null;
   if (!svg) {
     const prevSvg = ipContent.querySelector(".ele-chart");
     if (prevSvg) hideEleHoverChart(prevSvg);
     if (map.hasLayer(eleHoverMapMarker)) map.removeLayer(eleHoverMapMarker);
     return;
   }
+  if (touch) e.preventDefault(); // don't scroll while scrubbing the elevation profile
   const { coords, cumDist, profile } = getEleHoverData(svg);
   if (!coords || !profile) return;
   const rect = svg.getBoundingClientRect();
@@ -1308,7 +1323,7 @@ function handleEleChartHover(e){
   const distMax = parseFloat(svg.dataset.distMax);
   const reversed = svg.dataset.reversed === "1";
 
-  const targetKm = Math.max(0, Math.min(distMax, ((e.clientX - rect.left) / rect.width) * distMax));
+  const targetKm = Math.max(0, Math.min(distMax, ((clientX - rect.left) / rect.width) * distMax));
 
   let elevation = profile[0][1];
   for (let i = 1; i < profile.length; i++) {
@@ -1331,11 +1346,11 @@ function handleEleChartHover(e){
   eleHoverMapMarker.bringToFront();
 }
 ipContent.addEventListener("mousemove", handleEleChartHover);
-ipContent.addEventListener("mouseleave", () => {
-  const svg = ipContent.querySelector(".ele-chart");
-  if (svg) hideEleHoverChart(svg);
-  if (map.hasLayer(eleHoverMapMarker)) map.removeLayer(eleHoverMapMarker);
-});
+ipContent.addEventListener("touchstart", handleEleChartHover, { passive: false });
+ipContent.addEventListener("touchmove", handleEleChartHover, { passive: false });
+ipContent.addEventListener("mouseleave", hideEleHover);
+ipContent.addEventListener("touchend", hideEleHover);
+ipContent.addEventListener("touchcancel", hideEleHover);
 
 let reversedId = null; // trail id currently shown in "reversed direction" view, or null
 
