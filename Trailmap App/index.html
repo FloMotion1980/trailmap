@@ -357,14 +357,11 @@ const REGION_CATALOG = {
   // over a technical-grade tag when both exist. "Knappentrail - Easy line" (a short ~33m alternate
   // bypass variant) was deliberately left out of the main Knappen-Trail entry -- it's a variant, not
   // a continuation. No sub-region split by mountain/lift sector yet (one flat "epic_bikepark"
-  // sub-region for now) -- revisit if a clearer sector grouping emerges from further research.
-  leogang: {
-    label: "Bikepark Leogang", file: "regions/leogang.json", trailCount: 13,
-    bounds: [[47.40801, 12.7026], [47.44109, 12.74268]],
-    subRegions: {
-      epic_bikepark: { label: "The Epic Bikepark", color: "#8a3a3a" }
-    }
-  },
+  // sub-region for now).
+  // NOTE (2026-07-25): "leogang" is no longer its own catalog entry -- Leogang was merged into the
+  // combined "bikecircus" region below (Saalbach Hinterglemm + Leogang + Fieberbrunn as one region with
+  // three sub-regions), after completing Leogang to all 21 official trails (L1-L15, LE10/13/14/15/17, R3)
+  // and correcting its difficulties to the resort's official 3-tier scale (easy/medium/difficult).
   // Second Alps bike park, same day/method as Leogang -- 11 official "shaped lines" (bikepark-life.com's
   // own name+difficulty+length table) plus 3 named natural singletrails (Kleble Alm/Leiterberg/Nene,
   // difficulty from mtb:scale since no official rating exists for these). OSM naming here is even
@@ -392,19 +389,30 @@ const REGION_CATALOG = {
   // bikepark-life.com length; using the SH-relations instead landed both within ~100-125%).
   // Worth checking for "route=mtb" relations named like the resort's own trail-board codes on any
   // future park before falling back to plain name-tag chaining + bridging.
-  // "Hochalm Trail" was dropped from this build -- OSM only has a short fragment under that name, and
-  // the only relation matching "Hochalm" turned out to be an 80-member round-trip tour (23km), not the
-  // plain ~6.9km descent -- flagged for future research rather than publishing a misleading line.
-  // Single sub-region "Bikecircus" -- the earlier Shapes-Lines/Naturtrails split was dropped 2026-07-25
-  // per the user (found the sub-region division unnecessary in practice), collapsing all 19 trails into
-  // one hub like Leogang/Sölden. Also 2026-07-25: 12er Sky-Line, ScheeLeitn Line and Wildenkaramba Line
-  // were digitized bottom-to-top (climbing) and got reversed (geometry+profile mirrored, up/down
-  // swapped) so they read as the descents they are; Wurzel-Trail was left as-is (rideable both ways).
-  saalbach: {
-    label: "Bikecircus Saalbach Hinterglemm", file: "regions/saalbach.json", trailCount: 25,
-    bounds: [[47.3454532, 12.5682751], [47.4163187, 12.6925776]],
+  // Combined "bikecircus" region (2026-07-25): the whole official Bikecircus Saalbach Hinterglemm +
+  // Leogang + Fieberbrunn bike area as ONE region with three sub-regions (saalbach/leogang/fieberbrunn),
+  // merged from the former separate "saalbach" and "leogang" catalog entries plus a new Fieberbrunn set.
+  // Rationale: the resort's two "Challenge" loops (BIG-5, THE CHALLENGE) span all three areas, so a
+  // single region lets those Trailrunden reference component trails across the whole Bikecircus.
+  // Data now lives in one file, regions/bikecircus.json; regions/saalbach.json + regions/leogang.json
+  // were removed. Trail sourcing/history per sub-region:
+  //  - Saalbach (25): OSM SH route=mtb relations; difficulties from the resort's official intermaps map
+  //    (3-tier easy/medium/difficult -> blau/rot/schwarz, no green). Includes SH36 Asitz, SH43 Hochalm,
+  //    SH81 Back-to-Black, SH84 Vink Link (uphill), SH90 Huberalm, SH92 Wetterkreuz (built from official
+  //    Outdooractive GPX). SH07 Blue-Line / SH42 Pro-Line / SH79 Evil Eye are real but absent from the
+  //    live status feed while their lift is under maintenance -- kept. 12er Sky-Line rebuilt from OSM
+  //    relation 19274522 (fixed a 700m jump + missing southern loop).
+  //  - Leogang (21): existing 13 + 8 completed from official GPX (L9/L10/L12-L15, LE17, R3); difficulties
+  //    corrected to the same official 3-tier scale.
+  //  - Fieberbrunn (3): Schweinestberg / Streuböden / Iglmoos, built from OSM (Overpass geometry +
+  //    Open-Meteo elevation). OSM has Iglmoos as section 1 only; the "2. Sektion" is not separately mapped.
+  bikecircus: {
+    label: "Bikecircus Saalbach Hinterglemm Leogang Fieberbrunn", file: "regions/bikecircus.json", trailCount: 49,
+    bounds: [[47.3406, 12.51535], [47.46892, 12.74268]],
     subRegions: {
-      bikecircus: { label: "Bikecircus", color: "#8a6a2f" }
+      saalbach: { label: "Saalbach Hinterglemm", color: "#8a6a2f" },
+      leogang: { label: "Leogang", color: "#8a3a3a" },
+      fieberbrunn: { label: "Fieberbrunn", color: "#2f6b8a" }
     }
   }
 };

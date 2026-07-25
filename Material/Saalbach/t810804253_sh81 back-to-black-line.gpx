@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>SH81 Back-to-Black-Line</name>
+    <author>
+      <name>Tourismusverband Saalbach Hinterglemm - Saalbach Hinterglemm</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/810804253"/>
+    <time>2026-06-10T16:41:45.809Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>SH81 Back-to-Black-Line</name>
+    <desc>Back to Black: Der Name ist Programm! Denn diese kurze Line bringt dich zurück von der roten Bearly Legal-Line auf die schwarze X-Line</desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="47.380133" lon="12.63094">
+        <ele>1403.70292</ele>
+        <name>Saalbach-Hinterglemm, Zell am See</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>12</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="47.380309" lon="12.630885">
+        <ele>1408.01888</ele>
+      </trkpt>
+      <trkpt lat="47.380481" lon="12.630764">
+        <ele>1408.16461</ele>
+      </trkpt>
+      <trkpt lat="47.38065" lon="12.630592">
+        <ele>1407.65106</ele>
+      </trkpt>
+      <trkpt lat="47.38082" lon="12.630463">
+        <ele>1404.71881</ele>
+      </trkpt>
+      <trkpt lat="47.380994" lon="12.630401">
+        <ele>1402.79621</ele>
+      </trkpt>
+      <trkpt lat="47.38114" lon="12.630354">
+        <ele>1401.54475</ele>
+      </trkpt>
+      <trkpt lat="47.381295" lon="12.630347">
+        <ele>1401.52052</ele>
+        <name>Saalbach-Hinterglemm, Zell am See</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>12</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

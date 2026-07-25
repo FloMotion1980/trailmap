@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Lumberjack Line</name>
+    <author>
+      <name>Saalfelden Leogang - Saalfelden Leogang Touristik GmbH</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/37550394"/>
+    <time>2024-01-09T13:34:56.883Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Lumberjack Line</name>
+    <desc>Be creative!</desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="47.436258" lon="12.718614">
+        <ele>906.02533</ele>
+        <name>47.436258,12.718614</name>
+      </trkpt>
+      <trkpt lat="47.436707" lon="12.718722">
+        <ele>886.52196</ele>
+      </trkpt>
+      <trkpt lat="47.436948" lon="12.719308">
+        <ele>870.4026</ele>
+      </trkpt>
+      <trkpt lat="47.437479" lon="12.719127">
+        <ele>858.81013</ele>
+      </trkpt>
+      <trkpt lat="47.437966" lon="12.71908">
+        <ele>850.58853</ele>
+      </trkpt>
+      <trkpt lat="47.438439" lon="12.719149">
+        <ele>839.88508</ele>
+        <name>47.438439,12.719149</name>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
