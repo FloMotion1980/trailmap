@@ -242,19 +242,10 @@ const REGION_CATALOG = {
       // Split out from the "Empfehlungen" staging bucket 2026-07-24 into its own permanent sub-region
       // once the user confirmed these 3 (Churchner, Drei Eichen, Pechstein -- RV Edelweiss 1924
       // Deidesheim e.V.'s real "Naturtrail" network, opened Feb 2025) are correctly sourced/connected.
-      naturtrail_deidesheim: { label: "Naturtrail Deidesheim", color: "#c2185b" },
-      // Staging area for individually-researched, not-yet-fully-verified finds (started 2026-07-24,
-      // per the user -- known trails/areas they'd heard of, e.g. "Edelweiss Deidesheim", plus a
-      // general web search for other well-regarded MTB trails and bikeable scenic hiking routes not
-      // covered by the official 20 tours). Deliberately a lower-confidence bucket than the rest of
-      // this region -- see docs/pfaelzerwald.md (if present) or project memory for exactly what's in
-      // here and how each entry was sourced; expect this sub-region to keep growing/getting refined.
-      // The 10 "Eckkopf Trail N" auto-detected entries moved out to Weinstraße 2026-07-24 (same day,
-      // after their geometry was rebuilt via clean shortest-path graph routing instead of the original
-      // greedy nearest-endpoint chaining, which had produced visible backtracking "Schnörkel" and one
-      // reversed trail -- see project memory) -- only Dahner Felsenpfad remains here as genuinely
-      // still-provisional (unconfirmed difficulty).
-      empfehlungen: { label: "Empfehlungen (vorläufig)", color: "#a35a2f" }
+      naturtrail_deidesheim: { label: "Naturtrail Deidesheim", color: "#c2185b" }
+      // (2026-07-26) The "empfehlungen" (Empfehlungen vorläufig) staging sub-region was removed: its
+      // last remaining entry, the Dahner Felsenpfad loop, was moved to Wahrzeichen-Touren
+      // (fernwege_felsentouren) per the user, leaving the bucket empty.
     }
   },
   // Source: https://www.bergstrasse-odenwald.de/mountainbiking/mountainkbikestrecken -- Durchstich
