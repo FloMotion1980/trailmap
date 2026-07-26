@@ -1878,21 +1878,23 @@ function buildTrailLayer(t){
   // with that trail's own polyline when both happen to be visible at once.
   const segmentHitLines = []; // one invisible wide hitline per trailId-carrying segment, see below
   const segmentNameLabels = []; // one standalone permanent name tooltip per trailId-carrying segment
-  const line = segments
-    ? L.featureGroup(segments.map(seg => {
+  // Built as an array rather than a straight segments.map(), because a LIFT stretch contributes NO line
+  // of its own (2026-07-26, per the user: "Lass doch einfach nur das graue Band"). The lift's own band is
+  // already on the map wherever a visible Tour rides it (see render()), so drawing a second line on top
+  // only competed with it -- and with the base map's aerialway line under it. The stretch keeps its
+  // invisible hit-line, so it stays hoverable and clickable; only the visible line is omitted.
+  const segmentLayers = [];
+  let line;
+  if (segments) {
+      segments.forEach(seg => {
         const refTrail = seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
-        // A stretch can also be a LIFT ride (seg.liftId) rather than a component trail or an
-        // anonymous fireroad connector -- that's what the resort's own "Challenge" tours are made of.
-        // Drawn in the lift's own dotted style so the tour visibly says "here you ride the gondola",
-        // instead of a generic grey connector dash implying you pedal it (added 2026-07-26).
         const refLift = seg.liftId ? LIFTS.find(lf => lf.id === seg.liftId) : null;
-        const visibleSeg = L.polyline(seg.coords, refLift
-          ? { color: LIFT_COLOR, weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
-          : {
+        const visibleSeg = refLift ? null : L.polyline(seg.coords, {
           color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
           dashArray: refTrail ? null : "6,6",
           weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false
         });
+        if (visibleSeg) segmentLayers.push(visibleSeg);
         if (refLift) {
           // Same per-segment hit-line pattern as a component trail below: keeps the LOOP as the open
           // panel (per the user's earlier rule that clicking into a loop shouldn't lose its context)
@@ -1900,8 +1902,20 @@ function buildTrailLayer(t){
           const liftHit = L.polyline(seg.coords, { color:"#000", weight: 18, opacity: 0, bubblingMouseEvents:false }).addTo(map);
           liftHit.bindTooltip(`🚡 ${refLift.name}`, { permanent:true, direction:"top", className:"trail-label-tooltip", interactive:false });
           liftHit.closeTooltip();
-          liftHit.on("mouseover", () => { visibleSeg.setStyle({ weight: HOVER_WEIGHT }); if (!showNames) liftHit.openTooltip(); });
-          liftHit.on("mouseout", () => { visibleSeg.setStyle({ weight: BASE_WEIGHT }); liftHit.closeTooltip(); });
+          // There is no line of our own to thicken here, so hover feedback goes to the LIFT's own band --
+          // the same emphasis a standalone lift gets. Looked up lazily: the band may not exist yet while
+          // this Tour is being built, since the lift layers are created after the trail layers.
+          const liftBand = () => (liftLayers[refLift.id] || {}).band;
+          liftHit.on("mouseover", () => {
+            const b = liftBand();
+            if (b) b.setStyle({ weight: LIFT_BAND_WEIGHT + 4, opacity: Math.min(1, baselineLiftBandOpacity() + 0.22) });
+            if (!showNames) liftHit.openTooltip();
+          });
+          liftHit.on("mouseout", () => {
+            const b = liftBand();
+            if (b) b.setStyle({ weight: LIFT_BAND_WEIGHT, opacity: baselineLiftBandOpacity() });
+            liftHit.closeTooltip();
+          });
           liftHit.on("click", () => {
             const wasOpen = openTrailId === t.id;
             openTrailId = t.id;
@@ -1962,18 +1976,20 @@ function buildTrailLayer(t){
             .setLatLng(midCoord).setContent(refTrail.name);
           segmentNameLabels.push({ trailId: refTrail.id, label: nameLabel });
         }
-        return visibleSeg;
-      })).addTo(map)
+      });
+    line = L.featureGroup(segmentLayers).addTo(map);
+  } else {
     // A loop with no TRAIL_SEGMENTS data (no named-component-trail breakdown, e.g. the Odenwald
     // "grouped cluster" loops like Gorxheimertal/Hammelbach) has no real single difficulty of its
     // own — its `diff` is just an overall-route approximation, not a claim about every stretch. Drawn
     // in the same dashed neutral CONNECTOR_COLOR already used for "no specific trail info here"
     // elsewhere, rather than a solid diffColor that would misleadingly read as one uniform-difficulty
     // trail (found 2026-07-25, per the user, after noticing GO1 rendered as a plain solid blue line).
-    : L.polyline(coords, t.loop
+    line = L.polyline(coords, t.loop
         ? { color: CONNECTOR_COLOR, dashArray: "6,6", weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
         : { color: diffColor[t.diff], weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
       ).addTo(map);
+  }
   // Invisible, much wider line laid over the visible one — makes tapping on touch screens far easier
   // without changing how thin the trail looks. All interaction happens on this one. Also carries the
   // name-label tooltip (rather than `line`, which for a Trailrunde is a featureGroup without tooltip
