@@ -368,11 +368,15 @@ const REGION_CATALOG = {
     // ("...Bartiges Bödele_Rettenbachtrail_Leiterbergtrail - Signature Trail in Sölden.gpx", in
     // Material/Sölden/Trails/). Both are marked "nicht mehr vorhanden" in that GPX's own waypoints --
     // they are the OLD variants that used to be part of this tour, kept because the user asked for them.
-    // Cut out of the single 12.8km track at its komoot highlight waypoints; that "waypoint == section
-    // start" assumption was validated against the already-built Leiterberg Trail (672), whose geometry
-    // matches the track from idx 209 while its waypoint sits at 213. The already-built "Bartigs Bödele
-    // Line (676)" has 0% geometric overlap with this track, confirming it really is a different (old)
-    // line, not a duplicate. Both blau per the user.
+    // Cut out of the single 12.8km track: the komoot highlight waypoints give each section's START
+    // (validated against the already-built Leiterberg Trail (672), whose geometry matches the track
+    // from idx 209 while its waypoint sits at 213). The already-built "Bartigs Bödele Line (676)" has
+    // 0% geometric overlap with this track, confirming it really is a different (old) line.
+    // The waypoints do NOT mark section ENDS though -- both were corrected by the user, who rode these:
+    // Bartigs Bödele ends where the track meets the Ötztaler Gletscherstraße (idx 59, confirmed 0m from
+    // that road via Overpass), and idx 59..89 is the road transfer up to the Rettenbach entry, not trail;
+    // Rettenbach ends where the Gahe Line begins (idx 162 -- Gahe Line (6028)'s own first coordinate
+    // sits 3m off the track there), not where Leiterberg starts. Both blau per the user.
     label: "Bike Republic Sölden", file: "regions/soelden.json", trailCount: 38,
     bounds: [[46.92087, 10.94823], [47.00829, 11.04643]],
     subRegions: {
