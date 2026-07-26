@@ -1105,7 +1105,7 @@ const LIFT_LINE_COLOR = "#000000";
 // sind OK aber die Linie ganz fein"). A single dashed stroke can only have one width, so fat dots and a
 // hairline between them are impossible that way.
 const LIFT_HAIRLINE_WEIGHT = 1.1;    // the fine connecting line
-const LIFT_DOT_WEIGHT = 4.5;         // dot diameter
+const LIFT_DOT_WEIGHT = 3.8;         // dot diameter (4.5 -> 3.8 on the user's request, "einen Tick kleiner")
 // A ~1px dash drawn with a ROUND line cap renders as a dot. dasharray is applied by Leaflet in SCREEN
 // pixels (it re-projects paths on zoom but never rescales stroke attributes -- the same reason a
 // connector's "6,6" looks identical at every zoom), so the dot spacing stays constant as you zoom:
