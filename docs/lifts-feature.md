@@ -47,10 +47,17 @@ turned out to be a clean, reliable key between the operator's published list and
 
 Deliberately excluded in Bikecircus, and worth re-checking each season:
 - **C1 Hochalmbahn** — runs in summer, but no bike transport.
-- **D1 Reiterkogelbahn** — closed all summer 2026 (rebuild).
 - **F2 Streuböden II** — no bike transport (F1 carries bikes to the middle station only).
   Note saalbach.com's own combined overview row says "F1+F2 … yes"; the more specific Fieberbrunn
   source and OSM both say F2 does not. The specific source was followed — flag for the user.
+
+**Temporary closures are deliberately NOT modelled.** `D1 Reiterkogelbahn` is included as a normal bike
+lift even though it is being rebuilt for summer 2026 and isn't running: it is a permanent part of the
+resort and will be back. A per-lift `closed`/`note` pair was built and then dropped the same day, per the
+user — **nothing in this app synchronises lift operating status, so a hardcoded flag would silently rot
+while looking authoritative.** The `lifts` data therefore states only the stable property "this lift
+carries bikes in summer". (OSM's "Reiterkogelbahn II" is skipped: a 2-point, ref-less
+`aerialway=construction` placeholder for the new section, not usable geometry.)
 
 ## Rendering — a translucent highlight band, not a competing line
 
