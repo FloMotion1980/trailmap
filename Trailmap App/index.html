@@ -54,6 +54,7 @@
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDownhillToggle" checked><span class="slider"></span></span>⬇ Downhill</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showUphillToggle" checked><span class="slider"></span></span>⚡ Uphill</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLoopToggle" checked><span class="slider"></span></span>🔁 Touren</label>
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLiftsToggle" checked><span class="slider"></span></span>🚡 Lifte</label>
           </div>
         </details>
         <details class="filter-section" id="secMapOptions">
@@ -123,6 +124,19 @@ const ELEVATION_PROFILES = {};
 // export/elevation profile all keep working unchanged) -- this is purely an additional rendering
 // hint consulted only by buildTrailLayer, same additive-flag pattern as `uphill`.
 const TRAIL_SEGMENTS = {};
+
+// ---- Bike lifts (mountain lifts that actually carry bikes in summer) ----
+// Mutable and starts empty, exactly like `lineTrails`: filled/emptied per region group by
+// activateRegionGroup/deactivateRegionGroup from that region's JSON `lifts` field. Entry shape:
+//   { id, name, code, region (a REGIONS sub-region key), type, coords, baseEle, topEle, osm }
+// `coords` is always stored bottom-station-first, so baseEle/topEle need no per-lift direction flag.
+// Deliberately a SEPARATE object type rather than an entry in `lineTrails` with a flag: a lift is not
+// a rideable trail, so it must stay out of the difficulty filter, the trail counters, the trail list
+// and the elevation-profile machinery. It gets its own single on/off toggle (`showLifts`) instead.
+// A lift only appears here if the OPERATOR confirms summer operation AND bike transport -- never
+// OSM's `aerialway:bicycle` tag, which proved wrong in both directions in Saalbach (set on a lift
+// closed all summer for a rebuild, missing on one that does carry bikes). OSM supplies geometry only.
+const LIFTS = [];
 
 // Always-loaded catalog of every region group the app knows about (no trail geometry — that's
 // fetched lazily per-group from `file` when a group is activated). Add a region by adding an
@@ -527,6 +541,7 @@ let showNames = false;
 let showUphill = true; // hides/shows trails flagged uphill:true (EMTB uphill trails) — independent of diff
 let showLoop = true; // hides/shows trails flagged loop:true (Trailrunden) — independent of diff
 let showDownhill = true; // hides/shows "regular" trails (neither uphill nor loop) — independent of diff
+let showLifts = true; // hides/shows bike lifts (see LIFTS) — one global switch, no per-difficulty axis
 // Direction arrows (added 2026-07-25) are off by default -- per the user, "so gefallen sie mir noch
 // nicht" (not happy with how they look yet) -- kept in the app as a Kartenoptionen toggle rather than
 // removed outright, in case the look gets refined later. Persisted like the other Kartenoptionen/
@@ -681,6 +696,12 @@ document.getElementById("showLoopToggle").addEventListener("change", (e) => {
 
 document.getElementById("showDownhillToggle").addEventListener("change", (e) => {
   showDownhill = e.target.checked;
+  persistActiveState();
+  render();
+});
+
+document.getElementById("showLiftsToggle").addEventListener("change", (e) => {
+  showLifts = e.target.checked;
   persistActiveState();
   render();
 });
@@ -1056,6 +1077,61 @@ const HOVER_WEIGHT = 6.5;
 // connector's dash pattern alone wasn't a reliable-enough visual cue that it isn't a black-rated
 // trail stretch (2026-07-24, per the user).
 const CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a Trailrunde, see TRAIL_SEGMENTS
+
+// ---- Bike lift rendering ----
+// Styled after OSM's own aerialway rendering, which the user picked as the model: a THIN line with
+// evenly spaced dots along it, where the dot spacing stays constant on screen -- zoom in and you get
+// more dots, not longer gaps.
+// That falls out for free from SVG `stroke-dasharray`, which Leaflet applies in *screen* pixels (the
+// overlay pane re-projects paths on zoom but never rescales stroke attributes -- the same reason a
+// connector's "6,6" dash looks identical at every zoom). So no zoom handler and no marker
+// recomputation is needed: a very short dash drawn with a ROUND line cap renders as a dot, and
+// "1,11" spaces those dots 12 screen-px apart at any zoom.
+// Two stacked polylines: the hairline cable, plus the dotted overlay on top.
+// Colour is deliberately outside the diffColor palette and away from CONNECTOR_COLOR's grey -- OSM
+// draws aerialways near-black, but black here is already the `schwarz` difficulty, and the user has
+// previously (correctly) objected to a non-trail line reading as a black-rated trail.
+const LIFT_COLOR = "#5b4a9e";  // violet -- infrastructure, not a difficulty
+const LIFT_CABLE_WEIGHT = 1.4; // the thin line
+const LIFT_DOT_WEIGHT = 4.5;   // dot diameter
+const LIFT_DOT_DASH = "1,11";  // dot + gap, in screen px -> constant spacing at every zoom
+const liftLayers = {}; // liftId -> { group, hitLine, stations:[..], lift, bounds }
+
+function buildLiftLayer(l){
+  const cable = L.polyline(l.coords, { color: LIFT_COLOR, weight: LIFT_CABLE_WEIGHT, opacity: 0.9, interactive: false, bubblingMouseEvents: false });
+  const dots = L.polyline(l.coords, { color: LIFT_COLOR, weight: LIFT_DOT_WEIGHT, opacity: 1, dashArray: LIFT_DOT_DASH, lineCap: "round", interactive: false, bubblingMouseEvents: false });
+  const group = L.featureGroup([cable, dots]).addTo(map);
+  // Station markers at both ends: hollow, so they read as "infrastructure" rather than as a trail's
+  // own filled green Start / red Ziel dots.
+  const stations = [l.coords[0], l.coords[l.coords.length - 1]].map(c =>
+    L.circleMarker(c, { radius: 4, color: LIFT_COLOR, weight: 2.5, fillColor: "#f2f3ec", fillOpacity: 1, interactive: false, bubblingMouseEvents: false }).addTo(map)
+  );
+  // Same invisible-wide-hitline trick trails use, so a hairline cable is still tappable on touch.
+  const hitLine = L.polyline(l.coords, { color: "#000", weight: 20, opacity: 0, bubblingMouseEvents: false }).addTo(map);
+  hitLine.bindTooltip(`🚡 ${l.name}`, { permanent: true, direction: "top", offset: [0, -6], className: "trail-label-tooltip", interactive: false });
+  hitLine.closeTooltip();
+  // Hover thickens only the dots (the cable stays a hairline), so the line doesn't change character.
+  hitLine.on("mouseover", () => { dots.setStyle({ weight: LIFT_DOT_WEIGHT + 2 }); if (!showNames) hitLine.openTooltip(); });
+  hitLine.on("mouseout", () => { dots.setStyle({ weight: LIFT_DOT_WEIGHT }); hitLine.closeTooltip(); });
+  hitLine.on("click", () => showLiftInfo(l));
+  liftLayers[l.id] = { group, dots, hitLine, stations, lift: l, bounds: L.latLngBounds(l.coords) };
+}
+
+function destroyLiftLayer(id){
+  const layer = liftLayers[id];
+  if (!layer) return;
+  if (openLiftId === id) closeInfoPanelAndDeselect();
+  map.removeLayer(layer.group);
+  map.removeLayer(layer.hitLine);
+  layer.stations.forEach(s => map.removeLayer(s));
+  delete liftLayers[id];
+}
+
+// Height gained by riding a lift up -- the one number a rider actually cares about.
+function liftClimb(l){ return Math.max(0, Math.round(l.topEle - l.baseEle)); }
+const LIFT_TYPE_LABEL = { gondola:"Gondelbahn", chair_lift:"Sesselbahn", cable_car:"Seilbahn",
+                          funicular:"Standseilbahn", platter:"Schlepplift", "t-bar":"Schlepplift",
+                          drag_lift:"Schlepplift", mixed_lift:"Gondel-/Sesselbahn" };
 // Below this zoom, a trail's own line is already too small to read and the (fixed-pixel-size,
 // non-scaling) startDot markers stop being a helpful "here's where it begins" cue and instead just
 // read as a field of white dots -- most noticeable in a large region like Pfälzer Wald (264 trails)
@@ -1164,7 +1240,8 @@ function handleInfoPanelClick(e){
   }
   const locBtn = e.target.closest(".locate-btn");
   if (locBtn) {
-    const layer = lineLayers[locBtn.dataset.id];
+    // Same button in a lift's panel carries data-lift-id instead of data-id.
+    const layer = locBtn.dataset.liftId ? liftLayers[locBtn.dataset.liftId] : lineLayers[locBtn.dataset.id];
     if (layer) flyToTrailBounds(layer.bounds);
   }
 }
@@ -1173,6 +1250,7 @@ ipContent.addEventListener("click", handleInfoPanelClick);
 document.getElementById("ipClose").addEventListener("click", () => {
   infoPanel.classList.remove("visible");
   openTrailId = null;
+  openLiftId = null;
   selectedSegmentId = null;
   clearSolo();
 });
@@ -1185,6 +1263,7 @@ document.getElementById("ipClose").addEventListener("click", () => {
 function closeInfoPanelAndDeselect(){
   infoPanel.classList.remove("visible");
   openTrailId = null;
+  openLiftId = null;
   selectedSegmentId = null;
   clearSolo();
   clearSelection();
@@ -1472,7 +1551,10 @@ function applyReversedEndpoints(id){
 }
 
 let openTrailId = null;       // trail currently shown in #infoPanel, or null
-let selectedSegmentId = null; // for a loop: which component trail's segment was last clicked, or null
+let openLiftId = null;        // lift currently shown in #infoPanel, or null (mutually exclusive with openTrailId)
+// For a loop: which of its segments was last clicked, or null. Holds either a component *trail* id or
+// (since lifts became segment-able) a *lift* id -- buildInfoPanelHtml resolves it against both.
+let selectedSegmentId = null;
 
 function buildInfoPanelHtml(t){
   const isSolo = soloId === t.id;
@@ -1491,14 +1573,24 @@ function buildInfoPanelHtml(t){
   let highlight = null, segmentInfoHtml = "";
   if (t.loop && selectedSegmentId) {
     const segs = TRAIL_SEGMENTS[t.id] || [];
-    const seg = segs.find(s => s.trailId === selectedSegmentId);
+    const seg = segs.find(s => s.trailId === selectedSegmentId || s.liftId === selectedSegmentId);
     const segTrail = lineTrails.find(tr => tr.id === selectedSegmentId);
+    const segLift = LIFTS.find(lf => lf.id === selectedSegmentId);
     if (seg && segTrail && seg.distStart != null) {
       highlight = { distStart: seg.distStart, distEnd: seg.distEnd, color: diffColor[segTrail.diff] };
       segmentInfoHtml = `
         <div class="ip-segment-info" style="border-left:3px solid ${diffColor[segTrail.diff]}">
           <b>${segTrail.name}</b><br>
           ${segTrail.len} km &middot; ${segTrail.up} m ↑ / ${segTrail.down} m ↓
+        </div>`;
+    } else if (seg && segLift && seg.distStart != null) {
+      // A clicked LIFT stretch: no difficulty and no up/down to report -- what matters is that this
+      // part is ridden by gondola and how much height it gains.
+      highlight = { distStart: seg.distStart, distEnd: seg.distEnd, color: LIFT_COLOR };
+      segmentInfoHtml = `
+        <div class="ip-segment-info" style="border-left:3px solid ${LIFT_COLOR}">
+          <b>🚡 ${segLift.name}</b><br>
+          ${LIFT_TYPE_LABEL[segLift.type] || "Bergbahn"} &middot; ${segLift.baseEle} m → ${segLift.topEle} m (+${liftClimb(segLift)} m)
         </div>`;
     }
   }
@@ -1513,7 +1605,10 @@ function buildInfoPanelHtml(t){
     const totalDist = profile[profile.length - 1][0];
     chartSegments = segs.filter(s => s.distStart != null).map(s => {
       const refTrail = s.trailId ? lineTrails.find(tr => tr.id === s.trailId) : null;
-      const color = refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR;
+      // A lift stretch gets the lift colour here too, so the chart keeps matching the map exactly --
+      // and a rider can see at a glance which climbs in the profile they don't have to pedal.
+      const refLift = s.liftId ? LIFTS.find(lf => lf.id === s.liftId) : null;
+      const color = refLift ? LIFT_COLOR : (refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR);
       // Segment distances are recorded along the *unreversed* track — flip them the same way
       // reverseElevationProfile() flips the profile itself, so both stay aligned on the x-axis.
       return isReversed
@@ -1538,7 +1633,29 @@ function buildInfoPanelHtml(t){
     </div>`;
 }
 
+// A lift's own info panel. Deliberately much sparser than a trail's: no difficulty, no elevation
+// profile (a lift's profile is a straight climb and would say nothing), no solo/reverse/GPX buttons.
+// Just what a rider needs to decide "does this get me and my bike up there, and how far up".
+function showLiftInfo(l){
+  openTrailId = null;      // a lift and a trail are never both open
+  selectedSegmentId = null;
+  openLiftId = l.id;
+  clearSolo();
+  clearSelection();       // a lift is not in the trail list, so nothing should stay highlighted there
+  const typeLabel = LIFT_TYPE_LABEL[l.type] || "Bergbahn";
+  ipContent.innerHTML = `
+    <h3>🚡 ${l.name} <button class="locate-btn" data-lift-id="${l.id}" title="Zum Lift springen">📍</button></h3>
+    <div class="ip-trail">
+      ${typeLabel}${l.code ? ` &middot; ${l.code}` : ""} &middot; Biketransport
+      <div class="ip-lift-stats">
+        ${l.baseEle} m → ${l.topEle} m &middot; <b>+${liftClimb(l)} m</b>
+      </div>
+    </div>`;
+  infoPanel.classList.add("visible");
+}
+
 function showTrailInfo(t){
+  openLiftId = null;      // opening a trail closes any lift that was showing
   const isNewSelection = openTrailId !== t.id;
   if (isNewSelection) selectedSegmentId = null; // switching to a genuinely different trail/loop
   openTrailId = t.id;
@@ -1650,11 +1767,36 @@ function buildTrailLayer(t){
   const line = segments
     ? L.featureGroup(segments.map(seg => {
         const refTrail = seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
-        const visibleSeg = L.polyline(seg.coords, {
+        // A stretch can also be a LIFT ride (seg.liftId) rather than a component trail or an
+        // anonymous fireroad connector -- that's what the resort's own "Challenge" tours are made of.
+        // Drawn in the lift's own dotted style so the tour visibly says "here you ride the gondola",
+        // instead of a generic grey connector dash implying you pedal it (added 2026-07-26).
+        const refLift = seg.liftId ? LIFTS.find(lf => lf.id === seg.liftId) : null;
+        const visibleSeg = L.polyline(seg.coords, refLift
+          ? { color: LIFT_COLOR, weight: LIFT_DOT_WEIGHT, opacity: 1, dashArray: LIFT_DOT_DASH, lineCap:"round", bubblingMouseEvents:false, interactive:false }
+          : {
           color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
           dashArray: refTrail ? null : "6,6",
           weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false
         });
+        if (refLift) {
+          // Same per-segment hit-line pattern as a component trail below: keeps the LOOP as the open
+          // panel (per the user's earlier rule that clicking into a loop shouldn't lose its context)
+          // and just toggles a small lift block into it via selectedSegmentId.
+          const liftHit = L.polyline(seg.coords, { color:"#000", weight: 18, opacity: 0, bubblingMouseEvents:false }).addTo(map);
+          liftHit.bindTooltip(`🚡 ${refLift.name}`, { permanent:true, direction:"top", className:"trail-label-tooltip", interactive:false });
+          liftHit.closeTooltip();
+          liftHit.on("mouseover", () => { visibleSeg.setStyle({ weight: LIFT_DOT_WEIGHT + 2 }); if (!showNames) liftHit.openTooltip(); });
+          liftHit.on("mouseout", () => { visibleSeg.setStyle({ weight: LIFT_DOT_WEIGHT }); liftHit.closeTooltip(); });
+          liftHit.on("click", () => {
+            const wasOpen = openTrailId === t.id;
+            openTrailId = t.id;
+            selectedSegmentId = (wasOpen && selectedSegmentId === refLift.id) ? null : refLift.id;
+            showTrailInfo(t);
+            selectCardFor(t.id);
+          });
+          segmentHitLines.push(liftHit);
+        }
         // A connector stretch (no refTrail) has nothing of its own to show — clicks/hovers there
         // fall through to the loop's own whole-track hitLine below, same as always. A stretch that
         // *is* one of the loop's component trails gets its own invisible wide hit-line (kept OUT of
@@ -1816,6 +1958,7 @@ function persistActiveState(){
       showUphill,
       showLoop,
       showDownhill,
+      showLifts,
       showDirectionArrows
     }));
   } catch (e) { /* localStorage unavailable (private mode etc.) — filters just won't persist */ }
@@ -1832,6 +1975,7 @@ function restoreActiveState(){
     if (typeof saved.showUphill !== "boolean") saved.showUphill = true;
     if (typeof saved.showLoop !== "boolean") saved.showLoop = true;
     if (typeof saved.showDownhill !== "boolean") saved.showDownhill = true;
+    if (typeof saved.showLifts !== "boolean") saved.showLifts = true;
     if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = false;
     return saved;
   } catch (e) { return null; }
@@ -1890,7 +2034,14 @@ async function activateRegionGroup(groupKey){
     Object.assign(TRAIL_GEO, data.trailGeo);
     Object.assign(ELEVATION_PROFILES, data.elevationProfiles);
     if (data.trailSegments) Object.assign(TRAIL_SEGMENTS, data.trailSegments);
+    // Lifts are optional per region -- a low-mountain region has none. The DATA has to land before
+    // buildTrailLayer runs, because a Trailrunde's lift segments resolve seg.liftId against LIFTS while
+    // being built; filling LIFTS afterwards left those stretches drawn as plain grey connectors.
+    // The LAYERS are still built after the trails, so the dotted cables end up above the trail lines in
+    // Leaflet's add-order z-stack and stay readable where a lift runs alongside a trail.
+    if (data.lifts) LIFTS.push(...data.lifts);
     data.lineTrails.forEach(buildTrailLayer);
+    if (data.lifts) data.lifts.forEach(buildLiftLayer);
     buildPlaceMarkers(groupKey, data.places);
 
     activeRegionGroups.add(groupKey);
@@ -1922,6 +2073,14 @@ function deactivateRegionGroup(groupKey){
       delete ELEVATION_PROFILES[id];
       delete TRAIL_SEGMENTS[id];
       lineTrails.splice(i, 1);
+    }
+  }
+  // Lifts, same teardown rule as the trails above: identified via the catalog's own sub-region keys
+  // (not the already-mutated REGIONS), so activation/deactivation order never matters.
+  for (let i = LIFTS.length - 1; i >= 0; i--) {
+    if (subKeys.includes(LIFTS[i].region)) {
+      destroyLiftLayer(LIFTS[i].id);
+      LIFTS.splice(i, 1);
     }
   }
   subKeys.forEach(subKey => { delete REGIONS[subKey]; activeRegions.delete(subKey); });
@@ -2255,6 +2414,30 @@ function render(){
     }
   });
 
+  // Lifts: shown when the "Lifte" switch is on AND their own sub-region is active. Deliberately NOT
+  // gated on activeDiffs or the Downhill/Uphill/Touren category switches -- a lift has no difficulty
+  // and is not one of those categories -- and deliberately left out of the shown/total counters above,
+  // which count rideable trails only.
+  LIFTS.forEach(l => {
+    const layer = liftLayers[l.id];
+    if (!layer) return;
+    const visible = showLifts && activeRegions.has(l.region);
+    if (visible) {
+      map.addLayer(layer.group);
+      map.addLayer(layer.hitLine);
+      // Leaflet re-opens a permanent tooltip on every (re-)add, so close it again -- same gotcha the
+      // segment hit-lines above already have to work around.
+      layer.hitLine.closeTooltip();
+      layer.stations.forEach(s => map.addLayer(s));
+    } else {
+      if (openLiftId === l.id) closeInfoPanelAndDeselect();
+      layer.hitLine.closeTooltip();
+      map.removeLayer(layer.group);
+      map.removeLayer(layer.hitLine);
+      layer.stations.forEach(s => map.removeLayer(s));
+    }
+  });
+
   countEl.textContent = `${shown}/${total} sichtbar`;
 
   Object.entries(regionSubCountEls).forEach(([key, el]) => { el.textContent = ` (${regionVisibleCounts[key] || 0})`; });
@@ -2292,6 +2475,7 @@ async function boot(){
     showUphill = saved.showUphill;
     showLoop = saved.showLoop;
     showDownhill = saved.showDownhill;
+    showLifts = saved.showLifts;
     showDirectionArrows = saved.showDirectionArrows;
     // rebuildRegionChips() re-derives region-chip DOM from activeRegions fresh, but the difficulty
     // chips (and the uphill/loop/downhill toggles) are static markup (all "active"/checked by
@@ -2302,6 +2486,7 @@ async function boot(){
     document.getElementById("showUphillToggle").checked = showUphill;
     document.getElementById("showLoopToggle").checked = showLoop;
     document.getElementById("showDownhillToggle").checked = showDownhill;
+    document.getElementById("showLiftsToggle").checked = showLifts;
     document.getElementById("showDirectionArrowsToggle").checked = showDirectionArrows;
   }
   rebuildRegionChips();
@@ -2428,7 +2613,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v5"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v6"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
