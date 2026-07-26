@@ -486,3 +486,5 @@ html.landscape-compact .ele-chart{ height:40px; }
   border:1px solid rgba(0,0,0,.18); padding:6px; resize:vertical;
 }
 #builderExport.visible{ display:block; }
+.builder-row .bi-meta.is-clipped{ color:var(--rust); }
+.builder-row button.on{ background:rgba(0,0,0,.12); opacity:1; }

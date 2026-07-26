@@ -742,8 +742,14 @@ document.getElementById("builderExportBtn").addEventListener("click", () => {
   // offline assembler takes to build the real Tour.
   const out = {
     name: "Neue Tour",
-    elements: builderItems.map(i => ({
-      kind: i.kind, id: i.id, name: builderNameOf(i), reversed: !!i.reversed
+    elements: builderResolve().map(r => ({
+      kind: r.item.kind, id: r.item.id, name: builderNameOf(r.item),
+      reversed: !!r.item.reversed, full: !!r.item.full,
+      // the ridden portion, so the offline assembler reproduces the same clip: first and last
+      // coordinate of the stretch actually used, plus its length
+      from: r.coords ? r.coords[0] : null,
+      to: r.coords ? r.coords[r.coords.length - 1] : null,
+      km: +r.len.toFixed(3)
     }))
   };
   ta.value = JSON.stringify(out, null, 2);
@@ -1228,21 +1234,100 @@ function builderNameOf(item){
   const t = lineTrails.find(tr => tr.id === item.id);
   return t ? t.name : item.id;
 }
-// Length/climb per element, taken from the element's own published figures rather than recomputed, so the
-// builder's totals match what the trail list and the lift panel already show.
-function builderStatsOf(item){
-  if (item.kind === "lift") {
-    const lf = LIFTS.find(l => l.id === item.id);
-    if (!lf) return { len: 0, up: 0, down: 0 };
-    const km = builderCoordsOf(item) ? cumulativeDistanceKm(builderCoordsOf(item)).slice(-1)[0] : 0;
-    const climb = liftClimb(lf);
-    // a lift is ridden upwards; reversing it means riding down, which no lift here does -- but keep the
-    // flip honest rather than silently ignoring it
-    return item.reversed ? { len: km, up: 0, down: climb } : { len: km, up: climb, down: 0 };
+// ---- Junction clipping -------------------------------------------------------------------------
+// A tour rarely rides a trail end to end: a new trail often starts partway along another one, and you
+// likewise join a trail somewhere other than its start (2026-07-26, per the user). Rather than making the
+// user mark those points, the cut is DERIVED from the sequence -- which is exactly what the sequence
+// already says. For each consecutive pair the closest approach between the two lines is the junction:
+// element A leaves there and element B joins there. A per-element `full` flag opts out when the automatic
+// guess is wrong, which it can be for two trails that cross each other more than once.
+// Lifts are never clipped: you ride a cable end to end.
+function closestApproach(A, B){
+  let best = Infinity, ia = 0, ib = 0;
+  for (let i = 0; i < A.length; i++) {
+    for (let j = 0; j < B.length; j++) {
+      const dla = (B[j][0] - A[i][0]) * 110540;
+      const dlo = (B[j][1] - A[i][1]) * 76000; // ~cos(47deg) * 111320, good enough to rank candidates
+      const d = dla * dla + dlo * dlo;
+      if (d < best) { best = d; ia = i; ib = j; }
+    }
   }
-  const t = lineTrails.find(tr => tr.id === item.id);
-  if (!t) return { len: 0, up: 0, down: 0 };
-  return item.reversed ? { len: t.len, up: t.down, down: t.up } : { len: t.len, up: t.up, down: t.down };
+  return { ia, ib, dist: Math.sqrt(best) };
+}
+
+// Resolves the whole list into what is actually ridden: clipped, oriented coordinates plus stats.
+function builderResolve(){
+  const geoms = builderItems.map(builderCoordsOf);
+  const n = builderItems.length;
+  const entry = new Array(n).fill(null), exit = new Array(n).fill(null);
+  // A lift is joined at its boarding station and left at its arrival station -- NOT at the nearest point
+  // of its cable, which can pass high above the trail you are actually leaving. The user's example is
+  // exactly this: you quit the X-Line where the Schattberg Sprinter's valley station is, not where the
+  // cable happens to cross overhead. So a lift contributes a single point to the junction search.
+  const junctionRef = (i, side) => {
+    const g = geoms[i];
+    if (!g || builderItems[i].kind !== "lift") return g;
+    const board = builderItems[i].reversed ? g[g.length - 1] : g[0];
+    const arrive = builderItems[i].reversed ? g[0] : g[g.length - 1];
+    return [side === "entry" ? board : arrive];
+  };
+  for (let i = 0; i < n - 1; i++) {
+    const A = junctionRef(i, "exit"), B = junctionRef(i + 1, "entry");
+    if (!A || !B) continue;
+    const j = closestApproach(A, B);
+    if (builderItems[i].kind === "trail" && !builderItems[i].full) exit[i] = j.ia;
+    if (builderItems[i + 1].kind === "trail" && !builderItems[i + 1].full) entry[i + 1] = j.ib;
+  }
+  return builderItems.map((item, i) => {
+    const g = geoms[i];
+    if (!g || g.length < 2) return { item, coords: null, len: 0, up: 0, down: 0, fullLen: 0, clipped: false };
+    if (item.kind === "lift") {
+      const lf = LIFTS.find(l => l.id === item.id);
+      const km = cumulativeDistanceKm(g).slice(-1)[0];
+      const climb = lf ? liftClimb(lf) : 0;
+      const coords = item.reversed ? g.slice().reverse() : g;
+      return item.reversed
+        ? { item, coords, len: km, up: 0, down: climb, fullLen: km, clipped: false }
+        : { item, coords, len: km, up: climb, down: 0, fullLen: km, clipped: false };
+    }
+    const cum = cumulativeDistanceKm(g);
+    const fullLen = cum[cum.length - 1];
+    // an open end runs to whichever terminus leaves the longer ride
+    let a = entry[i], b = exit[i];
+    if (a === null && b === null) { a = 0; b = g.length - 1; }
+    else if (a === null) a = (b > (g.length - 1) / 2) ? 0 : g.length - 1;
+    else if (b === null) b = (a > (g.length - 1) / 2) ? 0 : g.length - 1;
+    let lo = Math.min(a, b), hi = Math.max(a, b);
+    if (hi - lo < 1) { lo = 0; hi = g.length - 1; }        // degenerate clip -> fall back to the whole trail
+    let coords = g.slice(lo, hi + 1);
+    let forward = a <= b;
+    if (item.reversed) forward = !forward;
+    if (!forward) coords = coords.slice().reverse();
+    const len = cum[hi] - cum[lo];
+    const clipped = (hi - lo) < g.length - 1;
+    // Unclipped: use the trail's own published up/down, so the builder agrees with the trail list. Only a
+    // CLIPPED stretch has to be integrated from the elevation profile -- and that understates climbs,
+    // because the profile is resampled to ~100 points and smooths small undulations away (Hacklberg comes
+    // out at 49m instead of its official 124m). Nothing better is available in the browser; the offline
+    // assembler recomputes up/down from full-resolution elevation when the tour is finalised.
+    const t0 = lineTrails.find(tr => tr.id === item.id);
+    if (!clipped && t0) {
+      const u = forward ? t0.up : t0.down, dn2 = forward ? t0.down : t0.up;
+      return { item, coords, len, up: u, down: dn2, fullLen, clipped: false };
+    }
+    const prof = ELEVATION_PROFILES[item.id];
+    let up = 0, down = 0;
+    if (prof && prof.length > 1) {
+      const d0 = cum[lo], d1 = cum[hi];
+      const pts = prof.filter(p => p[0] >= d0 - 1e-9 && p[0] <= d1 + 1e-9);
+      for (let k = 1; k < pts.length; k++) {
+        const dz = pts[k][1] - pts[k - 1][1];
+        if (dz > 0) up += dz; else down -= dz;
+      }
+      if (!forward) { const t2 = up; up = down; down = t2; }
+    }
+    return { item, coords, len, up: Math.round(up), down: Math.round(down), fullLen, clipped };
+  });
 }
 
 function persistBuilder(){
@@ -1278,15 +1363,19 @@ function renderBuilder(){
   countEl2.textContent = builderItems.length ? `${builderItems.length} Elemente` : "";
   listEl2.innerHTML = "";
   let km = 0, up = 0, down = 0;
-  builderItems.forEach((item, i) => {
-    const st = builderStatsOf(item);
-    km += st.len; up += st.up; down += st.down;
+  const resolved = builderResolve();
+  resolved.forEach((r, i) => {
+    const item = r.item;
+    km += r.len; up += r.up; down += r.down;
     const row = document.createElement("div");
     row.className = "builder-row" + (item.kind === "lift" ? " is-lift" : "") + (item.reversed ? " is-reversed" : "");
+    // when a trail is only partly ridden, show both figures so it's obvious the clip happened
+    const meta = r.clipped ? `${r.len.toFixed(2)} / ${r.fullLen.toFixed(2)} km` : `${r.len.toFixed(2)} km`;
     row.innerHTML = `
       <span class="bi-num">${i + 1}</span>
       <span class="bi-name">${item.kind === "lift" ? "🚡 " : ""}${builderNameOf(item)}</span>
-      <span class="bi-meta">${st.len.toFixed(2)} km</span>
+      <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
+      ${item.kind === "trail" ? `<button data-act="full" class="${item.full ? "on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">⇔</button>` : ""}
       <button data-act="flip" title="Richtung umdrehen">🔄</button>
       <button data-act="up" title="Nach oben">↑</button>
       <button data-act="down" title="Nach unten">↓</button>
@@ -1294,6 +1383,7 @@ function renderBuilder(){
     row.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
       const act = b.dataset.act;
       if (act === "flip") item.reversed = !item.reversed;
+      else if (act === "full") item.full = !item.full;
       else if (act === "del") builderItems.splice(i, 1);
       else if (act === "up" && i > 0) builderItems.splice(i - 1, 0, builderItems.splice(i, 1)[0]);
       else if (act === "down" && i < builderItems.length - 1) builderItems.splice(i + 1, 0, builderItems.splice(i, 1)[0]);
@@ -1307,8 +1397,8 @@ function renderBuilder(){
     : "";
   // map highlight: one wide translucent line per chosen element, in ride order
   builderHighlight.clearLayers();
-  builderItems.forEach(item => {
-    const c = builderCoordsOf(item);
+  resolved.forEach(r => {
+    const c = r.coords;
     if (!c || c.length < 2) return;
     builderHighlight.addLayer(L.polyline(c, {
       pane: BUILDER_PANE, color: BUILDER_COLOR, weight: BUILDER_WEIGHT, opacity: BUILDER_OPACITY,

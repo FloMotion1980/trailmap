@@ -51,6 +51,32 @@ which no real lift here does but is kept honest rather than silently ignored.
 `builderPane` at z-index **345** — below the trails (overlayPane, 400) and below the lift mask (350), so a
 12px highlight can never cover the very lines it is pointing at. Same reasoning as the lift band's own pane.
 
+## Junction clipping
+
+A tour rarely rides a trail end to end: a new trail often starts partway along another one, and you
+likewise join a trail somewhere other than its start. Rather than making the user mark those points, the
+cut is **derived from the sequence**, which is what the sequence already says.
+
+For each consecutive pair, the closest approach between the two lines is the junction: the earlier element
+leaves there, the later one joins there. Per element, `full: true` opts out — needed when two trails cross
+each other more than once, where the automatic guess can pick the wrong crossing.
+
+**A lift contributes only one point to the junction search, not its whole cable** — its boarding station
+when it is being joined, its arrival station when it is being left. This matters: the user's own example is
+leaving the X-Line for the Schattberg Sprinter, and you quit the trail where the *valley station* is, not
+where the cable happens to pass overhead. Lifts themselves are never clipped; you ride a cable end to end.
+
+Direction falls out of the clip (entry index vs exit index); the per-row 🔄 flips the traversal on top of
+that. The first and last elements run to whichever terminus leaves the longer ride.
+
+Rows show `ridden / full km` in the accent colour whenever a clip happened, so it is never silent.
+
+**up/down:** an unclipped trail reports its own published figures, so the builder agrees with the trail
+list. A clipped stretch has to be integrated from `ELEVATION_PROFILES`, which **understates climbs** — the
+profile is resampled to ~100 points and smooths small undulations away (Hacklberg integrates to 49 m
+against its official 124 m). Nothing better is available in the browser; the offline assembler recomputes
+up/down from full-resolution elevation when a tour is finalised.
+
 ## Extending it
 
 The obvious next steps, in rough order of value:
