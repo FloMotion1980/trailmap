@@ -72,6 +72,20 @@
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
         </details>
       </div>
+      <details class="filter-section" id="secBuilder">
+        <summary><span class="section-title-row"><span>Tourenbuilder</span><span class="section-meta" id="builderCountLabel"></span></span></summary>
+        <div class="toggle-row-group">
+          <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="builderModeToggle"><span class="slider"></span></span>🧭 Builder-Modus</label>
+        </div>
+        <div id="builderHint">Modus an, dann Trails und Lifte anklicken — auf der Karte oder in der Liste. Sie werden hinten angehängt.</div>
+        <div id="builderList"></div>
+        <div id="builderTotals"></div>
+        <div class="builder-actions">
+          <button id="builderExportBtn">Als JSON ausgeben</button>
+          <button id="builderClearBtn">Leeren</button>
+        </div>
+        <textarea id="builderExport" readonly rows="6" spellcheck="false"></textarea>
+      </details>
       <details class="filter-section" id="secTrails" open>
         <summary>Trails</summary>
         <div class="trail-list" id="trailList"></div>
@@ -706,6 +720,37 @@ document.getElementById("showLiftsToggle").addEventListener("change", (e) => {
   render();
 });
 
+// ---- Tourenbuilder controls ----
+document.getElementById("builderModeToggle").addEventListener("change", (e) => {
+  builderMode = e.target.checked;
+  // Leaving a half-open info panel behind while switching into builder mode is confusing -- clicks no
+  // longer feed it, so close it and drop the map selection.
+  if (builderMode) closeInfoPanelAndDeselect();
+  persistBuilder();
+  renderBuilder();
+});
+document.getElementById("builderClearBtn").addEventListener("click", () => {
+  builderItems = [];
+  document.getElementById("builderExport").classList.remove("visible");
+  persistBuilder();
+  renderBuilder();
+});
+document.getElementById("builderExportBtn").addEventListener("click", () => {
+  const ta = document.getElementById("builderExport");
+  // Deliberately only the ordered element list, not a finished Tour: distStart/distEnd and an elevation
+  // profile would be guesses while the gaps between elements are still open. This is exactly the input the
+  // offline assembler takes to build the real Tour.
+  const out = {
+    name: "Neue Tour",
+    elements: builderItems.map(i => ({
+      kind: i.kind, id: i.id, name: builderNameOf(i), reversed: !!i.reversed
+    }))
+  };
+  ta.value = JSON.stringify(out, null, 2);
+  ta.classList.add("visible");
+  ta.select();
+});
+
 // ---- Collapsible sidebar filter sections (added 2026-07-23, to free up vertical space above the
 // trail list) — plain <details>/<summary>, open/closed state persisted separately from the actual
 // filter values above (activeRegions/activeDiffs/etc.), since it's UI layout state, not a filter.
@@ -1148,6 +1193,131 @@ const liftSelectionOutline = L.polyline([], {
   pane: LIFT_BAND_PANE, color: "#fff200", weight: LIFT_MASK_WEIGHT + 6, opacity: 1,
   lineCap: "round", lineJoin: "round", interactive: false
 });
+// ---- Tourenbuilder (2026-07-26) ----
+// A scratch list of trails and lifts in ride order, assembled by clicking them. Explicitly a FIRST cut:
+// gaps between consecutive elements are left visible rather than resolved, per the user ("Es ist OK, dass
+// dann erstmal Lücken zwischen den Elementen bleiben"). What it produces is the ordered element list, which
+// is exactly the input the offline assembler needs to turn a route into a real Tour -- so the builder
+// deliberately does NOT try to emit distStart/distEnd or an elevation profile, both of which would be
+// guesses until the gaps are closed.
+// Entry shape: { kind: "trail"|"lift", id, reversed }
+let builderMode = false;
+let builderItems = [];
+const BUILDER_KEY = "trailmap-builder-v1";
+const BUILDER_COLOR = "#e0a326";   // the app's own --highlight; not a difficulty and not the lift black
+const BUILDER_WEIGHT = 12;
+const BUILDER_OPACITY = 0.5;
+// Own pane below the trails (and below the lift band at 350) so a wide highlight can never cover the very
+// lines it is pointing at.
+const BUILDER_PANE = "builderPane";
+map.createPane(BUILDER_PANE).style.zIndex = 345;
+const builderHighlight = L.layerGroup([], { pane: BUILDER_PANE }).addTo(map);
+
+function builderCoordsOf(item){
+  if (item.kind === "lift") {
+    const lf = LIFTS.find(l => l.id === item.id);
+    return lf ? lf.coords : null;
+  }
+  return TRAIL_GEO[item.id] || null;
+}
+function builderNameOf(item){
+  if (item.kind === "lift") {
+    const lf = LIFTS.find(l => l.id === item.id);
+    return lf ? lf.name : item.id;
+  }
+  const t = lineTrails.find(tr => tr.id === item.id);
+  return t ? t.name : item.id;
+}
+// Length/climb per element, taken from the element's own published figures rather than recomputed, so the
+// builder's totals match what the trail list and the lift panel already show.
+function builderStatsOf(item){
+  if (item.kind === "lift") {
+    const lf = LIFTS.find(l => l.id === item.id);
+    if (!lf) return { len: 0, up: 0, down: 0 };
+    const km = builderCoordsOf(item) ? cumulativeDistanceKm(builderCoordsOf(item)).slice(-1)[0] : 0;
+    const climb = liftClimb(lf);
+    // a lift is ridden upwards; reversing it means riding down, which no lift here does -- but keep the
+    // flip honest rather than silently ignoring it
+    return item.reversed ? { len: km, up: 0, down: climb } : { len: km, up: climb, down: 0 };
+  }
+  const t = lineTrails.find(tr => tr.id === item.id);
+  if (!t) return { len: 0, up: 0, down: 0 };
+  return item.reversed ? { len: t.len, up: t.down, down: t.up } : { len: t.len, up: t.up, down: t.down };
+}
+
+function persistBuilder(){
+  try { localStorage.setItem(BUILDER_KEY, JSON.stringify({ builderMode, builderItems })); }
+  catch (e) { /* private mode -- the builder just won't survive a reload */ }
+}
+function restoreBuilder(){
+  try {
+    const raw = localStorage.getItem(BUILDER_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    builderMode = !!s.builderMode;
+    builderItems = Array.isArray(s.builderItems) ? s.builderItems.filter(i => i && i.id && i.kind) : [];
+  } catch (e) { /* ignore a corrupt entry */ }
+}
+
+// Adding is routed through here from every click site (map line, endpoint dots, sidebar card, and a Tour's
+// own segment hit-lines). Returns true when the builder consumed the click, so each caller can bail out of
+// its normal "open the info panel" behaviour.
+function builderTryAdd(kind, id){
+  if (!builderMode || !id) return false;
+  builderItems.push({ kind, id, reversed: false });
+  persistBuilder();
+  renderBuilder();
+  return true;
+}
+
+function renderBuilder(){
+  const listEl2 = document.getElementById("builderList");
+  const totalsEl = document.getElementById("builderTotals");
+  const countEl2 = document.getElementById("builderCountLabel");
+  if (!listEl2) return;
+  countEl2.textContent = builderItems.length ? `${builderItems.length} Elemente` : "";
+  listEl2.innerHTML = "";
+  let km = 0, up = 0, down = 0;
+  builderItems.forEach((item, i) => {
+    const st = builderStatsOf(item);
+    km += st.len; up += st.up; down += st.down;
+    const row = document.createElement("div");
+    row.className = "builder-row" + (item.kind === "lift" ? " is-lift" : "") + (item.reversed ? " is-reversed" : "");
+    row.innerHTML = `
+      <span class="bi-num">${i + 1}</span>
+      <span class="bi-name">${item.kind === "lift" ? "🚡 " : ""}${builderNameOf(item)}</span>
+      <span class="bi-meta">${st.len.toFixed(2)} km</span>
+      <button data-act="flip" title="Richtung umdrehen">🔄</button>
+      <button data-act="up" title="Nach oben">↑</button>
+      <button data-act="down" title="Nach unten">↓</button>
+      <button data-act="del" title="Entfernen">✕</button>`;
+    row.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+      const act = b.dataset.act;
+      if (act === "flip") item.reversed = !item.reversed;
+      else if (act === "del") builderItems.splice(i, 1);
+      else if (act === "up" && i > 0) builderItems.splice(i - 1, 0, builderItems.splice(i, 1)[0]);
+      else if (act === "down" && i < builderItems.length - 1) builderItems.splice(i + 1, 0, builderItems.splice(i, 1)[0]);
+      persistBuilder();
+      renderBuilder();
+    }));
+    listEl2.appendChild(row);
+  });
+  totalsEl.textContent = builderItems.length
+    ? `${km.toFixed(2)} km · ${Math.round(up)} m ↑ / ${Math.round(down)} m ↓`
+    : "";
+  // map highlight: one wide translucent line per chosen element, in ride order
+  builderHighlight.clearLayers();
+  builderItems.forEach(item => {
+    const c = builderCoordsOf(item);
+    if (!c || c.length < 2) return;
+    builderHighlight.addLayer(L.polyline(c, {
+      pane: BUILDER_PANE, color: BUILDER_COLOR, weight: BUILDER_WEIGHT, opacity: BUILDER_OPACITY,
+      lineCap: "round", lineJoin: "round", interactive: false
+    }));
+  });
+  document.getElementById("builderHint").style.display = builderMode ? "block" : "none";
+}
+
 // Which lift is SELECTED on the map, as opposed to `openLiftId` = whose info panel is open. Two ids for
 // the same reason trails have both `currentSelectedId` and `openTrailId`: closing the panel with the ×
 // deliberately keeps the map selection (outline + endpoints) alive -- verified against a trail, which
@@ -1216,13 +1386,13 @@ function buildLiftLayer(l){
   }
   hitLine.on("mouseover", () => setLiftHover(true));
   hitLine.on("mouseout", () => setLiftHover(false));
-  hitLine.on("click", () => showLiftInfo(l));
+  hitLine.on("click", () => { if (builderTryAdd("lift", l.id)) return; showLiftInfo(l); });
   // The station markers sit on top of the hit-line, so they'd otherwise swallow the hover/click that
   // belongs to the lift -- same reason a trail wires its own startMarker/endMarker to setHover.
   [startMarker, endMarker].forEach(m => {
     m.on("mouseover", () => setLiftHover(true));
     m.on("mouseout", () => setLiftHover(false));
-    m.on("click", () => showLiftInfo(l));
+    m.on("click", () => { if (builderTryAdd("lift", l.id)) return; showLiftInfo(l); });
   });
   liftLayers[l.id] = { mask, hairline, dots, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
 }
@@ -1940,6 +2110,7 @@ function buildTrailLayer(t){
           liftHit.on("mouseover", () => { liftDots.setStyle({ weight: LIFT_DOT_WEIGHT + 2 }); if (!showNames) liftHit.openTooltip(); });
           liftHit.on("mouseout", () => { liftDots.setStyle({ weight: LIFT_DOT_WEIGHT }); liftHit.closeTooltip(); });
           liftHit.on("click", () => {
+            if (builderTryAdd("lift", refLift.id)) return;
             const wasOpen = openTrailId === t.id;
             openTrailId = t.id;
             selectedSegmentId = (wasOpen && selectedSegmentId === refLift.id) ? null : refLift.id;
@@ -1977,6 +2148,7 @@ function buildTrailLayer(t){
           // stats + a highlighted stretch in the loop's own elevation profile on/off (see
           // buildInfoPanelHtml's selectedSegmentId handling), rather than opening a separate panel.
           segHit.on("click", () => {
+            if (builderTryAdd("trail", refTrail.id)) return;
             const wasOpen = openTrailId === t.id;
             openTrailId = t.id; // pre-empt showTrailInfo's own "switched to a different trail" reset below
             selectedSegmentId = (wasOpen && selectedSegmentId === refTrail.id) ? null : refTrail.id;
@@ -2071,14 +2243,14 @@ function buildTrailLayer(t){
   }
   hitLine.on("mouseover", () => setHover(true));
   hitLine.on("mouseout", () => setHover(false));
-  hitLine.on("click", () => { setHover(true); showTrailInfo(t); selectCardFor(t.id); });
-  startDot.on("click", () => { showTrailInfo(t); selectCardFor(t.id); });
+  hitLine.on("click", () => { if (builderTryAdd("trail", t.id)) return; setHover(true); showTrailInfo(t); selectCardFor(t.id); });
+  startDot.on("click", () => { if (builderTryAdd("trail", t.id)) return; showTrailInfo(t); selectCardFor(t.id); });
   startDot.on("mouseover", () => setHover(true));
   startDot.on("mouseout", () => setHover(false));
-  startMarker.on("click", () => { showTrailInfo(t); selectCardFor(t.id); });
+  startMarker.on("click", () => { if (builderTryAdd("trail", t.id)) return; showTrailInfo(t); selectCardFor(t.id); });
   startMarker.on("mouseover", () => setHover(true));
   startMarker.on("mouseout", () => setHover(false)); // tooltip close now lives in setHover(false) itself, see above
-  endMarker.on("click", () => { showTrailInfo(t); selectCardFor(t.id); });
+  endMarker.on("click", () => { if (builderTryAdd("trail", t.id)) return; showTrailInfo(t); selectCardFor(t.id); });
   endMarker.on("mouseover", () => setHover(true));
   endMarker.on("mouseout", () => setHover(false));
 
@@ -2544,6 +2716,7 @@ function render(){
             if (openTrailId === t.id) showTrailInfo(t); // keep an already-open panel's own solo button in sync
             return;
           }
+          if (builderTryAdd("trail", t.id)) return;
           if (!layer) return;
           flyToTrailBounds(layer.bounds);
           showTrailInfo(t);
@@ -2666,6 +2839,12 @@ async function boot(){
   rebuildRegionChips();
   render();
 
+  // Builder last: its rows resolve names/lengths against the regions loaded above, so restoring it any
+  // earlier would render a list of bare ids.
+  restoreBuilder();
+  document.getElementById("builderModeToggle").checked = builderMode;
+  renderBuilder();
+
   const combinedBounds = L.latLngBounds([]);
   activeRegionGroups.forEach(g => combinedBounds.extend(L.latLngBounds(REGION_CATALOG[g].bounds)));
   if (combinedBounds.isValid()) {
@@ -2787,7 +2966,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v6"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v7"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

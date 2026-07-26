@@ -3,10 +3,10 @@
 // and caches map tiles as they are viewed (or explicitly preloaded) so the map background
 // keeps working without a connection.
 
-// v6 (2026-07-26): bumped because style.css gained rules for the new bike-lift info panel. style.css
-// is in APP_SHELL and served cache-first (only the navigate request is network-first), so without a
-// version bump a returning user would pair the new index.html with the previously cached stylesheet.
-const CACHE_NAME = "trailmap-v6";
+// Bump whenever style.css changes: it is in APP_SHELL and served cache-first (only the navigate request
+// is network-first), so without a bump a returning user pairs the new index.html with the previously
+// cached stylesheet. v6 = bike-lift info panel rules, v7 = Tourenbuilder panel rules (both 2026-07-26).
+const CACHE_NAME = "trailmap-v7";
 const APP_SHELL = [
   "./",
   "./index.html",

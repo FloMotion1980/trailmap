@@ -452,3 +452,37 @@ html.landscape-compact #infoPanel{
   overflow-y: auto;
 }
 html.landscape-compact .ele-chart{ height:40px; }
+
+/* ---- Tourenbuilder (2026-07-26) ------------------------------------------------
+   A scratch list of trails/lifts in ride order. Kept visually close to .trail-card
+   so the two lists read as the same kind of thing, but numbered and with row
+   controls (flip / move / remove). */
+#builderHint{ font-size:11px; opacity:.75; line-height:1.4; margin:6px 0 8px; }
+#builderList{ display:flex; flex-direction:column; gap:4px; }
+.builder-row{
+  display:flex; align-items:center; gap:6px;
+  padding:5px 7px; border:1px solid rgba(0,0,0,.12); border-radius:7px;
+  font-size:12px; background:var(--card-bg);
+}
+.builder-row .bi-num{ min-width:1.6em; text-align:right; opacity:.6; font-variant-numeric:tabular-nums; }
+.builder-row .bi-name{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.builder-row .bi-meta{ opacity:.7; font-size:11px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+.builder-row button{
+  border:none; background:transparent; cursor:pointer; font-size:13px; line-height:1;
+  padding:2px 3px; border-radius:4px; opacity:.75;
+}
+.builder-row button:hover{ opacity:1; background:rgba(0,0,0,.08); }
+.builder-row.is-lift .bi-name{ font-style:italic; }
+.builder-row.is-reversed .bi-name::after{ content:" ↺"; opacity:.7; }
+#builderTotals{ margin-top:8px; font-size:12px; font-weight:600; }
+.builder-actions{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+.builder-actions button{
+  flex:1 1 auto; font-size:11.5px; padding:5px 8px; border-radius:6px;
+  border:1px solid rgba(0,0,0,.18); background:transparent; cursor:pointer;
+}
+#builderExport{
+  width:100%; margin-top:8px; font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:10.5px; line-height:1.35; border-radius:6px; display:none;
+  border:1px solid rgba(0,0,0,.18); padding:6px; resize:vertical;
+}
+#builderExport.visible{ display:block; }
