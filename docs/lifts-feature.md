@@ -66,8 +66,13 @@ polylines:
 
 1. **MASK** — an opaque thin grey band (`LIFT_MASK_COLOR #cfcfcf`, `LIFT_MASK_WEIGHT 7`) that *covers*
    the base map's own aerialway line, tick marks included.
-2. **SYMBOL** — a black dash-dot line on top (`LIFT_LINE_COLOR`, `LIFT_LINE_DASH "14,5,3,5"`, at the
-   ordinary `BASE_WEIGHT`), the usual cartographic cable-car pattern.
+2. **SYMBOL** — black, and drawn as **two** strokes rather than one dash-dot stroke: a hairline
+   (`LIFT_HAIRLINE_WEIGHT 1.1`, solid) plus fat dots on top (`LIFT_DOT_WEIGHT 4.5`,
+   `LIFT_DOT_DASH "1,13"`, round line cap). A single dashed stroke can only have one width, so "fat dots
+   with a very fine line between them" — which is what the user asked for, matching OSM's own aerialway
+   look — is impossible that way. A ~1px dash with a round cap renders as a dot, and because Leaflet
+   applies `dashArray` in **screen** pixels the dot spacing stays constant at every zoom: zoom in and you
+   get more dots, not longer gaps. No zoom handler needed.
 
 Both live in the `LIFT_BAND_PANE` (z-index 350, between `tilePane` 200 and `overlayPane` 400), so they
 sit above the tiles but below the trails.
@@ -79,26 +84,36 @@ unreadable) and then a wide translucent band meant to let the tile's line show t
 below). Covering the tile's line and drawing our own symbol on it ends the conflict and loses nothing —
 our symbol says the same thing plus "this one carries bikes".
 
-**The constraint that decided it — worth understanding before changing any of this.** A Tour renders its
-segments as members of one `L.featureGroup`, and every existing call site styles the whole Tour through
-it: hover, solo dimming, `resetAllHoverStyles`. Those calls pass exactly **`weight` and `opacity`**.
-Colour and `dashArray` survive them; width and transparency do not. So:
+### A Tour draws its own lift stretch, and is style-exempt there — `line` vs `styleTarget`
 
-- A **band** (which *is* width + transparency) can never be a group member — it would collapse to a
-  3.5px opaque line after the first hover. Reusing the band inside a Tour would have required pulling
-  that segment out of the group and hand-carrying it through render()/teardown/solo.
-- A **dash-dot symbol** (colour + dash) is safe as an ordinary group member.
+A Tour draws its lift stretch itself, with the same two strokes, exactly as it draws a component-trail
+stretch (per the user: "Ich will Lifte wie Trails"). So the Tour's line is continuous and a lift looks
+identical everywhere.
 
-That is why the final design puts the lift's identity in colour+dash: **a Tour draws its own lift stretch
-exactly like a component-trail stretch**, with no special-casing anywhere (per the user: "Ich will Lifte
-wie Trails"). The grey mask is not duplicated per Tour — it belongs to the lift object, and render() keeps
-that object visible wherever a visible Tour rides it, so the mask is already under the Tour's stretch.
+**The constraint to understand before changing any of this.** A Tour renders its segments as members of
+one `L.featureGroup`, and every existing call site styles the whole Tour through it — `setHover`,
+`applySolo`, `clearSolo`, `resetAllHoverStyles` — with `setStyle({weight, opacity})`. Colour and
+`dashArray` survive those calls; **width and opacity do not**. A hairline-plus-fat-dots symbol is a
+*width* contrast, so passing it through the group would flatten both strokes to the same width and destroy
+the look (this is also why the earlier translucent band could never be a group member).
 
-Consequences, all verified with a Tour selected (which auto-enables solo): the Tour's own 4 lift stretches
-render at the Tour's own opacity 0.9 while every other lift dims to 0.15 — so **the Tour's line has no gap
-at its lift stretches**, which the previous "band only, no line in the Tour" version did have. One
-cosmetic leftover: the mask dims with the other lifts, so under a soloed Tour's bright symbol the tile's
-tick marks partly reappear.
+The fix is two handles per trail, both stored in `lineLayers[id]`:
+
+| handle | contains | used for |
+|---|---|---|
+| `line` | **every** segment | add/remove, `bringToFront` — the lifecycle |
+| `styleTarget` | only the **non-lift** segments | every `setStyle` call |
+
+For a trail without segments, `styleTarget === line`. All five `setStyle` call sites go through
+`styleTarget`; verified afterwards that a normal trail still behaves exactly as before (hover 3.5→6.5 and
+back, solo 0.85→0.15 with the soloed one at 0.9, and back).
+
+**Deliberate consequence:** a Tour's lift stretch does not dim or thicken with the Tour. It stays as it is
+— which also means the Tour never has a gap there, unlike the earlier "band only, no line in the Tour"
+version. Hovering the stretch itself still gives feedback: its own dots grow.
+
+The grey mask is not duplicated per Tour — it belongs to the lift object, and render() keeps that object
+visible wherever a visible Tour rides it, so the mask is already under the Tour's stretch.
 
 Hover on a lift widens the mask slightly and thickens the symbol to `HOVER_WEIGHT`. The selection outline
 is opaque again (a yellow rim around the mask) — there is nothing underneath left to preserve now that the

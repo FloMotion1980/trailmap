@@ -1101,7 +1101,16 @@ const CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a T
 const LIFT_MASK_COLOR = "#cfcfcf";   // clearly lighter than CONNECTOR_COLOR (#5a5a5a) so it can't read as a connector
 const LIFT_MASK_WEIGHT = 7;          // must cover the tile's aerialway line *including* its tick marks (~5-6px)
 const LIFT_LINE_COLOR = "#000000";
-const LIFT_LINE_DASH = "14,5,3,5";   // dash-dot; in screen px, so it looks identical at every zoom
+// The symbol is TWO strokes, not one dash-dot stroke (2026-07-26, per the user: "Dicke Punkte wie jetzt
+// sind OK aber die Linie ganz fein"). A single dashed stroke can only have one width, so fat dots and a
+// hairline between them are impossible that way.
+const LIFT_HAIRLINE_WEIGHT = 1.1;    // the fine connecting line
+const LIFT_DOT_WEIGHT = 4.5;         // dot diameter
+// A ~1px dash drawn with a ROUND line cap renders as a dot. dasharray is applied by Leaflet in SCREEN
+// pixels (it re-projects paths on zoom but never rescales stroke attributes -- the same reason a
+// connector's "6,6" looks identical at every zoom), so the dot spacing stays constant as you zoom:
+// zoom in and you get more dots, not longer gaps. No zoom handler needed.
+const LIFT_DOT_DASH = "1,13";
 // Solo mode dims the lifts too (2026-07-26, per the user: "Der Solo Button blendet Lifte nicht aus").
 // Dimmed rather than hidden, matching what solo does to the other trails. Read via
 // baselineLiftOpacity() everywhere, NEVER hardcoded -- hardcoding the equivalent for trails was a real
@@ -1113,7 +1122,8 @@ function applyLiftSoloStyles(){
   Object.values(liftLayers).forEach(layer => {
     const o = baselineLiftOpacity();
     layer.mask.setStyle({ opacity: o });
-    layer.symbol.setStyle({ opacity: o });
+    layer.hairline.setStyle({ opacity: o });
+    layer.dots.setStyle({ opacity: o });
   });
 }
 // Deliberately NO per-lift "currently closed" flag. It was tried and dropped the same day, per the user:
@@ -1151,23 +1161,28 @@ function highlightSelectedLift(id){
   if (!map.hasLayer(liftSelectionOutline)) liftSelectionOutline.addTo(map);
   liftSelectionOutline.bringToBack();
   layer.mask.bringToFront();
-  layer.symbol.bringToFront();
+  layer.hairline.bringToFront();
+  layer.dots.bringToFront();
   currentSelectedLiftId = id;
 }
 function clearLiftSelection(){
   if (map.hasLayer(liftSelectionOutline)) map.removeLayer(liftSelectionOutline);
   if (currentSelectedLiftId) { hideEndpoints(currentSelectedLiftId); currentSelectedLiftId = null; }
 }
-const liftLayers = {}; // liftId -> { mask, symbol, hitLine, startMarker, endMarker, lift, bounds }
+const liftLayers = {}; // liftId -> { mask, hairline, dots, hitLine, startMarker, endMarker, lift, bounds }
 
 function buildLiftLayer(l){
   const mask = L.polyline(l.coords, {
     pane: LIFT_BAND_PANE, color: LIFT_MASK_COLOR, weight: LIFT_MASK_WEIGHT, opacity: 1,
     lineCap: "round", lineJoin: "round", interactive: false, bubblingMouseEvents: false
   }).addTo(map);
-  const symbol = L.polyline(l.coords, {
-    pane: LIFT_BAND_PANE, color: LIFT_LINE_COLOR, weight: BASE_WEIGHT, opacity: 1,
-    dashArray: LIFT_LINE_DASH, interactive: false, bubblingMouseEvents: false
+  const hairline = L.polyline(l.coords, {
+    pane: LIFT_BAND_PANE, color: LIFT_LINE_COLOR, weight: LIFT_HAIRLINE_WEIGHT, opacity: 1,
+    interactive: false, bubblingMouseEvents: false
+  }).addTo(map);
+  const dots = L.polyline(l.coords, {
+    pane: LIFT_BAND_PANE, color: LIFT_LINE_COLOR, weight: LIFT_DOT_WEIGHT, opacity: 1,
+    dashArray: LIFT_DOT_DASH, lineCap: "round", interactive: false, bubblingMouseEvents: false
   }).addTo(map);
   // Station markers, styled exactly like a trail's own Start/Ziel dots (green bottom, red top) and --
   // like those -- shown only while this lift is the selected one, not permanently (2026-07-26, per the
@@ -1188,7 +1203,7 @@ function buildLiftLayer(l){
     // Hover widens and darkens the band a little -- enough to pick it out, without it becoming opaque
     // and hiding the base map's own lift line that shows through it.
     mask.setStyle({ weight: on ? LIFT_MASK_WEIGHT + 3 : LIFT_MASK_WEIGHT });
-    symbol.setStyle({ weight: on ? HOVER_WEIGHT : BASE_WEIGHT });
+    dots.setStyle({ weight: on ? LIFT_DOT_WEIGHT + 2 : LIFT_DOT_WEIGHT });
     if (on) {
       showEndpoints(l.id);
       if (!showNames) hitLine.openTooltip();
@@ -1209,7 +1224,7 @@ function buildLiftLayer(l){
     m.on("mouseout", () => setLiftHover(false));
     m.on("click", () => showLiftInfo(l));
   });
-  liftLayers[l.id] = { mask, symbol, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
+  liftLayers[l.id] = { mask, hairline, dots, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
 }
 
 // Station markers reuse the shared showEndpoints/hideEndpoints defined further down (they resolve a
@@ -1222,7 +1237,8 @@ function destroyLiftLayer(id){
   if (!layer) return;
   if (openLiftId === id) closeInfoPanelAndDeselect();
   map.removeLayer(layer.mask);
-  map.removeLayer(layer.symbol);
+  map.removeLayer(layer.hairline);
+  map.removeLayer(layer.dots);
   map.removeLayer(layer.hitLine);
   hideEndpoints(id);
   delete liftLayers[id];
@@ -1276,13 +1292,13 @@ function setArrowOpacity(layer, opacity){
 function applySolo(id){
   Object.entries(lineLayers).forEach(([lid, layer]) => {
     if (lid === id) {
-      layer.line.setStyle({ opacity: 0.9 });
+      layer.styleTarget.setStyle({ opacity: 0.9 });
       layer.startDot.setStyle({ opacity:1, fillOpacity:1 });
       layer.startMarker.setStyle({ opacity:1, fillOpacity:1 });
       layer.endMarker.setStyle({ opacity:1, fillOpacity:1 });
       setArrowOpacity(layer, 1);
     } else {
-      layer.line.setStyle({ opacity: SOLO_DIM_OPACITY });
+      layer.styleTarget.setStyle({ opacity: SOLO_DIM_OPACITY });
       layer.startDot.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
       layer.startMarker.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
       layer.endMarker.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
@@ -1296,7 +1312,7 @@ function applySolo(id){
 }
 function clearSolo(){
   Object.values(lineLayers).forEach(layer => {
-    layer.line.setStyle({ opacity: 0.85 });
+    layer.styleTarget.setStyle({ opacity: 0.85 });
     layer.startDot.setStyle({ opacity:1, fillOpacity:1 });
     layer.startMarker.setStyle({ opacity:1, fillOpacity:1 });
     layer.endMarker.setStyle({ opacity:1, fillOpacity:1 });
@@ -1856,7 +1872,7 @@ function baselineLineOpacity(lid){
 function resetAllHoverStyles(exceptId){
   Object.entries(lineLayers).forEach(([lid, layer]) => {
     if (lid !== exceptId) {
-      layer.line.setStyle({ weight: BASE_WEIGHT, opacity: baselineLineOpacity(lid) });
+      layer.styleTarget.setStyle({ weight: BASE_WEIGHT, opacity: baselineLineOpacity(lid) });
       if (layer.card) layer.card.classList.remove("hovered");
       if (currentSelectedId !== lid) hideEndpoints(lid);
     }
@@ -1880,28 +1896,40 @@ function buildTrailLayer(t){
   // with that trail's own polyline when both happen to be visible at once.
   const segmentHitLines = []; // one invisible wide hitline per trailId-carrying segment, see below
   const segmentNameLabels = []; // one standalone permanent name tooltip per trailId-carrying segment
-  // A LIFT stretch is drawn by the Tour itself, as an ordinary featureGroup member, exactly like a
-  // component-trail stretch (2026-07-26, per the user: "Ich will Lifte wie Trails"). That only works
-  // because the lift SYMBOL is defined by colour + dashArray alone: the group's setStyle calls (tour
-  // hover, solo dimming, resetAllHoverStyles) pass `weight` and `opacity`, which would have destroyed a
-  // width-and-transparency-based band but leave a dash-dot pattern intact.
-  // The lift's grey MASK is not duplicated here -- it belongs to the lift object, and render() keeps that
-  // object visible wherever a visible Tour rides it, so the mask is already in place under this stretch.
-  const segmentLayers = [];
-  let line;
+  // A LIFT stretch is drawn by the Tour itself, exactly like a component-trail stretch, so the Tour's line
+  // is continuous and a lift looks the same everywhere (per the user: "Ich will Lifte wie Trails").
+  // It is drawn with the same two strokes a standalone lift uses -- hairline + fat dots -- and therefore
+  // must be exempt from the group's STYLING: every existing call site (setHover, applySolo, clearSolo,
+  // resetAllHoverStyles) styles a Tour via one setStyle({weight, opacity}) on the whole group, which would
+  // flatten a hairline and its dots to the same width and destroy the look. So there are two handles:
+  //   `line`        -- every segment, used for add/remove/bringToFront (lifecycle), and
+  //   `styleTarget` -- only the non-lift segments, used for every setStyle call.
+  // Consequence, deliberate: a Tour's lift stretch does not dim or thicken with the Tour. It stays put,
+  // which also means the Tour never has a gap there.
+  // The grey MASK is not duplicated here -- it belongs to the lift object, and render() keeps that object
+  // visible wherever a visible Tour rides it, so the mask is already in place under this stretch.
+  const segmentLayers = [];      // all segments -> `line`
+  const styleableLayers = [];    // non-lift segments -> `styleTarget`
+  let line, styleTarget;
   if (segments) {
       segments.forEach(seg => {
         const refTrail = seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
         const refLift = seg.liftId ? LIFTS.find(lf => lf.id === seg.liftId) : null;
-        const visibleSeg = L.polyline(seg.coords, refLift
-          ? { color: LIFT_LINE_COLOR, dashArray: LIFT_LINE_DASH,
-              weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
-          : {
-          color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
-          dashArray: refTrail ? null : "6,6",
-          weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false
-        });
-        segmentLayers.push(visibleSeg);
+        let visibleSeg = null; // the styleable line, for a trail or connector stretch
+        let liftDots = null;   // a lift stretch's dots, hovered instead of a line of its own
+        if (refLift) {
+          const liftHairline = L.polyline(seg.coords, { color: LIFT_LINE_COLOR, weight: LIFT_HAIRLINE_WEIGHT, opacity: 1, bubblingMouseEvents:false, interactive:false });
+          liftDots = L.polyline(seg.coords, { color: LIFT_LINE_COLOR, weight: LIFT_DOT_WEIGHT, opacity: 1, dashArray: LIFT_DOT_DASH, lineCap:"round", bubblingMouseEvents:false, interactive:false });
+          segmentLayers.push(liftHairline, liftDots);
+        } else {
+          visibleSeg = L.polyline(seg.coords, {
+            color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
+            dashArray: refTrail ? null : "6,6",
+            weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false
+          });
+          segmentLayers.push(visibleSeg);
+          styleableLayers.push(visibleSeg);
+        }
         if (refLift) {
           // Same per-segment hit-line pattern as a component trail below: keeps the LOOP as the open
           // panel (per the user's earlier rule that clicking into a loop shouldn't lose its context)
@@ -1909,8 +1937,8 @@ function buildTrailLayer(t){
           const liftHit = L.polyline(seg.coords, { color:"#000", weight: 18, opacity: 0, bubblingMouseEvents:false }).addTo(map);
           liftHit.bindTooltip(`🚡 ${refLift.name}`, { permanent:true, direction:"top", className:"trail-label-tooltip", interactive:false });
           liftHit.closeTooltip();
-          liftHit.on("mouseover", () => { visibleSeg.setStyle({ weight: HOVER_WEIGHT }); if (!showNames) liftHit.openTooltip(); });
-          liftHit.on("mouseout", () => { visibleSeg.setStyle({ weight: BASE_WEIGHT }); liftHit.closeTooltip(); });
+          liftHit.on("mouseover", () => { liftDots.setStyle({ weight: LIFT_DOT_WEIGHT + 2 }); if (!showNames) liftHit.openTooltip(); });
+          liftHit.on("mouseout", () => { liftDots.setStyle({ weight: LIFT_DOT_WEIGHT }); liftHit.closeTooltip(); });
           liftHit.on("click", () => {
             const wasOpen = openTrailId === t.id;
             openTrailId = t.id;
@@ -1973,6 +2001,7 @@ function buildTrailLayer(t){
         }
       });
     line = L.featureGroup(segmentLayers).addTo(map);
+    styleTarget = L.featureGroup(styleableLayers); // not added to the map -- a styling handle only
   } else {
     // A loop with no TRAIL_SEGMENTS data (no named-component-trail breakdown, e.g. the Odenwald
     // "grouped cluster" loops like Gorxheimertal/Hammelbach) has no real single difficulty of its
@@ -1984,6 +2013,7 @@ function buildTrailLayer(t){
         ? { color: CONNECTOR_COLOR, dashArray: "6,6", weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
         : { color: diffColor[t.diff], weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
       ).addTo(map);
+    styleTarget = line; // no segments -> nothing to exempt
   }
   // Invisible, much wider line laid over the visible one — makes tapping on touch screens far easier
   // without changing how thin the trail looks. All interaction happens on this one. Also carries the
@@ -2017,7 +2047,7 @@ function buildTrailLayer(t){
 
   function setHover(on){
     if (on) resetAllHoverStyles(t.id); // force any stuck "fat" trail (common on touch, missed mouseout) back to normal first
-    line.setStyle({ weight: on ? HOVER_WEIGHT : BASE_WEIGHT, opacity: on ? 1 : baselineLineOpacity(t.id) });
+    styleTarget.setStyle({ weight: on ? HOVER_WEIGHT : BASE_WEIGHT, opacity: on ? 1 : baselineLineOpacity(t.id) });
     const card = lineLayers[t.id].card;
     if (card) card.classList.toggle("hovered", on);
     if (on) {
@@ -2052,7 +2082,7 @@ function buildTrailLayer(t){
   endMarker.on("mouseover", () => setHover(true));
   endMarker.on("mouseout", () => setHover(false));
 
-  lineLayers[t.id] = { line, hitLine, segmentHitLines, segmentNameLabels, startDot, startMarker, endMarker, directionArrows, bounds, setHover, midIdx, coords, card:null };
+  lineLayers[t.id] = { line, styleTarget, hitLine, segmentHitLines, segmentNameLabels, startDot, startMarker, endMarker, directionArrows, bounds, setHover, midIdx, coords, card:null };
 }
 
 // Undoes buildTrailLayer: removes every layer this trail owns from the map and forgets it.
@@ -2562,7 +2592,8 @@ function render(){
     const visible = (showLifts && activeRegions.has(l.region)) || liftIdsInVisibleTours.has(l.id);
     if (visible) {
       map.addLayer(layer.mask);
-      map.addLayer(layer.symbol);
+      map.addLayer(layer.hairline);
+      map.addLayer(layer.dots);
       map.addLayer(layer.hitLine);
       // Leaflet re-opens a permanent tooltip on every (re-)add, so close it again -- same gotcha the
       // segment hit-lines above already have to work around.
@@ -2574,7 +2605,8 @@ function render(){
       if (openLiftId === l.id) closeInfoPanelAndDeselect();
       layer.hitLine.closeTooltip();
       map.removeLayer(layer.mask);
-      map.removeLayer(layer.symbol);
+      map.removeLayer(layer.hairline);
+      map.removeLayer(layer.dots);
       map.removeLayer(layer.hitLine);
       hideEndpoints(l.id);
     }
