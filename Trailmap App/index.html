@@ -1108,6 +1108,16 @@ const LIFT_DOT_DASH = "1,11";  // dot + gap, in screen px -> constant spacing at
 // reading as a highlight around that line and starts disappearing behind it.
 const LIFT_BAND_WEIGHT = 8;
 const LIFT_BAND_OPACITY = 0.38;
+// Solo mode dims the lifts too (2026-07-26, per the user: "Der Solo Button blendet Lifte nicht aus").
+// Dimmed rather than hidden, matching what solo does to the other trails. Read via
+// baselineLiftBandOpacity() everywhere, NEVER hardcoded -- hardcoding the equivalent for trails was a
+// real bug once: merely moving the mouse over another line silently cancelled solo's dimming, because
+// the hover-off path reset opacity to the undimmed constant.
+const LIFT_BAND_DIM_OPACITY = 0.1;
+function baselineLiftBandOpacity(){ return soloId ? LIFT_BAND_DIM_OPACITY : LIFT_BAND_OPACITY; }
+function applyLiftSoloStyles(){
+  Object.values(liftLayers).forEach(layer => layer.band.setStyle({ opacity: baselineLiftBandOpacity() }));
+}
 // Deliberately NO per-lift "currently closed" flag. It was tried and dropped the same day, per the user:
 // nothing in this app synchronises lift operating status, so a hardcoded flag would silently rot while
 // looking authoritative. `lifts` therefore states only the stable property "this lift carries bikes in
@@ -1123,8 +1133,13 @@ map.createPane(LIFT_BAND_PANE).style.zIndex = 350;
 // reasons: it has to live in the lift band's pane (the trails' outline sits in overlayPane, above the
 // band, so it would cover the band AND the base map's own lift line showing through it), and it has to
 // be sized against the band's width instead of HOVER_WEIGHT, so it reads as a halo AROUND the band.
+// Semi-transparent, unlike the trails' outline which is fully opaque. A trail's outline sits behind the
+// trail's own opaque coloured line, so nothing is lost by it being solid -- but a lift's whole point is
+// that the base map's own aerialway line reads THROUGH it, and an opaque yellow hid exactly that
+// (2026-07-26, per the user). At 0.5 the tile's line still comes through both this and the band above it.
+const LIFT_SELECTION_OPACITY = 0.5;
 const liftSelectionOutline = L.polyline([], {
-  pane: LIFT_BAND_PANE, color: "#fff200", weight: LIFT_BAND_WEIGHT + 6, opacity: 1,
+  pane: LIFT_BAND_PANE, color: "#fff200", weight: LIFT_BAND_WEIGHT + 6, opacity: LIFT_SELECTION_OPACITY,
   lineCap: "round", lineJoin: "round", interactive: false
 });
 // Which lift is SELECTED on the map, as opposed to `openLiftId` = whose info panel is open. Two ids for
@@ -1172,7 +1187,7 @@ function buildLiftLayer(l){
     // Hover widens and darkens the band a little -- enough to pick it out, without it becoming opaque
     // and hiding the base map's own lift line that shows through it.
     band.setStyle({ weight: on ? LIFT_BAND_WEIGHT + 4 : LIFT_BAND_WEIGHT,
-                    opacity: on ? Math.min(1, LIFT_BAND_OPACITY + 0.22) : LIFT_BAND_OPACITY });
+                    opacity: on ? Math.min(1, baselineLiftBandOpacity() + 0.22) : baselineLiftBandOpacity() });
     if (on) {
       showEndpoints(l.id);
       if (!showNames) hitLine.openTooltip();
@@ -1274,6 +1289,7 @@ function applySolo(id){
     }
   });
   soloId = id;
+  applyLiftSoloStyles(); // after soloId is set -- baselineLiftBandOpacity() reads it
   syncSelectedCardSoloBtn();
 }
 function clearSolo(){
@@ -1285,6 +1301,7 @@ function clearSolo(){
     setArrowOpacity(layer, 1);
   });
   soloId = null;
+  applyLiftSoloStyles(); // after soloId is cleared -- restores the undimmed band opacity
   applyNameLabels();
   syncSelectedCardSoloBtn();
 }
