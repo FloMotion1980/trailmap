@@ -387,6 +387,40 @@ const REGION_CATALOG = {
       trailcombis: { label: "Trailcombis", color: "#8a3a6a" }
     }
   },
+  // Dolomiti Paganella (Trentino, IT), 24 trails, built 2026-07-26. Sub-regions are the park's OWN three
+  // zones (Andalo 10 / Fai 9 / Molveno 5) -- that's the top-level grouping on its official trail list;
+  // its second axis ("Bike park" lift-served lines vs. "Shared trail" natural trails) is deliberately NOT
+  // a sub-region, to avoid 6 half-empty ones.
+  // Sourcing: the operator site paganellabikepark.com has no GPX of its own, but every
+  // /en/trail/<slug> page embeds an Outdooractive tour id, which feeds the same direct GPX endpoint used
+  // for Finale Ligure (download.tour.gpx?i=<id>) -- so geometry AND real embedded elevation, no elevation
+  // API needed. Difficulty comes from the park's own 6-tier grading, scraped from the level icons on its
+  // "by zone" trail table (beginner/beg-int/int/int-adv/advanced/expert -> gruen/blau/blau/rot/schwarz/
+  // schwarz). That was chosen over Outdooractive's S-scale on purpose: the documented S1->blau/S2->rot/
+  // S3+->schwarz shift would have made 17 of 27 trails schwarz, which misrepresents a park that markets
+  // beginner flow lines. Length/up/down are the park's own published numbers (parsed out of the same
+  // table's labels), per the "prefer official over GPX-derived" rule.
+  // WORTH A SPOT-CHECK: for a few trails the official length disagrees with the GPX by >25% --
+  // Interstellar (1.3 official vs 0.80 GPX), Easy Rider (2.2 vs 1.14), Top Gun (4.7 vs 3.67),
+  // Arancia Meccanica (1.3 vs 1.89, GPX longer), Ude's Trail (8.8 vs 12.06). Official numbers were kept.
+  // NOT BUILT (3 of the official list's 27): the long lift-assisted marathon routes "Lake to Lake"
+  // (75 km), "Bear Trails" (60 km) and "from Top to Lake" (30 km). Their official GPX draws the
+  // cable-car rides as straight lines -- verified in the source GPX, not a simplification artifact:
+  // the Andalo lift shows as +741 m over a 2384 m straight segment, the Doss Pelà lift as +373 m over
+  // 1190 m -- so they would render as 2.4 km straight lines across the map, and their GPX-computed climb
+  // is correspondingly wrong (from Top to Lake: 1083 m computed vs 200 m official). The right container
+  // for these is the Touren/segment feature with the lift stretches as connectors, not a plain trail
+  // card. Everything else has no gap over 559 m, and those are just coarse sampling on straight
+  // stretches (elevation changes only ±30 m across them), not lifts.
+  paganella: {
+    label: "Dolomiti Paganella", file: "regions/paganella.json", trailCount: 24,
+    bounds: [[46.13632, 10.9538], [46.22536, 11.0866]],
+    subRegions: {
+      andalo: { label: "Andalo", color: "#1c8ac2" },
+      fai: { label: "Fai della Paganella", color: "#c26a1c" },
+      molveno: { label: "Molveno", color: "#6a8a2f" }
+    }
+  },
   // Portes du Soleil (FR/CH) -- the resort markets itself as "our 5 bikeparks", so the sub-regions are
   // those 5: Les Gets, Morzine, Avoriaz, Châtel and the Swiss Champéry-Les Crosets-Morgins ("bikepark.ch",
   // keyed `chablais`). 52 downhill runs, built 2026-07-26.
