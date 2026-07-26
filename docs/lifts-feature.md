@@ -52,19 +52,52 @@ Deliberately excluded in Bikecircus, and worth re-checking each season:
   Note saalbach.com's own combined overview row says "F1+F2 … yes"; the more specific Fieberbrunn
   source and OSM both say F2 does not. The specific source was followed — flag for the user.
 
-## Rendering — OSM's own aerialway look
+## Rendering — a translucent highlight band, not a competing line
 
-The user picked OSM's rendering as the model (screenshot): a **thin line with evenly spaced dots**,
-where the **dot spacing stays constant on screen** — zoom in and you get more dots, not longer gaps.
+**Current (2026-07-26, second iteration).** A standalone lift is drawn as one **wide translucent band**
+(`LIFT_BAND_WEIGHT` 11, `LIFT_BAND_OPACITY` 0.38, round caps, no dash), plus the usual invisible wide
+hit-line so it stays tappable on touch.
 
-That needs no zoom handler and no marker recomputation. SVG `stroke-dasharray` is applied by Leaflet
-in **screen pixels** (the overlay pane re-projects paths on zoom but never rescales stroke attributes —
-the same reason a connector's `"6,6"` dash looks identical at every zoom). A very short dash drawn with
-a **round line cap renders as a dot**, so `dashArray: "1,11"` + `lineCap: "round"` gives dots 12
-screen-px apart at any zoom, for free.
+Why a band: the **OSM/OpenTopoMap base tiles already draw every aerialway themselves** — a dark grey
+line with perpendicular ticks. Since our data comes from the same OSM ways, the two land *exactly* on top
+of each other, and a line of our own just mushes together with the tile's, making both harder to read
+(the user hit this immediately: "dann liegen der OSM Lift und unsere Liftlinie übereinander"). A band
+sidesteps the competition instead of fighting it: the base map's crisp line shows **through** the
+translucent band, which then only has to say "this one carries bikes". Same idiom the app already uses
+for its selection highlight — a wider line behind, not a recolour.
 
-Two stacked polylines per lift: the hairline cable (`LIFT_CABLE_WEIGHT` 1.4) plus the dotted overlay
-(`LIFT_DOT_WEIGHT` 4.5), plus the usual invisible wide hit-line so a hairline is still tappable on touch.
+Two implementation notes:
+- **"Behind" is achieved by transparency, not stacking.** Leaflet's `tilePane` (z 200) always sits below
+  every vector layer, so the band is technically *above* the tile image; it just lets it through.
+- The band **does** need to sit below the trails, or it would tint every trail crossing it. It gets its
+  own pane, `LIFT_BAND_PANE` at z-index **350** — between `tilePane` (200) and `overlayPane` (400) —
+  passed to the polyline via Leaflet's `pane` option. The hit-line and station markers stay in the
+  default panes, so they remain on top and clickable.
+
+Hover widens the band and raises its opacity a little, but deliberately not to full opacity — it must
+keep letting the base map's own lift line through.
+
+**A Tour's own lift stretches still use the dotted style** (`LIFT_DOT_WEIGHT` 4.5 +
+`LIFT_DOT_DASH "1,11"` + round cap), not the band: inside a tour line the surrounding segments give
+enough context, and the stretch has to read as part of a continuous route. Unify later if it looks
+inconsistent in practice.
+
+### The earlier dotted-line version, and the trick worth remembering
+
+The first iteration copied OSM's own look — a thin line with evenly spaced dots whose **spacing stays
+constant on screen** (zoom in, get more dots). That was replaced by the band for the overlap reason
+above, but the technique is worth keeping in mind, and is still used for the tour segments:
+
+SVG `stroke-dasharray` is applied by Leaflet in **screen pixels** (the overlay pane re-projects paths on
+zoom but never rescales stroke attributes — the same reason a connector's `"6,6"` dash looks identical at
+every zoom). A very short dash drawn with a **round line cap renders as a dot**, so `dashArray: "1,11"`
++ `lineCap: "round"` gives dots 12 screen-px apart at any zoom — no zoom handler, no marker
+recomputation.
+
+**Known trade-off of the band:** on the **satellite** base layer the map draws no aerialways at all, so
+there is no crisp line for the band to sit under and it reads as a fairly faint violet stripe on dark
+forest. Street and relief both draw lifts, so only satellite is affected. If that becomes a problem,
+raise the opacity or add a thin crisp core line back.
 
 **Station markers follow the trail convention exactly** (changed 2026-07-26 on the user's request, after
 a first version drew them permanently as hollow violet dots): green at the valley station, red at the

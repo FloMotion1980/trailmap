@@ -1092,15 +1092,30 @@ const CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a T
 // draws aerialways near-black, but black here is already the `schwarz` difficulty, and the user has
 // previously (correctly) objected to a non-trail line reading as a black-rated trail.
 const LIFT_COLOR = "#5b4a9e";  // violet -- infrastructure, not a difficulty
-const LIFT_CABLE_WEIGHT = 1.4; // the thin line
-const LIFT_DOT_WEIGHT = 4.5;   // dot diameter
+const LIFT_DOT_WEIGHT = 4.5;   // dot diameter, still used for a Tour's own lift stretches
 const LIFT_DOT_DASH = "1,11";  // dot + gap, in screen px -> constant spacing at every zoom
-const liftLayers = {}; // liftId -> { group, hitLine, stations:[..], lift, bounds }
+// Standalone lifts are drawn as a WIDE TRANSLUCENT BAND instead of their own line (2026-07-26, per the
+// user). Reason: the OSM/OpenTopoMap base tiles already draw every aerialway themselves, and since both
+// come from the same OSM data they land exactly on top of each other -- our own thin dotted line just
+// mushed together with the tile's grey ticked one and made both harder to read. A band sidesteps the
+// competition entirely: the base map's crisp line shows THROUGH the translucent band, which then only
+// says "this one carries bikes". Same idiom the app already uses for the selection highlight (a wider
+// line behind, not a recolour).
+// Note "behind" can only be achieved via transparency, not stacking: Leaflet's tilePane always sits
+// below every vector layer, so the band is technically above the tile image.
+const LIFT_BAND_WEIGHT = 11;
+const LIFT_BAND_OPACITY = 0.38;
+// The band does need to sit below the TRAILS though, or it would tint every trail crossing it. Own
+// pane, z-index between tilePane (200) and overlayPane (400).
+const LIFT_BAND_PANE = "liftBandPane";
+map.createPane(LIFT_BAND_PANE).style.zIndex = 350;
+const liftLayers = {}; // liftId -> { band, hitLine, startMarker, endMarker, lift, bounds }
 
 function buildLiftLayer(l){
-  const cable = L.polyline(l.coords, { color: LIFT_COLOR, weight: LIFT_CABLE_WEIGHT, opacity: 0.9, interactive: false, bubblingMouseEvents: false });
-  const dots = L.polyline(l.coords, { color: LIFT_COLOR, weight: LIFT_DOT_WEIGHT, opacity: 1, dashArray: LIFT_DOT_DASH, lineCap: "round", interactive: false, bubblingMouseEvents: false });
-  const group = L.featureGroup([cable, dots]).addTo(map);
+  const band = L.polyline(l.coords, {
+    pane: LIFT_BAND_PANE, color: LIFT_COLOR, weight: LIFT_BAND_WEIGHT, opacity: LIFT_BAND_OPACITY,
+    lineCap: "round", lineJoin: "round", interactive: false, bubblingMouseEvents: false
+  }).addTo(map);
   // Station markers, styled exactly like a trail's own Start/Ziel dots (green bottom, red top) and --
   // like those -- shown only while this lift is the selected one, not permanently (2026-07-26, per the
   // user). Since `coords` is always stored bottom-station-first, coords[0] is the valley station.
@@ -1117,7 +1132,10 @@ function buildLiftLayer(l){
   // (2026-07-26, per the user). Keeps them on mouseout if this lift is the selected one, mirroring the
   // `currentSelectedId !== t.id` guard in a trail's setHover(false).
   function setLiftHover(on){
-    dots.setStyle({ weight: on ? LIFT_DOT_WEIGHT + 2 : LIFT_DOT_WEIGHT });
+    // Hover widens and darkens the band a little -- enough to pick it out, without it becoming opaque
+    // and hiding the base map's own lift line that shows through it.
+    band.setStyle({ weight: on ? LIFT_BAND_WEIGHT + 4 : LIFT_BAND_WEIGHT,
+                    opacity: on ? Math.min(1, LIFT_BAND_OPACITY + 0.22) : LIFT_BAND_OPACITY });
     if (on) {
       showEndpoints(l.id);
       if (!showNames) hitLine.openTooltip();
@@ -1138,7 +1156,7 @@ function buildLiftLayer(l){
     m.on("mouseout", () => setLiftHover(false));
     m.on("click", () => showLiftInfo(l));
   });
-  liftLayers[l.id] = { group, dots, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
+  liftLayers[l.id] = { band, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
 }
 
 // Station markers reuse the shared showEndpoints/hideEndpoints defined further down (they resolve a
@@ -1150,7 +1168,7 @@ function destroyLiftLayer(id){
   const layer = liftLayers[id];
   if (!layer) return;
   if (openLiftId === id) closeInfoPanelAndDeselect();
-  map.removeLayer(layer.group);
+  map.removeLayer(layer.band);
   map.removeLayer(layer.hitLine);
   hideEndpoints(id);
   delete liftLayers[id];
@@ -2463,7 +2481,7 @@ function render(){
     if (!layer) return;
     const visible = showLifts && activeRegions.has(l.region);
     if (visible) {
-      map.addLayer(layer.group);
+      map.addLayer(layer.band);
       map.addLayer(layer.hitLine);
       // Leaflet re-opens a permanent tooltip on every (re-)add, so close it again -- same gotcha the
       // segment hit-lines above already have to work around.
@@ -2474,7 +2492,7 @@ function render(){
       // selected one still needs its own markers gone -- hence the unconditional hide too.
       if (openLiftId === l.id) closeInfoPanelAndDeselect();
       layer.hitLine.closeTooltip();
-      map.removeLayer(layer.group);
+      map.removeLayer(layer.band);
       map.removeLayer(layer.hitLine);
       hideEndpoints(l.id);
     }
