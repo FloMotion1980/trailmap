@@ -1101,11 +1101,13 @@ function buildLiftLayer(l){
   const cable = L.polyline(l.coords, { color: LIFT_COLOR, weight: LIFT_CABLE_WEIGHT, opacity: 0.9, interactive: false, bubblingMouseEvents: false });
   const dots = L.polyline(l.coords, { color: LIFT_COLOR, weight: LIFT_DOT_WEIGHT, opacity: 1, dashArray: LIFT_DOT_DASH, lineCap: "round", interactive: false, bubblingMouseEvents: false });
   const group = L.featureGroup([cable, dots]).addTo(map);
-  // Station markers at both ends: hollow, so they read as "infrastructure" rather than as a trail's
-  // own filled green Start / red Ziel dots.
-  const stations = [l.coords[0], l.coords[l.coords.length - 1]].map(c =>
-    L.circleMarker(c, { radius: 4, color: LIFT_COLOR, weight: 2.5, fillColor: "#f2f3ec", fillOpacity: 1, interactive: false, bubblingMouseEvents: false }).addTo(map)
-  );
+  // Station markers, styled exactly like a trail's own Start/Ziel dots (green bottom, red top) and --
+  // like those -- shown only while this lift is the selected one, not permanently (2026-07-26, per the
+  // user). Since `coords` is always stored bottom-station-first, coords[0] is the valley station.
+  const startMarker = L.circleMarker(l.coords[0], { radius:5, color:"#0d3d1a", weight:1.5, fillColor:"#3fbf5e", fillOpacity:1, bubblingMouseEvents:false });
+  const endMarker = L.circleMarker(l.coords[l.coords.length - 1], { radius:5, color:"#5c0f0a", weight:1.5, fillColor:"#e0392b", fillOpacity:1, bubblingMouseEvents:false });
+  startMarker.bindTooltip("Talstation", { permanent:false, direction:"top", className:"trail-label-tooltip", interactive:false });
+  endMarker.bindTooltip("Bergstation", { permanent:false, direction:"top", className:"trail-label-tooltip", interactive:false });
   // Same invisible-wide-hitline trick trails use, so a hairline cable is still tappable on touch.
   const hitLine = L.polyline(l.coords, { color: "#000", weight: 20, opacity: 0, bubblingMouseEvents: false }).addTo(map);
   hitLine.bindTooltip(`🚡 ${l.name}`, { permanent: true, direction: "top", offset: [0, -6], className: "trail-label-tooltip", interactive: false });
@@ -1114,8 +1116,30 @@ function buildLiftLayer(l){
   hitLine.on("mouseover", () => { dots.setStyle({ weight: LIFT_DOT_WEIGHT + 2 }); if (!showNames) hitLine.openTooltip(); });
   hitLine.on("mouseout", () => { dots.setStyle({ weight: LIFT_DOT_WEIGHT }); hitLine.closeTooltip(); });
   hitLine.on("click", () => showLiftInfo(l));
-  liftLayers[l.id] = { group, dots, hitLine, stations, lift: l, bounds: L.latLngBounds(l.coords) };
+  liftLayers[l.id] = { group, dots, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
 }
+
+// Station markers follow the same show-on-selection rule as a trail's Start/Ziel dots -- see
+// showEndpoints/hideEndpoints for the trail equivalents.
+function showLiftEndpoints(id){
+  const layer = liftLayers[id];
+  if (!layer) return;
+  if (!map.hasLayer(layer.startMarker)) layer.startMarker.addTo(map);
+  if (!map.hasLayer(layer.endMarker)) layer.endMarker.addTo(map);
+  layer.startMarker.bringToFront();
+  layer.endMarker.bringToFront();
+}
+function hideLiftEndpoints(id){
+  const layer = liftLayers[id];
+  if (!layer) return;
+  // Close first: a marker yanked out from under a stationary cursor never gets a natural mouseout, so
+  // its tooltip would stay stuck open -- the same trap hideEndpoints() documents for trails.
+  layer.startMarker.closeTooltip();
+  layer.endMarker.closeTooltip();
+  map.removeLayer(layer.startMarker);
+  map.removeLayer(layer.endMarker);
+}
+function hideAllLiftEndpoints(){ Object.keys(liftLayers).forEach(hideLiftEndpoints); }
 
 function destroyLiftLayer(id){
   const layer = liftLayers[id];
@@ -1123,7 +1147,7 @@ function destroyLiftLayer(id){
   if (openLiftId === id) closeInfoPanelAndDeselect();
   map.removeLayer(layer.group);
   map.removeLayer(layer.hitLine);
-  layer.stations.forEach(s => map.removeLayer(s));
+  hideLiftEndpoints(id);
   delete liftLayers[id];
 }
 
@@ -1253,6 +1277,7 @@ document.getElementById("ipClose").addEventListener("click", () => {
   openLiftId = null;
   selectedSegmentId = null;
   clearSolo();
+  hideAllLiftEndpoints();
 });
 // Full "nothing is selected/open/soloed anymore" reset -- shared by clicking empty map space and by
 // render()'s filter-driven hide branch (a filter change hiding the currently-selected trail needs the
@@ -1267,6 +1292,7 @@ function closeInfoPanelAndDeselect(){
   selectedSegmentId = null;
   clearSolo();
   clearSelection();
+  hideAllLiftEndpoints();
 }
 map.on("click", closeInfoPanelAndDeselect);
 
@@ -1642,6 +1668,8 @@ function showLiftInfo(l){
   openLiftId = l.id;
   clearSolo();
   clearSelection();       // a lift is not in the trail list, so nothing should stay highlighted there
+  hideAllLiftEndpoints(); // only the newly selected lift shows its stations
+  showLiftEndpoints(l.id);
   const typeLabel = LIFT_TYPE_LABEL[l.type] || "Bergbahn";
   ipContent.innerHTML = `
     <h3>🚡 ${l.name} <button class="locate-btn" data-lift-id="${l.id}" title="Zum Lift springen">📍</button></h3>
@@ -1656,6 +1684,7 @@ function showLiftInfo(l){
 
 function showTrailInfo(t){
   openLiftId = null;      // opening a trail closes any lift that was showing
+  hideAllLiftEndpoints();
   const isNewSelection = openTrailId !== t.id;
   if (isNewSelection) selectedSegmentId = null; // switching to a genuinely different trail/loop
   openTrailId = t.id;
@@ -2428,13 +2457,15 @@ function render(){
       // Leaflet re-opens a permanent tooltip on every (re-)add, so close it again -- same gotcha the
       // segment hit-lines above already have to work around.
       layer.hitLine.closeTooltip();
-      layer.stations.forEach(s => map.addLayer(s));
+      // Station markers are NOT added here: they belong to the selected lift only (showLiftInfo).
     } else {
+      // closeInfoPanelAndDeselect() also hides the stations, but a filtered-out lift that wasn't the
+      // selected one still needs its own markers gone -- hence the unconditional hide too.
       if (openLiftId === l.id) closeInfoPanelAndDeselect();
       layer.hitLine.closeTooltip();
       map.removeLayer(layer.group);
       map.removeLayer(layer.hitLine);
-      layer.stations.forEach(s => map.removeLayer(s));
+      hideLiftEndpoints(l.id);
     }
   });
 

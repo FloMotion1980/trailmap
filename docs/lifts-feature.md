@@ -64,9 +64,18 @@ a **round line cap renders as a dot**, so `dashArray: "1,11"` + `lineCap: "round
 screen-px apart at any zoom, for free.
 
 Two stacked polylines per lift: the hairline cable (`LIFT_CABLE_WEIGHT` 1.4) plus the dotted overlay
-(`LIFT_DOT_WEIGHT` 4.5). Plus a hollow station `circleMarker` at each end — hollow so it doesn't read
-as a trail's own filled green Start / red Ziel dot — and the usual invisible wide hit-line so a
-hairline is still tappable on touch.
+(`LIFT_DOT_WEIGHT` 4.5), plus the usual invisible wide hit-line so a hairline is still tappable on touch.
+
+**Station markers follow the trail convention exactly** (changed 2026-07-26 on the user's request, after
+a first version drew them permanently as hollow violet dots): green at the valley station, red at the
+top station, and **only while that lift is the selected one** — the same show-on-selection rule as a
+trail's Start/Ziel dots, via `showLiftEndpoints`/`hideLiftEndpoints`/`hideAllLiftEndpoints` mirroring
+`showEndpoints`/`hideEndpoints`. Because `coords` is always stored bottom-first, `coords[0]` is the
+valley station, so no per-lift direction check is needed. Tooltips are "Talstation"/"Bergstation".
+They are hidden on: selecting a different lift, selecting any trail (`showTrailInfo`), closing the
+panel, clicking empty map (`closeInfoPanelAndDeselect`), a filter hiding that lift, and teardown.
+`render()` deliberately does **not** add them back when a lift becomes visible again — visibility of the
+line and selection of the lift are separate things.
 
 `LIFT_COLOR` is violet `#5b4a9e`, deliberately outside the `diffColor` palette and away from
 `CONNECTOR_COLOR`'s grey. OSM draws aerialways near-black, but black here is already the `schwarz`
