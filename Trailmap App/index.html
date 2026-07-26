@@ -1113,6 +1113,28 @@ const LIFT_BAND_OPACITY = 0.38;
 // pane, z-index between tilePane (200) and overlayPane (400).
 const LIFT_BAND_PANE = "liftBandPane";
 map.createPane(LIFT_BAND_PANE).style.zIndex = 350;
+
+// Selection highlight for a lift (2026-07-26, per the user: a selected lift got no yellow outline).
+// Same idea and same colour as the trails' `selectionOutline` -- one shared polyline, moved to whichever
+// object is selected, drawn behind it rather than recolouring it -- but it needs its own layer for two
+// reasons: it has to live in the lift band's pane (the trails' outline sits in overlayPane, above the
+// band, so it would cover the band AND the base map's own lift line showing through it), and it has to
+// be sized against the band's width instead of HOVER_WEIGHT, so it reads as a halo AROUND the band.
+const liftSelectionOutline = L.polyline([], {
+  pane: LIFT_BAND_PANE, color: "#fff200", weight: LIFT_BAND_WEIGHT + 6, opacity: 1,
+  lineCap: "round", lineJoin: "round", interactive: false
+});
+function highlightSelectedLift(id){
+  const layer = liftLayers[id];
+  if (!layer) { clearLiftSelection(); return; }
+  liftSelectionOutline.setLatLngs(layer.lift.coords);
+  if (!map.hasLayer(liftSelectionOutline)) liftSelectionOutline.addTo(map);
+  liftSelectionOutline.bringToBack();
+  layer.band.bringToFront();
+}
+function clearLiftSelection(){
+  if (map.hasLayer(liftSelectionOutline)) map.removeLayer(liftSelectionOutline);
+}
 const liftLayers = {}; // liftId -> { band, hitLine, startMarker, endMarker, lift, bounds }
 
 function buildLiftLayer(l){
@@ -1697,6 +1719,7 @@ function showLiftInfo(l){
   clearSelection();       // a lift is not in the trail list, so nothing should stay highlighted there
   hideAllLiftEndpoints(); // only the newly selected lift shows its stations
   showEndpoints(l.id);
+  highlightSelectedLift(l.id);
   const typeLabel = LIFT_TYPE_LABEL[l.type] || "Bergbahn";
   ipContent.innerHTML = `
     <h3>🚡 ${l.name} <button class="locate-btn" data-lift-id="${l.id}" title="Zum Lift springen">📍</button></h3>
@@ -2275,6 +2298,7 @@ const selectionOutline = L.polyline([], {
 
 function highlightSelectedTrail(id){
   const layer = lineLayers[id];
+  clearLiftSelection(); // selecting a trail drops any lift highlight
   if (currentSelectedId && currentSelectedId !== id) hideEndpoints(currentSelectedId);
   if (!layer) { if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline); currentSelectedId = null; return; }
   selectionOutline.setLatLngs(layer.coords);
@@ -2291,6 +2315,7 @@ function clearSelection(){
   if (selectedCard) { selectedCard.classList.remove("selected"); selectedCard = null; }
   if (currentSelectedId) { hideEndpoints(currentSelectedId); currentSelectedId = null; }
   if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline);
+  clearLiftSelection(); // a lift and a trail are never selected at the same time
 }
 
 function selectTrail(id, card){
