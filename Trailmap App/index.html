@@ -387,6 +387,35 @@ const REGION_CATALOG = {
       trailcombis: { label: "Trailcombis", color: "#8a3a6a" }
     }
   },
+  // Portes du Soleil (FR/CH) -- the resort markets itself as "our 5 bikeparks", so the sub-regions are
+  // those 5: Les Gets, Morzine, Avoriaz, Châtel and the Swiss Champéry-Les Crosets-Morgins ("bikepark.ch",
+  // keyed `chablais`). 52 downhill runs, built 2026-07-26.
+  // Sourcing note: unlike the Austrian parks, NONE of the operator sites here expose per-trail GPX
+  // (portesdusoleil.com, bikepark.ch, lesgets.com, chatel.com all checked -- no .gpx/.geojson assets),
+  // so this is an OSM build. What makes it work anyway is that the OSM `route=mtb` + `mtb:type=downhill`
+  // relations here carry a **`colour` tag** (green/blue/red/black) -- the resort's own piste colour, which
+  // maps 1:1 onto this app's difficulty scale, so difficulty is official rather than guessed. Five runs
+  // have no colour tag and were resolved from mtb:scale / the name (Piste des Biquettes, Serpentine,
+  // Grand Conche, Grand Conche MTB DH (Black), Downhill Crosets) -- flagged as lower confidence.
+  // Elevation came from OpenTopoData `eudem25m` (25m European DEM, better than mapzen in the Alps),
+  // NOT Open-Meteo, which rate-limits on a batch this size; fetches are cached to disk per coordinate.
+  // Sub-region assignment is by nearest lift-base anchor, several anchors per park (Les Gets spans
+  // Chavannes/Mont Chéry/Nauchets, Morzine spans Pléney + Super Morzine-Zore, Avoriaz includes the
+  // Lindarets sector). Anchors matter: a first pass with a sloppy Les Gets anchor wrongly pulled the
+  // Pléney runs (La Noire, Super 8, Family, Atray) into Les Gets.
+  // KNOWN GAP: the Swiss side has only 3 runs here because OSM barely covers it -- bikepark.ch's own
+  // Morgins/Champéry/Les Crosets runs are largely unmapped. Needs a GPX or a manual list to complete.
+  portesdusoleil: {
+    label: "Portes du Soleil", file: "regions/portesdusoleil.json", trailCount: 52,
+    bounds: [[46.13418, 6.65558], [46.23115, 6.84092]],
+    subRegions: {
+      lesgets: { label: "Les Gets", color: "#c2a01c" },
+      morzine: { label: "Morzine", color: "#1c7ac2" },
+      avoriaz: { label: "Avoriaz", color: "#8a3ac2" },
+      chatel: { label: "Châtel", color: "#c2451c" },
+      chablais: { label: "Champéry · Les Crosets · Morgins", color: "#2f8a5a" }
+    }
+  },
   // Serfaus-Fiss-Ladis (Tyrol). Two sub-regions: the Waldbahn "bikepark" (9 gravity trails) and the
   // mountain "singletrails" (8 marked descents). Built 2026-07-26 from the operator's OWN site,
   // bike-sfl.at, which turned out to expose a direct per-trail GPX asset
