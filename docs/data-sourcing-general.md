@@ -10,6 +10,19 @@ GPX → geometry/elevation is a well-defined pipeline (regex point extraction �
 
 Metadata (name/difficulty/length/up/down/url) is a separate, non-automatable step — it doesn't come from the GPX, it comes from whatever official source exists for that region (tourism site scraping for Paznaun; the `BiketrailsNauders.pdf` brochure's S0–S3 scale for 3-Länder's 21 numbered trails). Where no official length/Hm exists (newer trails not in a brochure), GPX-computed length/elevation-gain-loss is an acceptable fallback — but prefer official published numbers over GPX-derived ones when both exist, to stay consistent with the rest of `lineTrails`.
 
+## Try the resort/park operator's OWN site for GPX first (before OSM)
+
+**Added 2026-07-26, prompted by the user: "Warum probierst du nicht online GPX zu kriegen von den Parks. Bisher gabs die immer."** They were right, and this should now be step 1 for any new bike park / resort region, ahead of OSM+Overpass:
+
+A resort's own bike site is very often built on a tour-CMS (Outdooractive/komoot-backed) that publishes a **direct, unauthenticated GPX asset per trail**. For Serfaus-Fiss-Ladis this was `bike-sfl.at`, with each trail's detail page (`/de/singletrails/<name>-<num>_tour_<id>`) embedding a link to `/var/assets/Touren/<name>-<num>-<assetid>.gpx`. A two-step scrape (listing page → detail pages → regex `(/var/assets/Touren/[^"']+?\.gpx)`) got all of them in one pass. Look for the same shape on any operator site: a per-trail detail page whose HTML contains a `.gpx` (and usually `.kml`) asset URL.
+
+**Why this beats OSM as a first choice:**
+- **Real embedded elevation.** This is the big one — it removes the elevation-API step entirely. Open-Meteo's elevation endpoint **rate-limits hard** on a batch build (~10+ trails back-to-back) and starts returning `null`/`0`, which silently produces garbage profiles (Serfaus' first, OSM-based build had trails reading `ele 0 -> 1648`, `up2254/dn270` on what is actually a pure descent). If you ever *do* have to batch-fetch elevation, save incrementally per trail so a mid-loop rate-limit doesn't discard everything.
+- **The operator's list is authoritative for which trails still exist.** Serfaus' status page (`/de/info-service/trailstatus-oeffnungszeiten`) enumerated exactly 17 trails; OSM additionally carried Wildbachtrail, Flüstertrail and Almtrail, which the operator no longer lists — i.e. defunct. OSM keeps old trails around long after they're gone, and it also *missed* one that does exist (Scheidtrail). Cross-check both directions.
+- Difficulty comes from the same pages, in the operator's own words.
+
+**But don't assume the GPX is automatically the better geometry — verify against the operator's published length/drop.** Park GPX files are often recorded as a *ride*, so they can include the lift/access return leg: Serfaus' "Morning Glory" GPX came back as a loop (1.22 km, up102/dn97) against a published 0.68 km descent, and "Downhill" carried up137. In those cases OSM's clean descent line is the better one. Conversely OSM was badly truncated for "Supernatural 2.0" (0.21 km vs 1.85 km published). The workable rule is **per-trail source selection scored against the operator's own published numbers**, not a blanket "GPX always wins" — and keep the published length as `len` either way, per the existing official-numbers-beat-GPX-derived convention.
+
 ## Checking for a redirect before assuming a name has no match
 
 A site's own detail-page slug can be phrased differently than the name a user gives you and still be the same trail — e.g. an Italian-phrased alternate name 301-redirecting to a canonical English slug on finaleoutdoor.com. Before concluding a user-supplied name has no existing entry, try `curl -I -A "<real UA>" <guessed-slug-url>` and check the `location` header for a redirect target — cheap, and prevents accidentally re-fetching/duplicating a trail that's already built under a different-looking name.

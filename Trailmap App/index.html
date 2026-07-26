@@ -364,13 +364,47 @@ const REGION_CATALOG = {
   // 300m, whichever is larger; fall back to a direct join otherwise) plus a small-fragment-drop
   // threshold (~20m) to `bridge_chains()` in the build script, both worth reusing for future parks.
   soelden: {
-    label: "Bike Republic Sölden", file: "regions/soelden.json", trailCount: 36,
+    // 2026-07-26: +2 historical trails the user supplied as one komoot tour GPX
+    // ("...Bartiges Bödele_Rettenbachtrail_Leiterbergtrail - Signature Trail in Sölden.gpx", in
+    // Material/Sölden/Trails/). Both are marked "nicht mehr vorhanden" in that GPX's own waypoints --
+    // they are the OLD variants that used to be part of this tour, kept because the user asked for them.
+    // Cut out of the single 12.8km track at its komoot highlight waypoints; that "waypoint == section
+    // start" assumption was validated against the already-built Leiterberg Trail (672), whose geometry
+    // matches the track from idx 209 while its waypoint sits at 213. The already-built "Bartigs Bödele
+    // Line (676)" has 0% geometric overlap with this track, confirming it really is a different (old)
+    // line, not a duplicate. Both blau per the user.
+    label: "Bike Republic Sölden", file: "regions/soelden.json", trailCount: 38,
     bounds: [[46.92087, 10.94823], [47.00829, 11.04643]],
     subRegions: {
       shaped_lines: { label: "Shaped Lines", color: "#2f6b8a" },
       trails: { label: "Trails", color: "#8a5a2f" },
       trails_stille_seite: { label: "Trails Stille Seite", color: "#5a8a3a" },
       trailcombis: { label: "Trailcombis", color: "#8a3a6a" }
+    }
+  },
+  // Serfaus-Fiss-Ladis (Tyrol). Two sub-regions: the Waldbahn "bikepark" (9 gravity trails) and the
+  // mountain "singletrails" (8 marked descents). Built 2026-07-26 from the operator's OWN site,
+  // bike-sfl.at, which turned out to expose a direct per-trail GPX asset
+  // (/var/assets/Touren/<name>-<num>-<id>.gpx, linked from each trail's detail page) -- these carry
+  // real embedded elevation and removed the need for OSM+elevation-API entirely for the singletrails.
+  // The complete official trail set is enumerated on /de/info-service/trailstatus-oeffnungszeiten
+  // (exactly these 17). Names OSM still carries but the operator no longer lists -- Wildbachtrail,
+  // Flüstertrail, Almtrail -- are therefore treated as defunct and deliberately NOT included.
+  // Difficulty from the operator's own labels: Very Easy->gruen, Easy->blau, Medium->rot,
+  // Difficult->schwarz (agrees with OSM mtb:scale for the park trails).
+  // Geometry source is per-trail, chosen by agreement with the operator's own published length/drop:
+  // the park GPX sometimes includes the lift/access return leg (Morning Glory comes back as a loop,
+  // up102/dn97; Downhill carries up137), so OSM's clean descent is used for Milky Way, Vuelta, Morning
+  // Glory, Strada del Sole, Downhill; the GPX is used where OSM is truncated or short (Supernatural 2.0
+  // was only 0.21km in OSM vs 1.85km published, plus Hill Bill, Supernatural, Freeride). All 8
+  // singletrails use the GPX. `len` is the operator's published figure throughout, per the project's
+  // "official numbers beat GPX-derived" rule; up/down are computed from the chosen geometry.
+  serfaus: {
+    label: "Serfaus-Fiss-Ladis", file: "regions/serfaus.json", trailCount: 17,
+    bounds: [[47.03392, 10.53756], [47.09037, 10.63242]],
+    subRegions: {
+      bikepark: { label: "Bikepark", color: "#c25b1c" },
+      singletrails: { label: "Singletrails", color: "#3f7a3a" }
     }
   },
   // Third Alps bike park. Different data source than Leogang/Sölden: Saalbach's own official trails
