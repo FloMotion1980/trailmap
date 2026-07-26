@@ -1112,34 +1112,39 @@ function buildLiftLayer(l){
   const hitLine = L.polyline(l.coords, { color: "#000", weight: 20, opacity: 0, bubblingMouseEvents: false }).addTo(map);
   hitLine.bindTooltip(`🚡 ${l.name}`, { permanent: true, direction: "top", offset: [0, -6], className: "trail-label-tooltip", interactive: false });
   hitLine.closeTooltip();
-  // Hover thickens only the dots (the cable stays a hairline), so the line doesn't change character.
-  hitLine.on("mouseover", () => { dots.setStyle({ weight: LIFT_DOT_WEIGHT + 2 }); if (!showNames) hitLine.openTooltip(); });
-  hitLine.on("mouseout", () => { dots.setStyle({ weight: LIFT_DOT_WEIGHT }); hitLine.closeTooltip(); });
+  // Hover thickens only the dots (the cable stays a hairline), so the line doesn't change character,
+  // and reveals the station markers -- exactly like a trail's own hover reveals Start/Ziel
+  // (2026-07-26, per the user). Keeps them on mouseout if this lift is the selected one, mirroring the
+  // `currentSelectedId !== t.id` guard in a trail's setHover(false).
+  function setLiftHover(on){
+    dots.setStyle({ weight: on ? LIFT_DOT_WEIGHT + 2 : LIFT_DOT_WEIGHT });
+    if (on) {
+      showEndpoints(l.id);
+      if (!showNames) hitLine.openTooltip();
+    } else {
+      startMarker.closeTooltip();
+      endMarker.closeTooltip();
+      hitLine.closeTooltip();
+      if (openLiftId !== l.id) hideEndpoints(l.id);
+    }
+  }
+  hitLine.on("mouseover", () => setLiftHover(true));
+  hitLine.on("mouseout", () => setLiftHover(false));
   hitLine.on("click", () => showLiftInfo(l));
+  // The station markers sit on top of the hit-line, so they'd otherwise swallow the hover/click that
+  // belongs to the lift -- same reason a trail wires its own startMarker/endMarker to setHover.
+  [startMarker, endMarker].forEach(m => {
+    m.on("mouseover", () => setLiftHover(true));
+    m.on("mouseout", () => setLiftHover(false));
+    m.on("click", () => showLiftInfo(l));
+  });
   liftLayers[l.id] = { group, dots, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
 }
 
-// Station markers follow the same show-on-selection rule as a trail's Start/Ziel dots -- see
-// showEndpoints/hideEndpoints for the trail equivalents.
-function showLiftEndpoints(id){
-  const layer = liftLayers[id];
-  if (!layer) return;
-  if (!map.hasLayer(layer.startMarker)) layer.startMarker.addTo(map);
-  if (!map.hasLayer(layer.endMarker)) layer.endMarker.addTo(map);
-  layer.startMarker.bringToFront();
-  layer.endMarker.bringToFront();
-}
-function hideLiftEndpoints(id){
-  const layer = liftLayers[id];
-  if (!layer) return;
-  // Close first: a marker yanked out from under a stationary cursor never gets a natural mouseout, so
-  // its tooltip would stay stuck open -- the same trap hideEndpoints() documents for trails.
-  layer.startMarker.closeTooltip();
-  layer.endMarker.closeTooltip();
-  map.removeLayer(layer.startMarker);
-  map.removeLayer(layer.endMarker);
-}
-function hideAllLiftEndpoints(){ Object.keys(liftLayers).forEach(hideLiftEndpoints); }
+// Station markers reuse the shared showEndpoints/hideEndpoints defined further down (they resolve a
+// trail OR a lift by id) -- no lift-specific copies. Only this "hide every lift's" sweep is
+// lift-specific, since trails already have their own equivalents via clearSelection/resetAllHoverStyles.
+function hideAllLiftEndpoints(){ Object.keys(liftLayers).forEach(hideEndpoints); }
 
 function destroyLiftLayer(id){
   const layer = liftLayers[id];
@@ -1147,7 +1152,7 @@ function destroyLiftLayer(id){
   if (openLiftId === id) closeInfoPanelAndDeselect();
   map.removeLayer(layer.group);
   map.removeLayer(layer.hitLine);
-  hideLiftEndpoints(id);
+  hideEndpoints(id);
   delete liftLayers[id];
 }
 
@@ -1669,7 +1674,7 @@ function showLiftInfo(l){
   clearSolo();
   clearSelection();       // a lift is not in the trail list, so nothing should stay highlighted there
   hideAllLiftEndpoints(); // only the newly selected lift shows its stations
-  showLiftEndpoints(l.id);
+  showEndpoints(l.id);
   const typeLabel = LIFT_TYPE_LABEL[l.type] || "Bergbahn";
   ipContent.innerHTML = `
     <h3>🚡 ${l.name} <button class="locate-btn" data-lift-id="${l.id}" title="Zum Lift springen">📍</button></h3>
@@ -1733,8 +1738,14 @@ ${trkpts}
 
 // ---- Render polylines for GPX trails ----
 let currentSelectedId = null;
+// Endpoint markers work identically for a trail (green Start / red Ziel) and a lift (green Talstation /
+// red Bergstation): both registries store a `startMarker`/`endMarker` pair, and ids are unique across
+// them (lifts are prefixed `lift_`), so one implementation serves both rather than a duplicated
+// lift-specific pair (2026-07-26, per the user: "Im Idealfall ist das auch der gleiche Code").
+function endpointOwner(id){ return lineLayers[id] || liftLayers[id]; }
+
 function showEndpoints(id){
-  const layer = lineLayers[id];
+  const layer = endpointOwner(id);
   if (!layer) return;
   if (!map.hasLayer(layer.startMarker)) layer.startMarker.addTo(map);
   if (!map.hasLayer(layer.endMarker)) layer.endMarker.addTo(map);
@@ -1742,7 +1753,7 @@ function showEndpoints(id){
   layer.endMarker.bringToFront();
 }
 function hideEndpoints(id){
-  const layer = lineLayers[id];
+  const layer = endpointOwner(id);
   if (!layer) return;
   // Belt-and-suspenders against a pre-existing "Start"/"Ziel" tooltip getting stuck open (reported
   // by the user 2026-07-23, but present before the segment-click work too): if the marker is removed
@@ -2465,7 +2476,7 @@ function render(){
       layer.hitLine.closeTooltip();
       map.removeLayer(layer.group);
       map.removeLayer(layer.hitLine);
-      hideLiftEndpoints(l.id);
+      hideEndpoints(l.id);
     }
   });
 
