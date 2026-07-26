@@ -59,7 +59,57 @@ while looking authoritative.** The `lifts` data therefore states only the stable
 carries bikes in summer". (OSM's "Reiterkogelbahn II" is skipped: a 2-point, ref-less
 `aerialway=construction` placeholder for the new section, not usable geometry.)
 
-## Rendering — a translucent highlight band, not a competing line
+## Rendering — mask the base map's own line, then draw our symbol on it
+
+**Current (2026-07-26, third and final iteration — the user's own design.)** A lift is two stacked
+polylines:
+
+1. **MASK** — an opaque thin grey band (`LIFT_MASK_COLOR #cfcfcf`, `LIFT_MASK_WEIGHT 7`) that *covers*
+   the base map's own aerialway line, tick marks included.
+2. **SYMBOL** — a black dash-dot line on top (`LIFT_LINE_COLOR`, `LIFT_LINE_DASH "14,5,3,5"`, at the
+   ordinary `BASE_WEIGHT`), the usual cartographic cable-car pattern.
+
+Both live in the `LIFT_BAND_PANE` (z-index 350, between `tilePane` 200 and `overlayPane` 400), so they
+sit above the tiles but below the trails.
+
+**Why masking rather than coexisting.** The OSM/OpenTopoMap tiles draw every aerialway themselves, and
+since our data comes from the same OSM ways the two land *exactly* on top of each other. Two earlier
+attempts tried to live with that: a thin dotted line (mushed together with the tile's ticks — both became
+unreadable) and then a wide translucent band meant to let the tile's line show through (readable, but see
+below). Covering the tile's line and drawing our own symbol on it ends the conflict and loses nothing —
+our symbol says the same thing plus "this one carries bikes".
+
+**The constraint that decided it — worth understanding before changing any of this.** A Tour renders its
+segments as members of one `L.featureGroup`, and every existing call site styles the whole Tour through
+it: hover, solo dimming, `resetAllHoverStyles`. Those calls pass exactly **`weight` and `opacity`**.
+Colour and `dashArray` survive them; width and transparency do not. So:
+
+- A **band** (which *is* width + transparency) can never be a group member — it would collapse to a
+  3.5px opaque line after the first hover. Reusing the band inside a Tour would have required pulling
+  that segment out of the group and hand-carrying it through render()/teardown/solo.
+- A **dash-dot symbol** (colour + dash) is safe as an ordinary group member.
+
+That is why the final design puts the lift's identity in colour+dash: **a Tour draws its own lift stretch
+exactly like a component-trail stretch**, with no special-casing anywhere (per the user: "Ich will Lifte
+wie Trails"). The grey mask is not duplicated per Tour — it belongs to the lift object, and render() keeps
+that object visible wherever a visible Tour rides it, so the mask is already under the Tour's stretch.
+
+Consequences, all verified with a Tour selected (which auto-enables solo): the Tour's own 4 lift stretches
+render at the Tour's own opacity 0.9 while every other lift dims to 0.15 — so **the Tour's line has no gap
+at its lift stretches**, which the previous "band only, no line in the Tour" version did have. One
+cosmetic leftover: the mask dims with the other lifts, so under a soloed Tour's bright symbol the tile's
+tick marks partly reappear.
+
+Hover on a lift widens the mask slightly and thickens the symbol to `HOVER_WEIGHT`. The selection outline
+is opaque again (a yellow rim around the mask) — there is nothing underneath left to preserve now that the
+mask deliberately covers the tile's line.
+
+**Note on the black:** `schwarz` is also a difficulty colour, so a lift's symbol and a black-rated trail
+share a hue. The dash-dot pattern plus the grey casing are what tell them apart. This also means the
+elevation chart paints a Tour's lift stretch in near-black, close to a `schwarz` stretch — flagged rather
+than solved.
+
+## Superseded: the translucent highlight band
 
 **Current (2026-07-26, second iteration).** A standalone lift is drawn as one **wide translucent band**
 (`LIFT_BAND_WEIGHT` 11, `LIFT_BAND_OPACITY` 0.38, round caps, no dash), plus the usual invisible wide

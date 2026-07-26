@@ -1082,41 +1082,39 @@ const CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a T
 // Styled after OSM's own aerialway rendering, which the user picked as the model: a THIN line with
 // evenly spaced dots along it, where the dot spacing stays constant on screen -- zoom in and you get
 // more dots, not longer gaps.
-// That falls out for free from SVG `stroke-dasharray`, which Leaflet applies in *screen* pixels (the
-// overlay pane re-projects paths on zoom but never rescales stroke attributes -- the same reason a
-// connector's "6,6" dash looks identical at every zoom). So no zoom handler and no marker
-// recomputation is needed: a very short dash drawn with a ROUND line cap renders as a dot, and
-// "1,11" spaces those dots 12 screen-px apart at any zoom.
-// Two stacked polylines: the hairline cable, plus the dotted overlay on top.
-// Colour is deliberately outside the diffColor palette and away from CONNECTOR_COLOR's grey -- OSM
-// draws aerialways near-black, but black here is already the `schwarz` difficulty, and the user has
-// previously (correctly) objected to a non-trail line reading as a black-rated trail.
-const LIFT_COLOR = "#5b4a9e";  // violet -- infrastructure, not a difficulty
-// A Tour's own lift stretch is a plain solid line in LIFT_COLOR at the same weight as the Tour's other
-// segments -- no dots (2026-07-26, per the user). The dotted style that used to live here is gone.
-// Standalone lifts are drawn as a WIDE TRANSLUCENT BAND instead of their own line (2026-07-26, per the
-// user). Reason: the OSM/OpenTopoMap base tiles already draw every aerialway themselves, and since both
-// come from the same OSM data they land exactly on top of each other -- our own thin dotted line just
-// mushed together with the tile's grey ticked one and made both harder to read. A band sidesteps the
-// competition entirely: the base map's crisp line shows THROUGH the translucent band, which then only
-// says "this one carries bikes". Same idiom the app already uses for the selection highlight (a wider
-// line behind, not a recolour).
-// Note "behind" can only be achieved via transparency, not stacking: Leaflet's tilePane always sits
-// below every vector layer, so the band is technically above the tile image.
-// 8, narrowed from 11 on the user's request. Lower bound worth knowing: the band has to stay wider than
-// the base map's own aerialway line *including its tick marks* (~5-6 screen px in total), or it stops
-// reading as a highlight around that line and starts disappearing behind it.
-const LIFT_BAND_WEIGHT = 8;
-const LIFT_BAND_OPACITY = 0.38;
+// A lift is drawn in TWO parts (2026-07-26, the user's own design after several iterations):
+//
+//   1. MASK -- an opaque, thin grey band that *covers* the base map's own aerialway line.
+//   2. SYMBOL -- a black dash-dot line on top of it, the usual cartographic cable-car pattern.
+//
+// The mask exists because the OSM/OpenTopoMap tiles draw every aerialway themselves, and since our data
+// comes from the same OSM ways the two land exactly on top of each other. Earlier attempts tried to
+// coexist with that line -- a thin dotted line (mushed together with the tile's ticks) and then a wide
+// translucent band meant to let it show through (readable, but width+opacity are exactly what a Tour's
+// featureGroup overwrites, so it could never be reused inside a Tour). Masking the tile's line and
+// drawing our own symbol on top ends the conflict: nothing is lost, since our symbol says the same thing
+// plus "this one carries bikes".
+//
+// Crucially the SYMBOL is defined by colour + dashArray only, never by width or opacity. That is what
+// lets a Tour render its own lift stretch as an ordinary featureGroup member, exactly like a component
+// trail stretch: a group setStyle({weight, opacity}) call leaves colour and dash untouched.
+const LIFT_MASK_COLOR = "#cfcfcf";   // clearly lighter than CONNECTOR_COLOR (#5a5a5a) so it can't read as a connector
+const LIFT_MASK_WEIGHT = 7;          // must cover the tile's aerialway line *including* its tick marks (~5-6px)
+const LIFT_LINE_COLOR = "#000000";
+const LIFT_LINE_DASH = "14,5,3,5";   // dash-dot; in screen px, so it looks identical at every zoom
 // Solo mode dims the lifts too (2026-07-26, per the user: "Der Solo Button blendet Lifte nicht aus").
 // Dimmed rather than hidden, matching what solo does to the other trails. Read via
-// baselineLiftBandOpacity() everywhere, NEVER hardcoded -- hardcoding the equivalent for trails was a
-// real bug once: merely moving the mouse over another line silently cancelled solo's dimming, because
-// the hover-off path reset opacity to the undimmed constant.
-const LIFT_BAND_DIM_OPACITY = 0.1;
-function baselineLiftBandOpacity(){ return soloId ? LIFT_BAND_DIM_OPACITY : LIFT_BAND_OPACITY; }
+// baselineLiftOpacity() everywhere, NEVER hardcoded -- hardcoding the equivalent for trails was a real
+// bug once: merely moving the mouse over another line silently cancelled solo's dimming, because the
+// hover-off path reset opacity to the undimmed constant.
+const LIFT_DIM_OPACITY = 0.15;
+function baselineLiftOpacity(){ return soloId ? LIFT_DIM_OPACITY : 1; }
 function applyLiftSoloStyles(){
-  Object.values(liftLayers).forEach(layer => layer.band.setStyle({ opacity: baselineLiftBandOpacity() }));
+  Object.values(liftLayers).forEach(layer => {
+    const o = baselineLiftOpacity();
+    layer.mask.setStyle({ opacity: o });
+    layer.symbol.setStyle({ opacity: o });
+  });
 }
 // Deliberately NO per-lift "currently closed" flag. It was tried and dropped the same day, per the user:
 // nothing in this app synchronises lift operating status, so a hardcoded flag would silently rot while
@@ -1133,13 +1131,11 @@ map.createPane(LIFT_BAND_PANE).style.zIndex = 350;
 // reasons: it has to live in the lift band's pane (the trails' outline sits in overlayPane, above the
 // band, so it would cover the band AND the base map's own lift line showing through it), and it has to
 // be sized against the band's width instead of HOVER_WEIGHT, so it reads as a halo AROUND the band.
-// Semi-transparent, unlike the trails' outline which is fully opaque. A trail's outline sits behind the
-// trail's own opaque coloured line, so nothing is lost by it being solid -- but a lift's whole point is
-// that the base map's own aerialway line reads THROUGH it, and an opaque yellow hid exactly that
-// (2026-07-26, per the user). At 0.5 the tile's line still comes through both this and the band above it.
-const LIFT_SELECTION_OPACITY = 0.5;
+// Opaque, like the trails' own selection outline. It sits behind the mask, so it shows as a yellow rim
+// around it -- there is nothing underneath left to preserve now that the mask deliberately covers the
+// tile's aerialway line.
 const liftSelectionOutline = L.polyline([], {
-  pane: LIFT_BAND_PANE, color: "#fff200", weight: LIFT_BAND_WEIGHT + 6, opacity: LIFT_SELECTION_OPACITY,
+  pane: LIFT_BAND_PANE, color: "#fff200", weight: LIFT_MASK_WEIGHT + 6, opacity: 1,
   lineCap: "round", lineJoin: "round", interactive: false
 });
 // Which lift is SELECTED on the map, as opposed to `openLiftId` = whose info panel is open. Two ids for
@@ -1154,19 +1150,24 @@ function highlightSelectedLift(id){
   liftSelectionOutline.setLatLngs(layer.lift.coords);
   if (!map.hasLayer(liftSelectionOutline)) liftSelectionOutline.addTo(map);
   liftSelectionOutline.bringToBack();
-  layer.band.bringToFront();
+  layer.mask.bringToFront();
+  layer.symbol.bringToFront();
   currentSelectedLiftId = id;
 }
 function clearLiftSelection(){
   if (map.hasLayer(liftSelectionOutline)) map.removeLayer(liftSelectionOutline);
   if (currentSelectedLiftId) { hideEndpoints(currentSelectedLiftId); currentSelectedLiftId = null; }
 }
-const liftLayers = {}; // liftId -> { band, hitLine, startMarker, endMarker, lift, bounds }
+const liftLayers = {}; // liftId -> { mask, symbol, hitLine, startMarker, endMarker, lift, bounds }
 
 function buildLiftLayer(l){
-  const band = L.polyline(l.coords, {
-    pane: LIFT_BAND_PANE, color: LIFT_COLOR, weight: LIFT_BAND_WEIGHT, opacity: LIFT_BAND_OPACITY,
+  const mask = L.polyline(l.coords, {
+    pane: LIFT_BAND_PANE, color: LIFT_MASK_COLOR, weight: LIFT_MASK_WEIGHT, opacity: 1,
     lineCap: "round", lineJoin: "round", interactive: false, bubblingMouseEvents: false
+  }).addTo(map);
+  const symbol = L.polyline(l.coords, {
+    pane: LIFT_BAND_PANE, color: LIFT_LINE_COLOR, weight: BASE_WEIGHT, opacity: 1,
+    dashArray: LIFT_LINE_DASH, interactive: false, bubblingMouseEvents: false
   }).addTo(map);
   // Station markers, styled exactly like a trail's own Start/Ziel dots (green bottom, red top) and --
   // like those -- shown only while this lift is the selected one, not permanently (2026-07-26, per the
@@ -1186,8 +1187,8 @@ function buildLiftLayer(l){
   function setLiftHover(on){
     // Hover widens and darkens the band a little -- enough to pick it out, without it becoming opaque
     // and hiding the base map's own lift line that shows through it.
-    band.setStyle({ weight: on ? LIFT_BAND_WEIGHT + 4 : LIFT_BAND_WEIGHT,
-                    opacity: on ? Math.min(1, baselineLiftBandOpacity() + 0.22) : baselineLiftBandOpacity() });
+    mask.setStyle({ weight: on ? LIFT_MASK_WEIGHT + 3 : LIFT_MASK_WEIGHT });
+    symbol.setStyle({ weight: on ? HOVER_WEIGHT : BASE_WEIGHT });
     if (on) {
       showEndpoints(l.id);
       if (!showNames) hitLine.openTooltip();
@@ -1208,7 +1209,7 @@ function buildLiftLayer(l){
     m.on("mouseout", () => setLiftHover(false));
     m.on("click", () => showLiftInfo(l));
   });
-  liftLayers[l.id] = { band, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
+  liftLayers[l.id] = { mask, symbol, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
 }
 
 // Station markers reuse the shared showEndpoints/hideEndpoints defined further down (they resolve a
@@ -1220,7 +1221,8 @@ function destroyLiftLayer(id){
   const layer = liftLayers[id];
   if (!layer) return;
   if (openLiftId === id) closeInfoPanelAndDeselect();
-  map.removeLayer(layer.band);
+  map.removeLayer(layer.mask);
+  map.removeLayer(layer.symbol);
   map.removeLayer(layer.hitLine);
   hideEndpoints(id);
   delete liftLayers[id];
@@ -1289,7 +1291,7 @@ function applySolo(id){
     }
   });
   soloId = id;
-  applyLiftSoloStyles(); // after soloId is set -- baselineLiftBandOpacity() reads it
+  applyLiftSoloStyles(); // after soloId is set -- baselineLiftOpacity() reads it
   syncSelectedCardSoloBtn();
 }
 function clearSolo(){
@@ -1690,9 +1692,9 @@ function buildInfoPanelHtml(t){
     } else if (seg && segLift && seg.distStart != null) {
       // A clicked LIFT stretch: no difficulty and no up/down to report -- what matters is that this
       // part is ridden by gondola and how much height it gains.
-      highlight = { distStart: seg.distStart, distEnd: seg.distEnd, color: LIFT_COLOR };
+      highlight = { distStart: seg.distStart, distEnd: seg.distEnd, color: LIFT_LINE_COLOR };
       segmentInfoHtml = `
-        <div class="ip-segment-info" style="border-left:3px solid ${LIFT_COLOR}">
+        <div class="ip-segment-info" style="border-left:3px solid ${LIFT_LINE_COLOR}">
           <b>🚡 ${segLift.name}</b><br>
           ${LIFT_TYPE_LABEL[segLift.type] || "Bergbahn"} &middot; ${segLift.baseEle} m → ${segLift.topEle} m (+${liftClimb(segLift)} m)
         </div>`;
@@ -1712,7 +1714,7 @@ function buildInfoPanelHtml(t){
       // A lift stretch gets the lift colour here too, so the chart keeps matching the map exactly --
       // and a rider can see at a glance which climbs in the profile they don't have to pedal.
       const refLift = s.liftId ? LIFTS.find(lf => lf.id === s.liftId) : null;
-      const color = refLift ? LIFT_COLOR : (refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR);
+      const color = refLift ? LIFT_LINE_COLOR : (refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR);
       // Segment distances are recorded along the *unreversed* track — flip them the same way
       // reverseElevationProfile() flips the profile itself, so both stay aligned on the x-axis.
       return isReversed
@@ -1878,23 +1880,28 @@ function buildTrailLayer(t){
   // with that trail's own polyline when both happen to be visible at once.
   const segmentHitLines = []; // one invisible wide hitline per trailId-carrying segment, see below
   const segmentNameLabels = []; // one standalone permanent name tooltip per trailId-carrying segment
-  // Built as an array rather than a straight segments.map(), because a LIFT stretch contributes NO line
-  // of its own (2026-07-26, per the user: "Lass doch einfach nur das graue Band"). The lift's own band is
-  // already on the map wherever a visible Tour rides it (see render()), so drawing a second line on top
-  // only competed with it -- and with the base map's aerialway line under it. The stretch keeps its
-  // invisible hit-line, so it stays hoverable and clickable; only the visible line is omitted.
+  // A LIFT stretch is drawn by the Tour itself, as an ordinary featureGroup member, exactly like a
+  // component-trail stretch (2026-07-26, per the user: "Ich will Lifte wie Trails"). That only works
+  // because the lift SYMBOL is defined by colour + dashArray alone: the group's setStyle calls (tour
+  // hover, solo dimming, resetAllHoverStyles) pass `weight` and `opacity`, which would have destroyed a
+  // width-and-transparency-based band but leave a dash-dot pattern intact.
+  // The lift's grey MASK is not duplicated here -- it belongs to the lift object, and render() keeps that
+  // object visible wherever a visible Tour rides it, so the mask is already in place under this stretch.
   const segmentLayers = [];
   let line;
   if (segments) {
       segments.forEach(seg => {
         const refTrail = seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
         const refLift = seg.liftId ? LIFTS.find(lf => lf.id === seg.liftId) : null;
-        const visibleSeg = refLift ? null : L.polyline(seg.coords, {
+        const visibleSeg = L.polyline(seg.coords, refLift
+          ? { color: LIFT_LINE_COLOR, dashArray: LIFT_LINE_DASH,
+              weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
+          : {
           color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
           dashArray: refTrail ? null : "6,6",
           weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false
         });
-        if (visibleSeg) segmentLayers.push(visibleSeg);
+        segmentLayers.push(visibleSeg);
         if (refLift) {
           // Same per-segment hit-line pattern as a component trail below: keeps the LOOP as the open
           // panel (per the user's earlier rule that clicking into a loop shouldn't lose its context)
@@ -1902,20 +1909,8 @@ function buildTrailLayer(t){
           const liftHit = L.polyline(seg.coords, { color:"#000", weight: 18, opacity: 0, bubblingMouseEvents:false }).addTo(map);
           liftHit.bindTooltip(`🚡 ${refLift.name}`, { permanent:true, direction:"top", className:"trail-label-tooltip", interactive:false });
           liftHit.closeTooltip();
-          // There is no line of our own to thicken here, so hover feedback goes to the LIFT's own band --
-          // the same emphasis a standalone lift gets. Looked up lazily: the band may not exist yet while
-          // this Tour is being built, since the lift layers are created after the trail layers.
-          const liftBand = () => (liftLayers[refLift.id] || {}).band;
-          liftHit.on("mouseover", () => {
-            const b = liftBand();
-            if (b) b.setStyle({ weight: LIFT_BAND_WEIGHT + 4, opacity: Math.min(1, baselineLiftBandOpacity() + 0.22) });
-            if (!showNames) liftHit.openTooltip();
-          });
-          liftHit.on("mouseout", () => {
-            const b = liftBand();
-            if (b) b.setStyle({ weight: LIFT_BAND_WEIGHT, opacity: baselineLiftBandOpacity() });
-            liftHit.closeTooltip();
-          });
+          liftHit.on("mouseover", () => { visibleSeg.setStyle({ weight: HOVER_WEIGHT }); if (!showNames) liftHit.openTooltip(); });
+          liftHit.on("mouseout", () => { visibleSeg.setStyle({ weight: BASE_WEIGHT }); liftHit.closeTooltip(); });
           liftHit.on("click", () => {
             const wasOpen = openTrailId === t.id;
             openTrailId = t.id;
@@ -2566,7 +2561,8 @@ function render(){
     if (!layer) return;
     const visible = (showLifts && activeRegions.has(l.region)) || liftIdsInVisibleTours.has(l.id);
     if (visible) {
-      map.addLayer(layer.band);
+      map.addLayer(layer.mask);
+      map.addLayer(layer.symbol);
       map.addLayer(layer.hitLine);
       // Leaflet re-opens a permanent tooltip on every (re-)add, so close it again -- same gotcha the
       // segment hit-lines above already have to work around.
@@ -2577,7 +2573,8 @@ function render(){
       // selected one still needs its own markers gone -- hence the unconditional hide too.
       if (openLiftId === l.id) closeInfoPanelAndDeselect();
       layer.hitLine.closeTooltip();
-      map.removeLayer(layer.band);
+      map.removeLayer(layer.mask);
+      map.removeLayer(layer.symbol);
       map.removeLayer(layer.hitLine);
       hideEndpoints(l.id);
     }
