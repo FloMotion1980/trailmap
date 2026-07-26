@@ -364,12 +364,13 @@ const REGION_CATALOG = {
   // 300m, whichever is larger; fall back to a direct join otherwise) plus a small-fragment-drop
   // threshold (~20m) to `bridge_chains()` in the build script, both worth reusing for future parks.
   soelden: {
-    label: "Bike Republic Sölden", file: "regions/soelden.json", trailCount: 32,
+    label: "Bike Republic Sölden", file: "regions/soelden.json", trailCount: 36,
     bounds: [[46.92087, 10.94823], [47.00829, 11.04643]],
     subRegions: {
       shaped_lines: { label: "Shaped Lines", color: "#2f6b8a" },
       trails: { label: "Trails", color: "#8a5a2f" },
-      trails_stille_seite: { label: "Trails Stille Seite", color: "#5a8a3a" }
+      trails_stille_seite: { label: "Trails Stille Seite", color: "#5a8a3a" },
+      trailcombis: { label: "Trailcombis", color: "#8a3a6a" }
     }
   },
   // Third Alps bike park. Different data source than Leogang/Sölden: Saalbach's own official trails
