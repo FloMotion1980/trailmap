@@ -1103,7 +1103,10 @@ const LIFT_DOT_DASH = "1,11";  // dot + gap, in screen px -> constant spacing at
 // line behind, not a recolour).
 // Note "behind" can only be achieved via transparency, not stacking: Leaflet's tilePane always sits
 // below every vector layer, so the band is technically above the tile image.
-const LIFT_BAND_WEIGHT = 11;
+// 8, narrowed from 11 on the user's request. Lower bound worth knowing: the band has to stay wider than
+// the base map's own aerialway line *including its tick marks* (~5-6 screen px in total), or it stops
+// reading as a highlight around that line and starts disappearing behind it.
+const LIFT_BAND_WEIGHT = 8;
 const LIFT_BAND_OPACITY = 0.38;
 // Deliberately NO per-lift "currently closed" flag. It was tried and dropped the same day, per the user:
 // nothing in this app synchronises lift operating status, so a hardcoded flag would silently rot while
@@ -1124,6 +1127,12 @@ const liftSelectionOutline = L.polyline([], {
   pane: LIFT_BAND_PANE, color: "#fff200", weight: LIFT_BAND_WEIGHT + 6, opacity: 1,
   lineCap: "round", lineJoin: "round", interactive: false
 });
+// Which lift is SELECTED on the map, as opposed to `openLiftId` = whose info panel is open. Two ids for
+// the same reason trails have both `currentSelectedId` and `openTrailId`: closing the panel with the ×
+// deliberately keeps the map selection (outline + endpoints) alive -- verified against a trail, which
+// keeps its outline, its Start/Ziel dots and its selected card after ×. Without this split, a closed
+// panel set openLiftId to null and the next mouseout stripped the selected lift's stations.
+let currentSelectedLiftId = null;
 function highlightSelectedLift(id){
   const layer = liftLayers[id];
   if (!layer) { clearLiftSelection(); return; }
@@ -1131,9 +1140,11 @@ function highlightSelectedLift(id){
   if (!map.hasLayer(liftSelectionOutline)) liftSelectionOutline.addTo(map);
   liftSelectionOutline.bringToBack();
   layer.band.bringToFront();
+  currentSelectedLiftId = id;
 }
 function clearLiftSelection(){
   if (map.hasLayer(liftSelectionOutline)) map.removeLayer(liftSelectionOutline);
+  if (currentSelectedLiftId) { hideEndpoints(currentSelectedLiftId); currentSelectedLiftId = null; }
 }
 const liftLayers = {}; // liftId -> { band, hitLine, startMarker, endMarker, lift, bounds }
 
@@ -1169,7 +1180,7 @@ function buildLiftLayer(l){
       startMarker.closeTooltip();
       endMarker.closeTooltip();
       hitLine.closeTooltip();
-      if (openLiftId !== l.id) hideEndpoints(l.id);
+      if (currentSelectedLiftId !== l.id) hideEndpoints(l.id);
     }
   }
   hitLine.on("mouseover", () => setLiftHover(true));
@@ -1326,7 +1337,8 @@ document.getElementById("ipClose").addEventListener("click", () => {
   openLiftId = null;
   selectedSegmentId = null;
   clearSolo();
-  hideAllLiftEndpoints();
+  // Deliberately NOT clearing the map selection here -- a trail keeps its outline, endpoints and card
+  // after the ×, and a lift now behaves the same (its stations survive via currentSelectedLiftId).
 });
 // Full "nothing is selected/open/soloed anymore" reset -- shared by clicking empty map space and by
 // render()'s filter-driven hide branch (a filter change hiding the currently-selected trail needs the
