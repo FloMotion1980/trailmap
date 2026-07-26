@@ -1092,8 +1092,8 @@ const CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a T
 // draws aerialways near-black, but black here is already the `schwarz` difficulty, and the user has
 // previously (correctly) objected to a non-trail line reading as a black-rated trail.
 const LIFT_COLOR = "#5b4a9e";  // violet -- infrastructure, not a difficulty
-const LIFT_DOT_WEIGHT = 4.5;   // dot diameter, still used for a Tour's own lift stretches
-const LIFT_DOT_DASH = "1,11";  // dot + gap, in screen px -> constant spacing at every zoom
+// A Tour's own lift stretch is a plain solid line in LIFT_COLOR at the same weight as the Tour's other
+// segments -- no dots (2026-07-26, per the user). The dotted style that used to live here is gone.
 // Standalone lifts are drawn as a WIDE TRANSLUCENT BAND instead of their own line (2026-07-26, per the
 // user). Reason: the OSM/OpenTopoMap base tiles already draw every aerialway themselves, and since both
 // come from the same OSM data they land exactly on top of each other -- our own thin dotted line just
@@ -1887,7 +1887,7 @@ function buildTrailLayer(t){
         // instead of a generic grey connector dash implying you pedal it (added 2026-07-26).
         const refLift = seg.liftId ? LIFTS.find(lf => lf.id === seg.liftId) : null;
         const visibleSeg = L.polyline(seg.coords, refLift
-          ? { color: LIFT_COLOR, weight: LIFT_DOT_WEIGHT, opacity: 1, dashArray: LIFT_DOT_DASH, lineCap:"round", bubblingMouseEvents:false, interactive:false }
+          ? { color: LIFT_COLOR, weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
           : {
           color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
           dashArray: refTrail ? null : "6,6",
@@ -1900,8 +1900,8 @@ function buildTrailLayer(t){
           const liftHit = L.polyline(seg.coords, { color:"#000", weight: 18, opacity: 0, bubblingMouseEvents:false }).addTo(map);
           liftHit.bindTooltip(`🚡 ${refLift.name}`, { permanent:true, direction:"top", className:"trail-label-tooltip", interactive:false });
           liftHit.closeTooltip();
-          liftHit.on("mouseover", () => { visibleSeg.setStyle({ weight: LIFT_DOT_WEIGHT + 2 }); if (!showNames) liftHit.openTooltip(); });
-          liftHit.on("mouseout", () => { visibleSeg.setStyle({ weight: LIFT_DOT_WEIGHT }); liftHit.closeTooltip(); });
+          liftHit.on("mouseover", () => { visibleSeg.setStyle({ weight: HOVER_WEIGHT }); if (!showNames) liftHit.openTooltip(); });
+          liftHit.on("mouseout", () => { visibleSeg.setStyle({ weight: BASE_WEIGHT }); liftHit.closeTooltip(); });
           liftHit.on("click", () => {
             const wasOpen = openTrailId === t.id;
             openTrailId = t.id;
@@ -2405,6 +2405,13 @@ function render(){
   // global shown/total line below (region + diff + category filters all applied), not just a raw
   // per-region trail count, so a chip reads "how many would you actually see right now".
   const regionVisibleCounts = {};
+  // Lifts used by a currently-visible Tour. Same rule the component trails already follow: being part
+  // of a visible Tour makes something visible regardless of the filters (a red trail still shows inside
+  // a Tour when "rot" is off). So a lift a Tour rides shows its band even with the "Lifte" switch off,
+  // or when only the "Challenges" sub-region is active and the lift's own sub-region isn't -- which is
+  // exactly the case where the user first found lifts missing (2026-07-26). Filled during the region
+  // loop below and consumed by the LIFTS loop after it.
+  const liftIdsInVisibleTours = new Set();
   const groupVisibleCounts = {};
 
   Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
@@ -2438,6 +2445,10 @@ function render(){
         const categoryOk = t.loop ? showLoop : (t.uphill ? showUphill : showDownhill);
         const visible = regionOk && activeDiffs.has(t.diff) && categoryOk;
         if (visible) { regionVisibleCounts[regionKey]++; groupVisibleCounts[groupKey]++; }
+        // Note the lifts a visible Tour rides, so the LIFTS loop below can show their bands too.
+        if (visible && t.loop) {
+          (TRAIL_SEGMENTS[t.id] || []).forEach(s => { if (s.liftId) liftIdsInVisibleTours.add(s.liftId); });
+        }
         if (layer) {
           if (visible) {
             map.addLayer(layer.line); map.addLayer(layer.hitLine);
@@ -2537,7 +2548,7 @@ function render(){
   LIFTS.forEach(l => {
     const layer = liftLayers[l.id];
     if (!layer) return;
-    const visible = showLifts && activeRegions.has(l.region);
+    const visible = (showLifts && activeRegions.has(l.region)) || liftIdsInVisibleTours.has(l.id);
     if (visible) {
       map.addLayer(layer.band);
       map.addLayer(layer.hitLine);
