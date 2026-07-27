@@ -593,9 +593,11 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
   padding:4px 2px; touch-action:none;
 }
 .bi-drag:active{ cursor:grabbing; opacity:.8; }
-.builder-row.is-dragging{ z-index:5; }
+/* Rows glide into place while something is dragged over them, so the opening gap is what shows the
+   destination. The dragged row itself must NOT be animated -- it has to track the finger exactly. */
+.builder-row{ transition: transform .16s ease; }
+.builder-row.is-dragging{ z-index:5; transition:none; }
 .builder-row.is-dragging .bi-body{ box-shadow:0 4px 14px rgba(0,0,0,.25); border-color:var(--highlight); }
-.builder-row.is-drop-target .bi-body{ box-shadow:inset 0 3px 0 var(--highlight); }
 .builder-row .bi-num{ min-width:1.6em; text-align:right; opacity:.6; font-variant-numeric:tabular-nums; }
 .builder-row .bi-name{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .builder-row .bi-meta{ opacity:.7; font-size:11px; white-space:nowrap; font-variant-numeric:tabular-nums; }
@@ -623,7 +625,16 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
   border:none; background:transparent; cursor:pointer; font-size:13px; line-height:1;
   padding:2px 3px; border-radius:4px; opacity:.75;
 }
-.bi-main button:hover:not(:disabled){ opacity:1; background:rgba(0,0,0,.08); }
+/* Only on devices that really hover. On a touch screen :hover sticks after a tap until you tap elsewhere,
+   which left a grey block sitting under the button you last pressed -- the user's "Die buttons selbst
+   brauchen keinen grauen Fokushintergrund". Same reason the tap highlight and the focus ring are dropped,
+   with :focus-visible kept so keyboard use still shows where it is. */
+@media (hover: hover){
+  .bi-main button:hover:not(:disabled){ opacity:1; background:rgba(0,0,0,.08); }
+}
+.bi-main button{ -webkit-tap-highlight-color: transparent; }
+.bi-main button:focus{ outline:none; background:transparent; }
+.bi-main button:focus-visible{ outline:2px solid var(--highlight); outline-offset:1px; }
 /* 🔄 on a stretch that is clipped at both ends: the sequence already fixes its direction. */
 .bi-main button:disabled{ opacity:.25; cursor:default; }
 /* Pointed at (hovered) or tapped: this element keeps its full glow on the map while the rest steps back,
@@ -632,7 +643,8 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
    second highlight, which read as two selections at once. */
 .builder-row.is-focused .bi-body{ border-color:var(--highlight); background:rgba(224,163,38,.10); }
 .builder-row.is-lift .bi-name{ font-style:italic; }
-.builder-row.is-reversed .bi-name::after{ content:" ↺"; opacity:.7; }
+/* No ↺ after the name any more: the ←/→ button now carries the direction, and saying it twice in one row
+   just cost width the name needed. `.is-reversed` stays on the row as a hook. */
 #builderTotals{ margin-top:8px; font-size:12px; font-weight:600; }
 .builder-actions{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
 .builder-actions button{
@@ -646,7 +658,9 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
 }
 #builderExport.visible{ display:block; }
 .builder-row .bi-meta.is-clipped{ color:var(--rust); }
-.bi-main button.on{ background:rgba(0,0,0,.12); opacity:1; }
+/* A pressed-in toggle (🏁 "ganz fahren") is a STATE, so it takes the accent colour rather than the grey
+   that a stuck hover used to look like. */
+.bi-main button.on{ background:rgba(224,163,38,.30); opacity:1; }
 
 /* Touch targets. A 13px glyph with 3px of padding is not one, which is what the user hit: "Auf dem Handy
    sind die Knöpfe für hoch und runter bzw. löschen viel zu klein." ↑/↓ are gone entirely (dragging replaced

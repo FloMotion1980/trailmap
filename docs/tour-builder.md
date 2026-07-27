@@ -105,9 +105,24 @@ A row is a shell, not the visible box:
 ```
 .builder-row        positioning shell, overflow:hidden, carries the 🗑 delete hint in ::before
 └ .bi-body          the visible box (border, background) -- this is what slides on a swipe
-  ├ .bi-main        ⠿ handle · number · name · flags · km · ⇔ · 🔄 · ✕
+  ├ .bi-main        ⠿ handle · number · name · flags · km · 🏁 · →/← · ✕
   └ .bi-connect     iConnect, only when there is more than one candidate
 ```
+
+**Button icons carry state, not actions** (user, 2026-07-27): **→** means the stretch is ridden in its
+element's own direction, **←** against it, and pressing the arrow flips it. **🏁** is "ride the whole trail"
+(the `full` opt-out of junction clipping). The old `↺` after a reversed row's name is gone — the arrow says
+it, and saying it twice cost width the name needed.
+
+Two touch details that go with them:
+
+- **Pressing any of a row's buttons also marks that element**, on touch layouts only. Without it you would
+  change a row on a phone without ever seeing which stretch on the map you changed; on a mouse, hover
+  already does it and a lasting mark would outstay its welcome.
+- **No grey block under a pressed button.** On a touch screen `:hover` sticks after a tap until you tap
+  something else, so the hover rule now lives in `@media (hover: hover)`, the tap highlight is cleared, and
+  `:focus` drops its background while `:focus-visible` keeps a ring for keyboard use. A pressed-in toggle
+  (🏁 `.on`) uses the accent colour instead of grey, so a state cannot be mistaken for that artefact.
 
 **iConnect** is the user's name for the junction — short for intelligent connector — and it now sits
 *inside* the element's own box ("es sollte aussehen, dass es in dem Trailviereck ist") instead of in a strip
@@ -122,10 +137,16 @@ not work on mobile Safari at all.
 - **The axis split is left to the browser** via `touch-action`: `pan-y` on `.bi-body` means a vertical drag
   scrolls the sheet (we get a `pointercancel`) while a horizontal one arrives as `pointermove`; `none` on
   `.bi-drag` stops a vertical drag there from being stolen by that same scrolling. No manual guessing.
-- **Drag**: row midpoints are measured **once**, before anything moves — the dragged row keeps its place in
-  the layout (only a `transform` shifts it), so they stay valid for the whole gesture. Move/end listeners
-  live on `window`, and `setPointerCapture` is wrapped in try/catch: it is an enhancement, and it throws
-  outright for a pointer id the browser does not consider active.
+- **Drag**: row geometry is measured **once**, before anything moves — nothing here changes the layout, every
+  row is only ever shifted by a `transform`, so the measurements stay valid for the whole gesture. Move/end
+  listeners live on `window`, and `setPointerCapture` is wrapped in try/catch: it is an enhancement, and it
+  throws outright for a pointer id the browser does not consider active.
+- **The list reorders live**: the rows between the grab point and the destination step aside by the dragged
+  row's own height + the list gap, so the opening gap *is* the drop indicator. A marker line on the
+  destination row came first and the user found it hard to read. `.builder-row` gets a
+  `transition: transform .16s` for that glide, and `.is-dragging` sets `transition: none` — the dragged row
+  has to track the finger exactly. Measuring once is also what stops the shifted rows from feeding back into
+  the target calculation and flickering.
 - **Swipe**: right only, deletes past `SWIPE_DELETE_PX` (96), snaps back below it. Any movement past
   `GESTURE_SLOP_PX` sets `data-gesture` on the row so the click that follows does not also toggle the row
   focus.

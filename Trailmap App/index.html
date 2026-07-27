@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=18" />
+<link rel="stylesheet" href="style.css?v=19" />
 </head>
 <body>
 <div id="fatalError">
@@ -1638,9 +1638,12 @@ function wireBuilderRowDrag(row, idx){
   handle.addEventListener("pointerdown", (e) => {
     e.preventDefault();
     const rows = [...document.querySelectorAll("#builderList .builder-row")];
-    // Midpoints are measured ONCE, before anything moves: the dragged row keeps its place in the layout
-    // (only a transform shifts it), so they stay valid for the whole gesture.
-    const mids = rows.map(r => { const b = r.getBoundingClientRect(); return b.top + b.height / 2; });
+    // Geometry is measured ONCE, before anything moves. Nothing here changes the layout -- every row is
+    // only ever shifted by a transform -- so these stay valid for the whole gesture, which is also what
+    // keeps the live reorder below from feeding back into its own input and flickering.
+    const rects = rows.map(r => r.getBoundingClientRect());
+    const mids = rects.map(b => b.top + b.height / 2);
+    const shift = rects[idx].height + 4;   // how far a displaced row travels: dragged height + list gap
     const startY = e.clientY;
     let target = idx;
     row.classList.add("is-dragging");
@@ -1655,15 +1658,21 @@ function wireBuilderRowDrag(row, idx){
       let slot = 0;
       while (slot < mids.length && y > mids[slot]) slot++;   // rows whose centre is above ours
       target = slot > idx ? slot - 1 : slot;                 // slot counts the dragged row itself
-      rows.forEach((r, k) => r.classList.toggle("is-drop-target", k === target && target !== idx));
+      // The list reorders live: the rows between here and the destination step aside, so the gap you are
+      // dropping into is the thing you see. A marker line on the destination row was the first version and
+      // the user found it hard to read ("die Animation beim Drag n drop etwas schwer verständlich").
+      rows.forEach((r, k) => {
+        if (k === idx) return;
+        const d = (k > idx && k <= target) ? -shift : (k >= target && k < idx) ? shift : 0;
+        r.style.transform = d ? `translateY(${d}px)` : "";
+      });
     };
     const onEnd = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onEnd);
       window.removeEventListener("pointercancel", onEnd);
-      row.style.transform = "";
+      rows.forEach(r => { r.style.transform = ""; });
       row.classList.remove("is-dragging");
-      rows.forEach(r => r.classList.remove("is-drop-target"));
       if (target !== idx) {
         const snapshot = builderPredecessorSnapshot();
         builderItems.splice(target, 0, builderItems.splice(idx, 1)[0]);
@@ -1760,10 +1769,12 @@ function renderBuilder(){
           ${against ? `<span class="bi-against" title="Gegen die Trailrichtung — dieser Abschnitt geht bergauf">↑</span>` : ""}
           ${r.empty ? `<span class="bi-empty" title="Der Übergang liegt genau auf dem Trailende — in Trailrichtung bleibt nichts zu fahren. Mit 🔄 rückwärts einplanen, oder mit ⇔ ganz fahren.">∅</span>` : ""}
           <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
-          ${item.kind === "trail" ? `<button data-act="full" class="${item.full ? "on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">⇔</button>` : ""}
-          <button data-act="flip"${r.dirFixed
-            ? ` disabled title="Richtung liegt durch die Reihenfolge fest — mit ⇔ freigeben"`
-            : ` title="${item.kind === "trail" && (r.clipped || r.junction) ? "Zum anderen Ende des Trails fahren" : "Richtung umdrehen"}"`}>🔄</button>
+          ${item.kind === "trail" ? `<button data-act="full" class="bi-full${item.full ? " on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">🏁</button>` : ""}
+          <!-- The arrow IS the state, and pressing it flips: → ridden in the element's own direction,
+               ← against it (user, 2026-07-27). No separate marker after the name any more. -->
+          <button data-act="flip" class="bi-dir"${r.dirFixed
+            ? ` disabled title="Richtung liegt durch die Reihenfolge fest — mit 🏁 freigeben"`
+            : ` title="${item.reversed ? "Rückwärts — antippen für vorwärts" : "Vorwärts — antippen für rückwärts"}"`}>${item.reversed ? "←" : "→"}</button>
           <button data-act="del" class="bi-del" title="Entfernen">✕</button>
         </div>
         ${hasConnect ? `<button class="bi-connect" data-act="connect" title="Nächste mögliche Kreuzung">
@@ -1776,6 +1787,11 @@ function renderBuilder(){
     row.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
       const act = b.dataset.act;
       const snapshot = builderPredecessorSnapshot();
+      // Pressing any of a row's buttons also marks that element -- on a phone there is no hover to do it,
+      // so you would otherwise change a row without ever seeing which stretch on the map you changed
+      // (user, 2026-07-27). Not on a mouse, where hover already handles it and a lasting mark would
+      // outstay its welcome.
+      if (act !== "del" && builderTouchLayout()) builderActiveIdx = i;
       if (act === "flip") item.reversed = !item.reversed;
       else if (act === "full") item.full = !item.full;
       else if (act === "connect") item.junctionAlt = ((item.junctionAlt | 0) + 1) % j.count;
@@ -3486,7 +3502,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v18"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v19"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
