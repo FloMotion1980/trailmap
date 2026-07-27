@@ -109,10 +109,23 @@ A row is a shell, not the visible box:
   └ .bi-connect     iConnect, only when there is more than one candidate
 ```
 
-**Button icons carry state, not actions** (user, 2026-07-27): **→** means the stretch is ridden in its
-element's own direction, **←** against it, and pressing the arrow flips it. **🏁** is "ride the whole trail"
-(the `full` opt-out of junction clipping). The old `↺` after a reversed row's name is gone — the arrow says
-it, and saying it twice cost width the name needed.
+**Button icons carry state, not actions** (user, 2026-07-27): **→** / **←** is the direction, and pressing
+the arrow flips it. The old `↺` after a reversed row's name is gone — the arrow says it, and saying it twice
+cost width the name needed.
+
+**The arrow shows YOUR choice (`reversed`), never a direction derived from the geometry.** This was tried
+the other way for one iteration and the user ruled it out (2026-07-28): *"ich würde keine automatische
+Rückwärtserkennung machen. Das sollte eine bewusste Entscheidung sein. Wenn der User Murks zusammenbaut ist
+das halt so. Man könnte höchstens eine Warnung anzeigen."* So when a sequence ends up running a stretch
+against its trail's own direction, that is a **`.builder-warning` strip** below the row — placed like the
+connector, since it annotates the chain rather than the element — and nothing is quietly rewritten.
+`uphill`-flagged trails are exempt; for those a climb is the point.
+
+Worth knowing how those two interact, because it is the whole model in one example. `Back-to-Black → X-Line
+→ Sprinter` pins both X-Line ends, forcing 2.95 km uphill: the arrow is disabled and the warning appears.
+Switching the **first** iConnect off frees the entry — the X-Line becomes 1.31 km, the arrow is usable again,
+the warning is gone, and the tour's climb drops from 686 m to 258 m. Turning a junction off is both the
+replacement for the flag and the tool against "Murks".
 
 Two touch details that go with them:
 
@@ -124,10 +137,35 @@ Two touch details that go with them:
   `:focus` drops its background while `:focus-visible` keeps a ring for keyboard use. A pressed-in toggle
   (🏁 `.on`) uses the accent colour instead of grey, so a state cannot be mistaken for that artefact.
 
-**iConnect** is the user's name for the junction — short for intelligent connector — and it now sits
-*inside* the element's own box ("es sollte aussehen, dass es in dem Trailviereck ist") instead of in a strip
-between two boxes, and **only when `count > 1`**, i.e. when there is actually something to cycle. It belongs
-to this element for the same reason `junctionAlt` is stored on it: it describes where *this* one is joined.
+**iConnect** — the user's name for the junction, short for intelligent connector — is **one control per
+junction, drawn between the two rows it belongs to** (`.builder-connector`, a sibling of the rows in
+`#builderList`), straddling both boxes via negative margins with a short vertical stub to the left.
+
+It took three placements to get there, and the two rejected ones are worth recording because each looked
+right until it was used:
+
+1. Its own strip between the rows — read as detached from everything.
+2. Inside one element's box. But a junction clips *both* sides, so whichever box you pick misattributes the
+   other half. The user hit it from both ends: *"das iConnect steht unten bei 2 … es bezieht sich auf den
+   Trail obendrüber"*, and in the mirrored case (lift → trail) it sat on the **lift**, which is never
+   clipped at all — the control changed a length two rows away and none of its own.
+3. Between the rows, touching both. Nothing left to misattribute.
+
+**It also absorbed the "ride the whole trail" flag**, which is the user's own insight: *"Trail ganz fahren
+ist eigentlich iConnect ausschalten."* One step further than they put it, though — turning a junction off
+unclips **both** neighbours, so "ridden whole" is not a property of a trail but the off state of the
+junctions touching it. The 🏁 button is gone; the connector cycles candidate 1 … n, then **off**, then back
+to the first.
+
+Consequences of moving the state from the element to the pair:
+
+- Stored on the **earlier** element as `connectAlt` / `connectOff`, describing the junction to what comes
+  next. `builderJunctionKey()` therefore looks *forward* now, and `full` no longer exists.
+- Migration in `restoreBuilder()` for tours saved before this: `junctionAlt` on element i described junction
+  i-1 → i, so it moves to i-1 as `connectAlt`; `full` on element i becomes `connectOff` on the junctions on
+  **both** sides of it. Without it a saved tour would silently come back a different shape.
+- A junction between two lifts clips nothing, so it gets no control (`j.clips`).
+- Export field renamed `junction` → `iConnect`, and carries `{off: true}` for the off state.
 
 **Dragging replaced ↑/↓ entirely** and, on a touch screen, **a right swipe replaced ✕** — both because
 "auf dem Handy sind die Knöpfe für hoch und runter bzw. löschen viel zu klein". With four buttons down to

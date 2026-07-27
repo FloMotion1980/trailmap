@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=20" />
+<link rel="stylesheet" href="style.css?v=21" />
 </head>
 <body>
 <div id="fatalError">
@@ -794,16 +794,19 @@ document.getElementById("builderExportBtn").addEventListener("click", () => {
     name: "Neue Tour",
     elements: builderResolve().map(r => ({
       kind: r.item.kind, id: r.item.id, name: builderNameOf(r.item),
-      reversed: !!r.item.reversed, full: !!r.item.full,
+      reversed: !!r.item.reversed,
       // the ridden portion, so the offline assembler reproduces the same clip: first and last
       // coordinate of the stretch actually used, plus its length
       from: r.coords ? r.coords[0] : null,
       to: r.coords ? r.coords[r.coords.length - 1] : null,
       km: +r.len.toFixed(3),
-      // which junction candidate this element joins its predecessor at, and how far apart the two lines
-      // are there -- from/to already pin the clip down, this records how it was arrived at
-      junction: r.junction
-        ? { alt: r.junction.alt, of: r.junction.count, gapM: Math.round(r.junction.dist) }
+      // The iConnect to the element AFTER this one: which candidate, how many there were, how far apart the
+      // two lines are, or off (= neither side clipped here). from/to already pin the clip down; this records
+      // how it was arrived at.
+      iConnect: r.junction
+        ? (r.junction.off
+            ? { off: true }
+            : { alt: r.junction.alt, of: r.junction.count, gapM: Math.round(r.junction.dist) })
         : null
     }))
   };
@@ -1378,19 +1381,32 @@ function builderResolve(){
     const arrive = builderItems[i].reversed ? g[0] : g[g.length - 1];
     return [side === "entry" ? board : arrive];
   };
-  // Which junction each element joins its PREDECESSOR at, so index i describes the pair (i-1, i). The
-  // chosen candidate lives on the later element as `junctionAlt`, which reads the same way the UI does
-  // ("where do I come in?") and means a row's own control never reaches backwards past its own row.
+  // A junction is a property of the PAIR, so index i describes the pair (i, i+1) and its state lives on
+  // the earlier element as `connectAlt` / `connectOff`. Storing it on one element and *showing* it there
+  // was the mistake: whichever side you pick, it misattributes the other half. The user hit it from both
+  // ends (2026-07-28) -- "das iConnect steht unten bei 2 ... es bezieht sich auf den Trail obendrüber",
+  // and in the mirrored case it sat on a lift, which is never clipped at all. The control is drawn between
+  // the two rows now; see the connector in renderBuilder.
+  //
+  // `connectOff` replaces the old per-element `full` flag, which is the user's own insight: "Trail ganz
+  // fahren ist eigentlich iConnect ausschalten". It is one step further than they put it, though -- turning
+  // a junction off unclips BOTH neighbours, so "ridden whole" is not a property of a trail but the off
+  // state of the junctions touching it.
   const junctionInfo = new Array(n).fill(null);
   for (let i = 0; i < n - 1; i++) {
     const A = junctionRef(i, "exit"), B = junctionRef(i + 1, "entry");
     if (!A || !B) continue;
     const cands = junctionCandidates(A, B);
-    const alt = Math.min(Math.max(builderItems[i + 1].junctionAlt | 0, 0), cands.length - 1);
+    const item = builderItems[i];
+    const off = !!item.connectOff;
+    const alt = Math.min(Math.max(item.connectAlt | 0, 0), cands.length - 1);
     const j = cands[alt];
-    junctionInfo[i + 1] = { count: cands.length, alt, dist: j.dist };
-    if (builderItems[i].kind === "trail" && !builderItems[i].full) exit[i] = j.ia;
-    if (builderItems[i + 1].kind === "trail" && !builderItems[i + 1].full) entry[i + 1] = j.ib;
+    // A junction between two lifts clips nothing -- neither side is ever cut -- so it gets no control.
+    const clips = item.kind === "trail" || builderItems[i + 1].kind === "trail";
+    junctionInfo[i] = { count: cands.length, alt, off, dist: j.dist, clips };
+    if (off) continue;
+    if (item.kind === "trail") exit[i] = j.ia;
+    if (builderItems[i + 1].kind === "trail") entry[i + 1] = j.ib;
   }
   const resolved = builderItems.map((item, i) => {
     const g = geoms[i];
@@ -1475,31 +1491,42 @@ function builderResolve(){
              against: !forward, empty: hi <= lo };
   });
   resolved.forEach((r, i) => {
+    // `junction` is the one AFTER this element -- the connector drawn below its row.
     r.junction = junctionInfo[i];
     // Clipped at both ends: the sequence fully determines which way this stretch is ridden, so there is
-    // nothing left for the 🔄 to flip -- the row disables it instead of offering a control that does
-    // nothing. Opting out with ⇔ (`full`) frees both ends again and makes 🔄 meaningful.
+    // nothing left for the arrow to flip -- the row disables it instead of offering a control that does
+    // nothing. Switching either neighbouring iConnect off frees an end and makes the arrow meaningful.
     r.dirFixed = r.item.kind === "trail" && entry[i] !== null && exit[i] !== null;
   });
   return resolved;
 }
 
-// A stored `junctionAlt` means "the Nth candidate for the junction with whatever is in front of me", so
-// it turns into nonsense the moment that neighbour changes. Snapshot the predecessors before an edit,
-// call this after it, and only the pairs the edit actually touched lose their tuning.
+// A stored `connectAlt`/`connectOff` describes the junction to whatever comes NEXT, so it turns into
+// nonsense the moment that neighbour changes. Snapshot before an edit, call this after it, and only the
+// pairs the edit actually touched lose their tuning.
 // Reversal is part of the key for a lift, because which station a lift contributes to the junction search
-// depends on its direction -- flipping one therefore invalidates its own junction and the next one's.
+// depends on its direction -- flipping one therefore invalidates the junctions on both sides of it.
 function builderJunctionKey(items, i){
   const key = it => it.kind + ":" + it.id + (it.kind === "lift" && it.reversed ? ":rev" : "");
-  return (i > 0 ? key(items[i - 1]) : "-") + ">" + key(items[i]);
+  return key(items[i]) + ">" + (i < items.length - 1 ? key(items[i + 1]) : "-");
 }
 function builderPredecessorSnapshot(){
   return new Map(builderItems.map((it, i) => [it, builderJunctionKey(builderItems, i)]));
 }
 function builderClearStaleAlts(snapshot){
   builderItems.forEach((it, i) => {
-    if (snapshot.get(it) !== builderJunctionKey(builderItems, i)) delete it.junctionAlt;
+    if (snapshot.get(it) !== builderJunctionKey(builderItems, i)) {
+      delete it.connectAlt;
+      delete it.connectOff;
+    }
   });
+}
+// Cycle order: candidate 1 … candidate n, then off, then back to the first.
+function builderCycleConnect(item, count){
+  if (item.connectOff) { delete item.connectOff; item.connectAlt = 0; return; }
+  const next = (item.connectAlt | 0) + 1;
+  if (next >= count) { item.connectOff = true; delete item.connectAlt; }
+  else item.connectAlt = next;
 }
 
 function persistBuilder(){
@@ -1514,6 +1541,20 @@ function restoreBuilder(){
     builderMode = !!s.builderMode;
     builderItems = Array.isArray(s.builderItems) ? s.builderItems.filter(i => i && i.id && i.kind) : [];
     if (typeof s.builderSheetOpen === "boolean") builderSheetOpen = s.builderSheetOpen;
+    // Migrate state saved before the junction became a thing of its own (2026-07-28). `junctionAlt` on
+    // element i described the junction i-1 → i, which now lives on i-1 as `connectAlt`; `full` on element i
+    // meant "neither of my ends is clipped", which is now the off state of the junctions on both sides of
+    // it. Without this, a saved tour would silently come back a different shape.
+    builderItems.forEach((it, i) => {
+      if (typeof it.junctionAlt === "number" && i > 0) builderItems[i - 1].connectAlt = it.junctionAlt;
+      delete it.junctionAlt;
+    });
+    builderItems.forEach((it, i) => {
+      if (!it.full) return;
+      if (i > 0) builderItems[i - 1].connectOff = true;
+      if (i < builderItems.length - 1) it.connectOff = true;
+      delete it.full;
+    });
   } catch (e) { /* ignore a corrupt entry */ }
 }
 
@@ -1747,23 +1788,12 @@ function renderBuilder(){
     row.dataset.idx = i;
     // when a trail is only partly ridden, show both figures so it's obvious the clip happened
     const meta = r.clipped ? `${r.len.toFixed(2)} / ${r.fullLen.toFixed(2)} km` : `${r.len.toFixed(2)} km`;
-    // A stretch ridden against the trail's own direction means pedalling up a descent. Worth flagging:
-    // it can be deliberate (🔄) but it can also be forced by a sequence that pins both ends down, and
-    // then nothing else in the row reveals it (the user's Back-to-Black → X-Line → Sprinter, where the
-    // lift station sits above where the X-Line was joined). Uphill-flagged trails are exempt -- for those
-    // a climb is the point.
-    // The arrow shows the direction actually ridden, not the stored `reversed` switch -- those differ, and
-    // the difference is the whole point: a sequence can force a stretch backwards without anyone pressing
-    // anything (both ends pinned by junctions). The separate ↑ marker that used to flag that is gone now
-    // that the button carries it, per the user ("das zeigt jetzt der Button") -- but only because the
-    // button was changed to tell the truth.
-    const goesBack = item.kind === "lift" ? !!item.reversed : !!r.against;
-    // "iConnect" -- the user's name for the junction, short for intelligent connector -- sits INSIDE the
-    // element's own box now rather than in a strip between two boxes, and only appears when there is
-    // actually something to choose (`count > 1`). It belongs to this element because it describes where
-    // *this* one is joined; `junctionAlt` is stored on it for the same reason.
-    const j = r.junction;
-    const hasConnect = j && j.count > 1;
+    // The arrow shows YOUR OWN choice (`reversed`), never a direction derived from the geometry. The user
+    // was explicit (2026-07-28): "ich würde keine automatische Rückwärtserkennung machen. Das sollte eine
+    // bewusste Entscheidung sein. Wenn der User Murks zusammenbaut ist das halt so. Man könnte höchstens
+    // eine Warnung anzeigen." So when the sequence ends up running a stretch against its trail's own
+    // direction, that is reported as a warning strip below the row instead of quietly rewriting the button.
+    const goesBack = !!item.reversed;
     row.innerHTML = `
       <div class="bi-body">
         <div class="bi-main">
@@ -1771,23 +1801,16 @@ function renderBuilder(){
           <span class="bi-num">${i + 1}</span>
           <span class="bi-name">${item.kind === "lift" ? "🚡 " : ""}${builderNameOf(item)}</span>
           <span class="bi-tail">
-            ${r.empty ? `<span class="bi-empty" title="Der Übergang liegt genau auf dem Trailende — in Trailrichtung bleibt nichts zu fahren. Mit ← rückwärts einplanen, oder mit 🏁 ganz fahren.">∅</span>` : ""}
+            ${r.empty ? `<span class="bi-empty" title="Der Übergang liegt genau auf dem Trailende — in Trailrichtung bleibt nichts zu fahren. Mit ← rückwärts einplanen, oder iConnect aus.">∅</span>` : ""}
             <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
-            ${item.kind === "trail" ? `<button data-act="full" class="bi-full${item.full ? " on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">🏁</button>` : ""}
             <!-- The arrow IS the state, and pressing it flips: → ridden in the element's own direction,
                  ← against it (user, 2026-07-27). No separate marker after the name any more. -->
             <button data-act="flip" class="bi-dir"${r.dirFixed
-              ? ` disabled title="Richtung liegt durch die Reihenfolge fest — mit 🏁 freigeben"`
+              ? ` disabled title="Richtung liegt durch die Reihenfolge fest — dazu einen der beiden iConnect ausschalten"`
               : ` title="${goesBack ? "Rückwärts — antippen für vorwärts" : "Vorwärts — antippen für rückwärts"}"`}>${goesBack ? "←" : "→"}</button>
             <button data-act="del" class="bi-del" title="Entfernen">✕</button>
           </span>
         </div>
-        ${hasConnect ? `<button class="bi-connect" data-act="connect" title="Nächste mögliche Kreuzung">
-          <span class="bc-label">iConnect</span>
-          <span class="bc-gap${j.dist > JUNCTION_MAX_GAP_M ? " is-far" : ""}">${Math.round(j.dist)} m</span>
-          <span class="bc-alt">${j.alt + 1}/${j.count}</span>
-          <span class="bc-cycle">⟳</span>
-        </button>` : ""}
       </div>`;
     row.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
       const act = b.dataset.act;
@@ -1798,8 +1821,6 @@ function renderBuilder(){
       // outstay its welcome.
       if (act !== "del" && builderTouchLayout()) builderActiveIdx = i;
       if (act === "flip") item.reversed = !item.reversed;
-      else if (act === "full") item.full = !item.full;
-      else if (act === "connect") item.junctionAlt = ((item.junctionAlt | 0) + 1) % j.count;
       else if (act === "del") { builderItems.splice(i, 1); builderActiveIdx = null; }
       builderClearStaleAlts(snapshot);
       persistBuilder();
@@ -1819,6 +1840,45 @@ function renderBuilder(){
     wireBuilderRowDrag(row, i);
     wireBuilderRowSwipe(row, i);
     listEl2.appendChild(row);
+
+    // Warning strip: this stretch runs against its trail's own direction. Not a correction and not folded
+    // into the arrow -- direction stays the user's own decision, and "wenn der User Murks zusammenbaut ist
+    // das halt so. Man könnte höchstens eine Warnung anzeigen" (2026-07-28). Uphill-flagged trails are
+    // exempt: for those a climb is the point.
+    const tMeta = item.kind === "trail" ? lineTrails.find(tr => tr.id === item.id) : null;
+    if (r.against && !(tMeta && tMeta.uphill)) {
+      const warn = document.createElement("div");
+      warn.className = "builder-warning";
+      warn.innerHTML = `<span class="bw-icon">⚠</span><span>Gegen die Trailrichtung — dieser Abschnitt geht bergauf</span>`;
+      listEl2.appendChild(warn);
+    }
+
+    // iConnect: one control per JUNCTION, drawn between the two rows it belongs to, straddling both boxes
+    // so it cannot be misread as a property of either (user, 2026-07-28). It cycles candidate 1..n and then
+    // off; off means neither neighbour is clipped here, which is what used to be the per-trail "ride the
+    // whole trail" flag. A junction between two lifts clips nothing, so it gets no control.
+    const j = r.junction;
+    if (j && j.clips) {
+      const cx = document.createElement("button");
+      cx.className = "builder-connector" + (j.off ? " is-off" : "");
+      cx.title = j.off
+        ? "iConnect aus — beide Nachbarn fahren bis zu ihren eigenen Enden. Antippen für die erste Kreuzung."
+        : `Kreuzung ${j.alt + 1} von ${j.count} — antippen für die nächste, nach der letzten aus`;
+      cx.innerHTML = j.off
+        ? `<span class="bx-label">iConnect</span><span class="bx-state">aus</span><span class="bx-cycle">⟳</span>`
+        : `<span class="bx-label">iConnect</span>
+           <span class="bx-gap${j.dist > JUNCTION_MAX_GAP_M ? " is-far" : ""}">${Math.round(j.dist)} m</span>
+           <span class="bx-alt">${j.alt + 1}/${j.count}</span><span class="bx-cycle">⟳</span>`;
+      cx.addEventListener("click", () => {
+        const snapshot = builderPredecessorSnapshot();
+        builderCycleConnect(item, j.count);
+        if (builderTouchLayout()) builderActiveIdx = i;
+        builderClearStaleAlts(snapshot);
+        persistBuilder();
+        renderBuilder();
+      });
+      listEl2.appendChild(cx);
+    }
   });
   totalsEl.textContent = builderItems.length
     ? `${km.toFixed(2)} km · ${Math.round(up)} m ↑ / ${Math.round(down)} m ↓`
@@ -3507,7 +3567,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v20"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v21"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
