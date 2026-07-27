@@ -3,16 +3,18 @@
 // and caches map tiles as they are viewed (or explicitly preloaded) so the map background
 // keeps working without a connection.
 
-// Style changes no longer need a bump: style.css is served network-first as of v16 (see the fetch handler),
-// so a new index.html can never be paired with an old stylesheet again. Bump this only to force every
-// cached asset to be re-fetched. v6-v15 were all "style.css changed" bumps, back when it was cache-first --
-// the last of which did not reach the user's phone and made the pinned builder sheet invisible there,
-// which is why the strategy changed (2026-07-27).
-const CACHE_NAME = "trailmap-v16";
+// Style changes no longer need a bump HERE: the stylesheet carries a ?v= in its own URL (STYLE_URL below,
+// and the <link> in index.html must match it), so a new index.html always asks for a URL the old cache
+// cannot answer. Bump CACHE_NAME only to force every cached asset to be re-fetched. v6-v15 were all
+// "style.css changed" bumps, back when the URL was constant -- and the last of those did not reach the
+// user's phone, which left the pinned builder sheet invisible there (2026-07-27).
+const CACHE_NAME = "trailmap-v17";
+// Must stay identical to the href of the <link rel="stylesheet"> in index.html.
+const STYLE_URL = "./style.css?v=17";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./style.css",
+  STYLE_URL,
   "./regions/paznaun.json" // default region on a first-ever visit — precached so it works offline
                             // immediately; other regions are cached opportunistically (cache-first
                             // fetch handler below) once the user activates them via the region dialog.
@@ -54,22 +56,32 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Our own stylesheet: network-first, same reasoning as the navigation request it belongs to. It used to
-  // be cache-first, which made every CSS change depend on the CACHE_NAME bump actually reaching the
-  // device -- and when it did not, the browser paired a NEW index.html with an OLD style.css. That is not
-  // a cosmetic problem: an element whose rules are missing entirely loses its `position:absolute` and
-  // therefore paints *behind* #map (which is `position:absolute; inset:0`), i.e. it vanishes. Exactly what
-  // happened to the user's phone with the pinned builder sheet and the 🧭 button on 2026-07-27, while
-  // everything else looked perfectly normal. One small same-origin file; not worth the risk.
+  // Our own stylesheet stays CACHE-FIRST on purpose (the user, 2026-07-27: "mach das css nicht network
+  // first") -- this app is used offline and on one bar of signal, where network-first would stall the page
+  // behind a request timeout before falling back to the cache.
+  //
+  // What keeps it fresh instead is the ?v= query on the <link> in index.html: index.html is network-first,
+  // so a new deploy brings a new stylesheet URL, which cannot hit the old cache entry. That fixes the same
+  // bug a CACHE_NAME bump was supposed to fix without depending on the bump reaching the device -- and it
+  // is not a cosmetic bug: an element whose rules are missing loses its `position:absolute` and paints
+  // *behind* #map (`position:absolute; inset:0`), i.e. vanishes. That is what happened to the user's phone
+  // with the pinned builder sheet and the mode button, while everything else looked perfectly normal.
+  //
+  // The fallback covers the one gap the query opens: an index.html cached from an older deploy asks for a
+  // ?v= this cache never held, so offline it would get nothing at all. Any stylesheet beats none.
   if (new URL(req.url).pathname.endsWith("/style.css")) {
     event.respondWith(
-      fetch(req)
+      caches.match(req).then((hit) => hit || fetch(req)
         .then((resp) => {
           const clone = resp.clone();
           event.waitUntil(caches.open(CACHE_NAME).then((c) => c.put(req, clone)));
           return resp;
         })
-        .catch(() => caches.match(req))
+        .catch(() => caches.open(CACHE_NAME).then((c) => c.keys().then((keys) => {
+          const other = keys.find((k) => new URL(k.url).pathname.endsWith("/style.css"));
+          return other ? c.match(other) : undefined;
+        })))
+      )
     );
     return;
   }
