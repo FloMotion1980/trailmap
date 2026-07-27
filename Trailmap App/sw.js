@@ -3,12 +3,12 @@
 // and caches map tiles as they are viewed (or explicitly preloaded) so the map background
 // keeps working without a connection.
 
-// Bump whenever style.css changes: it is in APP_SHELL and served cache-first (only the navigate request
-// is network-first), so without a bump a returning user pairs the new index.html with the previously
-// cached stylesheet. v6 = bike-lift info panel rules, v7 = Tourenbuilder panel rules (both 2026-07-26),
-// v8 = builder glow + numbered start dots, v9 = junction rows, v10 = "gegen die Trailrichtung" marker
-// v11 = disabled-switch style, v12 = empty-stretch marker, v13 = builder row focus, v14 = numbered red end dot, v15 = pinned builder sheet (all 2026-07-27).
-const CACHE_NAME = "trailmap-v15";
+// Style changes no longer need a bump: style.css is served network-first as of v16 (see the fetch handler),
+// so a new index.html can never be paired with an old stylesheet again. Bump this only to force every
+// cached asset to be re-fetched. v6-v15 were all "style.css changed" bumps, back when it was cache-first --
+// the last of which did not reach the user's phone and made the pinned builder sheet invisible there,
+// which is why the strategy changed (2026-07-27).
+const CACHE_NAME = "trailmap-v16";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -42,6 +42,26 @@ self.addEventListener("fetch", (event) => {
   // fresh online and the app re-fetches only the region files whose hash changed. Falls back to the
   // cached manifest when offline. This is what drives cache invalidation, independent of SW updates.
   if (new URL(req.url).pathname.endsWith("/regions/version.json")) {
+    event.respondWith(
+      fetch(req)
+        .then((resp) => {
+          const clone = resp.clone();
+          event.waitUntil(caches.open(CACHE_NAME).then((c) => c.put(req, clone)));
+          return resp;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // Our own stylesheet: network-first, same reasoning as the navigation request it belongs to. It used to
+  // be cache-first, which made every CSS change depend on the CACHE_NAME bump actually reaching the
+  // device -- and when it did not, the browser paired a NEW index.html with an OLD style.css. That is not
+  // a cosmetic problem: an element whose rules are missing entirely loses its `position:absolute` and
+  // therefore paints *behind* #map (which is `position:absolute; inset:0`), i.e. it vanishes. Exactly what
+  // happened to the user's phone with the pinned builder sheet and the 🧭 button on 2026-07-27, while
+  // everything else looked perfectly normal. One small same-origin file; not worth the risk.
+  if (new URL(req.url).pathname.endsWith("/style.css")) {
     event.respondWith(
       fetch(req)
         .then((resp) => {

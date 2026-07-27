@@ -1542,6 +1542,11 @@ const BUILDER_GLOW_FOCUS = [
 function drawBuilderHighlight(){
   const focus = builderFocusIdx();
   builderHighlight.clearLayers();
+  // Nothing at all while the mode is off (user, 2026-07-27). It used to stay, which was harmless while the
+  // list lived in the sidebar and was always there to explain it -- but now the sheet disappears with the
+  // mode, and a glowing chain with numbered dots and no list next to it explains nothing. The items are
+  // untouched, so switching back on brings the whole chain straight back.
+  if (!builderMode) return;
   // Glow bands first, the focused one LAST: they share one pane and Leaflet's SVG renderer stacks later
   // paths on top, so drawing it in list order would let a following element's 26px halo wash it out.
   const drawGlow = (r, i) => {
@@ -3379,7 +3384,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v15"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v16"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
