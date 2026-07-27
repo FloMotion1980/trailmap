@@ -50,7 +50,9 @@ Unlike the original `Paznaun App/`, trail data is **not** all embedded inline an
 
 ### How trail data gets into a region's JSON file
 
-GPX → geometry/elevation is a well-defined pipeline (regex point extraction — real XML parsers choke on malformed source GPX like unescaped `&` in `<name>`, or CDATA-wrapped `<ele>` values, or `lon` before `lat` in the attribute order, all of which show up across the GPX sets in `Material/` — → Douglas-Peucker line simplification with a small fixed epsilon (~2m; don't simplify harder just to hit a point-count target, that visibly distorts short trails) → elevation resampled to ~100 points by distance with implausible outliers (e.g. GPS glitches reading ~0m) linearly interpolated). This has been scripted more than once (ad hoc, not currently committed to the repo) but not turned into a repo-tracked tool yet — if you rebuild it, that's still the recommended shape.
+GPX → geometry/elevation is a well-defined pipeline, and since 2026-07-28 it is **repo-tracked in `tools/trailmap_pipeline.py`** — import it rather than writing it again. It had been re-derived from scratch in every session that added a region (~27 ad-hoc scripts in one session alone, all lost with it), which risks silent inconsistency between regions. The shape: regex point extraction (real XML parsers choke on malformed source GPX like unescaped `&` in `<name>`, or CDATA-wrapped `<ele>` values, or `lon` before `lat` in the attribute order, all of which show up across the GPX sets in `Material/`) → 0.5m point de-duplication → Douglas-Peucker with a small fixed epsilon (2m; don't simplify harder just to hit a point-count target, that visibly distorts short trails) → elevation resampled by distance (100 points, 150 above 7km, 200 above 25km) with missing/implausible values (e.g. GPS glitches reading ~0m, or the placeholder `<ele>0</ele>` in Donnersberg's downloads) interpolated. Verified against the newest region: it reproduces all 24 Dolomiti Paganella trails byte-identically. **Older regions were built to coarser parameters** (Paznaun has ~half the points and fixed 100-point profiles), so re-running the pipeline over one would change its geometry slightly — only do that when there's a reason to touch it anyway.
+
+`python tools/validate_region.py [key]` checks a region against the invariants that have actually caused bugs (sub-region keys, difficulties, empty `url`, orphaned geometry/profiles, `trailCount`, lifts stored bottom-station-first, sub-region colours, the loop concatenation invariant, and geometry that sits implausibly far from the region centre). Run it after any region change; non-zero exit means something failed.
 
 Metadata (name/difficulty/length/up/down/url) is a separate, non-automatable step — it doesn't come from the GPX, it comes from whatever official source exists for that region (tourism site scraping for Paznaun; the `BiketrailsNauders.pdf` brochure's S0–S3 scale for 3-Länder's 21 numbered trails). Where no official length/Hm exists (newer trails not in a brochure), GPX-computed length/elevation-gain-loss is an acceptable fallback — but prefer official published numbers over GPX-derived ones when both exist, to stay consistent with the rest of `lineTrails`.
 
@@ -60,9 +62,12 @@ Metadata (name/difficulty/length/up/down/url) is a separate, non-automatable ste
 
 ### Adding a new region under this model
 
-1. Run the GPX pipeline above to produce that region's trail data, then shape it into `regions/<newgroup>.json` as `{ lineTrails, trailGeo, elevationProfiles, places }`.
-2. Add one `REGION_CATALOG` entry: `label`, `file`, `trailCount`, a computed `bounds` bounding box, and `subRegions` (label+color per sub-region/hub).
-3. That's it — no other code changes needed. The dialog, sidebar, `render()`, persistence, and map-fitting all already iterate the catalog/active-state dynamically.
+**See `docs/adding-a-region.md` for the full runbook** — the order of operations, the decisions that need the user (difficulties where nothing official exists, the sub-region split, one region or several), and the verification step. In short:
+
+1. Run the pipeline (`tools/trailmap_pipeline.py`) to produce that region's trail data, then shape it into `regions/<newgroup>.json` as `{ lineTrails, trailGeo, elevationProfiles, places }` — `write_region()` does the last part in the app's own formatting.
+2. Add one `REGION_CATALOG` entry: `label`, `file`, `trailCount`, a computed `bounds` bounding box (`region_summary()` gives you one), and `subRegions` (label+color per sub-region/hub).
+3. `python tools/validate_region.py <newgroup>`, then look at it in a browser against the base map.
+4. That's it — no other code changes needed. The dialog, sidebar, `render()`, persistence, and map-fitting all already iterate the catalog/active-state dynamically.
 
 ### Map / UI conventions worth knowing before touching them
 

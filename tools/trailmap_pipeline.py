@@ -1,0 +1,478 @@
+# -*- coding: utf-8 -*-
+"""Trailmap region-building pipeline — the proven primitives, in one importable module.
+
+Why this file exists: this pipeline had been written from scratch in every session that added a region
+(~27 ad-hoc scripts in one session alone, all of which died with it), and CLAUDE.md itself noted it was
+"scripted more than once, not currently committed". Re-deriving it each time risks silent inconsistency
+between regions — a different simplification epsilon or a different resampling count makes new trails look
+subtly unlike the existing ones, which is the same class of problem as the Challenge threshold tuning.
+
+Standard library only, deliberately: no install step, works in a fresh sandbox.
+
+    import sys; sys.path.insert(0, r"D:\\Trailmap\\tools")
+    from trailmap_pipeline import *
+
+Everything here is extracted from code that actually produced the regions currently in the app
+(Paganella, Serfaus, Portes du Soleil, Bikecircus, Sölden, …), including the workarounds for real data
+defects met along the way. Read the docstrings before "simplifying" any of it.
+"""
+import difflib
+import html as _html
+import json
+import math
+import os
+import re
+import time
+import urllib.parse
+import urllib.request
+
+__all__ = [
+    "haversine_m", "perp_distance_m", "douglas_peucker", "cumulative_km", "bounds_of",
+    "parse_gpx", "gpx_name", "dedupe_points",
+    "ElevationLookup",
+    "overpass", "osm_aerialway_survey", "osm_named_ways", "norm_name", "fuzzy_lookup",
+    "build_profile", "build_trail", "write_region", "region_summary",
+    "SIMPLIFY_EPS_M", "MIN_POINT_SPACING_M",
+]
+
+# ---------------------------------------------------------------------------------------------------
+# Constants that must stay the same across regions, or trails stop looking alike
+# ---------------------------------------------------------------------------------------------------
+
+#: Douglas-Peucker tolerance. Do NOT raise this to hit a point-count target -- it visibly distorts short
+#: trails, which is exactly the mistake CLAUDE.md warns about.
+SIMPLIFY_EPS_M = 2.0
+
+#: Drop consecutive raw points closer than this before simplifying. GPS recordings contain dense clusters
+#: while standing still, and they skew the simplification.
+MIN_POINT_SPACING_M = 0.5
+
+
+# ---------------------------------------------------------------------------------------------------
+# Geometry
+# ---------------------------------------------------------------------------------------------------
+
+def haversine_m(a, b):
+    """Great-circle distance in metres between two [lat, lon] points (extra elements ignored)."""
+    R = 6371000.0
+    r = math.pi / 180
+    dla = (b[0] - a[0]) * r
+    dlo = (b[1] - a[1]) * r
+    x = math.sin(dla / 2) ** 2 + math.cos(a[0] * r) * math.cos(b[0] * r) * math.sin(dlo / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(x))
+
+
+def perp_distance_m(p, a, b):
+    """Perpendicular distance from p to the segment a-b, via a local equirectangular projection.
+
+    Projecting first (rather than doing spherical maths) is accurate enough at trail scale and keeps
+    Douglas-Peucker cheap. The cos(lat) factor uses a's latitude, which is fine over a few hundred metres.
+    """
+    la = a[0] * math.pi / 180
+    to_xy = lambda q: (q[1] * math.cos(la) * 111320, q[0] * 110540)
+    P, A, B = to_xy(p), to_xy(a), to_xy(b)
+    num = abs((B[0] - A[0]) * (A[1] - P[1]) - (A[0] - P[0]) * (B[1] - A[1]))
+    den = math.hypot(B[0] - A[0], B[1] - A[1])
+    return haversine_m(p, a) if den < 1e-6 else num / den
+
+
+def douglas_peucker(points, eps_m=SIMPLIFY_EPS_M):
+    """Simplify a [[lat, lon, ele?], ...] list, keeping any third element on the points it keeps."""
+    if len(points) < 3:
+        return list(points)
+    dmax, idx = 0.0, 0
+    for i in range(1, len(points) - 1):
+        d = perp_distance_m(points[i][:2], points[0][:2], points[-1][:2])
+        if d > dmax:
+            dmax, idx = d, i
+    if dmax <= eps_m:
+        return [points[0], points[-1]]
+    return (douglas_peucker(points[:idx + 1], eps_m)[:-1]
+            + douglas_peucker(points[idx:], eps_m))
+
+
+def cumulative_km(coords):
+    """Cumulative distance in km along a coordinate list; same length as the input."""
+    out = [0.0]
+    for i in range(1, len(coords)):
+        out.append(out[-1] + haversine_m(coords[i - 1][:2], coords[i][:2]) / 1000.0)
+    return out
+
+
+def bounds_of(trail_geo):
+    """The [[latMin, lngMin], [latMax, lngMax]] box a REGION_CATALOG entry needs.
+
+    Accepts the region's `trailGeo` dict (or any iterable of coordinate lists).
+    """
+    geoms = trail_geo.values() if isinstance(trail_geo, dict) else trail_geo
+    lats, lons = [], []
+    for g in geoms:
+        for c in g:
+            lats.append(c[0])
+            lons.append(c[1])
+    if not lats:
+        raise ValueError("bounds_of: no coordinates")
+    return [[round(min(lats), 5), round(min(lons), 5)],
+            [round(max(lats), 5), round(max(lons), 5)]]
+
+
+# ---------------------------------------------------------------------------------------------------
+# GPX
+# ---------------------------------------------------------------------------------------------------
+
+def parse_gpx(text):
+    """Extract [[lat, lon, ele|None], ...] from GPX text.
+
+    Regex on purpose, not an XML parser: real source GPX in Material/ breaks strict parsers in at least
+    three ways -- unescaped `&` inside <name>, CDATA-wrapped <ele> values, and `lon` before `lat` in the
+    attribute order. A parser that chokes on any of those is useless here. Handles both self-closing
+    <trkpt/> and <trkpt>…</trkpt>, and reads <rtept> too, since some operator exports use routes.
+    """
+    pts = []
+    for tag in ("trkpt", "rtept"):
+        for m in re.finditer(r'<%s\b([^>]*?)(?:/>|>(.*?)</%s>)' % (tag, tag), text, re.S):
+            attrs = m.group(1) or ""
+            body = m.group(2) or ""
+            la = re.search(r'lat="([-\d.]+)"', attrs)
+            lo = re.search(r'lon="([-\d.]+)"', attrs)
+            if not (la and lo):
+                continue
+            # CDATA or plain, and possibly with whitespace
+            e = re.search(r'<ele>\s*(?:<!\[CDATA\[)?\s*([-\d.]+)\s*(?:\]\]>)?\s*</ele>', body)
+            pts.append([float(la.group(1)), float(lo.group(1)),
+                        float(e.group(1)) if e else None])
+        if pts:
+            break
+    return pts
+
+
+def gpx_name(text):
+    """The track name, HTML-unescaped and stripped of a leading trail number.
+
+    Operator exports arrive like '787 &quot;Ribs Trail&quot;' or 'TC Foo'; the number belongs in the
+    display name only when the region's brochure uses it (see the Nauders/Finale conventions).
+    """
+    m = (re.search(r"<metadata>.*?<name>(.*?)</name>", text, re.S)
+         or re.search(r"<name>(.*?)</name>", text, re.S))
+    if not m:
+        return None
+    n = _html.unescape(m.group(1)).strip()
+    n = re.sub(r"^\s*(?:TC|\d+)\s*", "", n).strip()
+    n = n.strip('"\u201c\u201d').strip()
+    return re.sub(r"\s+", " ", n)
+
+
+def dedupe_points(points, min_spacing_m=MIN_POINT_SPACING_M):
+    """Drop consecutive points closer together than `min_spacing_m` (standing-still clusters)."""
+    out = []
+    for p in points:
+        if not out or haversine_m(out[-1][:2], p[:2]) > min_spacing_m:
+            out.append(p)
+    return out
+
+
+# ---------------------------------------------------------------------------------------------------
+# Elevation (OpenTopoData) — for geometry that has no usable <ele> of its own
+# ---------------------------------------------------------------------------------------------------
+
+class ElevationLookup:
+    """Batched OpenTopoData lookups with an on-disk cache.
+
+    Needed whenever geometry comes from OSM (no elevation at all) or from a GPX whose <ele> is a
+    placeholder -- e.g. all four Donnersberg site downloads carry <ele>0</ele> throughout.
+
+    Datasets are tried in descending quality and the first that answers for the whole batch wins.
+    The public API is rate-limited (1 call/s, 100 locations/call), hence the sleeps; without the cache a
+    re-run of a build would take minutes and risk a ban.
+    """
+
+    DATASETS = ("eudem25m", "mapzen", "srtm30m")
+    BATCH = 100
+
+    def __init__(self, cache_path="elevation_cache.json"):
+        self.cache_path = cache_path
+        self.cache = {}
+        if os.path.exists(cache_path):
+            try:
+                self.cache = json.load(open(cache_path, encoding="utf-8"))
+            except Exception:
+                self.cache = {}
+
+    @staticmethod
+    def _key(p):
+        return "%.5f,%.5f" % (p[0], p[1])
+
+    def _save(self):
+        json.dump(self.cache, open(self.cache_path, "w", encoding="utf-8"))
+
+    def __call__(self, points):
+        """Return one elevation per [lat, lon] in `points`, fetching only what is not cached."""
+        todo = [p for p in points if self._key(p) not in self.cache]
+        # de-duplicate within the request too, or a doubled-back trail pays twice
+        seen, uniq = set(), []
+        for p in todo:
+            k = self._key(p)
+            if k not in seen:
+                seen.add(k)
+                uniq.append(p)
+        for i in range(0, len(uniq), self.BATCH):
+            batch = uniq[i:i + self.BATCH]
+            loc = "|".join("%.5f,%.5f" % (p[0], p[1]) for p in batch)
+            got = None
+            for ds in self.DATASETS:
+                for attempt in range(4):
+                    try:
+                        url = "https://api.opentopodata.org/v1/%s?locations=%s" % (ds, loc)
+                        req = urllib.request.Request(url, headers={"User-Agent": "trailmap/1.0"})
+                        r = json.loads(urllib.request.urlopen(req, timeout=60).read().decode())
+                        if r.get("status") == "OK":
+                            vals = [x["elevation"] for x in r["results"]]
+                            if all(v is not None for v in vals):
+                                got = vals
+                                break
+                    except Exception:
+                        pass
+                    time.sleep(2 + 2 * attempt)
+                if got:
+                    break
+            if got is None:
+                raise RuntimeError("elevation lookup failed for a batch of %d" % len(batch))
+            for p, e in zip(batch, got):
+                self.cache[self._key(p)] = e
+            self._save()
+            time.sleep(1.1)
+        return [self.cache[self._key(p)] for p in points]
+
+
+# ---------------------------------------------------------------------------------------------------
+# OpenStreetMap / Overpass
+# ---------------------------------------------------------------------------------------------------
+
+def overpass(query, timeout=240):
+    """Run an Overpass query, falling back across mirrors.
+
+    kumi.systems first: it is consistently the most reliable of the three for these bbox-sized queries.
+    """
+    endpoints = ("https://overpass.kumi.systems/api/interpreter",
+                 "https://overpass-api.de/api/interpreter",
+                 "https://overpass.openstreetmap.fr/api/interpreter")
+    last = None
+    for ep in endpoints:
+        for _ in range(2):
+            try:
+                req = urllib.request.Request(
+                    ep, data=urllib.parse.urlencode({"data": query}).encode(),
+                    headers={"User-Agent": "trailmap/1.0"})
+                return json.loads(urllib.request.urlopen(req, timeout=timeout).read().decode())
+            except Exception as e:
+                last = e
+                time.sleep(3)
+    raise RuntimeError("overpass failed: %r" % (last,))
+
+
+def osm_aerialway_survey(bbox, min_len_m=200):
+    """Every named aerialway in `bbox` ("latMin,lonMin,latMax,lonMax"), with geometry.
+
+    Returns rows of {id, name, aerialway, ref, bike, len, geom}. `bike` is OSM's own
+    aerialway:bicycle/bicycle tag -- reported for information only. **It does not decide whether a lift
+    belongs in the data**: the operator's summer list does. That tag was wrong in both directions in
+    Serfaus (bicycle=yes on a lift the operator excludes, and tags on three it never lists). See
+    docs/lifts-feature.md.
+    """
+    q = ('[out:json][timeout:%d];way["aerialway"]["aerialway"!="station"](%s);out tags geom;'
+         % (240, bbox))
+    j = overpass(q)
+    rows = []
+    for e in j.get("elements", []):
+        if e.get("type") != "way":
+            continue
+        t = e.get("tags", {})
+        g = [[p["lat"], p["lon"]] for p in e.get("geometry", [])]
+        if len(g) < 2 or not t.get("name"):
+            continue
+        L = sum(haversine_m(g[i - 1], g[i]) for i in range(1, len(g)))
+        if L < min_len_m:
+            continue
+        rows.append({"id": e["id"], "name": t["name"], "aerialway": t.get("aerialway"),
+                     "ref": t.get("ref"),
+                     "bike": t.get("aerialway:bicycle") or t.get("bicycle"),
+                     "len": round(L), "geom": g})
+    rows.sort(key=lambda r: r["name"])
+    return rows
+
+
+def osm_named_ways(bbox, name_regex, highway_regex="path|track|footway|cycleway"):
+    """Ways in `bbox` whose name matches, with geometry — for trails OSM has mapped by name.
+
+    This is how the four Donnersberg trails are built: their own site's GPX deviated visibly from the
+    OSM/OpenTopoMap base layer this app renders, and matching the base map matters more than picking the
+    nominally most accurate source. See CLAUDE.md's Donnersberg note.
+    """
+    q = ('[out:json][timeout:240];way["highway"~"%s"]["name"~"%s"](%s);out tags geom;'
+         % (highway_regex, name_regex, bbox))
+    j = overpass(q)
+    rows = []
+    for e in j.get("elements", []):
+        if e.get("type") != "way":
+            continue
+        g = [[p["lat"], p["lon"]] for p in e.get("geometry", [])]
+        if len(g) < 2:
+            continue
+        rows.append({"id": e["id"], "name": e.get("tags", {}).get("name"),
+                     "tags": e.get("tags", {}), "geom": g,
+                     "len": round(sum(haversine_m(g[i - 1], g[i]) for i in range(1, len(g))))})
+    return rows
+
+
+def norm_name(s):
+    """Lowercase, strip everything non-alphanumeric — for matching operator names against OSM names."""
+    return re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+
+def fuzzy_lookup(name, by_norm, cutoff=0.8):
+    """Find `name` in a {norm_name: row} dict, tolerating mojibake in OSM's own name strings.
+
+    A U+FFFD replacement character normalises to nothing, silently dropping a letter -- OSM's corrupted
+    "S\ufffdraussaix" becomes "sraussaix", one character short of "seraussaix", so plain equality misses
+    it. Some cases are not even recoverable this way (dreilaender's Schönebenbahn had to be fetched by
+    way id instead).
+    """
+    k = norm_name(name)
+    if k in by_norm:
+        return by_norm[k]
+    close = difflib.get_close_matches(k, list(by_norm.keys()), n=1, cutoff=cutoff)
+    return by_norm[close[0]] if close else None
+
+
+# ---------------------------------------------------------------------------------------------------
+# Region assembly
+# ---------------------------------------------------------------------------------------------------
+
+def build_profile(coords, elevations, smooth=2):
+    """Resample to an ELEVATION_PROFILES entry: [[km, m], ...] over the trail's own length.
+
+    Point count follows length so a 40 km tour is not squeezed into the same 100 samples as a 1 km run --
+    the app's chart and its hover-sync interpolate between whatever is here.
+
+    Returns (profile, gain_m, loss_m). Note the gain/loss computed here is measured on the RESAMPLED
+    profile, so it understates small undulations; prefer the operator's published numbers when they
+    exist, exactly as `build_trail` does.
+    """
+    if len(coords) != len(elevations):
+        raise ValueError("build_profile: %d coords vs %d elevations" % (len(coords), len(elevations)))
+    ele = list(elevations)
+    # Fill gaps: GPS glitches and missing <ele> read as None or an implausible ~0 in an alpine region.
+    for i, e in enumerate(ele):
+        if e is None:
+            back = next((ele[j] for j in range(i, -1, -1) if ele[j] is not None), None)
+            fwd = next((ele[j] for j in range(i, len(ele)) if ele[j] is not None), None)
+            ele[i] = back if back is not None else (fwd if fwd is not None else 0.0)
+    if smooth:
+        w = smooth
+        ele = [sum(ele[max(0, i - w):i + w + 1]) / len(ele[max(0, i - w):i + w + 1])
+               for i in range(len(ele))]
+    cum = cumulative_km(coords)
+    total = cum[-1]
+    if total <= 0:
+        raise ValueError("build_profile: zero-length track")
+
+    def at(dk):
+        if dk <= 0:
+            return ele[0]
+        if dk >= total:
+            return ele[-1]
+        for j in range(len(cum) - 1):
+            if cum[j] <= dk <= cum[j + 1]:
+                span = cum[j + 1] - cum[j]
+                t = 0 if span == 0 else (dk - cum[j]) / span
+                return ele[j] + t * (ele[j + 1] - ele[j])
+        return ele[-1]
+
+    n = 100 if total < 7 else (150 if total < 25 else 200)
+    prof = [[round(total * k / (n - 1), 4), round(at(total * k / (n - 1)), 1)] for k in range(n)]
+    gain = round(sum(max(0.0, prof[i + 1][1] - prof[i][1]) for i in range(n - 1)))
+    loss = round(sum(max(0.0, prof[i][1] - prof[i + 1][1]) for i in range(n - 1)))
+    return prof, gain, loss
+
+
+def build_trail(trail_id, name, region, diff, raw_points, *, url=None, uphill=False,
+                official=None, elevation=None, descend=True, eps_m=SIMPLIFY_EPS_M):
+    """Turn raw GPX/OSM points into the three things a region JSON needs for one trail.
+
+    Returns (lineTrails_entry, geo, profile).
+
+    `official` is (len_km, up_m, down_m) from the operator/brochure when it exists, and is preferred over
+    the GPX-derived figures so the region agrees with the rest of `lineTrails`. GPX-derived numbers are an
+    acceptable fallback only where nothing official is published.
+
+    `elevation` is an ElevationLookup (or any callable taking [[lat,lon],...]) used when the points carry
+    no usable third element. Points whose elevation is exactly 0 in a mountain region are treated as
+    missing -- that is the Donnersberg placeholder case, not sea level.
+
+    `descend=True` flips the stored direction when the track climbs by more than 15 m end to end. Bike-park
+    runs are gravity descents, and several operator exports are recorded uphill; the app draws Start/Ziel
+    and direction arrows from the stored order, so this has to be right. Set descend=False for an uphill
+    trail (and pass uphill=True), or where the recording direction is already known good.
+    """
+    pts = douglas_peucker(dedupe_points(raw_points), eps_m)
+    if len(pts) < 2:
+        raise ValueError("%s: fewer than 2 points after simplification" % trail_id)
+
+    ele = [p[2] if len(p) > 2 else None for p in pts]
+    if all(e is None or abs(e) < 0.5 for e in ele):
+        if elevation is None:
+            raise ValueError("%s: no usable <ele> and no elevation lookup given" % trail_id)
+        ele = elevation([[p[0], p[1]] for p in pts])
+
+    if descend and not uphill:
+        first = next((e for e in ele if e is not None), None)
+        last = next((e for e in reversed(ele) if e is not None), None)
+        if first is not None and last is not None and last > first + 15:
+            pts = pts[::-1]
+            ele = ele[::-1]
+
+    coords = [[round(p[0], 6), round(p[1], 6)] for p in pts]
+    prof, gain, loss = build_profile(coords, ele)
+    if official:
+        length, up, down = official
+    else:
+        length, up, down = round(cumulative_km(coords)[-1], 2), gain, loss
+
+    entry = {"id": trail_id, "name": name, "region": region, "diff": diff,
+             "len": length, "up": up, "down": down}
+    if uphill:
+        entry["uphill"] = True
+    if url:                     # omit entirely when there is no official page -- never set it to ""
+        entry["url"] = url
+    return entry, coords, prof
+
+
+def write_region(path, line_trails, trail_geo, elevation_profiles, places=None, lifts=None,
+                 trail_segments=None):
+    """Write a regions/<key>.json in the app's own shape and formatting.
+
+    The separators match the existing files, so a rebuild produces a readable diff rather than one giant
+    changed line.
+    """
+    data = {"lineTrails": line_trails, "trailGeo": trail_geo,
+            "elevationProfiles": elevation_profiles, "places": places or []}
+    if trail_segments:
+        data["trailSegments"] = trail_segments
+    if lifts:
+        data["lifts"] = lifts
+    json.dump(data, open(path, "w", encoding="utf-8"), ensure_ascii=False,
+              separators=(", ", ": "))
+    return data
+
+
+def region_summary(data):
+    """A one-glance report: counts per sub-region and per difficulty, plus the catalog bounds."""
+    from collections import Counter
+    trails = data["lineTrails"]
+    return {
+        "trails": len(trails),
+        "perRegion": dict(Counter(t["region"] for t in trails)),
+        "perDiff": dict(Counter(t["diff"] for t in trails)),
+        "lifts": len(data.get("lifts") or []),
+        "bounds": bounds_of(data["trailGeo"]),
+    }
