@@ -47,9 +47,27 @@ a lift) rather than recomputed from geometry, so the builder agrees with what th
 panel already show. `reversed` swaps up/down for a trail; for a lift it moves the climb to the descent side,
 which no real lift here does but is kept honest rather than silently ignored.
 
-**Map highlight.** One wide translucent line per element in the app's `--highlight` amber, in its own pane
-`builderPane` at z-index **345** — below the trails (overlayPane, 400) and below the lift mask (350), so a
-12px highlight can never cover the very lines it is pointing at. Same reasoning as the lift band's own pane.
+**Map highlight.** A **glow** per element, in its own pane `builderPane` at z-index **345** — below the
+trails (overlayPane, 400) and below the lift mask (350), so a wide highlight can never cover the very lines
+it is pointing at. Same reasoning as the lift band's own pane.
+
+The glow is three stacked polylines (`BUILDER_GLOW`: soft 26px halo → 16px body → 8px bright core, all in
+the `--highlight` amber family) plus a `drop-shadow()` filter on the **pane element itself**
+(`.leaflet-builder-pane` in `style.css`) — one filter for the whole chain, so the halo reads as continuous
+instead of showing per-line seams. The first cut's single 12px/0.5 band was too easy to lose against a busy
+base map (user, 2026-07-27). The core stays wider than `BASE_WEIGHT` (3.5) so it shows on both sides of the
+trail line drawn above it.
+
+Note the pane's CSS class: Leaflet's `createPane("builderPane")` produces `leaflet-builder-pane`, not
+`leaflet-builderPane` — it rewrites a trailing `Pane` into `-pane`. Getting this wrong fails silently (the
+rule simply never matches anything), which is exactly what happened first.
+
+**Numbered start dots.** One green circle per element, at `r.coords[0]` — and since `builderResolve()`
+returns coordinates already clipped *and* oriented, that is by construction the end you actually set off
+from, so the per-row 🔄 moves the number to the element's other end with no extra bookkeeping. Same green /
+dark-green as the existing "Start" marker so the two read as the same kind of thing. These are `L.marker`s
+with a `divIcon` and **no `pane` option**: markers belong in Leaflet's `markerPane` (600), *above* the
+trails — unlike the glow bands, which deliberately sit below them.
 
 ## Junction clipping
 

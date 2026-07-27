@@ -488,3 +488,21 @@ html.landscape-compact .ele-chart{ height:40px; }
 #builderExport.visible{ display:block; }
 .builder-row .bi-meta.is-clipped{ color:var(--rust); }
 .builder-row button.on{ background:rgba(0,0,0,.12); opacity:1; }
+
+/* The chain glows so it stays findable on any base layer, satellite included (user, 2026-07-27). The
+   drop-shadow sits on the PANE, not on the individual paths, so the whole chain costs one filter and
+   the glow reads as one continuous halo instead of per-line seams. Pane class comes from Leaflet's
+   createPane("builderPane"). */
+.leaflet-builder-pane{
+  filter: drop-shadow(0 0 3px rgba(255,176,32,.95)) drop-shadow(0 0 10px rgba(255,140,0,.55));
+}
+/* Numbered start dot per builder element. Same green/dark-green as the existing "Start" marker so the
+   two read as the same thing; the white ring keeps it legible on a dark satellite tile. */
+.builder-num-icon{ background:none; border:none; pointer-events:none; }
+.builder-num{
+  width:22px; height:22px; box-sizing:border-box; border-radius:50%;
+  background:#3fbf5e; border:2px solid #0d3d1a;
+  color:#fff; font-size:12px; font-weight:700; line-height:18px; text-align:center;
+  font-variant-numeric:tabular-nums;
+  box-shadow:0 0 0 2px rgba(255,255,255,.6), 0 1px 3px rgba(0,0,0,.45);
+}

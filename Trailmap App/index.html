@@ -1210,9 +1210,16 @@ const liftSelectionOutline = L.polyline([], {
 let builderMode = false;
 let builderItems = [];
 const BUILDER_KEY = "trailmap-builder-v1";
-const BUILDER_COLOR = "#e0a326";   // the app's own --highlight; not a difficulty and not the lift black
-const BUILDER_WEIGHT = 12;
-const BUILDER_OPACITY = 0.5;
+// The chain is drawn as a GLOW rather than one flat band: a soft wide halo, a body, and a bright core,
+// stacked (plus a drop-shadow on the pane itself in style.css). The first cut's single 12px/0.5 amber
+// band was too easy to lose against a busy base map -- the user asked for "eine leuchtende Markierung"
+// (2026-07-27). Colours stay in the app's --highlight amber family, so it still reads as "selected for
+// the tour" and can't be confused with a difficulty colour or the lift black.
+const BUILDER_GLOW = [
+  { color: "#ff9d00", weight: 26, opacity: 0.22 },  // outer halo
+  { color: "#ffc22e", weight: 16, opacity: 0.45 },  // body
+  { color: "#fff0a8", weight: 8,  opacity: 0.95 },  // core, still wider than BASE_WEIGHT (3.5) so it
+];                                                  // shows on both sides of the trail line above it
 // Own pane below the trails (and below the lift band at 350) so a wide highlight can never cover the very
 // lines it is pointing at.
 const BUILDER_PANE = "builderPane";
@@ -1395,14 +1402,28 @@ function renderBuilder(){
   totalsEl.textContent = builderItems.length
     ? `${km.toFixed(2)} km · ${Math.round(up)} m ↑ / ${Math.round(down)} m ↓`
     : "";
-  // map highlight: one wide translucent line per chosen element, in ride order
+  // map highlight: a glowing band per chosen element, in ride order, each with a numbered green dot at
+  // the point where you actually start riding it
   builderHighlight.clearLayers();
-  resolved.forEach(r => {
+  resolved.forEach((r, i) => {
     const c = r.coords;
     if (!c || c.length < 2) return;
-    builderHighlight.addLayer(L.polyline(c, {
-      pane: BUILDER_PANE, color: BUILDER_COLOR, weight: BUILDER_WEIGHT, opacity: BUILDER_OPACITY,
+    BUILDER_GLOW.forEach(g => builderHighlight.addLayer(L.polyline(c, {
+      pane: BUILDER_PANE, color: g.color, weight: g.weight, opacity: g.opacity,
       lineCap: "round", lineJoin: "round", interactive: false
+    })));
+    // Numbered start dot. `r.coords` is already clipped AND oriented by builderResolve(), so c[0] is
+    // by construction the end you actually set off from -- flipping a row with 🔄 moves the number to
+    // the trail's other end with no bookkeeping here (the user's point: "wechselt bei rückwärts zum
+    // eigentlichen Endpunkt"). No pane option: markers belong in Leaflet's markerPane (600), ABOVE the
+    // trails, unlike the glow bands which deliberately sit below them at 345.
+    builderHighlight.addLayer(L.marker(c[0], {
+      icon: L.divIcon({
+        className: "builder-num-icon",
+        html: `<div class="builder-num">${i + 1}</div>`,
+        iconSize: [22, 22], iconAnchor: [11, 11]
+      }),
+      interactive: false, keyboard: false
     }));
   });
   document.getElementById("builderHint").style.display = builderMode ? "block" : "none";
@@ -3056,7 +3077,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v7"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v8"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
