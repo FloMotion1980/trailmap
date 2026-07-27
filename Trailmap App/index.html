@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=19" />
+<link rel="stylesheet" href="style.css?v=20" />
 </head>
 <body>
 <div id="fatalError">
@@ -1752,8 +1752,12 @@ function renderBuilder(){
     // then nothing else in the row reveals it (the user's Back-to-Black → X-Line → Sprinter, where the
     // lift station sits above where the X-Line was joined). Uphill-flagged trails are exempt -- for those
     // a climb is the point.
-    const t1 = item.kind === "trail" ? lineTrails.find(tr => tr.id === item.id) : null;
-    const against = r.against && !(t1 && t1.uphill);
+    // The arrow shows the direction actually ridden, not the stored `reversed` switch -- those differ, and
+    // the difference is the whole point: a sequence can force a stretch backwards without anyone pressing
+    // anything (both ends pinned by junctions). The separate ↑ marker that used to flag that is gone now
+    // that the button carries it, per the user ("das zeigt jetzt der Button") -- but only because the
+    // button was changed to tell the truth.
+    const goesBack = item.kind === "lift" ? !!item.reversed : !!r.against;
     // "iConnect" -- the user's name for the junction, short for intelligent connector -- sits INSIDE the
     // element's own box now rather than in a strip between two boxes, and only appears when there is
     // actually something to choose (`count > 1`). It belongs to this element because it describes where
@@ -1766,16 +1770,17 @@ function renderBuilder(){
           <span class="bi-drag" title="Verschieben">⠿</span>
           <span class="bi-num">${i + 1}</span>
           <span class="bi-name">${item.kind === "lift" ? "🚡 " : ""}${builderNameOf(item)}</span>
-          ${against ? `<span class="bi-against" title="Gegen die Trailrichtung — dieser Abschnitt geht bergauf">↑</span>` : ""}
-          ${r.empty ? `<span class="bi-empty" title="Der Übergang liegt genau auf dem Trailende — in Trailrichtung bleibt nichts zu fahren. Mit 🔄 rückwärts einplanen, oder mit ⇔ ganz fahren.">∅</span>` : ""}
-          <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
-          ${item.kind === "trail" ? `<button data-act="full" class="bi-full${item.full ? " on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">🏁</button>` : ""}
-          <!-- The arrow IS the state, and pressing it flips: → ridden in the element's own direction,
-               ← against it (user, 2026-07-27). No separate marker after the name any more. -->
-          <button data-act="flip" class="bi-dir"${r.dirFixed
-            ? ` disabled title="Richtung liegt durch die Reihenfolge fest — mit 🏁 freigeben"`
-            : ` title="${item.reversed ? "Rückwärts — antippen für vorwärts" : "Vorwärts — antippen für rückwärts"}"`}>${item.reversed ? "←" : "→"}</button>
-          <button data-act="del" class="bi-del" title="Entfernen">✕</button>
+          <span class="bi-tail">
+            ${r.empty ? `<span class="bi-empty" title="Der Übergang liegt genau auf dem Trailende — in Trailrichtung bleibt nichts zu fahren. Mit ← rückwärts einplanen, oder mit 🏁 ganz fahren.">∅</span>` : ""}
+            <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
+            ${item.kind === "trail" ? `<button data-act="full" class="bi-full${item.full ? " on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">🏁</button>` : ""}
+            <!-- The arrow IS the state, and pressing it flips: → ridden in the element's own direction,
+                 ← against it (user, 2026-07-27). No separate marker after the name any more. -->
+            <button data-act="flip" class="bi-dir"${r.dirFixed
+              ? ` disabled title="Richtung liegt durch die Reihenfolge fest — mit 🏁 freigeben"`
+              : ` title="${goesBack ? "Rückwärts — antippen für vorwärts" : "Vorwärts — antippen für rückwärts"}"`}>${goesBack ? "←" : "→"}</button>
+            <button data-act="del" class="bi-del" title="Entfernen">✕</button>
+          </span>
         </div>
         ${hasConnect ? `<button class="bi-connect" data-act="connect" title="Nächste mögliche Kreuzung">
           <span class="bc-label">iConnect</span>
@@ -3502,7 +3507,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v19"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v20"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
