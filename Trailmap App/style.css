@@ -689,18 +689,16 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
    sind die Knöpfe für hoch und runter bzw. löschen viel zu klein." ↑/↓ are gone entirely (dragging replaced
    them) and ✕ steps aside for the right-swipe, so the two that remain can afford real size. */
 @media (max-width: 768px), (pointer: coarse){
-  .builder-row .bi-main{ padding:6px 8px; gap:8px; flex-wrap:wrap; }
+  .builder-row .bi-main{ padding:6px 8px; gap:6px; }
   .bi-main button{ min-width:38px; min-height:38px; font-size:16px; padding:0; }
   .builder-row .bi-del{ display:none; }        /* the swipe does this job on a touch screen */
   .bi-drag{ font-size:17px; padding:8px 4px; }
   .builder-connector{ padding:5px 12px; font-size:11.5px; margin:-10px 0 -10px 38px; }
   .builder-connector .bx-cycle{ font-size:15px; }
   .builder-warning{ font-size:11px; margin-left:38px; }
-  /* Two lines on a phone so the trail name is always fully readable (user, 2026-07-28) -- the length and the
-     buttons used to squeeze it down to "Hacklber…". `flex:1 0 100%` on the tail is what forces the break;
-     the name then owns the whole first line and wraps instead of truncating. */
-  .builder-row .bi-name{ white-space:normal; overflow:visible; text-overflow:clip; line-height:1.3; }
-  .bi-tail{ flex:1 0 100%; justify-content:flex-end; margin-left:0; }
+  /* Strictly ONE line. Wrapping the tail onto a second one was tried and rejected outright -- "Ich wollte
+     auf keinen Fall dass das Listenelement größer wird. Wir sind auf dem Handy und haben eh wenig platz"
+     (2026-07-28). The name gets its room by making everything around it narrower instead; see below. */
 }
 
 /* The chain glows so it stays findable on any base layer, satellite included (user, 2026-07-27). The

@@ -103,11 +103,16 @@ it is a work-in-progress document rather than a view preference.
 A row is a shell, not the visible box:
 
 ```
-.builder-row        positioning shell, overflow:hidden, carries the 🗑 delete hint in ::before
-└ .bi-body          the visible box (border, background) -- this is what slides on a swipe
-  ├ .bi-main        ⠿ handle · number · name · flags · km · 🏁 · →/← · ✕
-  └ .bi-connect     iConnect, only when there is more than one candidate
+#builderList
+├ .builder-row        positioning shell, overflow:hidden, carries the 🗑 delete hint in ::before
+│ └ .bi-body          the visible box (border, background) -- this is what slides on a swipe
+│   └ .bi-main        ⠿ handle · number · name · [∅] · km · →/← · ✕
+├ .builder-warning     "runs against the trail's direction", when it does
+└ .builder-connector   iConnect for the junction to the NEXT row -- a sibling, not a child
 ```
+
+`.builder-warning` and `.builder-connector` are siblings of the rows on purpose: both annotate the *chain*
+rather than an element, and both use negative margins so they sit between the boxes they talk about.
 
 **Button icons carry state, not actions** (user, 2026-07-27): **→** / **←** is the direction, and pressing
 the arrow flips it. The old `↺` after a reversed row's name is gone — the arrow says it, and saying it twice
@@ -129,6 +134,13 @@ replacement for the flag and the tool against "Murks".
 
 Two touch details that go with them:
 
+- **Rows stay strictly one line on a phone.** Wrapping the tail onto a second line was tried and rejected
+  outright -- *"Ich wollte auf keinen Fall dass das Listenelement größer wird. Wir sind auf dem Handy und
+  haben eh wenig platz"* (2026-07-28). It also turned out to be unnecessary: once the 🏁 button was absorbed
+  into iConnect, one button left the row and the name fits again. Measured at 375px on the worst case
+  (a long name plus the ∅ marker plus a clipped "0.00 / 5.44 km"): rows are 52px, the name needs 119px and
+  gets 119px, nothing truncated. If a future addition squeezes it again, take the width from around the name
+  -- not from the row's height.
 - **Pressing any of a row's buttons also marks that element**, on touch layouts only. Without it you would
   change a row on a phone without ever seeing which stretch on the map you changed; on a mouse, hover
   already does it and a lasting mark would outstay its welcome.
