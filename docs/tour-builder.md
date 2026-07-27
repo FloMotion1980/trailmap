@@ -88,9 +88,14 @@ trails — unlike the glow bands, which deliberately sit below them.
 
 ## Row focus: pointing at one element (2026-07-27)
 
-Hovering a row (desktop) or tapping it (phone) lifts that element out of the chain: its glow stays full
-while the rest drops to `BUILDER_DIM` (0.28) opacity, its numbered dot stays green while the others dim, and
-a **red dot marks where its stretch ends**.
+Hovering a row (desktop) or tapping it (phone) marks that element on the map: its glow switches to
+`BUILDER_GLOW_FOCUS` — same widths, only brighter, up to a **near-white core** — and a **numbered red dot
+marks where its stretch ends**, built exactly like the green start dot with the same number.
+
+Nothing is dimmed and no other element changes. The first cut faded the rest back to 0.28 opacity and used
+the app's own small "Ziel" `circleMarker` for the end; the user replaced both (2026-07-27): *"Ich würde die
+anderen Elemente nicht ausblenden / dimmen. Mach einfach das Leuchten heller/fast weiß… Und ich würde den
+roten Punkt wie den grünen zeichnen. Mit Zahl drin nur halt rot anstatt grün."*
 
 That last part is the reason the feature exists. The user wanted to see whether a trail is being ridden
 backwards; for normal trails the app already answers this (`setHover(true)` → `showEndpoints()`, so hover or
@@ -113,6 +118,13 @@ Implementation notes:
   version styled `.is-active` separately and it read as two selections at once.
 - The row's click handler bails on `e.target.closest("button")` — a click on ⇔/🔄/↑/↓/✕ is not a request to
   focus the row.
+- **The focused element's glow is drawn last.** All bands share one pane and Leaflet's SVG renderer stacks
+  later paths on top, so drawing in list order would let a following element's 26px halo wash out the
+  bright one.
+- **The red end dot carries `zIndexOffset: 1000`** so it sits above every other marker. This is not
+  cosmetic: element N's end and element N+1's start are the *same junction*, so the red dot lands within a
+  few pixels of the next element's green dot almost every time (measured: 6 px for X-Line → Schattberg
+  Sprinter). Without the offset, Leaflet's latitude-based marker ordering decides which one wins.
 - No red dot on an `empty` stretch, where start and end coincide.
 
 Still open, per the user: the existing direction arrows on trail lines ("die gefallen mir nicht") want a

@@ -1488,22 +1488,36 @@ let builderResolved = [];     // last builderResolve() output, so hover redraws 
 let builderHoverIdx = null;   // mouse only, transient
 let builderActiveIdx = null;  // tapped, survives until tapped again or the list is edited
 const builderFocusIdx = () => (builderHoverIdx !== null ? builderHoverIdx : builderActiveIdx);
-const BUILDER_DIM = 0.28;     // opacity multiplier for the elements that are NOT focused
+// The focused element's glow: identical widths so nothing jumps, only brighter, up to a near-white core
+// (user, 2026-07-27: "Mach einfach das Leuchten heller/fast weiß für das highlight"). Nothing is dimmed --
+// the first cut faded the other elements back and the user did not want that; brightness alone marks it.
+const BUILDER_GLOW_FOCUS = [
+  { color: "#ffc94d", weight: 26, opacity: 0.40 },
+  { color: "#fff3b3", weight: 16, opacity: 0.72 },
+  { color: "#ffffff", weight: 8,  opacity: 1.00 },
+];
 
 function drawBuilderHighlight(){
   const focus = builderFocusIdx();
   builderHighlight.clearLayers();
+  // Glow bands first, the focused one LAST: they share one pane and Leaflet's SVG renderer stacks later
+  // paths on top, so drawing it in list order would let a following element's 26px halo wash it out.
+  const drawGlow = (r, i) => {
+    const c = r.coords;
+    // An empty stretch (both clip ends on the same point) glows nothing at all -- there is nothing being
+    // ridden to point at. Its numbered dot is still drawn below, so the element stays locatable.
+    if (!c || c.length < 2) return;
+    (focus === i ? BUILDER_GLOW_FOCUS : BUILDER_GLOW).forEach(g => builderHighlight.addLayer(L.polyline(c, {
+      pane: BUILDER_PANE, color: g.color, weight: g.weight, opacity: g.opacity,
+      lineCap: "round", lineJoin: "round", interactive: false
+    })));
+  };
+  builderResolved.forEach((r, i) => { if (i !== focus) drawGlow(r, i); });
+  if (focus !== null && builderResolved[focus]) drawGlow(builderResolved[focus], focus);
+
   builderResolved.forEach((r, i) => {
     const c = r.coords;
     if (!c || !c.length) return;
-    const dim = focus !== null && focus !== i;
-    // An empty stretch (both clip ends on the same point) glows nothing at all -- there is nothing being
-    // ridden to point at. Its numbered dot is still drawn below, so the element stays locatable.
-    if (c.length > 1) BUILDER_GLOW.forEach(g => builderHighlight.addLayer(L.polyline(c, {
-      pane: BUILDER_PANE, color: g.color, weight: g.weight,
-      opacity: dim ? g.opacity * BUILDER_DIM : g.opacity,
-      lineCap: "round", lineJoin: "round", interactive: false
-    })));
     // Numbered start dot. `r.coords` is already clipped AND oriented by builderResolve(), so c[0] is
     // by construction the end you actually set off from -- flipping a row with 🔄 moves the number to
     // the trail's other end with no bookkeeping here (the user's point: "wechselt bei rückwärts zum
@@ -1512,16 +1526,24 @@ function drawBuilderHighlight(){
     builderHighlight.addLayer(L.marker(c[0], {
       icon: L.divIcon({
         className: "builder-num-icon",
-        html: `<div class="builder-num${r.empty ? " is-empty" : ""}${dim ? " is-dimmed" : ""}">${i + 1}</div>`,
+        html: `<div class="builder-num${r.empty ? " is-empty" : ""}">${i + 1}</div>`,
         iconSize: [22, 22], iconAnchor: [11, 11]
       }),
       interactive: false, keyboard: false
     }));
-    // The red end dot, only for the focused element. Same colours as the app's own "Ziel" marker so the
-    // two read as the same thing. Nothing to point at on an empty stretch, where start and end coincide.
+    // The end dot, only for the focused element: built exactly like the start dot, same size and same
+    // number, red instead of green (user's call -- the app's own small "Ziel" circleMarker was the first
+    // attempt and reads as a different kind of thing). zIndexOffset keeps it above every other marker,
+    // including a start dot it may sit right on top of on a short stretch. Nothing to mark on an empty
+    // stretch, where start and end coincide.
     if (focus === i && c.length > 1) {
-      builderHighlight.addLayer(L.circleMarker(c[c.length - 1], {
-        radius: 6, color: "#5c0f0a", weight: 2, fillColor: "#e0392b", fillOpacity: 1, interactive: false
+      builderHighlight.addLayer(L.marker(c[c.length - 1], {
+        icon: L.divIcon({
+          className: "builder-num-icon",
+          html: `<div class="builder-num is-end">${i + 1}</div>`,
+          iconSize: [22, 22], iconAnchor: [11, 11]
+        }),
+        interactive: false, keyboard: false, zIndexOffset: 1000
       }));
     }
   });
@@ -3301,7 +3323,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v13"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v14"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

@@ -545,5 +545,6 @@ html.landscape-compact .ele-chart{ height:40px; }
 }
 /* Nothing is ridden at this element, so its dot is not a start — hollow instead of solid green. */
 .builder-num.is-empty{ background:var(--card-bg); color:var(--rust); border-color:var(--rust); }
-/* Another element is being pointed at, so this one steps back. */
-.builder-num.is-dimmed{ opacity:.3; }
+/* Where the focused element's stretch ENDS: same dot, same number, red instead of green — the same
+   green/red pairing the app already uses for a trail's own Start/Ziel markers. */
+.builder-num.is-end{ background:#e0392b; border-color:#5c0f0a; }
