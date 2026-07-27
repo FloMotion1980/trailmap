@@ -467,6 +467,9 @@ html.landscape-compact .ele-chart{ height:40px; }
 .builder-row .bi-num{ min-width:1.6em; text-align:right; opacity:.6; font-variant-numeric:tabular-nums; }
 .builder-row .bi-name{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .builder-row .bi-meta{ opacity:.7; font-size:11px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+/* Ridden against the trail's own direction, i.e. pedalling up a descent -- which the sequence can force
+   without anything else in the row saying so. */
+.builder-row .bi-against{ color:var(--rust); font-weight:700; cursor:help; }
 .builder-row button{
   border:none; background:transparent; cursor:pointer; font-size:13px; line-height:1;
   padding:2px 3px; border-radius:4px; opacity:.75;

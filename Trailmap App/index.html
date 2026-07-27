@@ -1356,28 +1356,37 @@ function builderResolve(){
     const cum = cumulativeDistanceKm(g);
     const fullLen = cum[cum.length - 1];
     const last = g.length - 1;
-    // An open end runs to whichever terminus leaves the longer ride -- and `reversed` picks the OTHER
-    // terminus for it, rather than reversing the finished stretch.
+    // An open end runs to the terminus the TRAIL'S OWN DIRECTION points at, and `reversed` picks the other
+    // one. Direction is never derived by reversing the finished stretch.
     //
-    // This is the fix for the user's "Wurzel-Trail rückwärts" case (2026-07-27). Reversing the stretch is
-    // only meaningful when nothing constrains the direction: once a junction pins one end down, the
-    // direction of travel is a fact of the sequence -- you leave a junction you have just joined at, you
-    // do not ride back into it. The old code flipped `forward` after the clip, which for ScheeLeitn Line ->
-    // Wurzel-Trail turned the Wurzel stretch around so it ran INTO its own entry junction (verified
-    // against the real Saalbach data). What the flip should do at a clipped end is choose the other
-    // terminus, which is the only freedom actually left.
+    // Both halves of this are fixes for what the user hit on 2026-07-27:
+    //
+    // 1. The original rule sent an open end "to whichever terminus leaves the longer ride", which is
+    //    simply the wrong criterion: every trail here has a direction of its own (Start/Ziel markers,
+    //    direction arrows). On the X-Line the Schattberg Sprinter's valley station sits at index 118 of
+    //    617, near the summit -- so the longer ride was from the valley, and the builder rode a 1117 m
+    //    descent backwards UPHILL (990 m -> 1826 m). Same thing joining the X-Line from the
+    //    Back-to-Black-Line: "dann fährt er die xline hoch". Riding it in its own direction and stopping
+    //    at the junction is what the sequence actually says.
+    // 2. `reversed` used to flip `forward` AFTER the clip, which made a stretch run INTO the junction it
+    //    had just joined at (the "Wurzel-Trail rückwärts" case). It now moves the open end to the other
+    //    terminus, which is the only freedom a junction leaves.
+    //
+    // The `Math.abs(...) < 1` guards cover a junction that sits ON the terminus the trail's direction
+    // points at -- then there is nothing to ride that way and the stretch has to come from the other end
+    // (ScheeLeitn Line joins the Wurzel-Trail at its own index 0, so it is ridden 69 -> 0).
     let a = entry[i], b = exit[i];
-    const other = t => (t === 0 ? last : 0);
+    const rev = !!item.reversed;
     if (a === null && b === null) {
       // no junction at all (single element, or opted out with `full`) -- a plain reversal
-      a = item.reversed ? last : 0;
-      b = item.reversed ? 0 : last;
+      a = rev ? last : 0;
+      b = rev ? 0 : last;
     } else if (a === null) {
-      const far = (b > last / 2) ? 0 : last;
-      a = item.reversed ? other(far) : far;
+      a = rev ? last : 0;                              // ride TO the exit junction, starting where the
+      if (Math.abs(b - a) < 1) a = rev ? 0 : last;     // trail itself starts
     } else if (b === null) {
-      const far = (a > last / 2) ? 0 : last;
-      b = item.reversed ? other(far) : far;
+      b = rev ? 0 : last;                              // ride FROM the entry junction, on to where the
+      if (Math.abs(b - a) < 1) b = rev ? last : 0;     // trail itself ends
     }
     let lo = Math.min(a, b), hi = Math.max(a, b);
     // Degenerate clip -> the whole trail. Also catches "reversed picked the terminus the junction sits
@@ -1396,7 +1405,7 @@ function builderResolve(){
     const t0 = lineTrails.find(tr => tr.id === item.id);
     if (!clipped && t0) {
       const u = forward ? t0.up : t0.down, dn2 = forward ? t0.down : t0.up;
-      return { item, coords, len, up: u, down: dn2, fullLen, clipped: false };
+      return { item, coords, len, up: u, down: dn2, fullLen, clipped: false, against: !forward };
     }
     const prof = ELEVATION_PROFILES[item.id];
     let up = 0, down = 0;
@@ -1409,7 +1418,7 @@ function builderResolve(){
       }
       if (!forward) { const t2 = up; up = down; down = t2; }
     }
-    return { item, coords, len, up: Math.round(up), down: Math.round(down), fullLen, clipped };
+    return { item, coords, len, up: Math.round(up), down: Math.round(down), fullLen, clipped, against: !forward };
   });
   resolved.forEach((r, i) => {
     r.junction = junctionInfo[i];
@@ -1503,9 +1512,17 @@ function renderBuilder(){
     row.className = "builder-row" + (item.kind === "lift" ? " is-lift" : "") + (item.reversed ? " is-reversed" : "");
     // when a trail is only partly ridden, show both figures so it's obvious the clip happened
     const meta = r.clipped ? `${r.len.toFixed(2)} / ${r.fullLen.toFixed(2)} km` : `${r.len.toFixed(2)} km`;
+    // A stretch ridden against the trail's own direction means pedalling up a descent. Worth flagging:
+    // it can be deliberate (🔄) but it can also be forced by a sequence that pins both ends down, and
+    // then nothing else in the row reveals it (the user's Back-to-Black → X-Line → Sprinter, where the
+    // lift station sits above where the X-Line was joined). Uphill-flagged trails are exempt -- for those
+    // a climb is the point.
+    const t1 = item.kind === "trail" ? lineTrails.find(tr => tr.id === item.id) : null;
+    const against = r.against && !(t1 && t1.uphill);
     row.innerHTML = `
       <span class="bi-num">${i + 1}</span>
       <span class="bi-name">${item.kind === "lift" ? "🚡 " : ""}${builderNameOf(item)}</span>
+      ${against ? `<span class="bi-against" title="Gegen die Trailrichtung — dieser Abschnitt geht bergauf">↑</span>` : ""}
       <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
       ${item.kind === "trail" ? `<button data-act="full" class="${item.full ? "on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">⇔</button>` : ""}
       <button data-act="flip"${r.dirFixed
@@ -3206,7 +3223,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v9"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v10"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
