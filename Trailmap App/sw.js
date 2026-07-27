@@ -7,8 +7,8 @@
 // is network-first), so without a bump a returning user pairs the new index.html with the previously
 // cached stylesheet. v6 = bike-lift info panel rules, v7 = Tourenbuilder panel rules (both 2026-07-26),
 // v8 = builder glow + numbered start dots, v9 = junction rows, v10 = "gegen die Trailrichtung" marker
-// v11 = disabled-switch style, v12 = empty-stretch marker (all 2026-07-27).
-const CACHE_NAME = "trailmap-v12";
+// v11 = disabled-switch style, v12 = empty-stretch marker, v13 = builder row focus (all 2026-07-27).
+const CACHE_NAME = "trailmap-v13";
 const APP_SHELL = [
   "./",
   "./index.html",

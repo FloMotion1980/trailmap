@@ -86,6 +86,40 @@ dark-green as the existing "Start" marker so the two read as the same kind of th
 with a `divIcon` and **no `pane` option**: markers belong in Leaflet's `markerPane` (600), *above* the
 trails — unlike the glow bands, which deliberately sit below them.
 
+## Row focus: pointing at one element (2026-07-27)
+
+Hovering a row (desktop) or tapping it (phone) lifts that element out of the chain: its glow stays full
+while the rest drops to `BUILDER_DIM` (0.28) opacity, its numbered dot stays green while the others dim, and
+a **red dot marks where its stretch ends**.
+
+That last part is the reason the feature exists. The user wanted to see whether a trail is being ridden
+backwards; for normal trails the app already answers this (`setHover(true)` → `showEndpoints()`, so hover or
+click shows the green "Start" and red "Ziel" markers), but a *builder element is usually clipped*, so those
+markers sit at the trail's real ends rather than at the ends of what is actually ridden. With a start and an
+end dot on the ridden stretch, direction reads straight off the map. Deliberately only while pointed at,
+never permanently — *"nicht immer, nur bei Highlight"*.
+
+Implementation notes:
+
+- **Drawing is split out of `renderBuilder()`** into `drawBuilderHighlight()`, and `builderResolve()`'s
+  output is cached in `builderResolved`. Rebuilding the rows on hover would replace the element the cursor
+  is over, so its `mouseleave` would never fire and the highlight would stick; re-resolving on every
+  mousemove would also redo every `junctionCandidates()` scan.
+- `builderHoverIdx` (mouse, transient) and `builderActiveIdx` (tapped, survives rebuilds when the row still
+  exists) with `builderFocusIdx()` preferring hover. `renderBuilder()` clears the hover — no pointer
+  movement happens during a rebuild, so no `mouseenter` would fire — and clamps the active index.
+- **Exactly one row is ever marked**, matching the map, which can only single out one element. A hover
+  therefore takes the marking off a previously tapped row instead of adding a second highlight; the first
+  version styled `.is-active` separately and it read as two selections at once.
+- The row's click handler bails on `e.target.closest("button")` — a click on ⇔/🔄/↑/↓/✕ is not a request to
+  focus the row.
+- No red dot on an `empty` stretch, where start and end coincide.
+
+Still open, per the user: the existing direction arrows on trail lines ("die gefallen mir nicht") want a
+redesign, and whatever that becomes should be applied to the builder's resolved coordinates too —
+`builderResolve()` already returns them clipped *and* oriented, so `buildDirectionArrows()` can run on them
+directly.
+
 ## Junction clipping
 
 A tour rarely rides a trail end to end: a new trail often starts partway along another one, and you

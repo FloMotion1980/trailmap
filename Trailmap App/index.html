@@ -1477,6 +1477,67 @@ function builderTryAdd(kind, id){
   return true;
 }
 
+// ---- Row focus: which element is being pointed at --------------------------------------------------
+// Hovering (desktop) or tapping (phone) a row lifts that element out of the chain: its own glow stays
+// full while the rest steps back, and a red dot marks where its stretch ENDS. That last part is the point
+// (user, 2026-07-27): a builder element is usually clipped, so the trail's own Start/Ziel markers sit at
+// the trail's real ends, not at the ends of what is actually ridden -- and with a start and an end dot
+// visible, the direction of travel reads straight off the map. Deliberately only while pointed at, never
+// permanently ("nicht immer, nur bei Highlight"), so the map stays quiet the rest of the time.
+let builderResolved = [];     // last builderResolve() output, so hover redraws need not re-resolve
+let builderHoverIdx = null;   // mouse only, transient
+let builderActiveIdx = null;  // tapped, survives until tapped again or the list is edited
+const builderFocusIdx = () => (builderHoverIdx !== null ? builderHoverIdx : builderActiveIdx);
+const BUILDER_DIM = 0.28;     // opacity multiplier for the elements that are NOT focused
+
+function drawBuilderHighlight(){
+  const focus = builderFocusIdx();
+  builderHighlight.clearLayers();
+  builderResolved.forEach((r, i) => {
+    const c = r.coords;
+    if (!c || !c.length) return;
+    const dim = focus !== null && focus !== i;
+    // An empty stretch (both clip ends on the same point) glows nothing at all -- there is nothing being
+    // ridden to point at. Its numbered dot is still drawn below, so the element stays locatable.
+    if (c.length > 1) BUILDER_GLOW.forEach(g => builderHighlight.addLayer(L.polyline(c, {
+      pane: BUILDER_PANE, color: g.color, weight: g.weight,
+      opacity: dim ? g.opacity * BUILDER_DIM : g.opacity,
+      lineCap: "round", lineJoin: "round", interactive: false
+    })));
+    // Numbered start dot. `r.coords` is already clipped AND oriented by builderResolve(), so c[0] is
+    // by construction the end you actually set off from -- flipping a row with 🔄 moves the number to
+    // the trail's other end with no bookkeeping here (the user's point: "wechselt bei rückwärts zum
+    // eigentlichen Endpunkt"). No pane option: markers belong in Leaflet's markerPane (600), ABOVE the
+    // trails, unlike the glow bands which deliberately sit below them at 345.
+    builderHighlight.addLayer(L.marker(c[0], {
+      icon: L.divIcon({
+        className: "builder-num-icon",
+        html: `<div class="builder-num${r.empty ? " is-empty" : ""}${dim ? " is-dimmed" : ""}">${i + 1}</div>`,
+        iconSize: [22, 22], iconAnchor: [11, 11]
+      }),
+      interactive: false, keyboard: false
+    }));
+    // The red end dot, only for the focused element. Same colours as the app's own "Ziel" marker so the
+    // two read as the same thing. Nothing to point at on an empty stretch, where start and end coincide.
+    if (focus === i && c.length > 1) {
+      builderHighlight.addLayer(L.circleMarker(c[c.length - 1], {
+        radius: 6, color: "#5c0f0a", weight: 2, fillColor: "#e0392b", fillOpacity: 1, interactive: false
+      }));
+    }
+  });
+}
+
+// Applies the focus to the rows without rebuilding them -- rebuilding under the cursor would replace the
+// element the mouse is over, so its mouseleave would never fire and the highlight would stick.
+function syncBuilderRowFocus(){
+  const focus = builderFocusIdx();
+  document.querySelectorAll("#builderList .builder-row").forEach(row => {
+    const i = Number(row.dataset.idx);
+    row.classList.toggle("is-focused", focus === i);
+  });
+  drawBuilderHighlight();
+}
+
 function renderBuilder(){
   const listEl2 = document.getElementById("builderList");
   const totalsEl = document.getElementById("builderTotals");
@@ -1484,6 +1545,10 @@ function renderBuilder(){
   if (!listEl2) return;
   countEl2.textContent = builderItems.length ? `${builderItems.length} Elemente` : "";
   listEl2.innerHTML = "";
+  // Hover cannot survive a rebuild (no pointer movement happens, so no mouseenter fires on the new row);
+  // a tapped row can and does, as long as it still exists.
+  builderHoverIdx = null;
+  if (builderActiveIdx !== null && builderActiveIdx >= builderItems.length) builderActiveIdx = null;
   let km = 0, up = 0, down = 0;
   const resolved = builderResolve();
   resolved.forEach((r, i) => {
@@ -1513,7 +1578,9 @@ function renderBuilder(){
       listEl2.appendChild(jr);
     }
     const row = document.createElement("div");
-    row.className = "builder-row" + (item.kind === "lift" ? " is-lift" : "") + (item.reversed ? " is-reversed" : "");
+    row.className = "builder-row" + (item.kind === "lift" ? " is-lift" : "") + (item.reversed ? " is-reversed" : "")
+      + (builderActiveIdx === i ? " is-focused" : "");  // hover is always null right after a rebuild
+    row.dataset.idx = i;
     // when a trail is only partly ridden, show both figures so it's obvious the clip happened
     const meta = r.clipped ? `${r.len.toFixed(2)} / ${r.fullLen.toFixed(2)} km` : `${r.len.toFixed(2)} km`;
     // A stretch ridden against the trail's own direction means pedalling up a descent. Worth flagging:
@@ -1548,37 +1615,22 @@ function renderBuilder(){
       persistBuilder();
       renderBuilder();
     }));
+    row.addEventListener("mouseenter", () => { builderHoverIdx = i; syncBuilderRowFocus(); });
+    row.addEventListener("mouseleave", () => { builderHoverIdx = null; syncBuilderRowFocus(); });
+    // Tap toggles a lasting focus, since a phone has no hover at all. The row's own buttons keep their
+    // meaning -- a click on one of those is not a request to focus the row.
+    row.addEventListener("click", (e) => {
+      if (e.target.closest("button")) return;
+      builderActiveIdx = (builderActiveIdx === i) ? null : i;
+      syncBuilderRowFocus();
+    });
     listEl2.appendChild(row);
   });
   totalsEl.textContent = builderItems.length
     ? `${km.toFixed(2)} km · ${Math.round(up)} m ↑ / ${Math.round(down)} m ↓`
     : "";
-  // map highlight: a glowing band per chosen element, in ride order, each with a numbered green dot at
-  // the point where you actually start riding it
-  builderHighlight.clearLayers();
-  resolved.forEach((r, i) => {
-    const c = r.coords;
-    if (!c || !c.length) return;
-    // An empty stretch (both clip ends on the same point) glows nothing at all -- there is nothing being
-    // ridden to point at. Its numbered dot is still drawn below, so the element stays locatable.
-    if (c.length > 1) BUILDER_GLOW.forEach(g => builderHighlight.addLayer(L.polyline(c, {
-      pane: BUILDER_PANE, color: g.color, weight: g.weight, opacity: g.opacity,
-      lineCap: "round", lineJoin: "round", interactive: false
-    })));
-    // Numbered start dot. `r.coords` is already clipped AND oriented by builderResolve(), so c[0] is
-    // by construction the end you actually set off from -- flipping a row with 🔄 moves the number to
-    // the trail's other end with no bookkeeping here (the user's point: "wechselt bei rückwärts zum
-    // eigentlichen Endpunkt"). No pane option: markers belong in Leaflet's markerPane (600), ABOVE the
-    // trails, unlike the glow bands which deliberately sit below them at 345.
-    builderHighlight.addLayer(L.marker(c[0], {
-      icon: L.divIcon({
-        className: "builder-num-icon",
-        html: `<div class="builder-num${r.empty ? " is-empty" : ""}">${i + 1}</div>`,
-        iconSize: [22, 22], iconAnchor: [11, 11]
-      }),
-      interactive: false, keyboard: false
-    }));
-  });
+  builderResolved = resolved;
+  drawBuilderHighlight();
   document.getElementById("builderHint").style.display = builderMode ? "block" : "none";
   // The 🔁 Touren switch cannot do anything while the mode is on, so it is disabled and dimmed rather
   // than left sitting there looking functional.
@@ -3249,7 +3301,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v12"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v13"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
