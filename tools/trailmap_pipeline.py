@@ -28,11 +28,11 @@ import urllib.request
 
 __all__ = [
     "haversine_m", "perp_distance_m", "douglas_peucker", "cumulative_km", "bounds_of",
-    "parse_gpx", "gpx_name", "dedupe_points",
+    "parse_gpx", "parse_kml", "gpx_name", "dedupe_points", "split_on_gaps",
     "ElevationLookup",
     "overpass", "osm_aerialway_survey", "osm_named_ways", "norm_name", "fuzzy_lookup",
     "build_profile", "build_trail", "write_region", "region_summary",
-    "SIMPLIFY_EPS_M", "MIN_POINT_SPACING_M",
+    "SIMPLIFY_EPS_M", "MIN_POINT_SPACING_M", "MAX_TRACK_GAP_M",
 ]
 
 # ---------------------------------------------------------------------------------------------------
@@ -160,6 +160,57 @@ def gpx_name(text):
     n = re.sub(r"^\s*(?:TC|\d+)\s*", "", n).strip()
     n = n.strip('"\u201c\u201d').strip()
     return re.sub(r"\s+", " ", n)
+
+
+def parse_kml(text):
+    """Extract [[lat, lon, ele|None], ...] from KML `<coordinates>` blocks (lon,lat[,ele] order).
+
+    Needed because some operator portals serve KML from a URL that ends in `.gpx` — the Tiroler Zugspitz
+    Arena's per-tour download does exactly that. Elevation is often a placeholder 0 there, which
+    `build_trail` detects and backfills.
+    """
+    pts = []
+    for block in re.findall(r"<coordinates>(.*?)</coordinates>", text, re.S):
+        for tok in block.split():
+            p = tok.split(",")
+            if len(p) >= 2:
+                try:
+                    pts.append([float(p[1]), float(p[0]),
+                                float(p[2]) if len(p) > 2 else None])
+                except ValueError:
+                    continue
+    return pts
+
+
+#: A jump longer than this between consecutive raw points is a segment boundary, not a ride.
+MAX_TRACK_GAP_M = 120.0
+
+
+def split_on_gaps(points, max_gap_m=MAX_TRACK_GAP_M):
+    """Split a point list wherever consecutive points jump implausibly far apart.
+
+    Portal exports routinely concatenate several segments into one track (a descent plus a variant, or a
+    trail plus its access road) with no separator. Flattening those blindly welds them together with a
+    phantom straight line across the map — the Zugspitz Arena's "Blue Bird" KML jumps 1.8 km back east
+    partway through, which alone made its computed length 6.16 km against 4.1 km official. This is the same
+    defect that got Paganella's lift-assisted marathon routes excluded.
+
+    Returns a list of segments, longest first, so `split_on_gaps(pts)[0]` is the main line. **Always check
+    the chosen segment's length against the operator's published figure** rather than assuming the longest
+    one is the right one.
+    """
+    if not points:
+        return []
+    segs, cur = [], [points[0]]
+    for prev, p in zip(points, points[1:]):
+        if haversine_m(prev[:2], p[:2]) > max_gap_m:
+            segs.append(cur)
+            cur = [p]
+        else:
+            cur.append(p)
+    segs.append(cur)
+    segs.sort(key=lambda s: cumulative_km(s)[-1] if len(s) > 1 else 0.0, reverse=True)
+    return segs
 
 
 def dedupe_points(points, min_spacing_m=MIN_POINT_SPACING_M):

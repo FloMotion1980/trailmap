@@ -460,6 +460,28 @@ const REGION_CATALOG = {
   // for these is the Touren/segment feature with the lift stretches as connectors, not a plain trail
   // card. Everything else has no gap over 559 m, and those are just coarse sampling on straight
   // stretches (elevation changes only ±30 m across them), not lifts.
+  zugspitzarena: {
+    // Built 2026-07-28 from the operator's own per-tour downloads on zugspitzarena.com. Two things worth
+    // knowing: the download link ends in `.gpx` but serves KML, and several tracks carry extra fragments
+    // that have to be split off (Blue Bird's would otherwise measure 6.16 km against 4.1 km official) --
+    // see docs/adding-a-region.md and `split_on_gaps` in tools/trailmap_pipeline.py.
+    // Difficulty is the operator's own: its three Wetterstein trails name BOTH a tier and a colour
+    // ("Wetterstein Trail Blau - Blue Bird" is Leicht, "Rot - Fifty/Fifty" Mittel, "Schwarz - Bare
+    // Knuckle" Schwer), which pins Leicht=blau, Mittel=rot, Schwer=schwarz. `gruen` is unused here
+    // because the operator's easiest tier is what it itself calls blue.
+    // Sub-regions are the operator's own three areas, which are also its own URL segments.
+    // Not built: Bachtltrail, Barbarasteig, Rauhegasse and Blindsee Trail are named on the overview but
+    // have no tour page and therefore no geometry. Grubigalm and Wolfratshauser have tracks noticeably
+    // shorter than their published length (1.04 vs 1.80 km, 0.69 vs 1.00 km) -- the official figure is
+    // kept in `len` per the usual rule, but the drawn line is the shorter one.
+    label: "Tiroler Zugspitz Arena", file: "regions/zugspitzarena.json", trailCount: 13,
+    bounds: [[47.35496, 10.73881], [47.42707, 10.94872]],
+    subRegions: {
+      lermoos_biberwier: { label: "Lermoos / Biberwier", color: "#2f7fa8" },
+      ehrwald_wetterstein: { label: "Ehrwald / Wetterstein", color: "#a8542f" },
+      berwang_bichlbach: { label: "Berwang / Bichlbach", color: "#7d2fa8" }
+    }
+  },
   paganella: {
     label: "Dolomiti Paganella", file: "regions/paganella.json", trailCount: 24,
     bounds: [[46.13632, 10.9538], [46.22536, 11.0866]],
