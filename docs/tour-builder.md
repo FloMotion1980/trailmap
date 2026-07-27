@@ -32,9 +32,14 @@ until the gaps are closed. The export is exactly the input the offline assembler
 
 **State.** `builderMode` (bool) and `builderItems` (`[{kind:"trail"|"lift", id, reversed}]`), persisted
 under its own `localStorage` key `trailmap-builder-v1` — deliberately separate from the filter state, since
-it is a work-in-progress document rather than a view preference. Restored at the *end* of `boot()`, after
-the regions are loaded, because a row's name and length are resolved against `lineTrails`/`LIFTS`; restoring
-earlier would render a list of bare ids.
+it is a work-in-progress document rather than a view preference.
+
+`boot()` splits the two halves of bringing it back, and the order matters in both directions:
+
+- **`restoreBuilder()` before `render()`** — `render()` hides Tours while builder mode is on, so restoring
+  the state afterwards left a reloaded page in builder mode with the Tours still showing (user, 2026-07-27).
+- **`renderBuilder()` after `render()`**, and after the regions are loaded — a row's name and length resolve
+  against `lineTrails`/`LIFTS`, so doing it earlier renders a list of bare ids.
 
 **Adding.** Every click site funnels through one guard, `builderTryAdd(kind, id)`, which returns true when
 the builder consumed the click so the caller can skip its normal "open the info panel" behaviour. There are

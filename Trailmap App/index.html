@@ -3115,13 +3115,17 @@ async function boot(){
     document.getElementById("showLiftsToggle").checked = showLifts;
     document.getElementById("showDirectionArrowsToggle").checked = showDirectionArrows;
   }
+  // Builder STATE before render(), because render() hides Tours while builder mode is on -- restoring it
+  // afterwards left a reloaded page in builder mode with the Tours still showing until something else
+  // triggered a render (found 2026-07-27 by the user).
+  restoreBuilder();
+  document.getElementById("builderModeToggle").checked = builderMode;
+
   rebuildRegionChips();
   render();
 
-  // Builder last: its rows resolve names/lengths against the regions loaded above, so restoring it any
-  // earlier would render a list of bare ids.
-  restoreBuilder();
-  document.getElementById("builderModeToggle").checked = builderMode;
+  // Builder RENDERING last: its rows resolve names/lengths against the regions loaded above, so doing it
+  // any earlier would render a list of bare ids.
   renderBuilder();
 
   const combinedBounds = L.latLngBounds([]);
