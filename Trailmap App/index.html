@@ -32,8 +32,13 @@
 </div>
 <div class="app">
   <header>
+    <!-- The title doubles as the mode indicator: "Trailbuilder" while the builder mode is on (user,
+         2026-07-27). It also still scrolls the sidebar back to the top, as before. -->
     <h1 id="scrollTopBtn" title="Nach oben scrollen">Trailmap</h1>
     <button id="regionsBtn">🌍 Regionen wählen</button>
+    <!-- The one and only mode switch. It lives here because the header is the only element that looks the
+         same in both layouts, is reachable without opening the drawer, and covers no map. -->
+    <button id="builderModeBtn" title="Tourenbuilder ein/aus"><span class="bm-icon">🧭</span><span class="bm-label">Tourenbuilder</span></button>
   </header>
   <div class="layout">
     <aside>
@@ -72,15 +77,9 @@
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
         </details>
       </div>
-      <!-- Only the switch lives here. The list itself is one single element pinned to the map
-           (#builderSheet, further down) on every screen size -- see docs/tour-builder.md. -->
-      <details class="filter-section" id="secBuilder">
-        <summary><span class="section-title-row"><span>Tourenbuilder</span><span class="section-meta" id="builderCountLabel"></span></span></summary>
-        <div class="toggle-row-group">
-          <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="builderModeToggle"><span class="slider"></span></span>🧭 Builder-Modus</label>
-        </div>
-        <div id="builderSidebarNote">Die Tourenliste erscheint unten am Kartenrand, damit die Karte bedienbar bleibt.</div>
-      </details>
+      <!-- The Tourenbuilder has no sidebar section at all any more: its switch is the header button and
+           its list is #builderSheet, pinned to the map. Keeping a copy of either here would mean one
+           state with three owners -- see docs/tour-builder.md. -->
       <details class="filter-section" id="secTrails" open>
         <summary>Trails</summary>
         <div class="trail-list" id="trailList"></div>
@@ -90,7 +89,6 @@
       <div id="map"></div>
       <button id="sidebarToggle">☰ Trails</button>
       <button id="locateBtn" title="Mein Standort">📍</button>
-      <button id="builderBtn" title="Tourenbuilder ein/aus">🧭</button>
       <!-- The one and only builder list, pinned to the map on every screen size so the map stays
            clickable while you assemble a tour. Collapsed it is just its handle. -->
       <div id="builderSheet">
@@ -739,9 +737,11 @@ document.getElementById("showLiftsToggle").addEventListener("change", (e) => {
 });
 
 // ---- Tourenbuilder controls ----
-// Two controls for one state: the sidebar switch and the 🧭 button on the map. The map button matters --
-// with the list pinned to the map, you no longer need the drawer to WORK, so you must not need it to
-// switch the mode ON either (2026-07-27).
+// ONE control for one state: the header button. It started as a sidebar switch, then also got a 🧭 button
+// on the map, and the user rejected both placements (2026-07-27) -- the sidebar hides a map-mode switch
+// behind two taps, and the map corner is already busy. The header is the only element that looks the same
+// in both layouts, needs no drawer, and covers no map. Both earlier controls were removed rather than
+// kept alongside: one state with three owners is how they drift apart.
 function setBuilderMode(on){
   builderMode = on;
   // Leaving a half-open info panel behind while switching into builder mode is confusing -- clicks no
@@ -753,14 +753,19 @@ function setBuilderMode(on){
     // very thing you are about to click on.
     closeSidebar();
   }
-  document.getElementById("builderModeToggle").checked = builderMode;
-  document.getElementById("builderBtn").classList.toggle("on", builderMode);
+  syncBuilderModeChrome();
   persistBuilder();
   renderBuilder();
   render();  // Tours are hidden while the mode is on, so the map/list have to be rebuilt either way
 }
-document.getElementById("builderModeToggle").addEventListener("change", (e) => setBuilderMode(e.target.checked));
-document.getElementById("builderBtn").addEventListener("click", () => setBuilderMode(!builderMode));
+// The header carries the state: the button fills in, and the title itself becomes the mode indicator
+// ("Trailbuilder" instead of "Trailmap", the user's own idea). Its scroll-the-sidebar-to-top job is
+// unaffected -- only the text changes.
+function syncBuilderModeChrome(){
+  document.getElementById("builderModeBtn").classList.toggle("on", builderMode);
+  document.getElementById("scrollTopBtn").textContent = builderMode ? "Trailbuilder" : "Trailmap";
+}
+document.getElementById("builderModeBtn").addEventListener("click", () => setBuilderMode(!builderMode));
 document.getElementById("builderSheetHandle").addEventListener("click", (e) => {
   if (e.target.closest("#builderSheetOff")) return;   // that button ends the mode, it does not collapse
   builderSheetOpen = !builderSheetOpen;
@@ -1610,9 +1615,7 @@ function syncBuilderRowFocus(){
 function renderBuilder(){
   const listEl2 = document.getElementById("builderList");
   const totalsEl = document.getElementById("builderTotals");
-  const countEl2 = document.getElementById("builderCountLabel");
   if (!listEl2) return;
-  countEl2.textContent = builderItems.length ? `${builderItems.length} Elemente` : "";
   listEl2.innerHTML = "";
   // Hover cannot survive a rebuild (no pointer movement happens, so no mouseenter fires on the new row);
   // a tapped row can and does, as long as it still exists.
@@ -1712,7 +1715,6 @@ function renderBuilder(){
     ? `${builderItems.length} · ${km.toFixed(2)} km`
     : "leer";
   document.getElementById("builderSheetHandle").title = builderSheetOpen ? "Liste zuklappen" : "Liste aufklappen";
-  document.getElementById("builderBtn").classList.toggle("on", builderMode);
   document.getElementById("builderHint").style.display = builderItems.length ? "none" : "block";
   // The 🔁 Touren switch cannot do anything while the mode is on, so it is disabled and dimmed rather
   // than left sitting there looking functional.
@@ -3253,8 +3255,7 @@ async function boot(){
   // afterwards left a reloaded page in builder mode with the Tours still showing until something else
   // triggered a render (found 2026-07-27 by the user).
   restoreBuilder();
-  document.getElementById("builderModeToggle").checked = builderMode;
-  document.getElementById("builderBtn").classList.toggle("on", builderMode);
+  syncBuilderModeChrome();
 
   rebuildRegionChips();
   render();

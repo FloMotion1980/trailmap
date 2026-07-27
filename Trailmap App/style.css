@@ -460,7 +460,6 @@ html.landscape-compact .ele-chart{ height:40px; }
    A scratch list of trails/lifts in ride order. Kept visually close to .trail-card
    so the two lists read as the same kind of thing, but numbered and with row
    controls (flip / move / remove). */
-#builderSidebarNote{ font-size:11px; opacity:.75; line-height:1.4; margin:6px 0 2px; }
 #builderHint{ font-size:11px; opacity:.75; line-height:1.4; margin:6px 0 8px; }
 
 /* ---- The pinned builder sheet (2026-07-27) --------------------------------------
@@ -507,42 +506,40 @@ html.landscape-compact .ele-chart{ height:40px; }
 /* Phone landscape has almost no vertical room; the list gets a smaller share of it. */
 html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
 
-/* The 🧭 map button: switching the mode on must not require the drawer, now that working in it doesn't.
-   Shown on every screen size, unlike #locateBtn which is mobile-only -- hence the plain right offset here
-   and the +56px shift inside the mobile query below, where the locate button occupies that slot. */
-#builderBtn{
-  display:flex; position:absolute; z-index:1000;
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  right: calc(16px + env(safe-area-inset-right, 0px));
-  width:46px; height:46px; border-radius:50%;
-  background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-  font-size:21px; align-items:center; justify-content:center; cursor:pointer;
+/* The mode switch, in the header (2026-07-27). It sat in the sidebar first, then also as a round 🧭 button
+   on the map, and the user rejected both: the sidebar buries a map-mode switch behind two taps, and the map
+   corner already holds the locate button and Leaflet's attribution. Deliberately styled unlike #regionsBtn
+   (which is a filled rust pill) so two chips side by side don't read as the same kind of control. */
+#builderModeBtn{
+  display:flex; align-items:center; gap:6px; align-self:center;
+  background:transparent; color:#f2f3ec; border:1px solid rgba(242,243,236,.45); border-radius:14px;
+  padding:4px 12px; font-family: Arial, sans-serif; font-size:12.5px; font-weight:600; cursor:pointer;
 }
-#builderBtn:hover{ background:#f5f7ef; }
-#builderBtn.on{ background: var(--highlight); border-color:#b8801a; }
+#builderModeBtn:hover{ background:rgba(242,243,236,.12); }
+#builderModeBtn.on{ background: var(--highlight); border-color: var(--highlight); color: var(--ink); }
+#builderModeBtn .bm-icon{ font-size:13px; line-height:1; }
 
 @media (max-width: 768px), (pointer: coarse){
-  /* Sits beside #locateBtn, so it has to match its offsets exactly -- and on mobile that button is NOT at
-     bottom:16px but 54px higher, to clear the bottom-centred info panel. The is-standalone rule below
-     mirrors the one that already exists for #locateBtn for the same reason. */
-  #builderBtn{
-    right: calc(16px + env(safe-area-inset-right, 0px) + 56px);
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px) + 54px);
-  }
+  /* Icon only, so the header still fits on one line next to the region chip on a 375px phone. */
+  #builderModeBtn .bm-label{ display:none; }
+  #builderModeBtn{ padding:4px 9px; flex-shrink:0; }
+  /* Title + region chip + this button do not fit a 375px line at full width -- and "Trailbuilder" is wider
+     than "Trailmap", so switching the mode used to wrap the header onto a second line and shove the map
+     down. One line instead, with the region chip taking the squeeze: it already truncates with an ellipsis
+     by design, so it degrades gracefully, while the title and the mode button stay fully readable.
+     min-width:0 is the part that actually allows it -- a flex item's automatic minimum is its min-content
+     width, which white-space:nowrap text would otherwise refuse to go below. */
+  header{ flex-wrap:nowrap; gap:10px; }
+  header h1{ font-size:17px; flex-shrink:0; }
+  #regionsBtn{ min-width:0; flex-shrink:1; }
   /* On a phone the sheet spans the full width and sits at z-index 1600, so the whole bottom strip belongs
-     to it -- collapsed too. The locate button therefore moves to the top right for the duration (free
-     there: the drawer toggle is top left, #liveStatus top centre) and the 🧭 button steps aside entirely,
-     since the sheet's own ✕ is what ends the mode. Needs !important to beat the html.is-standalone rule
-     further up, and wins on document order at equal specificity. */
+     to it -- collapsed too. The locate button therefore moves to the top right for the duration; that
+     corner is free (drawer toggle is top left, #liveStatus top centre). Needs !important to beat the
+     html.is-standalone rule further up, and wins on document order at equal specificity. */
   html.has-builder-sheet #locateBtn{
     top: calc(16px + env(safe-area-inset-top, 0px)) !important;
     bottom: auto !important;
   }
-  html.has-builder-sheet #builderBtn{ display:none; }
-}
-html.is-standalone #builderBtn{
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
 }
 #builderList{ display:flex; flex-direction:column; gap:4px; }
 .builder-row{
