@@ -1,6 +1,6 @@
 # Tourenbuilder
 
-Added 2026-07-26. A sidebar mode for assembling a route by clicking trails and lifts in ride order.
+Added 2026-07-26. A map mode for assembling a route by clicking trails and lifts in ride order.
 
 ## Why it exists
 
@@ -42,12 +42,18 @@ two copies of the same list would mean two sets of handlers and inevitable drift
 the sidebar rather than being duplicated. They also asked for desktop and mobile to stay similar, which is
 what makes a single element workable at all.
 
-`renderBuilder()` and `drawBuilderHighlight()` needed **no changes**: they address `#builderList`,
-`#builderTotals` and `#builderCountLabel` by id, and those ids just moved.
+`renderBuilder()` and `drawBuilderHighlight()` needed **no changes**: they address `#builderList` and
+`#builderTotals` by id, and those ids just moved.
 
-- **One width rule for both platforms**: `min(100% - margins, 420px)`, anchored bottom-left. On a phone that
-  *is* full width; on a desktop it is a 420px panel that clears the info panel (top right, 280px) and the
-  locate button (bottom right) with no per-platform case.
+- **One width rule for phone and small desktop**: `min(100% - margins, 420px)`, anchored bottom-left. On a
+  phone that *is* full width; on a narrow desktop window it is a 420px panel that clears the info panel
+  (top right, 280px) and the locate button (bottom right) with no per-platform case.
+- **From 1024px with a fine pointer it becomes a full-height column on the right** (user, 2026-07-27), 360px
+  wide. Same element and markup — only the geometry changes, so no JS knows about it. Collapsed, the column
+  shrinks back to its handle rather than staying a full-height empty strip. Two things have to step aside
+  for it, both keyed on `html.has-builder-sheet`: `#infoPanel`, which lives at that exact corner, and
+  Leaflet's **attribution**, which sits bottom right and has to stay readable — it gets
+  `margin-right: 360px`.
 - **No backdrop** — the entire point. Taps reach the map underneath. z-index 1600: above the map's floating
   controls, below the drawer (2500) and its backdrop (2400), so opening the drawer still covers it.
 - **Collapsed it is just its handle** (~34px) showing `Tourenbuilder · 3 · 7.38 km`. State persisted as
@@ -91,6 +97,45 @@ it is a work-in-progress document rather than a view preference.
   the state afterwards left a reloaded page in builder mode with the Tours still showing (user, 2026-07-27).
 - **`renderBuilder()` after `render()`**, and after the regions are loaded — a row's name and length resolve
   against `lineTrails`/`LIFTS`, so doing it earlier renders a list of bare ids.
+
+## Row anatomy and gestures (2026-07-27)
+
+A row is a shell, not the visible box:
+
+```
+.builder-row        positioning shell, overflow:hidden, carries the 🗑 delete hint in ::before
+└ .bi-body          the visible box (border, background) -- this is what slides on a swipe
+  ├ .bi-main        ⠿ handle · number · name · flags · km · ⇔ · 🔄 · ✕
+  └ .bi-connect     iConnect, only when there is more than one candidate
+```
+
+**iConnect** is the user's name for the junction — short for intelligent connector — and it now sits
+*inside* the element's own box ("es sollte aussehen, dass es in dem Trailviereck ist") instead of in a strip
+between two boxes, and **only when `count > 1`**, i.e. when there is actually something to cycle. It belongs
+to this element for the same reason `junctionAlt` is stored on it: it describes where *this* one is joined.
+
+**Dragging replaced ↑/↓ entirely** and, on a touch screen, **a right swipe replaced ✕** — both because
+"auf dem Handy sind die Knöpfe für hoch und runter bzw. löschen viel zu klein". With four buttons down to
+two, the survivors get real 38×38px targets on mobile. Plain pointer events, since HTML5 drag-and-drop does
+not work on mobile Safari at all.
+
+- **The axis split is left to the browser** via `touch-action`: `pan-y` on `.bi-body` means a vertical drag
+  scrolls the sheet (we get a `pointercancel`) while a horizontal one arrives as `pointermove`; `none` on
+  `.bi-drag` stops a vertical drag there from being stolen by that same scrolling. No manual guessing.
+- **Drag**: row midpoints are measured **once**, before anything moves — the dragged row keeps its place in
+  the layout (only a `transform` shifts it), so they stay valid for the whole gesture. Move/end listeners
+  live on `window`, and `setPointerCapture` is wrapped in try/catch: it is an enhancement, and it throws
+  outright for a pointer id the browser does not consider active.
+- **Swipe**: right only, deletes past `SWIPE_DELETE_PX` (96), snaps back below it. Any movement past
+  `GESTURE_SLOP_PX` sets `data-gesture` on the row so the click that follows does not also toggle the row
+  focus.
+- Both reorder and delete clear `builderActiveIdx` — that index no longer points at what it did — and run
+  `builderClearStaleAlts()`.
+
+**A CSS trap this uncovered**: `.builder-row button` (specificity 0,1,1) beats `.bi-connect` (0,1,0), so the
+generic row-button rules silently stripped iConnect's border, background, font size and padding — it
+rendered as unstyled text apparently *outside* the box, which is exactly what it was supposed to be inside.
+The button rules are therefore scoped to **`.bi-main button`**, which is where ⇔/🔄/✕ actually live.
 
 **Adding.** Every click site funnels through one guard, `builderTryAdd(kind, id)`, which returns true when
 the builder consumed the click so the caller can skip its normal "open the info panel" behaviour. There are
@@ -192,7 +237,7 @@ cut is **derived from the sequence**, which is what the sequence already says.
 For each consecutive pair, the closest approach between the two lines is the junction: the earlier element
 leaves there, the later one joins there. Per element, `full: true` opts out entirely.
 
-### Cycling the candidates (2026-07-27)
+### Cycling the candidates ("iConnect", 2026-07-27)
 
 The guess is right often but not always — the user's verdict after a day of riding it: X-Line into the
 Schattberg Sprinter works, other spots do not, *"bei dem intelligenten Junction Clipping kann man mit
@@ -223,7 +268,7 @@ so every structural edit brackets itself in `builderPredecessorSnapshot()` /
 tuned. A lift's `reversed` is part of that key, since flipping a lift changes which station it contributes.
 
 **UI:** the junction gets its own thin row *between* the two element rows, because that is where it sits:
-`↳ Übergang · 84 m · 1/3 ⟳`. The gap doubles as a quality signal — a few metres means the lines really do
+`iConnect · 84 m · 1/3 ⟳`. The gap doubles as a quality signal — a few metres means the lines really do
 meet there, a hundred-plus means the guess is probably wrong and worth cycling. The **whole row** is the
 control, not the ⟳ glyph, which at 19×16 px is not a hittable target on a phone.
 

@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=17" />
+<link rel="stylesheet" href="style.css?v=18" />
 </head>
 <body>
 <div id="fatalError">
@@ -99,7 +99,7 @@
         <!-- A div, not a button: it carries its own nested "end the mode" button, and a button inside a
              button is invalid HTML. Clicking the bar collapses/expands; the ✕ is guarded in JS. -->
         <div id="builderSheetHandle" title="Liste auf-/zuklappen">
-          <span class="bs-caret">▲</span>
+          <span class="bs-caret">▸</span>
           <span class="bs-title">Tourenbuilder</span>
           <span class="bs-summary" id="builderSheetSummary"></span>
           <button id="builderSheetOff" title="Builder-Modus beenden">✕</button>
@@ -1616,6 +1616,108 @@ function syncBuilderRowFocus(){
   drawBuilderHighlight();
 }
 
+// ---- Row gestures (2026-07-27) -------------------------------------------------------------------
+// The ↑/↓ buttons are gone in favour of dragging, and on a phone ✕ is replaced by a right swipe -- the
+// user's own call: "Auf dem Handy sind die Knöpfe für hoch und runter bzw. löschen viel zu klein. Hoch
+// runter können wir komplett entfernen über drag n drop. Das X zum Löschen könnten wir zumindest am Handy
+// mit swipe nach rechts entfernen."
+//
+// Plain pointer events, not HTML5 drag-and-drop, which does not work on mobile Safari at all. The axis
+// split is left to the browser via `touch-action`: `pan-y` on the row body means a vertical drag scrolls
+// the sheet (and we get a pointercancel) while a horizontal one reaches us as pointermove; `none` on the
+// drag handle keeps a vertical drag there from being stolen by that same scrolling.
+const SWIPE_DELETE_PX = 96;   // release past this to delete
+const GESTURE_SLOP_PX = 5;    // movement before a press stops being a tap
+function builderTouchLayout(){
+  return window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
+}
+
+function wireBuilderRowDrag(row, idx){
+  const handle = row.querySelector(".bi-drag");
+  if (!handle) return;
+  handle.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    const rows = [...document.querySelectorAll("#builderList .builder-row")];
+    // Midpoints are measured ONCE, before anything moves: the dragged row keeps its place in the layout
+    // (only a transform shifts it), so they stay valid for the whole gesture.
+    const mids = rows.map(r => { const b = r.getBoundingClientRect(); return b.top + b.height / 2; });
+    const startY = e.clientY;
+    let target = idx;
+    row.classList.add("is-dragging");
+    // Capture is an enhancement, not a requirement: the move/end listeners sit on `window`, so the gesture
+    // survives the pointer leaving the handle either way -- and setPointerCapture throws outright for a
+    // pointer id the browser does not consider active.
+    try { handle.setPointerCapture(e.pointerId); } catch (err) { /* keep going without it */ }
+    const onMove = (ev) => {
+      const dy = ev.clientY - startY;
+      row.style.transform = `translateY(${dy}px)`;
+      const y = mids[idx] + dy;
+      let slot = 0;
+      while (slot < mids.length && y > mids[slot]) slot++;   // rows whose centre is above ours
+      target = slot > idx ? slot - 1 : slot;                 // slot counts the dragged row itself
+      rows.forEach((r, k) => r.classList.toggle("is-drop-target", k === target && target !== idx));
+    };
+    const onEnd = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onEnd);
+      window.removeEventListener("pointercancel", onEnd);
+      row.style.transform = "";
+      row.classList.remove("is-dragging");
+      rows.forEach(r => r.classList.remove("is-drop-target"));
+      if (target !== idx) {
+        const snapshot = builderPredecessorSnapshot();
+        builderItems.splice(target, 0, builderItems.splice(idx, 1)[0]);
+        builderClearStaleAlts(snapshot);
+        builderActiveIdx = null;   // that index no longer points at what it did
+        persistBuilder();
+      }
+      renderBuilder();
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onEnd);
+    window.addEventListener("pointercancel", onEnd);
+  });
+}
+
+function wireBuilderRowSwipe(row, idx){
+  if (!builderTouchLayout()) return;   // a mouse keeps the ✕ button instead
+  const body = row.querySelector(".bi-body");
+  let startX = 0, dx = 0, tracking = false;
+  const reset = () => {
+    body.style.transform = "";
+    row.classList.remove("is-swiping", "will-delete");
+    tracking = false; dx = 0;
+  };
+  body.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button") || e.target.closest(".bi-drag")) return;
+    startX = e.clientX; dx = 0; tracking = true;
+  });
+  body.addEventListener("pointermove", (e) => {
+    if (!tracking) return;
+    dx = Math.max(0, e.clientX - startX);          // right only
+    if (dx < GESTURE_SLOP_PX) return;
+    body.style.transform = `translateX(${dx}px)`;
+    row.classList.add("is-swiping");
+    row.classList.toggle("will-delete", dx >= SWIPE_DELETE_PX);
+  });
+  body.addEventListener("pointerup", () => {
+    const del = tracking && dx >= SWIPE_DELETE_PX;
+    // Any real movement must swallow the click that follows, or releasing a swipe would also toggle the
+    // row focus.
+    if (tracking && dx >= GESTURE_SLOP_PX) row.dataset.gesture = "1";
+    reset();
+    if (del) {
+      const snapshot = builderPredecessorSnapshot();
+      builderItems.splice(idx, 1);
+      builderClearStaleAlts(snapshot);
+      builderActiveIdx = null;
+      persistBuilder();
+      renderBuilder();
+    }
+  });
+  body.addEventListener("pointercancel", reset);   // browser took the gesture over for scrolling
+}
+
 function renderBuilder(){
   const listEl2 = document.getElementById("builderList");
   const totalsEl = document.getElementById("builderTotals");
@@ -1630,29 +1732,6 @@ function renderBuilder(){
   resolved.forEach((r, i) => {
     const item = r.item;
     km += r.len; up += r.up; down += r.down;
-    // The junction with the previous element gets its own thin row BETWEEN the two element rows, because
-    // that is literally where it sits (the user's choice, 2026-07-27). The gap it shows doubles as a
-    // quality signal: a few metres means the two lines really do meet there, a hundred-plus means the
-    // guess is probably wrong and it is worth cycling to the next candidate.
-    if (r.junction) {
-      const j = r.junction;
-      const jr = document.createElement("div");
-      // The WHOLE row cycles, not just the ⟳ glyph: a 19x16px icon is far too small to hit on a phone,
-      // and there is nothing else on this row that could want a click.
-      jr.className = "builder-junction" + (j.count > 1 ? " is-cyclable" : "");
-      if (j.count > 1) jr.title = "Nächste mögliche Kreuzung";
-      jr.innerHTML = `
-        <span class="bj-arrow">↳</span>
-        <span class="bj-label">Übergang</span>
-        <span class="bj-gap${j.dist > JUNCTION_MAX_GAP_M ? " is-far" : ""}">${Math.round(j.dist)} m</span>
-        ${j.count > 1 ? `<span class="bj-alt">${j.alt + 1}/${j.count}</span><span class="bj-cycle">⟳</span>` : ""}`;
-      if (j.count > 1) jr.addEventListener("click", () => {
-        item.junctionAlt = ((item.junctionAlt | 0) + 1) % j.count;
-        persistBuilder();
-        renderBuilder();
-      });
-      listEl2.appendChild(jr);
-    }
     const row = document.createElement("div");
     row.className = "builder-row" + (item.kind === "lift" ? " is-lift" : "") + (item.reversed ? " is-reversed" : "")
       + (builderActiveIdx === i ? " is-focused" : "");  // hover is always null right after a rebuild
@@ -1666,27 +1745,41 @@ function renderBuilder(){
     // a climb is the point.
     const t1 = item.kind === "trail" ? lineTrails.find(tr => tr.id === item.id) : null;
     const against = r.against && !(t1 && t1.uphill);
+    // "iConnect" -- the user's name for the junction, short for intelligent connector -- sits INSIDE the
+    // element's own box now rather than in a strip between two boxes, and only appears when there is
+    // actually something to choose (`count > 1`). It belongs to this element because it describes where
+    // *this* one is joined; `junctionAlt` is stored on it for the same reason.
+    const j = r.junction;
+    const hasConnect = j && j.count > 1;
     row.innerHTML = `
-      <span class="bi-num">${i + 1}</span>
-      <span class="bi-name">${item.kind === "lift" ? "🚡 " : ""}${builderNameOf(item)}</span>
-      ${against ? `<span class="bi-against" title="Gegen die Trailrichtung — dieser Abschnitt geht bergauf">↑</span>` : ""}
-      ${r.empty ? `<span class="bi-empty" title="Der Übergang liegt genau auf dem Trailende — in Trailrichtung bleibt nichts zu fahren. Mit 🔄 rückwärts einplanen, oder mit ⇔ ganz fahren.">∅</span>` : ""}
-      <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
-      ${item.kind === "trail" ? `<button data-act="full" class="${item.full ? "on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">⇔</button>` : ""}
-      <button data-act="flip"${r.dirFixed
-        ? ` disabled title="Richtung liegt durch die Reihenfolge fest — mit ⇔ freigeben"`
-        : ` title="${item.kind === "trail" && (r.clipped || r.junction) ? "Zum anderen Ende des Trails fahren" : "Richtung umdrehen"}"`}>🔄</button>
-      <button data-act="up" title="Nach oben">↑</button>
-      <button data-act="down" title="Nach unten">↓</button>
-      <button data-act="del" title="Entfernen">✕</button>`;
+      <div class="bi-body">
+        <div class="bi-main">
+          <span class="bi-drag" title="Verschieben">⠿</span>
+          <span class="bi-num">${i + 1}</span>
+          <span class="bi-name">${item.kind === "lift" ? "🚡 " : ""}${builderNameOf(item)}</span>
+          ${against ? `<span class="bi-against" title="Gegen die Trailrichtung — dieser Abschnitt geht bergauf">↑</span>` : ""}
+          ${r.empty ? `<span class="bi-empty" title="Der Übergang liegt genau auf dem Trailende — in Trailrichtung bleibt nichts zu fahren. Mit 🔄 rückwärts einplanen, oder mit ⇔ ganz fahren.">∅</span>` : ""}
+          <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
+          ${item.kind === "trail" ? `<button data-act="full" class="${item.full ? "on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">⇔</button>` : ""}
+          <button data-act="flip"${r.dirFixed
+            ? ` disabled title="Richtung liegt durch die Reihenfolge fest — mit ⇔ freigeben"`
+            : ` title="${item.kind === "trail" && (r.clipped || r.junction) ? "Zum anderen Ende des Trails fahren" : "Richtung umdrehen"}"`}>🔄</button>
+          <button data-act="del" class="bi-del" title="Entfernen">✕</button>
+        </div>
+        ${hasConnect ? `<button class="bi-connect" data-act="connect" title="Nächste mögliche Kreuzung">
+          <span class="bc-label">iConnect</span>
+          <span class="bc-gap${j.dist > JUNCTION_MAX_GAP_M ? " is-far" : ""}">${Math.round(j.dist)} m</span>
+          <span class="bc-alt">${j.alt + 1}/${j.count}</span>
+          <span class="bc-cycle">⟳</span>
+        </button>` : ""}
+      </div>`;
     row.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
       const act = b.dataset.act;
       const snapshot = builderPredecessorSnapshot();
       if (act === "flip") item.reversed = !item.reversed;
       else if (act === "full") item.full = !item.full;
-      else if (act === "del") builderItems.splice(i, 1);
-      else if (act === "up" && i > 0) builderItems.splice(i - 1, 0, builderItems.splice(i, 1)[0]);
-      else if (act === "down" && i < builderItems.length - 1) builderItems.splice(i + 1, 0, builderItems.splice(i, 1)[0]);
+      else if (act === "connect") item.junctionAlt = ((item.junctionAlt | 0) + 1) % j.count;
+      else if (act === "del") { builderItems.splice(i, 1); builderActiveIdx = null; }
       builderClearStaleAlts(snapshot);
       persistBuilder();
       renderBuilder();
@@ -1694,12 +1787,16 @@ function renderBuilder(){
     row.addEventListener("mouseenter", () => { builderHoverIdx = i; syncBuilderRowFocus(); });
     row.addEventListener("mouseleave", () => { builderHoverIdx = null; syncBuilderRowFocus(); });
     // Tap toggles a lasting focus, since a phone has no hover at all. The row's own buttons keep their
-    // meaning -- a click on one of those is not a request to focus the row.
+    // meaning -- a click on one of those is not a request to focus the row -- and neither is the click that
+    // follows a swipe or a drag, which the gesture handlers flag via data-gesture.
     row.addEventListener("click", (e) => {
-      if (e.target.closest("button")) return;
+      if (e.target.closest("button") || e.target.closest(".bi-drag")) return;
+      if (row.dataset.gesture) { delete row.dataset.gesture; return; }
       builderActiveIdx = (builderActiveIdx === i) ? null : i;
       syncBuilderRowFocus();
     });
+    wireBuilderRowDrag(row, i);
+    wireBuilderRowSwipe(row, i);
     listEl2.appendChild(row);
   });
   totalsEl.textContent = builderItems.length
@@ -3389,7 +3486,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v17"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v18"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

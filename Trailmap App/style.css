@@ -494,8 +494,13 @@ html.landscape-compact .ele-chart{ height:40px; }
   font-size:17px; line-height:1; padding:3px 7px; border-radius:6px;
 }
 #builderSheetOff:hover{ background:rgba(0,0,0,.08); color:var(--rust); }
-#builderSheetHandle .bs-caret{ font-size:9px; opacity:.6; transition:transform .15s ease; }
-#builderSheet.collapsed #builderSheetHandle .bs-caret{ transform:rotate(180deg); }
+/* Same glyph, size, weight and colour as the sidebar's <summary> carets (user: "das Dreieck ... bitte in
+   der gleichen größe wie die im Menu"), including their rotate-90-when-open behaviour. */
+#builderSheetHandle .bs-caret{
+  font-size:22px; font-weight:700; line-height:1; color:var(--forest);
+  transform:rotate(90deg); transition:transform .15s ease;
+}
+#builderSheet.collapsed #builderSheetHandle .bs-caret{ transform:none; }
 #builderSheetHandle .bs-title{ font-weight:700; }
 #builderSheetHandle .bs-summary{ margin-left:auto; opacity:.7; font-variant-numeric:tabular-nums; }
 #builderSheetBody{
@@ -505,6 +510,29 @@ html.landscape-compact .ele-chart{ height:40px; }
 #builderSheet.collapsed #builderSheetBody{ display:none; }
 /* Phone landscape has almost no vertical room; the list gets a smaller share of it. */
 html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
+
+/* On a big screen the sheet becomes a full-height column on the right instead of a corner panel (user,
+   2026-07-27). Same element, same markup -- only the geometry changes, so nothing in the JS knows about
+   this. Threshold is 1024px AND a fine pointer: a narrow laptop window keeps the corner panel, where a
+   360px column would eat most of the map. */
+@media (min-width: 1024px) and (pointer: fine){
+  #builderSheet{
+    top:0; right:0; bottom:0; left:auto;
+    width:360px; max-width:40vw;
+    border-radius:0; box-shadow:-4px 0 18px rgba(0,0,0,.18);
+    flex-direction:column;
+  }
+  #builderSheet.visible{ display:flex; }
+  /* Collapsed, the column shrinks back to just its handle rather than staying a full-height empty strip. */
+  #builderSheet.collapsed{ bottom:auto; }
+  #builderSheetHandle{ border-radius:0; padding:12px 10px 12px 16px; border-bottom:1px solid #e3e6da; }
+  #builderSheetBody{ flex:1 1 auto; max-height:none; padding:12px 16px 16px; }
+  /* The info panel lives at the map's top right, i.e. exactly where the column now is. */
+  html.has-builder-sheet #infoPanel{ right: calc(16px + 360px); }
+  /* And OSM's attribution sits at the bottom right, which the column would cover -- it has to stay
+     readable, so it steps aside for as long as the column is there. */
+  html.has-builder-sheet .leaflet-control-attribution{ margin-right:360px; }
+}
 
 /* The mode switch, in the header (2026-07-27). It sat in the sidebar first, then also as a round 🧭 button
    on the map, and the user rejected both: the sidebar buries a map-mode switch behind two taps, and the map
@@ -542,33 +570,67 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
   }
 }
 #builderList{ display:flex; flex-direction:column; gap:4px; }
-.builder-row{
-  display:flex; align-items:center; gap:6px;
-  padding:5px 7px; border:1px solid rgba(0,0,0,.12); border-radius:7px;
-  font-size:12px; background:var(--card-bg);
+/* The row is only a positioning shell: the visible box is .bi-body, which is what slides sideways on a
+   swipe, revealing the delete hint underneath. Splitting the two is what makes the gesture possible at all
+   without an extra wrapper element per row. */
+.builder-row{ position:relative; overflow:hidden; border-radius:7px; cursor:pointer; }
+.builder-row::before{
+  content:"🗑 Entfernen"; position:absolute; left:10px; top:50%; transform:translateY(-50%);
+  font-size:11.5px; font-weight:700; color:var(--rust); opacity:0; pointer-events:none;
 }
+.builder-row.is-swiping::before{ opacity:1; }
+.builder-row.will-delete::before{ text-decoration:underline; }
+.bi-body{
+  border:1px solid rgba(0,0,0,.12); border-radius:7px; background:var(--card-bg); font-size:12px;
+  /* pan-y hands vertical drags to the sheet's own scrolling (we then get a pointercancel) while letting
+     horizontal ones through as pointermove -- the axis split without any manual guessing. */
+  touch-action: pan-y;
+}
+.bi-main{ display:flex; align-items:center; gap:6px; padding:5px 7px; }
+/* touch-action:none, or a vertical drag on the handle would scroll the sheet instead of reordering. */
+.bi-drag{
+  flex-shrink:0; cursor:grab; opacity:.45; font-size:13px; line-height:1; letter-spacing:-1px;
+  padding:4px 2px; touch-action:none;
+}
+.bi-drag:active{ cursor:grabbing; opacity:.8; }
+.builder-row.is-dragging{ z-index:5; }
+.builder-row.is-dragging .bi-body{ box-shadow:0 4px 14px rgba(0,0,0,.25); border-color:var(--highlight); }
+.builder-row.is-drop-target .bi-body{ box-shadow:inset 0 3px 0 var(--highlight); }
 .builder-row .bi-num{ min-width:1.6em; text-align:right; opacity:.6; font-variant-numeric:tabular-nums; }
 .builder-row .bi-name{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .builder-row .bi-meta{ opacity:.7; font-size:11px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+/* iConnect, inside the element's own box (user's wording: "es sollte aussehen, dass es in dem
+   Trailviereck ist"). Only rendered when there is more than one candidate to cycle. */
+.bi-connect{
+  display:flex; align-items:center; gap:6px; width:100%;
+  border:none; border-top:1px dashed rgba(0,0,0,.14); background:rgba(0,0,0,.025);
+  border-radius:0 0 6px 6px; cursor:pointer; text-align:left;
+  padding:4px 8px 4px 26px; font-family:inherit; font-size:10.5px; color:var(--ink);
+}
+.bi-connect:hover{ background:rgba(224,163,38,.14); }
+.bi-connect .bc-label{ font-weight:700; letter-spacing:.3px; opacity:.8; }
+.bi-connect .bc-gap{ font-variant-numeric:tabular-nums; font-weight:600; }
+.bi-connect .bc-gap.is-far{ color:var(--rust); }
+.bi-connect .bc-alt{ margin-left:auto; opacity:.7; font-variant-numeric:tabular-nums; }
+.bi-connect .bc-cycle{ font-size:12px; opacity:.75; }
 /* Ridden against the trail's own direction, i.e. pedalling up a descent -- which the sequence can force
    without anything else in the row saying so. */
 .builder-row .bi-against{ color:var(--rust); font-weight:700; cursor:help; }
 /* Both clip ends landed on the same point: nothing to ride here. Deliberately never silently "repaired"
    by riding the trail backwards -- that is the user's call, with 🔄. */
 .builder-row .bi-empty{ color:var(--rust); font-weight:700; cursor:help; }
-.builder-row button{
+.bi-main button{
   border:none; background:transparent; cursor:pointer; font-size:13px; line-height:1;
   padding:2px 3px; border-radius:4px; opacity:.75;
 }
-.builder-row button:hover:not(:disabled){ opacity:1; background:rgba(0,0,0,.08); }
+.bi-main button:hover:not(:disabled){ opacity:1; background:rgba(0,0,0,.08); }
 /* 🔄 on a stretch that is clipped at both ends: the sequence already fixes its direction. */
-.builder-row button:disabled{ opacity:.25; cursor:default; }
+.bi-main button:disabled{ opacity:.25; cursor:default; }
 /* Pointed at (hovered) or tapped: this element keeps its full glow on the map while the rest steps back,
    and gets a red end dot. Exactly ONE row ever carries this, matching the map, which can only single out
    one element -- a hover therefore takes the marking off a previously tapped row rather than adding a
    second highlight, which read as two selections at once. */
-.builder-row{ cursor:pointer; }
-.builder-row.is-focused{ border-color:var(--highlight); background:rgba(224,163,38,.10); }
+.builder-row.is-focused .bi-body{ border-color:var(--highlight); background:rgba(224,163,38,.10); }
 .builder-row.is-lift .bi-name{ font-style:italic; }
 .builder-row.is-reversed .bi-name::after{ content:" ↺"; opacity:.7; }
 #builderTotals{ margin-top:8px; font-size:12px; font-weight:600; }
@@ -584,27 +646,19 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
 }
 #builderExport.visible{ display:block; }
 .builder-row .bi-meta.is-clipped{ color:var(--rust); }
-.builder-row button.on{ background:rgba(0,0,0,.12); opacity:1; }
+.bi-main button.on{ background:rgba(0,0,0,.12); opacity:1; }
 
-/* The junction between two consecutive elements, as its own thin row between their rows -- which is
-   where it actually sits (user's choice, 2026-07-27). Quieter than an element row on purpose: it is
-   annotation, not content. The gap turns rust when no candidate was close enough to be a real
-   crossing, i.e. when the clip is probably wrong and worth cycling. */
-.builder-junction{
-  display:flex; align-items:center; gap:5px; padding:4px 7px 4px 20px; border-radius:6px;
-  font-size:10.5px; line-height:1.4; opacity:.8;
+/* Touch targets. A 13px glyph with 3px of padding is not one, which is what the user hit: "Auf dem Handy
+   sind die Knöpfe für hoch und runter bzw. löschen viel zu klein." ↑/↓ are gone entirely (dragging replaced
+   them) and ✕ steps aside for the right-swipe, so the two that remain can afford real size. */
+@media (max-width: 768px), (pointer: coarse){
+  .builder-row .bi-main{ padding:6px 8px; gap:8px; }
+  .bi-main button{ min-width:38px; min-height:38px; font-size:16px; padding:0; }
+  .builder-row .bi-del{ display:none; }        /* the swipe does this job on a touch screen */
+  .bi-drag{ font-size:17px; padding:8px 4px; }
+  .bi-connect{ padding:7px 10px 7px 28px; font-size:11.5px; }
+  .bi-connect .bc-cycle{ font-size:15px; }
 }
-.builder-junction .bj-arrow{ opacity:.55; }
-.builder-junction .bj-label{ opacity:.7; }
-.builder-junction .bj-gap{ font-variant-numeric:tabular-nums; font-weight:600; }
-.builder-junction .bj-gap.is-far{ color:var(--rust); }
-.builder-junction .bj-alt{ margin-left:auto; opacity:.7; font-variant-numeric:tabular-nums; }
-.builder-junction .bj-cycle{ font-size:12px; opacity:.75; }
-/* The whole row is the control when there is more than one candidate -- a ⟳ glyph alone is not a
-   hittable target on a phone, and nothing else on the row wants a click. */
-.builder-junction.is-cyclable{ cursor:pointer; }
-.builder-junction.is-cyclable:hover{ opacity:1; background:rgba(0,0,0,.06); }
-.builder-junction.is-cyclable:hover .bj-cycle{ opacity:1; }
 
 /* The chain glows so it stays findable on any base layer, satellite included (user, 2026-07-27). The
    drop-shadow sits on the PANE, not on the individual paths, so the whole chain costs one filter and
