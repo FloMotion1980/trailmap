@@ -28,6 +28,50 @@ das regeln wir später"):
 only the element list and *not* `distStart`/`distEnd` or an elevation profile: both would be fabrications
 until the gaps are closed. The export is exactly the input the offline assembler needs.
 
+## Where it lives in the GUI (2026-07-27)
+
+The list is **one element pinned to the map** (`#builderSheet`, a sibling of `#map` and `#infoPanel` inside
+`.map-wrap`), on every screen size. The sidebar's `#secBuilder` keeps only the mode switch and a note
+pointing at it.
+
+The user's problem: on a phone the sidebar is a full-height drawer behind an opaque backdrop
+(`#sidebarBackdrop`, z-index 2400), so while the list was visible the map was unreachable — *"In der Sidebar
+ist es schwer die Trails anzuklicken auf der Karte, wenn man am handy arbeitet."* Their own follow-up
+question settled the design: *"Ist das Bottom Sheet ein eigenes GUI element zusätzlich zur Sidebar?"* No —
+two copies of the same list would mean two sets of handlers and inevitable drift, so the list moved out of
+the sidebar rather than being duplicated. They also asked for desktop and mobile to stay similar, which is
+what makes a single element workable at all.
+
+`renderBuilder()` and `drawBuilderHighlight()` needed **no changes**: they address `#builderList`,
+`#builderTotals` and `#builderCountLabel` by id, and those ids just moved.
+
+- **One width rule for both platforms**: `min(100% - margins, 420px)`, anchored bottom-left. On a phone that
+  *is* full width; on a desktop it is a 420px panel that clears the info panel (top right, 280px) and the
+  locate button (bottom right) with no per-platform case.
+- **No backdrop** — the entire point. Taps reach the map underneath. z-index 1600: above the map's floating
+  controls, below the drawer (2500) and its backdrop (2400), so opening the drawer still covers it.
+- **Collapsed it is just its handle** (~34px) showing `Tourenbuilder · 3 · 7.38 km`. State persisted as
+  `builderSheetOpen` in the same `localStorage` key.
+- **🧭 button on the map** (`#builderBtn`) toggles the mode, because with the list off the drawer you must
+  not need the drawer to switch the mode *on* either. It and the sidebar switch both go through
+  `setBuilderMode(on)`, which also closes the drawer when switching on.
+- **The sheet carries its own ✕**. Not decoration: on a phone the sheet is full width at z-index 1600 and
+  `#builderBtn` sits at 1000, so the map button is *behind* the sheet and could not switch the mode back
+  off. `#builderSheetHandle` is therefore a `div` (a button inside a button is invalid HTML) whose click
+  handler bails on `e.target.closest("#builderSheetOff")`.
+- **Mobile only**, while the sheet is visible: `#locateBtn` moves to the top right (free there — drawer
+  toggle is top left, `#liveStatus` top centre) and `#builderBtn` is hidden. Both via
+  `html.has-builder-sheet`, the same technique the app already uses for `landscape-compact`, and with
+  `!important` to beat the existing `html.is-standalone` overrides.
+- One trap worth recording: `#locateBtn` is **not** at `bottom:16px` on mobile but 54px higher, to clear the
+  bottom-centred info panel. `#builderBtn` sits beside it and has to mirror that offset *and* its
+  `html.is-standalone` override, or the two buttons end up at different heights.
+
+Still open: the builder glow and its numbered dots stay on the map when the mode is switched off (they
+always did — `drawBuilderHighlight()` does not check `builderMode`). With the list in the sidebar that was
+harmless; now that the sheet disappears with the mode, the glow is left without a visible list explaining
+it. Not changed unasked.
+
 ## How it works
 
 **State.** `builderMode` (bool) and `builderItems` (`[{kind:"trail"|"lift", id, reversed}]`), persisted

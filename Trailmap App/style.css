@@ -460,7 +460,90 @@ html.landscape-compact .ele-chart{ height:40px; }
    A scratch list of trails/lifts in ride order. Kept visually close to .trail-card
    so the two lists read as the same kind of thing, but numbered and with row
    controls (flip / move / remove). */
+#builderSidebarNote{ font-size:11px; opacity:.75; line-height:1.4; margin:6px 0 2px; }
 #builderHint{ font-size:11px; opacity:.75; line-height:1.4; margin:6px 0 8px; }
+
+/* ---- The pinned builder sheet (2026-07-27) --------------------------------------
+   ONE element, on every screen size -- not a second copy of the sidebar list. The user's own question
+   settled the design ("Ist das Bottom Sheet ein eigenes GUI element zusätzlich zur Sidebar?"): two copies
+   of the same list would mean two sets of handlers and inevitable drift, so the list moved OUT of the
+   sidebar entirely and only the mode switch stayed behind.
+
+   Anchored bottom-left with one width rule for both platforms: on a phone min(100%,...) IS full width, on
+   a desktop it is a 420px panel that clears the info panel (top right, 280px) and the locate button
+   (bottom right) without any per-platform special case. Deliberately NO backdrop -- that is the whole
+   point, taps have to reach the map underneath. z-index sits above the map's own floating controls but
+   below the sidebar drawer (2500) and its backdrop (2400), so opening the drawer still covers it. */
+#builderSheet{
+  display:none; position:absolute; z-index:1600;
+  left: calc(12px + env(safe-area-inset-left, 0px));
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  width: min(calc(100% - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)), 420px);
+  background: rgba(255,255,255,0.97);
+  border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.22);
+  font-family: Arial, sans-serif;
+}
+#builderSheet.visible{ display:block; }
+#builderSheetHandle{
+  display:flex; align-items:center; gap:8px;
+  cursor:pointer; padding:8px 8px 8px 14px; font-size:12.5px; color:var(--ink);
+  border-radius:10px;
+}
+#builderSheetHandle:hover{ background:rgba(0,0,0,.04); }
+#builderSheetOff{
+  flex-shrink:0; border:none; background:none; cursor:pointer; color:var(--stone);
+  font-size:17px; line-height:1; padding:3px 7px; border-radius:6px;
+}
+#builderSheetOff:hover{ background:rgba(0,0,0,.08); color:var(--rust); }
+#builderSheetHandle .bs-caret{ font-size:9px; opacity:.6; transition:transform .15s ease; }
+#builderSheet.collapsed #builderSheetHandle .bs-caret{ transform:rotate(180deg); }
+#builderSheetHandle .bs-title{ font-weight:700; }
+#builderSheetHandle .bs-summary{ margin-left:auto; opacity:.7; font-variant-numeric:tabular-nums; }
+#builderSheetBody{
+  padding:0 14px 12px;
+  max-height:min(46vh, 340px); overflow-y:auto;
+}
+#builderSheet.collapsed #builderSheetBody{ display:none; }
+/* Phone landscape has almost no vertical room; the list gets a smaller share of it. */
+html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
+
+/* The 🧭 map button: switching the mode on must not require the drawer, now that working in it doesn't.
+   Shown on every screen size, unlike #locateBtn which is mobile-only -- hence the plain right offset here
+   and the +56px shift inside the mobile query below, where the locate button occupies that slot. */
+#builderBtn{
+  display:flex; position:absolute; z-index:1000;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  width:46px; height:46px; border-radius:50%;
+  background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  font-size:21px; align-items:center; justify-content:center; cursor:pointer;
+}
+#builderBtn:hover{ background:#f5f7ef; }
+#builderBtn.on{ background: var(--highlight); border-color:#b8801a; }
+
+@media (max-width: 768px), (pointer: coarse){
+  /* Sits beside #locateBtn, so it has to match its offsets exactly -- and on mobile that button is NOT at
+     bottom:16px but 54px higher, to clear the bottom-centred info panel. The is-standalone rule below
+     mirrors the one that already exists for #locateBtn for the same reason. */
+  #builderBtn{
+    right: calc(16px + env(safe-area-inset-right, 0px) + 56px);
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px) + 54px);
+  }
+  /* On a phone the sheet spans the full width and sits at z-index 1600, so the whole bottom strip belongs
+     to it -- collapsed too. The locate button therefore moves to the top right for the duration (free
+     there: the drawer toggle is top left, #liveStatus top centre) and the 🧭 button steps aside entirely,
+     since the sheet's own ✕ is what ends the mode. Needs !important to beat the html.is-standalone rule
+     further up, and wins on document order at equal specificity. */
+  html.has-builder-sheet #locateBtn{
+    top: calc(16px + env(safe-area-inset-top, 0px)) !important;
+    bottom: auto !important;
+  }
+  html.has-builder-sheet #builderBtn{ display:none; }
+}
+html.is-standalone #builderBtn{
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+}
 #builderList{ display:flex; flex-direction:column; gap:4px; }
 .builder-row{
   display:flex; align-items:center; gap:6px;

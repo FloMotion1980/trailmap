@@ -72,19 +72,14 @@
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
         </details>
       </div>
+      <!-- Only the switch lives here. The list itself is one single element pinned to the map
+           (#builderSheet, further down) on every screen size -- see docs/tour-builder.md. -->
       <details class="filter-section" id="secBuilder">
         <summary><span class="section-title-row"><span>Tourenbuilder</span><span class="section-meta" id="builderCountLabel"></span></span></summary>
         <div class="toggle-row-group">
           <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="builderModeToggle"><span class="slider"></span></span>🧭 Builder-Modus</label>
         </div>
-        <div id="builderHint">Modus an, dann Trails und Lifte anklicken — auf der Karte oder in der Liste. Sie werden hinten angehängt.</div>
-        <div id="builderList"></div>
-        <div id="builderTotals"></div>
-        <div class="builder-actions">
-          <button id="builderExportBtn">Als JSON ausgeben</button>
-          <button id="builderClearBtn">Leeren</button>
-        </div>
-        <textarea id="builderExport" readonly rows="6" spellcheck="false"></textarea>
+        <div id="builderSidebarNote">Die Tourenliste erscheint unten am Kartenrand, damit die Karte bedienbar bleibt.</div>
       </details>
       <details class="filter-section" id="secTrails" open>
         <summary>Trails</summary>
@@ -95,6 +90,29 @@
       <div id="map"></div>
       <button id="sidebarToggle">☰ Trails</button>
       <button id="locateBtn" title="Mein Standort">📍</button>
+      <button id="builderBtn" title="Tourenbuilder ein/aus">🧭</button>
+      <!-- The one and only builder list, pinned to the map on every screen size so the map stays
+           clickable while you assemble a tour. Collapsed it is just its handle. -->
+      <div id="builderSheet">
+        <!-- A div, not a button: it carries its own nested "end the mode" button, and a button inside a
+             button is invalid HTML. Clicking the bar collapses/expands; the ✕ is guarded in JS. -->
+        <div id="builderSheetHandle" title="Liste auf-/zuklappen">
+          <span class="bs-caret">▲</span>
+          <span class="bs-title">Tourenbuilder</span>
+          <span class="bs-summary" id="builderSheetSummary"></span>
+          <button id="builderSheetOff" title="Builder-Modus beenden">✕</button>
+        </div>
+        <div id="builderSheetBody">
+          <div id="builderHint">Trails und Lifte anklicken — auf der Karte oder in der Liste. Sie werden hinten angehängt.</div>
+          <div id="builderList"></div>
+          <div id="builderTotals"></div>
+          <div class="builder-actions">
+            <button id="builderExportBtn">Als JSON ausgeben</button>
+            <button id="builderClearBtn">Leeren</button>
+          </div>
+          <textarea id="builderExport" readonly rows="6" spellcheck="false"></textarea>
+        </div>
+      </div>
       <div id="liveStatus"><span class="rec-dot"></span> Live-Tracking</div>
       <div id="infoPanel">
         <button class="ip-close" id="ipClose" title="Schließen">&times;</button>
@@ -721,15 +739,37 @@ document.getElementById("showLiftsToggle").addEventListener("change", (e) => {
 });
 
 // ---- Tourenbuilder controls ----
-document.getElementById("builderModeToggle").addEventListener("change", (e) => {
-  builderMode = e.target.checked;
+// Two controls for one state: the sidebar switch and the 🧭 button on the map. The map button matters --
+// with the list pinned to the map, you no longer need the drawer to WORK, so you must not need it to
+// switch the mode ON either (2026-07-27).
+function setBuilderMode(on){
+  builderMode = on;
   // Leaving a half-open info panel behind while switching into builder mode is confusing -- clicks no
   // longer feed it, so close it and drop the map selection.
-  if (builderMode) closeInfoPanelAndDeselect();
+  if (builderMode) {
+    closeInfoPanelAndDeselect();
+    builderSheetOpen = true;      // switching on means you want to see the list
+    // On a phone the drawer covers the map behind an opaque backdrop, so leaving it open would hide the
+    // very thing you are about to click on.
+    closeSidebar();
+  }
+  document.getElementById("builderModeToggle").checked = builderMode;
+  document.getElementById("builderBtn").classList.toggle("on", builderMode);
   persistBuilder();
   renderBuilder();
   render();  // Tours are hidden while the mode is on, so the map/list have to be rebuilt either way
+}
+document.getElementById("builderModeToggle").addEventListener("change", (e) => setBuilderMode(e.target.checked));
+document.getElementById("builderBtn").addEventListener("click", () => setBuilderMode(!builderMode));
+document.getElementById("builderSheetHandle").addEventListener("click", (e) => {
+  if (e.target.closest("#builderSheetOff")) return;   // that button ends the mode, it does not collapse
+  builderSheetOpen = !builderSheetOpen;
+  persistBuilder();
+  renderBuilder();
 });
+// The sheet's own way out. Needed because on a phone the sheet is full width at z-index 1600 and the 🧭
+// map button sits at 1000 -- it is behind the sheet, so it could not be used to switch back off.
+document.getElementById("builderSheetOff").addEventListener("click", () => setBuilderMode(false));
 document.getElementById("builderClearBtn").addEventListener("click", () => {
   builderItems = [];
   document.getElementById("builderExport").classList.remove("visible");
@@ -1215,6 +1255,7 @@ const liftSelectionOutline = L.polyline([], {
 // Entry shape: { kind: "trail"|"lift", id, reversed }
 let builderMode = false;
 let builderItems = [];
+let builderSheetOpen = true;   // whether the pinned list is expanded or just its handle
 const BUILDER_KEY = "trailmap-builder-v1";
 // The chain is drawn as a GLOW rather than one flat band: a soft wide halo, a body, and a bright core,
 // stacked (plus a drop-shadow on the pane itself in style.css). The first cut's single 12px/0.5 amber
@@ -1453,7 +1494,7 @@ function builderClearStaleAlts(snapshot){
 }
 
 function persistBuilder(){
-  try { localStorage.setItem(BUILDER_KEY, JSON.stringify({ builderMode, builderItems })); }
+  try { localStorage.setItem(BUILDER_KEY, JSON.stringify({ builderMode, builderItems, builderSheetOpen })); }
   catch (e) { /* private mode -- the builder just won't survive a reload */ }
 }
 function restoreBuilder(){
@@ -1463,6 +1504,7 @@ function restoreBuilder(){
     const s = JSON.parse(raw);
     builderMode = !!s.builderMode;
     builderItems = Array.isArray(s.builderItems) ? s.builderItems.filter(i => i && i.id && i.kind) : [];
+    if (typeof s.builderSheetOpen === "boolean") builderSheetOpen = s.builderSheetOpen;
   } catch (e) { /* ignore a corrupt entry */ }
 }
 
@@ -1653,7 +1695,20 @@ function renderBuilder(){
     : "";
   builderResolved = resolved;
   drawBuilderHighlight();
-  document.getElementById("builderHint").style.display = builderMode ? "block" : "none";
+  // The pinned sheet exists only while the mode is on; collapsed it is just its own handle. The <html>
+  // class is what lifts the map's other floating bits (locate button, info panel) clear of it -- same
+  // technique the app already uses for `landscape-compact`, and the only way to reach rules that carry
+  // !important for the standalone/landscape cases.
+  const sheet = document.getElementById("builderSheet");
+  sheet.classList.toggle("visible", builderMode);
+  sheet.classList.toggle("collapsed", !builderSheetOpen);
+  document.documentElement.classList.toggle("has-builder-sheet", builderMode);
+  document.getElementById("builderSheetSummary").textContent = builderItems.length
+    ? `${builderItems.length} · ${km.toFixed(2)} km`
+    : "leer";
+  document.getElementById("builderSheetHandle").title = builderSheetOpen ? "Liste zuklappen" : "Liste aufklappen";
+  document.getElementById("builderBtn").classList.toggle("on", builderMode);
+  document.getElementById("builderHint").style.display = builderItems.length ? "none" : "block";
   // The 🔁 Touren switch cannot do anything while the mode is on, so it is disabled and dimmed rather
   // than left sitting there looking functional.
   const loopToggle = document.getElementById("showLoopToggle");
@@ -3194,6 +3249,7 @@ async function boot(){
   // triggered a render (found 2026-07-27 by the user).
   restoreBuilder();
   document.getElementById("builderModeToggle").checked = builderMode;
+  document.getElementById("builderBtn").classList.toggle("on", builderMode);
 
   rebuildRegionChips();
   render();
@@ -3323,7 +3379,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v14"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v15"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
