@@ -728,6 +728,7 @@ document.getElementById("builderModeToggle").addEventListener("change", (e) => {
   if (builderMode) closeInfoPanelAndDeselect();
   persistBuilder();
   renderBuilder();
+  render();  // Tours are hidden while the mode is on, so the map/list have to be rebuilt either way
 });
 document.getElementById("builderClearBtn").addEventListener("click", () => {
   builderItems = [];
@@ -1573,6 +1574,17 @@ function renderBuilder(){
     }));
   });
   document.getElementById("builderHint").style.display = builderMode ? "block" : "none";
+  // The 🔁 Touren switch cannot do anything while the mode is on, so it is disabled and dimmed rather
+  // than left sitting there looking functional.
+  const loopToggle = document.getElementById("showLoopToggle");
+  if (loopToggle) {
+    loopToggle.disabled = builderMode;
+    const row = loopToggle.closest(".toggle-row");
+    if (row) {
+      row.classList.toggle("is-disabled", builderMode);
+      row.title = builderMode ? "Im Builder-Modus sind Touren immer ausgeblendet" : "";
+    }
+  }
 }
 
 // Which lift is SELECTED on the map, as opposed to `openLiftId` = whose info panel is open. Two ids for
@@ -2912,7 +2924,11 @@ function render(){
       regionLineTrails.forEach(t => {
         total++;
         const layer = lineLayers[t.id];
-        const categoryOk = t.loop ? showLoop : (t.uphill ? showUphill : showDownhill);
+        // Builder mode hides Tours outright, whatever the 🔁 switch says (user, 2026-07-27: "Die stören
+        // da nur"). A Tour lies on top of the very trails you are picking, so its line, its per-segment
+        // name labels and its wide hit-lines all get in the way of clicking the individual trails —
+        // which is the whole activity in this mode.
+        const categoryOk = t.loop ? (showLoop && !builderMode) : (t.uphill ? showUphill : showDownhill);
         const visible = regionOk && activeDiffs.has(t.diff) && categoryOk;
         if (visible) { regionVisibleCounts[regionKey]++; groupVisibleCounts[groupKey]++; }
         // Note the lifts a visible Tour rides, so the LIFTS loop below can show their bands too.
@@ -3223,7 +3239,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v10"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v11"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

@@ -42,6 +42,18 @@ the builder consumed the click so the caller can skip its normal "open the info 
 markers, a Tour's own component-trail and lift segment hit-lines, and the sidebar trail card. Clicking a
 Tour's segment adds the *referenced* trail or lift, which is a convenient way to copy an existing route.
 
+**Tours are hidden while the mode is on** (2026-07-27, user: *"Die stören da nur"*) — whatever the 🔁
+switch says, which is therefore `disabled` and dimmed for the duration rather than left looking functional.
+A Tour lies on top of the very trails you are picking, so its line, its per-segment name labels and its wide
+hit-lines all get in the way of the one activity this mode is for. `render()`'s category check reads
+`t.loop ? (showLoop && !builderMode) : ...`, and the mode toggle calls `render()` as well as
+`renderBuilder()`. Measured: 219 → 114 overlay paths, trail counter 51/51 → 49/51.
+
+One consequence worth knowing: two of the nine `builderTryAdd` sites are a Tour's own segment hit-lines
+(the "copy an existing route by clicking its segments" trick), and they are unreachable while the mode is
+on. If that turns out to be missed, the better shape is a "copy this Tour into the builder" button on the
+Tour's info panel, which does not need the Tour to be visible at all.
+
 **Totals.** Taken from each element's own published figures (`lineTrails.len/up/down`, and `liftClimb()` for
 a lift) rather than recomputed from geometry, so the builder agrees with what the trail list and the lift
 panel already show. `reversed` swaps up/down for a trail; for a lift it moves the climb to the descent side,

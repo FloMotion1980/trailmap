@@ -110,6 +110,9 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 .chip.diff-schwarz.active{ background:var(--schwarz); border-color:var(--schwarz); }
 .toggle-row-group{ display:flex; gap:16px; flex-wrap:wrap; margin-top:4px; }
 .toggle-row{ display:flex; align-items:center; gap:6px; font-family: Arial, sans-serif; font-size:12.5px; color:var(--ink); cursor:pointer; }
+/* A switch whose value cannot take effect right now — currently only 🔁 Touren while builder mode is on,
+   which hides Tours regardless of it. */
+.toggle-row.is-disabled{ opacity:.4; cursor:not-allowed; }
 .ios-switch{ position:relative; display:inline-block; width:34px; height:20px; flex-shrink:0; }
 .ios-switch input{ opacity:0; width:0; height:0; position:absolute; }
 .ios-switch .slider{ position:absolute; inset:0; background:#d3d8cd; border-radius:20px; transition: background .15s ease; }
