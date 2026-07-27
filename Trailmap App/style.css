@@ -473,6 +473,9 @@ html.landscape-compact .ele-chart{ height:40px; }
 /* Ridden against the trail's own direction, i.e. pedalling up a descent -- which the sequence can force
    without anything else in the row saying so. */
 .builder-row .bi-against{ color:var(--rust); font-weight:700; cursor:help; }
+/* Both clip ends landed on the same point: nothing to ride here. Deliberately never silently "repaired"
+   by riding the trail backwards -- that is the user's call, with 🔄. */
+.builder-row .bi-empty{ color:var(--rust); font-weight:700; cursor:help; }
 .builder-row button{
   border:none; background:transparent; cursor:pointer; font-size:13px; line-height:1;
   padding:2px 3px; border-radius:4px; opacity:.75;
@@ -534,3 +537,5 @@ html.landscape-compact .ele-chart{ height:40px; }
   font-variant-numeric:tabular-nums;
   box-shadow:0 0 0 2px rgba(255,255,255,.6), 0 1px 3px rgba(0,0,0,.45);
 }
+/* Nothing is ridden at this element, so its dot is not a start — hollow instead of solid green. */
+.builder-num.is-empty{ background:var(--card-bg); color:var(--rust); border-color:var(--rust); }

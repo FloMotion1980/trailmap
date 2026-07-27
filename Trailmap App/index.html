@@ -1373,9 +1373,13 @@ function builderResolve(){
     //    had just joined at (the "Wurzel-Trail rückwärts" case). It now moves the open end to the other
     //    terminus, which is the only freedom a junction leaves.
     //
-    // The `Math.abs(...) < 1` guards cover a junction that sits ON the terminus the trail's direction
-    // points at -- then there is nothing to ride that way and the stretch has to come from the other end
-    // (ScheeLeitn Line joins the Wurzel-Trail at its own index 0, so it is ridden 69 -> 0).
+    // Nothing here ever falls back to riding a trail backwards. If a junction sits on the very terminus
+    // the trail's own direction points at, the stretch is EMPTY and says so -- it does not silently
+    // become the whole trail ridden the other way, which is what the first version did and what the user
+    // ruled out on 2026-07-27: "Ich möchte nicht, dass er automatisch erkennt, dass er ihn rückwärts
+    // einplanen soll. Das mache ich dann von Hand." Their example: Steinbergbahn I -> II -> Asitz-Trail,
+    // where the mountain station is 298 m from the Asitz-Trail's END and 1600 m from its start, so the
+    // only junction candidate lands on the last point -- and the whole trail lit up.
     let a = entry[i], b = exit[i];
     const rev = !!item.reversed;
     if (a === null && b === null) {
@@ -1383,16 +1387,11 @@ function builderResolve(){
       a = rev ? last : 0;
       b = rev ? 0 : last;
     } else if (a === null) {
-      a = rev ? last : 0;                              // ride TO the exit junction, starting where the
-      if (Math.abs(b - a) < 1) a = rev ? 0 : last;     // trail itself starts
+      a = rev ? last : 0;   // ride TO the exit junction, starting where the trail itself starts
     } else if (b === null) {
-      b = rev ? 0 : last;                              // ride FROM the entry junction, on to where the
-      if (Math.abs(b - a) < 1) b = rev ? last : 0;     // trail itself ends
+      b = rev ? 0 : last;   // ride FROM the entry junction, on to where the trail itself ends
     }
-    let lo = Math.min(a, b), hi = Math.max(a, b);
-    // Degenerate clip -> the whole trail. Also catches "reversed picked the terminus the junction sits
-    // on", which would otherwise be a zero-length stretch.
-    if (hi - lo < 1) { lo = 0; hi = last; }
+    const lo = Math.min(a, b), hi = Math.max(a, b);
     let coords = g.slice(lo, hi + 1);
     const forward = a <= b;
     if (!forward) coords = coords.slice().reverse();
@@ -1419,7 +1418,11 @@ function builderResolve(){
       }
       if (!forward) { const t2 = up; up = down; down = t2; }
     }
-    return { item, coords, len, up: Math.round(up), down: Math.round(down), fullLen, clipped, against: !forward };
+    // `empty`: the two ends of the clip landed on the same point, so there is nothing to ride here. The
+    // row flags it and the map draws only the numbered dot, no glow -- the user's own expectation for the
+    // Asitz-Trail case ("Müsste ja eigentlich gar nix gelb leuchten, oder?").
+    return { item, coords, len, up: Math.round(up), down: Math.round(down), fullLen, clipped,
+             against: !forward, empty: hi <= lo };
   });
   resolved.forEach((r, i) => {
     r.junction = junctionInfo[i];
@@ -1524,6 +1527,7 @@ function renderBuilder(){
       <span class="bi-num">${i + 1}</span>
       <span class="bi-name">${item.kind === "lift" ? "🚡 " : ""}${builderNameOf(item)}</span>
       ${against ? `<span class="bi-against" title="Gegen die Trailrichtung — dieser Abschnitt geht bergauf">↑</span>` : ""}
+      ${r.empty ? `<span class="bi-empty" title="Der Übergang liegt genau auf dem Trailende — in Trailrichtung bleibt nichts zu fahren. Mit 🔄 rückwärts einplanen, oder mit ⇔ ganz fahren.">∅</span>` : ""}
       <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
       ${item.kind === "trail" ? `<button data-act="full" class="${item.full ? "on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">⇔</button>` : ""}
       <button data-act="flip"${r.dirFixed
@@ -1554,8 +1558,10 @@ function renderBuilder(){
   builderHighlight.clearLayers();
   resolved.forEach((r, i) => {
     const c = r.coords;
-    if (!c || c.length < 2) return;
-    BUILDER_GLOW.forEach(g => builderHighlight.addLayer(L.polyline(c, {
+    if (!c || !c.length) return;
+    // An empty stretch (both clip ends on the same point) glows nothing at all -- there is nothing being
+    // ridden to point at. Its numbered dot is still drawn below, so the element stays locatable.
+    if (c.length > 1) BUILDER_GLOW.forEach(g => builderHighlight.addLayer(L.polyline(c, {
       pane: BUILDER_PANE, color: g.color, weight: g.weight, opacity: g.opacity,
       lineCap: "round", lineJoin: "round", interactive: false
     })));
@@ -1567,7 +1573,7 @@ function renderBuilder(){
     builderHighlight.addLayer(L.marker(c[0], {
       icon: L.divIcon({
         className: "builder-num-icon",
-        html: `<div class="builder-num">${i + 1}</div>`,
+        html: `<div class="builder-num${r.empty ? " is-empty" : ""}">${i + 1}</div>`,
         iconSize: [22, 22], iconAnchor: [11, 11]
       }),
       interactive: false, keyboard: false
@@ -3239,7 +3245,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v11"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v12"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

@@ -149,9 +149,27 @@ Measured against the region data, before → after:
 | X-Line → Sprinter | 5.33 → **1.31 km** | 990 → 1826 m *becomes* 2009 → 1826 m |
 | Back-to-Black → X-Line | 4.27 → **2.38 km** | uphill *becomes* 1412 → 990 m |
 
-The `Math.abs(b - a) < 1` guards cover a junction sitting **on** the terminus the direction points at —
-there is nothing to ride that way, so the stretch comes from the other end instead (ScheeLeitn Line joins
-the Wurzel-Trail at its own index 0 and is therefore ridden 69 → 0).
+### Nothing ever auto-reverses; an empty stretch stays empty
+
+A junction can land **on** the very terminus the trail's direction points at, leaving nothing to ride. The
+first version of this rule "repaired" that by riding the whole trail from the other end — which the user
+ruled out (2026-07-27): *"Ich möchte nicht, dass er automatisch erkennt, dass er ihn rückwärts einplanen
+soll. Das mache ich dann von Hand."* Their case was `Steinbergbahn I → Steinbergbahn II → Asitz-Trail`,
+where the whole Asitz-Trail lit up: the mountain station is **298 m from the trail's end** and 1600 m from
+its start, so the sole candidate lands on the last point (and its 300 m gap is past
+`JUNCTION_MAX_GAP_M`, i.e. it is the "no candidate close enough" fallback — the junction row shows it in
+rust).
+
+So there is no fallback at all now: `lo === hi` yields a zero-length stretch, marked `r.empty`. The row
+shows `∅ 0.00 / 1.53 km` and the map draws **no glow** for it (the user: *"Müsste ja eigentlich gar nix gelb
+leuchten, oder?"*) — only its numbered dot, hollow instead of solid green, so the element stays locatable.
+🔄 then gives the backwards option by explicit choice (1.53 km, flagged ↑) and ⇔ the whole trail in its own
+direction.
+
+One knock-on: `ScheeLeitn Line → Wurzel-Trail` is now empty for the ScheeLeitn too (it joins the Wurzel at
+its own index 0), where it used to report 1.70 km ridden backwards. That sequence really is geometrically
+backwards — `Wurzel-Trail → ScheeLeitn Line` resolves cleanly — and it is better seen than silently
+smoothed over.
 
 Some sequences genuinely force a climb: `Back-to-Black → X-Line → Sprinter` pins both X-Line ends down and
 the lift station is above where the trail was joined, so it has to be pedalled up. Nothing in the row said
