@@ -749,7 +749,12 @@ document.getElementById("builderExportBtn").addEventListener("click", () => {
       // coordinate of the stretch actually used, plus its length
       from: r.coords ? r.coords[0] : null,
       to: r.coords ? r.coords[r.coords.length - 1] : null,
-      km: +r.len.toFixed(3)
+      km: +r.len.toFixed(3),
+      // which junction candidate this element joins its predecessor at, and how far apart the two lines
+      // are there -- from/to already pin the clip down, this records how it was arrived at
+      junction: r.junction
+        ? { alt: r.junction.alt, of: r.junction.count, gapM: Math.round(r.junction.dist) }
+        : null
     }))
   };
   ta.value = JSON.stringify(out, null, 2);
@@ -1249,17 +1254,61 @@ function builderNameOf(item){
 // element A leaves there and element B joins there. A per-element `full` flag opts out when the automatic
 // guess is wrong, which it can be for two trails that cross each other more than once.
 // Lifts are never clipped: you ride a cable end to end.
-function closestApproach(A, B){
-  let best = Infinity, ia = 0, ib = 0;
-  for (let i = 0; i < A.length; i++) {
+//
+// The guess is right often but not always (the user, 2026-07-27: X-Line into the Schattberg Sprinter works,
+// the Wurzel-Trail ridden backwards does not). Rather than chase a smarter heuristic, ALL plausible
+// junctions are offered and the user cycles through them -- "wenn es eine Möglichkeit gäbe, die
+// verschiedenen Möglichkeiten durchzuwechseln, könnte man mit Fehlern leben".
+const JUNCTION_MAX_GAP_M = 150;      // farther apart than this is not a junction, just two nearby trails
+const JUNCTION_MIN_SEP_KM = 0.15;    // two minima closer together than this along A are one crossing
+const JUNCTION_MAX_CANDIDATES = 6;
+// Every local minimum of "distance from A's point i to the nearest point of B", best first. Ordering by
+// gap is what makes cycling useful: candidate 1 is exactly what the old single-answer version returned,
+// so this can only ever add options, never change the default.
+function junctionCandidates(A, B){
+  // Scan along whichever side actually has a shape. A lift contributes a single station point (see
+  // junctionRef below), and when it is the one being LEFT, the alternatives live on the following
+  // trail's side -- otherwise a trail that passes its arrival station twice would offer only one
+  // candidate. Roles are swapped back on the way out.
+  if (A.length === 1 && B.length > 1) {
+    return junctionCandidates(B, A).map(c => ({ ia: c.ib, ib: c.ia, dist: c.dist }));
+  }
+  const n = A.length;
+  const near = new Array(n), dist = new Array(n);
+  for (let i = 0; i < n; i++) {
+    let best = Infinity, bj = 0;
     for (let j = 0; j < B.length; j++) {
       const dla = (B[j][0] - A[i][0]) * 110540;
       const dlo = (B[j][1] - A[i][1]) * 76000; // ~cos(47deg) * 111320, good enough to rank candidates
       const d = dla * dla + dlo * dlo;
-      if (d < best) { best = d; ia = i; ib = j; }
+      if (d < best) { best = d; bj = j; }
     }
+    near[i] = bj; dist[i] = Math.sqrt(best);
   }
-  return { ia, ib, dist: Math.sqrt(best) };
+  const cand = i => ({ ia: i, ib: near[i], dist: dist[i] });
+  if (n === 1) return [cand(0)];   // a lift contributes a single station, see junctionRef below
+  let globalMin = 0;
+  const minima = [];
+  for (let i = 0; i < n; i++) {
+    if (dist[i] < dist[globalMin]) globalMin = i;
+    // `<=` on both sides so a flat stretch still registers; the separation filter below drops the
+    // duplicates that produces.
+    const l = i > 0 ? dist[i - 1] : Infinity, r = i < n - 1 ? dist[i + 1] : Infinity;
+    if (dist[i] <= l && dist[i] <= r) minima.push(i);
+  }
+  const pool = minima.filter(i => dist[i] <= JUNCTION_MAX_GAP_M);
+  // No minimum close enough to be a real junction: still answer with the closest approach, so the
+  // behaviour never gets worse than before this existed -- the UI flags the wide gap instead.
+  if (!pool.length) return [cand(globalMin)];
+  pool.sort((a, b) => dist[a] - dist[b]);
+  const cum = cumulativeDistanceKm(A);
+  const kept = [];
+  for (const i of pool) {
+    if (kept.some(k => Math.abs(cum[k] - cum[i]) < JUNCTION_MIN_SEP_KM)) continue;
+    kept.push(i);
+    if (kept.length >= JUNCTION_MAX_CANDIDATES) break;
+  }
+  return kept.map(cand);
 }
 
 // Resolves the whole list into what is actually ridden: clipped, oriented coordinates plus stats.
@@ -1278,14 +1327,21 @@ function builderResolve(){
     const arrive = builderItems[i].reversed ? g[0] : g[g.length - 1];
     return [side === "entry" ? board : arrive];
   };
+  // Which junction each element joins its PREDECESSOR at, so index i describes the pair (i-1, i). The
+  // chosen candidate lives on the later element as `junctionAlt`, which reads the same way the UI does
+  // ("where do I come in?") and means a row's own control never reaches backwards past its own row.
+  const junctionInfo = new Array(n).fill(null);
   for (let i = 0; i < n - 1; i++) {
     const A = junctionRef(i, "exit"), B = junctionRef(i + 1, "entry");
     if (!A || !B) continue;
-    const j = closestApproach(A, B);
+    const cands = junctionCandidates(A, B);
+    const alt = Math.min(Math.max(builderItems[i + 1].junctionAlt | 0, 0), cands.length - 1);
+    const j = cands[alt];
+    junctionInfo[i + 1] = { count: cands.length, alt, dist: j.dist };
     if (builderItems[i].kind === "trail" && !builderItems[i].full) exit[i] = j.ia;
     if (builderItems[i + 1].kind === "trail" && !builderItems[i + 1].full) entry[i + 1] = j.ib;
   }
-  return builderItems.map((item, i) => {
+  const resolved = builderItems.map((item, i) => {
     const g = geoms[i];
     if (!g || g.length < 2) return { item, coords: null, len: 0, up: 0, down: 0, fullLen: 0, clipped: false };
     if (item.kind === "lift") {
@@ -1299,16 +1355,36 @@ function builderResolve(){
     }
     const cum = cumulativeDistanceKm(g);
     const fullLen = cum[cum.length - 1];
-    // an open end runs to whichever terminus leaves the longer ride
+    const last = g.length - 1;
+    // An open end runs to whichever terminus leaves the longer ride -- and `reversed` picks the OTHER
+    // terminus for it, rather than reversing the finished stretch.
+    //
+    // This is the fix for the user's "Wurzel-Trail rückwärts" case (2026-07-27). Reversing the stretch is
+    // only meaningful when nothing constrains the direction: once a junction pins one end down, the
+    // direction of travel is a fact of the sequence -- you leave a junction you have just joined at, you
+    // do not ride back into it. The old code flipped `forward` after the clip, which for ScheeLeitn Line ->
+    // Wurzel-Trail turned the Wurzel stretch around so it ran INTO its own entry junction (verified
+    // against the real Saalbach data). What the flip should do at a clipped end is choose the other
+    // terminus, which is the only freedom actually left.
     let a = entry[i], b = exit[i];
-    if (a === null && b === null) { a = 0; b = g.length - 1; }
-    else if (a === null) a = (b > (g.length - 1) / 2) ? 0 : g.length - 1;
-    else if (b === null) b = (a > (g.length - 1) / 2) ? 0 : g.length - 1;
+    const other = t => (t === 0 ? last : 0);
+    if (a === null && b === null) {
+      // no junction at all (single element, or opted out with `full`) -- a plain reversal
+      a = item.reversed ? last : 0;
+      b = item.reversed ? 0 : last;
+    } else if (a === null) {
+      const far = (b > last / 2) ? 0 : last;
+      a = item.reversed ? other(far) : far;
+    } else if (b === null) {
+      const far = (a > last / 2) ? 0 : last;
+      b = item.reversed ? other(far) : far;
+    }
     let lo = Math.min(a, b), hi = Math.max(a, b);
-    if (hi - lo < 1) { lo = 0; hi = g.length - 1; }        // degenerate clip -> fall back to the whole trail
+    // Degenerate clip -> the whole trail. Also catches "reversed picked the terminus the junction sits
+    // on", which would otherwise be a zero-length stretch.
+    if (hi - lo < 1) { lo = 0; hi = last; }
     let coords = g.slice(lo, hi + 1);
-    let forward = a <= b;
-    if (item.reversed) forward = !forward;
+    const forward = a <= b;
     if (!forward) coords = coords.slice().reverse();
     const len = cum[hi] - cum[lo];
     const clipped = (hi - lo) < g.length - 1;
@@ -1334,6 +1410,32 @@ function builderResolve(){
       if (!forward) { const t2 = up; up = down; down = t2; }
     }
     return { item, coords, len, up: Math.round(up), down: Math.round(down), fullLen, clipped };
+  });
+  resolved.forEach((r, i) => {
+    r.junction = junctionInfo[i];
+    // Clipped at both ends: the sequence fully determines which way this stretch is ridden, so there is
+    // nothing left for the 🔄 to flip -- the row disables it instead of offering a control that does
+    // nothing. Opting out with ⇔ (`full`) frees both ends again and makes 🔄 meaningful.
+    r.dirFixed = r.item.kind === "trail" && entry[i] !== null && exit[i] !== null;
+  });
+  return resolved;
+}
+
+// A stored `junctionAlt` means "the Nth candidate for the junction with whatever is in front of me", so
+// it turns into nonsense the moment that neighbour changes. Snapshot the predecessors before an edit,
+// call this after it, and only the pairs the edit actually touched lose their tuning.
+// Reversal is part of the key for a lift, because which station a lift contributes to the junction search
+// depends on its direction -- flipping one therefore invalidates its own junction and the next one's.
+function builderJunctionKey(items, i){
+  const key = it => it.kind + ":" + it.id + (it.kind === "lift" && it.reversed ? ":rev" : "");
+  return (i > 0 ? key(items[i - 1]) : "-") + ">" + key(items[i]);
+}
+function builderPredecessorSnapshot(){
+  return new Map(builderItems.map((it, i) => [it, builderJunctionKey(builderItems, i)]));
+}
+function builderClearStaleAlts(snapshot){
+  builderItems.forEach((it, i) => {
+    if (snapshot.get(it) !== builderJunctionKey(builderItems, i)) delete it.junctionAlt;
   });
 }
 
@@ -1374,6 +1476,29 @@ function renderBuilder(){
   resolved.forEach((r, i) => {
     const item = r.item;
     km += r.len; up += r.up; down += r.down;
+    // The junction with the previous element gets its own thin row BETWEEN the two element rows, because
+    // that is literally where it sits (the user's choice, 2026-07-27). The gap it shows doubles as a
+    // quality signal: a few metres means the two lines really do meet there, a hundred-plus means the
+    // guess is probably wrong and it is worth cycling to the next candidate.
+    if (r.junction) {
+      const j = r.junction;
+      const jr = document.createElement("div");
+      // The WHOLE row cycles, not just the ⟳ glyph: a 19x16px icon is far too small to hit on a phone,
+      // and there is nothing else on this row that could want a click.
+      jr.className = "builder-junction" + (j.count > 1 ? " is-cyclable" : "");
+      if (j.count > 1) jr.title = "Nächste mögliche Kreuzung";
+      jr.innerHTML = `
+        <span class="bj-arrow">↳</span>
+        <span class="bj-label">Übergang</span>
+        <span class="bj-gap${j.dist > JUNCTION_MAX_GAP_M ? " is-far" : ""}">${Math.round(j.dist)} m</span>
+        ${j.count > 1 ? `<span class="bj-alt">${j.alt + 1}/${j.count}</span><span class="bj-cycle">⟳</span>` : ""}`;
+      if (j.count > 1) jr.addEventListener("click", () => {
+        item.junctionAlt = ((item.junctionAlt | 0) + 1) % j.count;
+        persistBuilder();
+        renderBuilder();
+      });
+      listEl2.appendChild(jr);
+    }
     const row = document.createElement("div");
     row.className = "builder-row" + (item.kind === "lift" ? " is-lift" : "") + (item.reversed ? " is-reversed" : "");
     // when a trail is only partly ridden, show both figures so it's obvious the clip happened
@@ -1383,17 +1508,21 @@ function renderBuilder(){
       <span class="bi-name">${item.kind === "lift" ? "🚡 " : ""}${builderNameOf(item)}</span>
       <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
       ${item.kind === "trail" ? `<button data-act="full" class="${item.full ? "on" : ""}" title="${item.full ? "Zuschnitt wieder automatisch" : "Diesen Trail ganz fahren"}">⇔</button>` : ""}
-      <button data-act="flip" title="Richtung umdrehen">🔄</button>
+      <button data-act="flip"${r.dirFixed
+        ? ` disabled title="Richtung liegt durch die Reihenfolge fest — mit ⇔ freigeben"`
+        : ` title="${item.kind === "trail" && (r.clipped || r.junction) ? "Zum anderen Ende des Trails fahren" : "Richtung umdrehen"}"`}>🔄</button>
       <button data-act="up" title="Nach oben">↑</button>
       <button data-act="down" title="Nach unten">↓</button>
       <button data-act="del" title="Entfernen">✕</button>`;
     row.querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
       const act = b.dataset.act;
+      const snapshot = builderPredecessorSnapshot();
       if (act === "flip") item.reversed = !item.reversed;
       else if (act === "full") item.full = !item.full;
       else if (act === "del") builderItems.splice(i, 1);
       else if (act === "up" && i > 0) builderItems.splice(i - 1, 0, builderItems.splice(i, 1)[0]);
       else if (act === "down" && i < builderItems.length - 1) builderItems.splice(i + 1, 0, builderItems.splice(i, 1)[0]);
+      builderClearStaleAlts(snapshot);
       persistBuilder();
       renderBuilder();
     }));
@@ -3077,7 +3206,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v8"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v9"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

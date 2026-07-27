@@ -471,7 +471,9 @@ html.landscape-compact .ele-chart{ height:40px; }
   border:none; background:transparent; cursor:pointer; font-size:13px; line-height:1;
   padding:2px 3px; border-radius:4px; opacity:.75;
 }
-.builder-row button:hover{ opacity:1; background:rgba(0,0,0,.08); }
+.builder-row button:hover:not(:disabled){ opacity:1; background:rgba(0,0,0,.08); }
+/* 🔄 on a stretch that is clipped at both ends: the sequence already fixes its direction. */
+.builder-row button:disabled{ opacity:.25; cursor:default; }
 .builder-row.is-lift .bi-name{ font-style:italic; }
 .builder-row.is-reversed .bi-name::after{ content:" ↺"; opacity:.7; }
 #builderTotals{ margin-top:8px; font-size:12px; font-weight:600; }
@@ -488,6 +490,26 @@ html.landscape-compact .ele-chart{ height:40px; }
 #builderExport.visible{ display:block; }
 .builder-row .bi-meta.is-clipped{ color:var(--rust); }
 .builder-row button.on{ background:rgba(0,0,0,.12); opacity:1; }
+
+/* The junction between two consecutive elements, as its own thin row between their rows -- which is
+   where it actually sits (user's choice, 2026-07-27). Quieter than an element row on purpose: it is
+   annotation, not content. The gap turns rust when no candidate was close enough to be a real
+   crossing, i.e. when the clip is probably wrong and worth cycling. */
+.builder-junction{
+  display:flex; align-items:center; gap:5px; padding:4px 7px 4px 20px; border-radius:6px;
+  font-size:10.5px; line-height:1.4; opacity:.8;
+}
+.builder-junction .bj-arrow{ opacity:.55; }
+.builder-junction .bj-label{ opacity:.7; }
+.builder-junction .bj-gap{ font-variant-numeric:tabular-nums; font-weight:600; }
+.builder-junction .bj-gap.is-far{ color:var(--rust); }
+.builder-junction .bj-alt{ margin-left:auto; opacity:.7; font-variant-numeric:tabular-nums; }
+.builder-junction .bj-cycle{ font-size:12px; opacity:.75; }
+/* The whole row is the control when there is more than one candidate -- a ⟳ glyph alone is not a
+   hittable target on a phone, and nothing else on the row wants a click. */
+.builder-junction.is-cyclable{ cursor:pointer; }
+.builder-junction.is-cyclable:hover{ opacity:1; background:rgba(0,0,0,.06); }
+.builder-junction.is-cyclable:hover .bj-cycle{ opacity:1; }
 
 /* The chain glows so it stays findable on any base layer, satellite included (user, 2026-07-27). The
    drop-shadow sits on the PANE, not on the individual paths, so the whole chain costs one filter and

@@ -6,8 +6,8 @@
 // Bump whenever style.css changes: it is in APP_SHELL and served cache-first (only the navigate request
 // is network-first), so without a bump a returning user pairs the new index.html with the previously
 // cached stylesheet. v6 = bike-lift info panel rules, v7 = Tourenbuilder panel rules (both 2026-07-26),
-// v8 = builder glow + numbered start dots (2026-07-27).
-const CACHE_NAME = "trailmap-v8";
+// v8 = builder glow + numbered start dots, v9 = junction rows (both 2026-07-27).
+const CACHE_NAME = "trailmap-v9";
 const APP_SHELL = [
   "./",
   "./index.html",

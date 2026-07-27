@@ -76,16 +76,71 @@ likewise join a trail somewhere other than its start. Rather than making the use
 cut is **derived from the sequence**, which is what the sequence already says.
 
 For each consecutive pair, the closest approach between the two lines is the junction: the earlier element
-leaves there, the later one joins there. Per element, `full: true` opts out — needed when two trails cross
-each other more than once, where the automatic guess can pick the wrong crossing.
+leaves there, the later one joins there. Per element, `full: true` opts out entirely.
+
+### Cycling the candidates (2026-07-27)
+
+The guess is right often but not always — the user's verdict after a day of riding it: X-Line into the
+Schattberg Sprinter works, other spots do not, *"bei dem intelligenten Junction Clipping kann man mit
+Fehlern leben… wenn es eine Möglichkeit gäbe, die verschiedenen Möglichkeiten durchzuwechseln"*. So instead
+of chasing a smarter heuristic, **every plausible junction is offered and the user cycles**.
+
+`junctionCandidates(A, B)` returns all of them, best first: for each point of A the distance to the nearest
+point of B, then every **local minimum** of that curve, sorted by gap, dropping any beyond
+`JUNCTION_MAX_GAP_M` (150 m — farther apart than that is not a junction, just two nearby trails) and any
+within `JUNCTION_MIN_SEP_KM` (150 m along A) of a better one already kept, capped at
+`JUNCTION_MAX_CANDIDATES`. Candidate 1 is by construction exactly what the old single-answer version
+returned, so this could only add options, never change a default. If no minimum is close enough, the
+closest approach is still returned as a single candidate — the UI flags the wide gap in rust instead.
+
+Two details that are easy to get wrong:
+
+- **Scan the side that has a shape.** A lift contributes one station point (see below), so when the lift is
+  the element being *left*, the alternatives live on the following trail's side. `junctionCandidates` swaps
+  the roles in that case, otherwise a trail passing its arrival station twice would offer one candidate.
+- **`<=` on both neighbours** when detecting a minimum, so a flat stretch still registers; the separation
+  filter removes the duplicates that produces.
+
+The chosen candidate is stored as `junctionAlt` on the **later** element, meaning "the Nth candidate for the
+junction with whatever is in front of me". That reading matches the UI and keeps a row's control from
+reaching backwards past its own row. It also means the value is nonsense as soon as that neighbour changes,
+so every structural edit brackets itself in `builderPredecessorSnapshot()` /
+`builderClearStaleAlts()`, which clears the alts of exactly the pairs the edit touched and leaves the rest
+tuned. A lift's `reversed` is part of that key, since flipping a lift changes which station it contributes.
+
+**UI:** the junction gets its own thin row *between* the two element rows, because that is where it sits:
+`↳ Übergang · 84 m · 1/3 ⟳`. The gap doubles as a quality signal — a few metres means the lines really do
+meet there, a hundred-plus means the guess is probably wrong and worth cycling. The **whole row** is the
+control, not the ⟳ glyph, which at 19×16 px is not a hittable target on a phone.
 
 **A lift contributes only one point to the junction search, not its whole cable** — its boarding station
 when it is being joined, its arrival station when it is being left. This matters: the user's own example is
 leaving the X-Line for the Schattberg Sprinter, and you quit the trail where the *valley station* is, not
 where the cable happens to pass overhead. Lifts themselves are never clipped; you ride a cable end to end.
 
-Direction falls out of the clip (entry index vs exit index); the per-row 🔄 flips the traversal on top of
-that. The first and last elements run to whichever terminus leaves the longer ride.
+Direction falls out of the clip (entry index vs exit index). An open end runs to whichever terminus leaves
+the longer ride.
+
+### What 🔄 means on a clipped trail (fixed 2026-07-27)
+
+It flips **which terminus the open end runs to** — not the finished stretch. Reversing the stretch is only
+meaningful when nothing constrains the direction: once a junction pins one end down, the direction of travel
+is a fact of the sequence. You leave a junction you have just joined at; you do not ride back into it.
+
+The first version flipped `forward` *after* the clip, which is what the user hit with the Wurzel-Trail
+ridden backwards. Verified against the real Saalbach data: for `ScheeLeitn Line → Wurzel-Trail`, the Wurzel
+stretch is joined at index 114 and ridden down to 0 — pressing 🔄 turned that into 0 → 114, i.e. the stretch
+ran *into* its own entry junction. Now it instead runs 114 → 117, the other way out of the same junction
+(0.11 km, and the row says so).
+
+Consequences worth knowing:
+
+- A trail clipped at **both** ends has no freedom left, so its 🔄 is `disabled` with a title saying why
+  (`r.dirFixed`). Opting out with ⇔ frees both ends and makes 🔄 a plain reversal again — which is the way
+  to force a direction the sequence would otherwise dictate.
+- An element with no junction at all (single-element tour, or `full`) reverses exactly as before.
+- The degenerate-clip fallback (`hi - lo < 1` → whole trail) now also catches "the flip picked the terminus
+  the junction sits on", which would otherwise be a zero-length stretch.
 
 Rows show `ridden / full km` in the accent colour whenever a clip happened, so it is never silent.
 
