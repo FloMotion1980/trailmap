@@ -30,7 +30,7 @@ __all__ = [
     "haversine_m", "perp_distance_m", "douglas_peucker", "cumulative_km", "bounds_of",
     "parse_gpx", "parse_kml", "gpx_name", "dedupe_points", "split_on_gaps",
     "ElevationLookup",
-    "overpass", "osm_aerialway_survey", "osm_named_ways", "norm_name", "fuzzy_lookup",
+    "overpass", "osm_aerialway_survey", "osm_named_ways", "chain_ways", "norm_name", "fuzzy_lookup",
     "build_profile", "build_trail", "write_region", "region_summary",
     "SIMPLIFY_EPS_M", "MIN_POINT_SPACING_M", "MAX_TRACK_GAP_M",
 ]
@@ -373,6 +373,43 @@ def osm_named_ways(bbox, name_regex, highway_regex="path|track|footway|cycleway"
                      "tags": e.get("tags", {}), "geom": g,
                      "len": round(sum(haversine_m(g[i - 1], g[i]) for i in range(1, len(g))))})
     return rows
+
+
+def chain_ways(geoms, tol_m=25.0):
+    """Stitch OSM way fragments into one ordered line. Returns (chain, leftovers).
+
+    OSM splits a single trail into many ways wherever a tag changes, so a bike-park line arrives as 3-6
+    disconnected fragments in arbitrary order and arbitrary direction. Concatenating them as they come
+    produces a zig-zag across the mountain.
+
+    Greedy endpoint matching: start from the longest fragment, then repeatedly attach whichever remaining
+    fragment starts or ends within `tol_m` of the current chain's head or tail, reversing it if needed.
+
+    **Always check both return values.** A non-empty `leftovers` means the fragments do not form one line —
+    usually a branch or a same-named but separate trail — and the result should be treated as suspect
+    rather than drawn. `docs/finale-ligure.md` records the same lesson from the other direction: letting a
+    route renderer do relation-assembly beats reimplementing it, so prefer a clean single-track export when
+    one exists and use this only when the source is raw ways.
+    """
+    segs = [list(g) for g in geoms if len(g) >= 2]
+    if not segs:
+        return [], []
+    segs.sort(key=lambda g: cumulative_km(g)[-1], reverse=True)
+    chain = segs.pop(0)
+    changed = True
+    while changed and segs:
+        changed = False
+        for i, s in enumerate(segs):
+            for cand in (s, s[::-1]):
+                if haversine_m(chain[-1][:2], cand[0][:2]) <= tol_m:
+                    chain = chain + cand[1:]
+                    segs.pop(i); changed = True; break
+                if haversine_m(chain[0][:2], cand[-1][:2]) <= tol_m:
+                    chain = cand[:-1] + chain
+                    segs.pop(i); changed = True; break
+            if changed:
+                break
+    return chain, segs
 
 
 def norm_name(s):
