@@ -118,8 +118,33 @@ when it is being joined, its arrival station when it is being left. This matters
 leaving the X-Line for the Schattberg Sprinter, and you quit the trail where the *valley station* is, not
 where the cable happens to pass overhead. Lifts themselves are never clipped; you ride a cable end to end.
 
-Direction falls out of the clip (entry index vs exit index). An open end runs to whichever terminus leaves
-the longer ride.
+Direction falls out of the clip (entry index vs exit index).
+
+### An open end follows the trail's own direction (fixed 2026-07-27)
+
+**Not** "whichever terminus leaves the longer ride", which is what the first version did and is simply the
+wrong criterion: every trail here has a direction of its own, drawn with Start/Ziel markers and direction
+arrows. The Schattberg Sprinter's valley station sits at X-Line index 118 of 617, near the summit, so the
+longer ride started in the valley and the builder rode a 1117 m descent backwards *uphill* — 990 m →
+1826 m. The user hit it from both sides: the numbered start dot jumping to the far end of the trail when a
+lift was appended, and *"wenn ich Back to Black als 1 anklicke und als 2 die xline, dann fährt er die xline
+hoch"*.
+
+Measured against the region data, before → after:
+
+| sequence | ridden | elevation |
+|---|---|---|
+| X-Line → Sprinter | 5.33 → **1.31 km** | 990 → 1826 m *becomes* 2009 → 1826 m |
+| Back-to-Black → X-Line | 4.27 → **2.38 km** | uphill *becomes* 1412 → 990 m |
+
+The `Math.abs(b - a) < 1` guards cover a junction sitting **on** the terminus the direction points at —
+there is nothing to ride that way, so the stretch comes from the other end instead (ScheeLeitn Line joins
+the Wurzel-Trail at its own index 0 and is therefore ridden 69 → 0).
+
+Some sequences genuinely force a climb: `Back-to-Black → X-Line → Sprinter` pins both X-Line ends down and
+the lift station is above where the trail was joined, so it has to be pedalled up. Nothing in the row said
+so, hence **`r.against`** — a stretch ridden against its trail's own direction shows a rust ↑ with a
+tooltip. `uphill`-flagged trails are exempt, since for those a climb is the point.
 
 ### What 🔄 means on a clipped trail (fixed 2026-07-27)
 
