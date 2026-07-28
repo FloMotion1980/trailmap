@@ -98,6 +98,24 @@ it is a work-in-progress document rather than a view preference.
 - **`renderBuilder()` after `render()`**, and after the regions are loaded — a row's name and length resolve
   against `lineTrails`/`LIFTS`, so doing it earlier renders a list of bare ids.
 
+## Regression cases
+
+**`tools/builder_testcases.js` — paste it into the browser console with the `bikecircus` region active and
+Tourenbuilder mode on.** 16 cases, 82 checks, all green as of 2026-07-28. Every rule described below was
+derived from one concrete ride the user tried, and each of them broke an earlier rule when it landed (three
+separate direction bugs in two days), so the cases *are* those rides, with their real lengths and index
+ranges. Run it after touching `builderResolve`, `junctionCandidates`, the row rendering or the drag handler.
+
+It drives the real UI rather than calling the resolver directly, because `builderItems`, `TRAIL_GEO` and
+`lineTrails` are `let`/`const` inside the app's top-level `try{}` and are therefore unreachable from a
+separately-evaluated script — only the function declarations leak to the global scope. That is also why it
+checks index ranges and not just lengths: "the same 2.38 km measured from the wrong end" is exactly the bug
+class this feature keeps producing, and a length alone would not catch it.
+
+The file's header lists two mutations and the failures they must produce, so its teeth can be re-verified
+cheaply. Also worth knowing what one of those mutations revealed: removing the entry-side junction check
+brings back **17** empty stretches across the region, not just the one pair the user reported.
+
 ## Row anatomy and gestures (2026-07-27)
 
 A row is a shell, not the visible box:
