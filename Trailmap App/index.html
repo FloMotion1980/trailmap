@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=31" />
+<link rel="stylesheet" href="style.css?v=34" />
 </head>
 <body>
 <div id="fatalError">
@@ -121,7 +121,11 @@
           <textarea id="builderExport" readonly rows="6" spellcheck="false"></textarea>
         </div>
       </div>
-      <div id="liveStatus"><span class="rec-dot"></span> Live-Tracking</div>
+      <!-- Reads out the live state of the tracking rather than just saying it is on: accuracy, how old the
+           last fix is, and whether the compass is delivering. Added 2026-07-29 because two field reports
+           could not be diagnosed from the code alone -- the map not following while the dot moved, and the
+           heading cone freezing during a lift ride. See updateLiveStatus(). -->
+      <div id="liveStatus"><span class="rec-dot"></span><span id="liveStatusText">Live-Tracking</span></div>
       <div id="infoPanel">
         <button class="ip-close" id="ipClose" title="Schließen">&times;</button>
         <div id="ipContent"></div>
@@ -1097,6 +1101,7 @@ let followMode = false;
 const locateBtn = document.getElementById("locateBtn");
 
 let compassActive = false;
+let lastCompassAt = null;          // when the last USABLE compass reading arrived (see updateLiveStatus)
 let smoothedCompassHeading = null; // normalized 0-360, used only for computing the shortest-path delta
 let compassDisplayAngle = null;    // unbounded, ever-increasing/decreasing — this is what we actually render
 let orientationHandler = null;
@@ -1142,6 +1147,7 @@ function handleOrientation(event){
     compassDisplayAngle += diff * 0.2;
   }
   compassActive = true;
+  lastCompassAt = Date.now();   // read by updateLiveStatus -- a frozen cone is either no events or NaN
   updateHeadingCone(compassDisplayAngle);
 }
 
@@ -1178,6 +1184,7 @@ function detachOrientationListener(){
 function updateUserLocation(pos, isFirstFix){
   const { latitude, longitude, accuracy, heading } = pos.coords;
   const latlng = [latitude, longitude];
+  lastFixAt = Date.now(); lastAccuracy = accuracy; fixCount++;   // read by updateLiveStatus
 
   if (!userLocationMarker) {
     userLocationMarker = L.marker(latlng, { icon: geoIcon, zIndexOffset: 1000, interactive:false }).addTo(map);
@@ -1208,8 +1215,9 @@ function updateUserLocation(pos, isFirstFix){
       if (cone) cone.style.display = "none";
     }
   }
-  if (isFirstFix) map.flyTo(getOffsetCenter(L.latLng(latlng), 15), 15, { duration: 0.8 });
-  else if (followMode) map.panTo(getOffsetCenter(L.latLng(latlng), map.getZoom()), { animate: true, duration: 0.5 });
+  if (isFirstFix) { map.flyTo(getOffsetCenter(L.latLng(latlng), 15), 15, { duration: 0.8 }); panCount++; }
+  else if (followMode) { map.panTo(getOffsetCenter(L.latLng(latlng), map.getZoom()), { animate: true, duration: 0.5 }); panCount++; }
+  updateLiveStatus();
 }
 
 let wakeLock = null;
@@ -1232,6 +1240,47 @@ document.addEventListener("visibilitychange", () => {
 });
 
 const liveStatusEl = document.getElementById("liveStatus");
+const liveStatusTextEl = document.getElementById("liveStatusText");
+
+// ---- Live readout for the tracking mode (2026-07-29) ----------------------------------------------
+// Two field reports could not be diagnosed from the code: the map not scrolling along while the dot kept
+// updating, and the heading cone freezing during a lift ride. Both are invisible failures -- nothing errors,
+// it just stops. So the status pill now states what is actually happening instead of only that tracking is
+// on. It stays in permanently rather than being a debug toggle: GPS accuracy is honest information when the
+// dot sits 30 m off the trail in the woods.
+//
+// FIX AGE is the important one and it ticks on a timer, not only on new fixes -- a number that keeps
+// climbing is the difference between "the GPS stopped" and "the GPS is fine, the map is at fault", which is
+// exactly the ambiguity in the report. Same for the compass: its own age separates "no events at all"
+// (permission) from "events arrive but carry NaN" (magnetic interference, e.g. inside a steel gondola).
+// The PAN counter next to the fix counter closes the loop: if fixes climb and pans do not, the follow branch
+// is not being reached; if both climb and the map still does not move, Leaflet is swallowing the pan.
+let lastFixAt = null, lastAccuracy = null, fixCount = 0, panCount = 0, liveStatusTimer = null;
+const STALE_FIX_MS = 12000;   // beyond this the pill turns rust: fixes have stopped arriving
+
+function formatAge(ms){
+  const s = Math.round(ms / 1000);
+  return s < 60 ? s + " s" : Math.floor(s / 60) + " min";
+}
+
+function updateLiveStatus(){
+  if (!liveStatusTextEl) return;
+  const now = Date.now();
+  const parts = [];
+  parts.push(lastAccuracy !== null ? "±" + Math.round(lastAccuracy) + " m" : "kein Fix");
+  if (lastFixAt !== null) parts.push(formatAge(now - lastFixAt));
+  // Compass: the heading, or a dash when nothing has ever arrived. A "!" means readings HAVE arrived but
+  // stopped -- the gondola case. Deliberately a marker and not the age in seconds: at 375px the pill sits
+  // between the Trails button and the locate button, and the longer form wrapped onto a second line.
+  if (compassActive && smoothedCompassHeading !== null) {
+    parts.push("🧭 " + Math.round(smoothedCompassHeading) + "°" + (now - lastCompassAt > 4000 ? "!" : ""));
+  } else {
+    parts.push("🧭 —");
+  }
+  parts.push(fixCount + "/" + panCount);   // fixes received / map pans issued
+  liveStatusTextEl.textContent = parts.join(" · ");
+  liveStatusEl.classList.toggle("stale", lastFixAt !== null && now - lastFixAt > STALE_FIX_MS);
+}
 
 function startFollowing(){
   if (!navigator.geolocation) {
@@ -1243,6 +1292,10 @@ function startFollowing(){
   locateBtn.classList.add("active");
   locateBtn.title = "Folgen beenden";
   liveStatusEl.classList.add("visible");
+  lastFixAt = null; lastAccuracy = null; fixCount = 0; panCount = 0;
+  updateLiveStatus();
+  // Ticks so the fix age keeps counting up on its own -- that is what makes a stalled GPS visible.
+  if (liveStatusTimer === null) liveStatusTimer = setInterval(updateLiveStatus, 1000);
   acquireWakeLock();
   requestOrientationPermission();
   let firstFix = true;
@@ -1262,6 +1315,8 @@ function stopFollowing(){
   locateBtn.classList.remove("active");
   locateBtn.title = "Mein Standort";
   liveStatusEl.classList.remove("visible");
+  liveStatusEl.classList.remove("stale");
+  if (liveStatusTimer !== null) { clearInterval(liveStatusTimer); liveStatusTimer = null; }
   if (userLocationMarker) {
     const el = userLocationMarker.getElement();
     if (el) { const wrap = el.querySelector(".geo-wrap"); if (wrap) wrap.classList.remove("live"); }
@@ -3922,7 +3977,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v31"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v34"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

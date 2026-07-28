@@ -376,6 +376,10 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   padding:6px 14px; border-radius:16px; box-shadow:0 3px 10px rgba(0,0,0,0.25); align-items:center; gap:6px;
 }
 #liveStatus.visible{ display:flex; }
+/* Fixes have stopped arriving (see STALE_FIX_MS). Worth its own colour rather than just a climbing number:
+   the whole point is to notice it without reading, while riding. */
+#liveStatus.stale{ background: rgba(181,80,31,0.94); }
+#liveStatus #liveStatusText{ font-variant-numeric: tabular-nums; white-space: nowrap; }
 #liveStatus .rec-dot{
   width:8px; height:8px; border-radius:50%; background:#e0392b; animation: recBlink 1.2s ease-in-out infinite;
 }
@@ -485,6 +489,12 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
     max-height:min(38vh, 300px);
   }
   #locateBtn{ display:flex; }   /* position comes from the base rule -- top right on every layout */
+  /* Below the top button row, not beside it. The pill is centred on the viewport while the free space
+     between the Trails button (ends at 93px) and the locate button (starts at 313px) is not symmetric, so a
+     viewport-centred pill drifts left and touched the Trails button with 1px to spare at 375px -- and its
+     width grows with the readout (3-digit accuracy, "10 min", larger counters). Moving it down removes the
+     whole class of collisions instead of tuning a max-width against content that varies. */
+  #liveStatus{ top: calc(70px + env(safe-area-inset-top, 0px)); }
 }
 html.is-standalone #infoPanel{
   bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
