@@ -23,6 +23,32 @@ A resort's own bike site is very often built on a tour-CMS (Outdooractive/komoot
 
 **But don't assume the GPX is automatically the better geometry — verify against the operator's published length/drop.** Park GPX files are often recorded as a *ride*, so they can include the lift/access return leg: Serfaus' "Morning Glory" GPX came back as a loop (1.22 km, up102/dn97) against a published 0.68 km descent, and "Downhill" carried up137. In those cases OSM's clean descent line is the better one. Conversely OSM was badly truncated for "Supernatural 2.0" (0.21 km vs 1.85 km published). The workable rule is **per-trail source selection scored against the operator's own published numbers**, not a blanket "GPX always wins" — and keep the published length as `len` either way, per the existing official-numbers-beat-GPX-derived convention.
 
+## Outdooractive white-label sites: the GPX endpoint works even when the site itself blocks you (2026-07-29)
+
+A lot of resort map portals are white-labelled Outdooractive — the giveaway is a URL of the form
+`https://maps.<resort>.<tld>/de/tour/<category>/<slug>/<numericID>/`. **That numeric ID is an Outdooractive
+route ID**, so the download endpoint already documented for Finale works directly:
+
+```
+https://www.outdooractive.com/en/download.tour.gpx?i=<routeID>&project=outdooractive
+```
+
+**Verified for Bike Kingdom / Lenzerheide** (task #17, previously recorded as blocked): id `45019044` from
+`maps.arosalenzerheide.swiss/de/tour/mountainbike-trail/urdental-trail/45019044/` returns a valid GPX for
+"Urdental Trail" — 242 points, **242 `<ele>` values**, i.e. real elevation, so no DEM backfill needed. It
+works with a plain `urllib` request plus a browser `User-Agent`.
+
+Worth knowing because the portal itself does NOT cooperate: `maps.arosalenzerheide.swiss` answers **404** to
+the same plain request, for the tour page and for every category-listing URL tried. So the pattern is: get the
+ID from a URL the user hands you (or from a search result), then fetch the GPX from outdooractive.com — do not
+try to crawl the portal.
+
+**What is still missing for Bike Kingdom**: the ID list. `bikekingdom.ch/en/Tours-and-Trails/Trail-map`
+renders its trails client-side — its 284 KB of HTML contains no tour IDs, no links to the maps subdomain, and
+only three trail names in prose. So the list needs either the headless Chromium below, or a handful of
+per-trail URLs from the user (each one yields its GPX immediately). Difficulties still need the operator's own
+grading, as always.
+
 ## Checking for a redirect before assuming a name has no match
 
 A site's own detail-page slug can be phrased differently than the name a user gives you and still be the same trail — e.g. an Italian-phrased alternate name 301-redirecting to a canonical English slug on finaleoutdoor.com. Before concluding a user-supplied name has no existing entry, try `curl -I -A "<real UA>" <guessed-slug-url>` and check the `location` header for a redirect target — cheap, and prevents accidentally re-fetching/duplicating a trail that's already built under a different-looking name.
