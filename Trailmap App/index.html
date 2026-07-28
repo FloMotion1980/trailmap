@@ -1515,8 +1515,27 @@ function builderResolve(){
     })();
     junctionInfo[i] = { count: cands.length, alt, off, dist: j.dist, clips, tooFar, gapOff };
     if (off) continue;
+    // A JUNCTION IS ONLY USED IF BOTH SIDES CAN HONOUR IT (2026-07-28). The exit side has been checked since
+    // earlier today (an exit lying behind the direction of travel is skipped); this is the mirror image on the
+    // entry side, and the user found it on `Z-Line → 12er Sky-Line`: the two lines really do come within
+    // 108 m, so this is a genuine junction and the too-far default correctly does not apply -- but it joins
+    // the Z-Line's START to the 12er's END, i.e. it describes the ride in the OTHER order. Entering the 12er
+    // at its own last point leaves nothing to ride, which showed up as the `∅` hollow dot.
+    //
+    // So an entry is honoured only if the terminus its direction points at still lies ahead of it. Otherwise
+    // the junction is unusable in this order: neither side is clipped (the exit is dropped too -- clipping A
+    // to a point that connects to nothing would be the "half-wrongly closed gap" again) and the pair is
+    // reported as unmade.
+    const nx = builderItems[i + 1];
+    if (nx.kind === "trail") {
+      const gN = geoms[i + 1];
+      const revN = !!nx.reversed;
+      const ownEndN = revN ? 0 : gN.length - 1;
+      const somethingAhead = revN ? j.ib > ownEndN : j.ib < ownEndN;
+      if (!somethingAhead) { junctionInfo[i].unmade = true; continue; }
+    }
     if (item.kind === "trail") exit[i] = j.ia;
-    if (builderItems[i + 1].kind === "trail") entry[i + 1] = j.ib;
+    if (nx.kind === "trail") entry[i + 1] = j.ib;
   }
   const resolved = builderItems.map((item, i) => {
     const g = geoms[i];
@@ -1576,9 +1595,14 @@ function builderResolve(){
     const ahead = (from, to) => (rev ? to < from : to > from);
     const a = entry[i] !== null ? entry[i] : ownStart;
     const b = (exit[i] !== null && ahead(a, exit[i])) ? exit[i] : ownEnd;
-    // An exit junction we had to ignore: the connection to the next element is not made, which the row
-    // reports so the gap is never silent.
+    // The connection to the NEXT element was not made, which the row reports so the gap is never silent.
+    // Two reasons, and the row's tooltip names which one: the exit junction lay behind this element's
+    // direction of travel and was skipped here, or the junction was unusable for the next element (see
+    // `unmade` in the junction pass above) and was therefore dropped for both.
     const skippedExit = exit[i] !== null && b !== exit[i];
+    const gapReason = skippedExit ? "exit"
+                    : (junctionInfo[i] && junctionInfo[i].unmade) ? "next"
+                    : null;
     const lo = Math.min(a, b), hi = Math.max(a, b);
     let coords = g.slice(lo, hi + 1);
     const forward = a <= b;
@@ -1593,7 +1617,7 @@ function builderResolve(){
     const t0 = lineTrails.find(tr => tr.id === item.id);
     if (!clipped && t0) {
       const u = forward ? t0.up : t0.down, dn2 = forward ? t0.down : t0.up;
-      return { item, coords, len, up: u, down: dn2, fullLen, clipped: false, skippedExit };
+      return { item, coords, len, up: u, down: dn2, fullLen, clipped: false, skippedExit, gapReason };
     }
     const prof = ELEVATION_PROFILES[item.id];
     let up = 0, down = 0;
@@ -1609,11 +1633,17 @@ function builderResolve(){
     // `empty`: the two ends of the clip landed on the same point, so there is nothing to ride here. The
     // row flags it and the map draws only the numbered dot, no glow -- the user's own expectation for the
     // Asitz-Trail case ("Müsste ja eigentlich gar nix gelb leuchten, oder?").
+    //
+    // CURRENTLY UNREACHABLE, kept as a guard (2026-07-28). Since an entry junction is only honoured when the
+    // terminus is strictly ahead of it, `a` can never equal `ownEnd`; and `b` is either `ownEnd` or an exit
+    // strictly ahead of `a`. So a === b cannot happen. Verified empirically too: all 2352 ordered trail pairs
+    // in Saalbach, with and without the junction forced on, produce not a single empty stretch. If a future
+    // rule change reintroduces the case, the honest marker is already here rather than silently absent.
     // `against` used to ride here, flagging a stretch running counter to its trail's own direction. Dropped
     // 2026-07-28: the clip is direction-first now, so that state cannot arise unless you asked for it with
     // the arrow -- which the arrow itself already shows.
     return { item, coords, len, up: Math.round(up), down: Math.round(down), fullLen, clipped,
-             empty: hi <= lo, skippedExit };
+             empty: hi <= lo, skippedExit, gapReason };
   });
   resolved.forEach((r, i) => {
     // `junction` is the one AFTER this element -- the connector drawn below its row.
@@ -1946,7 +1976,11 @@ function renderBuilder(){
                  backwards along this trail, so it was skipped and the chain has a gap here. Replaces the
                  .builder-warning strip -- the user wanted the height back ("Nur ein Symbol in der Zeile"),
                  and the old warning's own case (a forced backwards ride) no longer exists. -->
-            ${r.skippedExit ? `<span class="bi-gap" title="Der iConnect zum nächsten Element liegt entgegen der Trailrichtung und wurde übersprungen — hier bleibt eine Lücke in der Kette. Zum Schließen: Reihenfolge ändern, Richtung umdrehen oder eine andere Kreuzung wählen.">⤳</span>` : ""}
+            ${r.gapReason ? `<span class="bi-gap" title="${
+                r.gapReason === "exit"
+                  ? "Der iConnect zum nächsten Element liegt entgegen der Trailrichtung und wurde übersprungen — hier bleibt eine Lücke in der Kette. Zum Schließen: Reihenfolge ändern, Richtung umdrehen oder eine andere Kreuzung wählen."
+                  : "Die Kreuzung liegt genau am Ende des nächsten Elements — dort wäre nichts mehr zu fahren, also wurde sie für beide Seiten verworfen. Meist heißt das, die beiden gehören in umgekehrter Reihenfolge. Hier bleibt eine Lücke in der Kette."
+              }">⤳</span>` : ""}
             <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
             <!-- The arrow IS the state, and pressing it flips: → ridden in the element's own direction,
                  ← against it (user, 2026-07-27). Always enabled since 2026-07-28: the sequence can no
@@ -1992,7 +2026,10 @@ function renderBuilder(){
     const j = r.junction;
     if (j && j.clips) {
       const cx = document.createElement("button");
-      cx.className = "builder-connector" + (j.off ? " is-off" : "");
+      // Dashed means "no connection is made here", whether that is your choice (off), the distance (too far),
+      // or the geometry (unusable in this order). The *text* still differs: an unmade junction keeps its
+      // distance and n/m, because cycling to another candidate may well find a usable one.
+      cx.className = "builder-connector" + (j.off || j.unmade ? " is-off" : "");
       // An off junction still shows the distance when it was switched off BECAUSE of that distance: it says
       // why it is off, and that there is something to be had by tapping. Without the number, "aus" on a pair
       // 1.6 km apart looks like an arbitrary default rather than a measurement.
@@ -2000,7 +2037,9 @@ function renderBuilder(){
         ? (j.tooFar
             ? `Kein Übergang: die beiden Linien kommen sich nur bis auf ${Math.round(j.dist)} m nahe, deutlich über ${JUNCTION_MAX_GAP_M} m. Beide fahren ganz, dazwischen bleibt eine Lücke von ${Math.round(j.gapOff)} m. Antippen erzwingt den Übergang trotzdem.`
             : `iConnect aus — beide Nachbarn fahren bis zu ihren eigenen Enden, dazwischen bleibt eine Lücke von ${Math.round(j.gapOff)} m. Antippen für die erste Kreuzung.`)
-        : `Kreuzung ${j.alt + 1} von ${j.count} — antippen für die nächste, nach der letzten aus`;
+        : j.unmade
+          ? `Kreuzung ${j.alt + 1} von ${j.count}, ${Math.round(j.dist)} m — liegt aber genau am Ende des nächsten Elements und wird deshalb nicht genutzt: beide fahren ganz. Antippen für die nächste Kreuzung.`
+          : `Kreuzung ${j.alt + 1} von ${j.count} — antippen für die nächste, nach der letzten aus`;
       // While off, the number shown is the gap you would actually have to ride (end of one to start of the
       // next), NOT the candidate's closest approach -- those differ by more than a kilometre in the
       // Steinbergbahn -> Asitz case, and the whole point of switching off is to leave that gap visible.

@@ -430,6 +430,38 @@ Consequences:
   documented further down — its junction is 300 m out, so it is off by default. Both outcomes are honest; this
   one is more useful.
 
+### A junction is only used if BOTH sides can honour it (2026-07-28)
+
+The exit side has been checked since earlier the same day; this is the mirror image on the entry side, and the
+user found it on `Z-Line → 12er Sky-Line`. The two lines really do come within **108 m**, so the junction is
+genuine and the too-far default correctly does not apply — but the candidate joins the **Z-Line's start to the
+12er's end** (`Z-Line idx0 ↔ 12er idx199 of 199`), i.e. it describes the ride in the *other* order. Entering
+the 12er at its own last point left nothing to ride: `∅ 0.00 / 5.61 km` and a hollow dot.
+
+Worth noting how the user reached the question, because it shows what the UI was and was not telling them:
+they saw the *whole Z-Line* highlighted and reasonably inferred there was no junction near its end — *"Der
+Endpunkt der 12er ist doch deutlich mehr als 150m vom Endpunkt der zline weg"*. But the full Z-Line **was
+itself the symptom**: its exit junction lay behind its direction and had been skipped, and the only sign of
+that was the `⤳`. Their endpoint-to-endpoint intuition also does not match the search, which compares every
+point pair — a trail's start pairing with another's end is exactly what makes `12er Sky-Line → Z-Line` work.
+They agreed the search itself is right: *"Prinzipiell ist es ja richtig, alle Kreuzungen zu suchen."*
+
+So an entry is honoured only if the terminus its direction points at still lies strictly ahead of it.
+Otherwise the junction is unusable **in this order**, and *neither* side is clipped — dropping the exit too,
+because clipping A to a point that connects to nothing is the half-wrongly-closed gap again. `junctionInfo`
+carries `unmade`, the pill goes dashed while keeping its distance and `n/m` (cycling may find a usable
+candidate), and the row shows `⤳` with a reason-specific tooltip (`gapReason` is `"exit"` or `"next"`).
+
+Reversing the pair shows the junction was real all along: `12er Sky-Line → Z-Line` uses it, and needs no clip
+at all, because it sits exactly at the 12er's end and the Z-Line's start.
+
+**One consequence: `empty` / `∅` is now unreachable.** If the entry is used, `ownEnd` is strictly ahead of it,
+so `a ≠ ownEnd`; and `b` is either `ownEnd` or an exit strictly ahead of `a`. Verified empirically as well —
+all 2352 ordered trail pairs in Saalbach, with and without the junction forced on, produce no empty stretch
+(17 pairs hit `unmade`, 30 hit a skipped exit). The flag, the badge and `.builder-num.is-empty` are kept as a
+guard so a future rule change finds the honest marker already in place, but nothing reaches them today. The
+Asitz-Trail case documented further down is one of the cases that moved: it now rides whole either way.
+
 **Two different distances, and the pill must not mix them up.** The candidate's `dist` is how close the two
 *lines* come — the gap you would still bridge if the junction is used. Once it is **off**, both neighbours ride
 to their own termini, so the real gap is end-of-A to start-of-B (`gapOff`, via `facingTerminus()`), and that
