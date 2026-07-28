@@ -482,6 +482,47 @@ const REGION_CATALOG = {
       berwang_bichlbach: { label: "Berwang / Bichlbach", color: "#7d2fa8" }
     }
   },
+  brandnertal: {
+    // Built 2026-07-28. Trail list, ST numbers and difficulties are the operator's own
+    // (bikepark-brandnertal.at/strecken/): Leicht->blau, Mittel->rot, Schwierig->schwarz, the same mapping
+    // the Zugspitz Arena pinned from its own colour words. Cross-checked against OSM mtb:scale, which
+    // agrees on 6 of the 8 trails carrying it; ST-06 and ST-08 disagree and the operator wins.
+    // GEOMETRY IS THE WEAK PART and wants a look on the map. It comes from OSM, where these trails are
+    // split into up to 11 ways with real gaps between them, so chain_ways() runs at a generous 160 m and
+    // that introduces short straight joins. Longest join per trail: ST-12 141 m, ST-02 122 m, ST-08 119 m,
+    // ST-10 117 m, ST-05 85 m, ST-11 82 m, ST-07 55 m, ST-03 48 m, ST-04 40 m. Four trails additionally
+    // have branch fragments that are NOT part of the drawn line (ST-08 1.00 km, ST-10 0.83 km,
+    // ST-04 0.58 km, ST-02 0.18 km) -- the ways there fork, so one polyline cannot hold them.
+    // If the user can export these from an app, that replaces all of the above; see task #19.
+    label: "Brandnertal", file: "regions/brandnertal.json", trailCount: 12,
+    bounds: [[47.11154, 9.71769], [47.14753, 9.76106]],
+    subRegions: {
+      tschengla: { label: "Tschengla (Parklines)", color: "#c2401c" },
+      brand_singletrails: { label: "Brand (Singletrails)", color: "#1c7fc2" }
+    }
+  },
+  schladming: {
+    // Built 2026-07-28. TWO DIFFERENT SOURCE QUALITIES, deliberately:
+    // * planai (12 trails) is solid -- the operator's own per-tour GPX, which the user pointed at. Each
+    //   tour page on planai.at links a real GPX with real elevation via tirol.mapservices.eu, and the
+    //   lengths match the operator's published figures. Difficulties are its own tables
+    //   (leicht->blau, mittel->rot, schwer->schwarz, as pinned by the Zugspitz Arena's colour words).
+    //   Two to check: Jack Lumber (409) GPX 0.52 km vs 0.33 km official, and Peak Flowline (402) whose
+    //   GPX has a second 0.93 km part that was set aside. 408's difficulty is not published by the
+    //   operator -- taken from OSM mtb:scale=1. 401 is the uphill trail the user linked.
+    //   NOT built: "Planai Runde" (304), a 34.2 km round tour -- belongs in the Touren feature.
+    // * reiteralm (8 trails) is WEAKER: no operator export exists, so geometry is OSM ways chained at
+    //   120 m and difficulty is OSM mtb:scale. The SELECTION is by name from OSM and is NOT confirmed
+    //   against an operator list. Joins to check: Buckelwald 159 m, Schnepfenwald 56 m, Eiskar 55 m,
+    //   Gassl 46 m, Jump Trail 40 m. Eiskar/Schnepfenwald/Enduro have branch fragments left out.
+    //   "Route 66" is named in OSM elsewhere but was not found in this bbox.
+    label: "Schladming / Reiteralm", file: "regions/schladming.json", trailCount: 20,
+    bounds: [[47.35919, 13.5857], [47.39554, 13.73611]],
+    subRegions: {
+      planai: { label: "Planai (Bikepark)", color: "#1c9c8a" },
+      reiteralm: { label: "Reiteralm", color: "#9c5f1c" }
+    }
+  },
   paganella: {
     label: "Dolomiti Paganella", file: "regions/paganella.json", trailCount: 24,
     bounds: [[46.13632, 10.9538], [46.22536, 11.0866]],
