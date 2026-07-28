@@ -66,6 +66,26 @@ aside::-webkit-scrollbar{ display:none; width:0; height:0; }
   aside.open{ transform: translateX(0); }
   #sidebarToggle{ display:flex; }
 }
+/* Sidebar scroll-to-top. `position:sticky` inside the scrolling <aside> as its LAST child: it pins itself
+   12px above the scrollport's bottom edge for as long as there is content below, which means it needs no
+   knowledge of the sidebar's width — that differs between the 350px desktop column and the min(88vw,340px)
+   phone drawer, and hardcoding either is what a fixed-position version would have required.
+   Only appears once there is somewhere to scroll back to (`aside.scrolled`, set in JS), so it does not sit on
+   top of a short list for no reason. A floating button like this was rejected in 2026-07-24 in favour of
+   making the header title do it; the title still does, but it cannot be reached on a phone (see the markup). */
+#sidebarTopBtn{
+  position: sticky; bottom: 12px; align-self: flex-end;
+  margin: 0 12px 12px; flex-shrink: 0;
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid #d8ddd0; background: rgba(255,255,255,0.97); color: var(--forest);
+  font-size: 17px; line-height: 1; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  opacity: 0; pointer-events: none; transition: opacity .18s ease;
+}
+aside.scrolled #sidebarTopBtn{ opacity: 1; pointer-events: auto; }
+@media (hover: hover){ #sidebarTopBtn:hover{ background: #f5f7ef; } }
+#sidebarTopBtn:focus-visible{ outline: 2px solid var(--highlight); outline-offset: 1px; }
+
 .filters{ padding: 14px 16px 10px; border-bottom: 1px solid #e3e6da; font-family: Arial, sans-serif; flex-shrink:0; }
 .filters h2{ font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--stone); margin: 0 0 8px; font-weight:700; }
 /* Collapsible filter sections (added 2026-07-23 to reclaim vertical space above the trail list) —
@@ -137,8 +157,15 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   background: transparent; transition: all .15s ease; }
 .region-group-label:hover{ background: var(--forest); color: #fff; }
 .region-group-label.all-active{ background: var(--forest); color: #fff; }
-.region-group-fly-btn{ border:none; background:none; cursor:pointer; font-size:14px; line-height:1;
-  padding: 7px 6px; color: var(--stone); border-radius: 6px; }
+/* Pinned to the box's own top-right corner (user, 2026-07-28: "ganz rechts oben ins Eck des Vierecks der
+   Region"). Sitting in the legend row meant sharing a flex line with a label whose width depends on the
+   region's name and trail count, so it never had a predictable position. Lifted by the same translateY(-50%)
+   as the legend so both straddle the border line, and it cuts its own gap in that border via the background,
+   exactly like the legend does. */
+.region-group-fly-btn{ border:none; cursor:pointer; font-size:14px; line-height:1;
+  padding: 7px 6px; color: var(--stone); border-radius: 6px;
+  position: absolute; top: 0; right: 8px; transform: translateY(-50%);
+  background: var(--card-bg); }
 .region-group-fly-btn:hover{ background: #e4ece0; color: var(--forest-dark); }
 .hub-group{ border-bottom: 1px solid #eceee4; }
 .hub-title{ padding: 10px 16px 4px; font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase;
@@ -277,6 +304,13 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   box-shadow:none;
 }
 .trail-label-tooltip::before{ display:none; }
+/* The difficulty as a dot in front of the name, mirroring the 🚡 that starts a lift's label (user's own
+   analogy, 2026-07-28). The thin dark ring keeps the black "schwarz" dot readable against the light tooltip
+   and the green one from bleeding into it. */
+.trail-label-tooltip .tl-diff{
+  display:inline-block; width:7px; height:7px; border-radius:50%; margin-right:5px;
+  border:1px solid rgba(0,0,0,.35); vertical-align:middle; position:relative; top:-1px;
+}
 
 .place-label-tooltip{
   background: var(--forest-dark); border: none; color: #fff;

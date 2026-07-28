@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=26" />
+<link rel="stylesheet" href="style.css?v=27" />
 </head>
 <body>
 <div id="fatalError">
@@ -89,6 +89,11 @@
         <summary>Trails</summary>
         <div class="trail-list" id="trailList"></div>
       </details>
+      <!-- Scroll-to-top for the sidebar. The header title does this too, but on a phone the sidebar is a
+           fixed drawer starting at top:0 with z-index 2500 — it covers the header completely, so the title is
+           unreachable exactly when a long list would need it (user, 2026-07-28). Sticky rather than fixed so
+           it positions itself against whichever width the sidebar currently has. -->
+      <button id="sidebarTopBtn" title="Nach oben">↑</button>
     </aside>
     <div class="map-wrap">
       <div id="map"></div>
@@ -715,9 +720,15 @@ function rebuildRegionChips(){
     });
     groupRow.appendChild(groupLabel);
 
+    groupBlock.appendChild(groupRow);
+
     // Separate button (own, generously-padded touch target) just for flying the map to this
     // region's bounds — split out from the label's toggle-visibility click so a single tap target
     // doesn't do two unrelated things (was hard to hit precisely on mobile too).
+    //
+    // A child of the BLOCK, not of the legend row, since 2026-07-28: it now sits in the box's own top-right
+    // corner (user's request). In the legend it had to share a flex row with a label whose width varies with
+    // the region name and its trail count, so it never landed in a predictable spot.
     const flyBtn = document.createElement("button");
     flyBtn.className = "region-group-fly-btn";
     flyBtn.textContent = "📍";
@@ -726,9 +737,7 @@ function rebuildRegionChips(){
       const catalogEntry = REGION_CATALOG[groupKey];
       if (catalogEntry) flyToTrailBounds(L.latLngBounds(catalogEntry.bounds));
     });
-    groupRow.appendChild(flyBtn);
-
-    groupBlock.appendChild(groupRow);
+    groupBlock.appendChild(flyBtn);
 
     const chipsRow = document.createElement("div");
     chipsRow.className = "region-group-chips";
@@ -959,6 +968,17 @@ sidebarBackdrop.addEventListener('click', closeSidebar);
 document.getElementById('scrollTopBtn').addEventListener('click', () => {
   asideEl.scrollTo({ top: 0, behavior: 'smooth' });
 });
+// The same job as a button inside the sidebar itself, because the header title above is unreachable on a
+// phone: the drawer is fixed at top:0 with z-index 2500 and covers the header whenever it is open (user,
+// 2026-07-28). Shown only once scrolled, so it never covers a short list for nothing.
+{
+  const topBtn = document.getElementById('sidebarTopBtn');
+  const SHOW_AFTER_PX = 180;
+  const syncTopBtn = () => asideEl.classList.toggle('scrolled', asideEl.scrollTop > SHOW_AFTER_PX);
+  asideEl.addEventListener('scroll', syncTopBtn, { passive: true });
+  topBtn.addEventListener('click', () => asideEl.scrollTo({ top: 0, behavior: 'smooth' }));
+  syncTopBtn();
+}
 
 function isMobileLayout(){
   return window.innerWidth <= 768 || window.matchMedia("(pointer: coarse)").matches;
@@ -1292,6 +1312,14 @@ const HOVER_WEIGHT = 6.5;
 // real trail — user, 2026-07-28: "einen Tick schmaler". They are the least important part of a loop and were
 // competing visually with the trails at the same 3.5. Same size of step as the lift dots' 4.5 -> 3.8.
 const CONNECTOR_WEIGHT = 2.8;
+// Map labels for a trail carry its difficulty as a coloured dot in front of the name, the same way lift
+// labels start with 🚡 — the user's own analogy (2026-07-28). Worth it because the labels are the one place
+// the map named a trail without saying anything about how hard it is, and the line's own colour is often
+// hidden under the label itself. Names are interpolated raw, like everywhere else in this file (the data is
+// ours, not user input).
+function trailLabelHtml(t){
+  return `<span class="tl-diff" style="background:${diffColor[t.diff]}"></span>${t.name}`;
+}
 // Neutral mid-grey, deliberately far from every diffColor tone (especially schwarz #1c1c1c, which
 // the old #222222 was nearly indistinguishable from on the map and the elevation chart) -- a
 // connector's dash pattern alone wasn't a reliable-enough visual cue that it isn't a black-rated
@@ -3035,7 +3063,7 @@ function buildTrailLayer(t){
           // open/close — instead opened/closed manually below, gated on `!showNames`, so a segment's
           // hover tooltip never doubles up with its always-on permanent name label (segmentNameLabels)
           // when "Namen" is toggled on.
-          segHit.bindTooltip(refTrail.name, { permanent:true, direction:"top", className:"trail-label-tooltip", interactive:false });
+          segHit.bindTooltip(trailLabelHtml(refTrail), { permanent:true, direction:"top", className:"trail-label-tooltip", interactive:false });
           segHit.closeTooltip();
           segHit.on("mouseover", () => {
             visibleSeg.setStyle({ weight: HOVER_WEIGHT });
@@ -3070,7 +3098,7 @@ function buildTrailLayer(t){
           // being covered by its own name, which matters most for short segments (2026-07-23, per the
           // user: "Könnte man den Tooltip nicht so positionieren, dass man den Trail sieht?").
           const nameLabel = L.tooltip({ permanent:true, direction:"top", offset:[0,-6], className:"trail-label-tooltip", interactive:false })
-            .setLatLng(midCoord).setContent(refTrail.name);
+            .setLatLng(midCoord).setContent(trailLabelHtml(refTrail));
           segmentNameLabels.push({ trailId: refTrail.id, label: nameLabel });
         }
       });
@@ -3114,7 +3142,7 @@ function buildTrailLayer(t){
   // direction:"top" + offset (not "center") so the name sits just above the point it's anchored to
   // rather than directly on top of it — keeps the actual trail line visible underneath instead of
   // covering it with its own label, most noticeable on short trails (2026-07-23).
-  hitLine.bindTooltip(t.name, { permanent:true, direction:"top", offset:[0,-6], className:"trail-label-tooltip", interactive:false });
+  hitLine.bindTooltip(trailLabelHtml(t), { permanent:true, direction:"top", offset:[0,-6], className:"trail-label-tooltip", interactive:false });
   hitLine.closeTooltip();
   startMarker.bindTooltip("Start", { permanent:false, direction:"top", className:"trail-label-tooltip", interactive:false });
   endMarker.bindTooltip("Ziel", { permanent:false, direction:"top", className:"trail-label-tooltip", interactive:false });
@@ -3881,7 +3909,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v26"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v27"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
