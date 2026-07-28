@@ -381,6 +381,64 @@ so every structural edit brackets itself in `builderPredecessorSnapshot()` /
 `builderClearStaleAlts()`, which clears the alts of exactly the pairs the edit touched and leaves the rest
 tuned. A lift's `reversed` is part of that key, since flipping a lift changes which station it contributes.
 
+### Too far apart is OFF by default (2026-07-28)
+
+`junctionCandidates` can never answer "there is no junction here": when nothing passes the 150 m filter it
+still returns the single closest approach. That fallback was mine, justified as "never worse than the old
+single answer" — and it was wrong. It is why chaining two trails that simply do not touch produced a
+"junction" 1.6 km wide and clipped the second trail to start in its middle. The user found it on
+`Hacklberg-Trail → Z-Line`: *"Ich hätte erwartet, dass bei Trails, die so weit weg voneinander sind, kein
+iConnect greift."*
+
+Measured over all 49 Saalbach trails, **the fallback fires for 2216 of 2352 ordered pairs — 94 %**, and in
+796 of them it cut more than a kilometre away. The worst are trails in different sub-regions:
+
+```
+Streuböden Line -> X-Line        10393 m apart   clips 6.62 of 6.66 km away
+Flying Gangster -> Steinberg Line  614 m apart   clips 7.13 of 8.11 km away
+Hacklberg-Trail -> 12er Sky-Line  1632 m apart   clips 5.22 of 5.61 km away
+```
+
+So the 150 m threshold almost never has anything to filter — two trails that genuinely meet are the
+exception in a park, where the lines run parallel down one mountain. The fallback therefore fires *precisely*
+when the pair does not touch, i.e. exactly where a gap is what you want.
+
+**The fallback is kept, but it is no longer the default:** too far apart means the junction starts **off**.
+The user's call — *"zu weit weg, iconnect aus"* — and deliberately not "delete the fallback", because a wide
+gap is sometimes a real long connector (Steinberg Line at 614 m), and cycling the candidate on is one tap.
+Same principle as iConnect itself: offer the option, do not guess harder.
+
+**The decisive argument is about the next feature, not about honesty.** Gaps are meant to be closed by real
+connections later, and a connection has to run from A's end to **B's own start**. An entry landing in B's
+middle would make the connector route into the middle of a trail while B's first kilometres silently vanish —
+a gap that is already half-wrongly closed. Off-by-default yields exactly the geometry the connector step
+needs: two whole trails and one clearly bounded gap.
+
+Consequences:
+
+- **`connectOff` is tri-state**: absent = the derived default, `true`/`false` = your explicit choice. A far
+  junction has to be switchable *on*, and "on" used to be expressed by the flag's absence. `builderCycleConnect`
+  therefore takes the effective `off` as a parameter (cycling has to start from the state you can see) and
+  writes `connectOff = false` rather than deleting it, or turning one on would snap straight back to off.
+- `builderClearStaleAlts` needs no change: it deletes both flags when the pair changes, so a new pair
+  re-derives its own default. That is the wanted behaviour, not a leak.
+- A saved tour containing such a junction comes back a different shape than it was left. The old shape is the
+  wrong one, so this is a correction rather than a regression — but it is a visible one.
+- **No `⤳` in the row for this.** At 94 % of pairs, nearly every row would carry a warning symbol; that is
+  noise, not information. The pill between the rows already says it.
+- `Steinbergbahn I → II → Asitz-Trail` now resolves as the full 1.53 km Asitz rather than the empty stretch
+  documented further down — its junction is 300 m out, so it is off by default. Both outcomes are honest; this
+  one is more useful.
+
+**Two different distances, and the pill must not mix them up.** The candidate's `dist` is how close the two
+*lines* come — the gap you would still bridge if the junction is used. Once it is **off**, both neighbours ride
+to their own termini, so the real gap is end-of-A to start-of-B (`gapOff`, via `facingTerminus()`), and that
+can be far larger: `Steinbergbahn II → Asitz-Trail` is 300 m at the closest approach, because the lift arrives
+near the trail's *end*, but **1609 m** from the arrival station to where you would actually start riding. The
+off pill shows `gapOff`, the on pill shows `dist`, and the export carries both (`gapM` / `nearestM`). Showing
+the closest approach next to the word "aus" would have been exactly the kind of quietly wrong number this
+whole change exists to remove.
+
 **UI:** the junction gets its own thin row *between* the two element rows, because that is where it sits:
 `iConnect · 84 m · 1/3 ⟳`. The gap doubles as a quality signal — a few metres means the lines really do
 meet there, a hundred-plus means the guess is probably wrong and worth cycling. The **whole row** is the
@@ -427,6 +485,10 @@ shows `∅ 0.00 / 1.53 km` and the map draws **no glow** for it (the user: *"Mü
 leuchten, oder?"*) — only its numbered dot, hollow instead of solid green, so the element stays locatable.
 The arrow then gives the backwards option by explicit choice (1.53 km), and switching that iConnect off gives
 the whole trail in its own direction.
+
+Since a too-far junction is off by default (see above), this Asitz case no longer reaches `empty` at all —
+its junction is 300 m out, so the trail simply rides whole. `empty` still happens for a *near* junction that
+lands on the terminus the direction points at.
 
 Note that `empty` is reachable only through the **entry** junction, which is the case above: the junction
 pins the start, the direction points away from the rest of the trail, and nothing is left. A behind-you
@@ -475,7 +537,11 @@ up/down from full-resolution elevation when a tour is finalised.
 The obvious next steps, in rough order of value:
 
 1. **Close the gaps.** For each pair of consecutive elements, find a connecting path. Cheapest useful
-   version: a straight link, drawn as a connector. Better: snap to nearby paths.
+   version: a straight link, drawn as a connector. Better: snap to nearby paths. The export already states
+   each gap: an off junction carries `gapM` (end of one element to the start of the next — the length the
+   connector has to cover) plus `tooFar` when that is *why* it is off, and an element whose exit junction was
+   skipped carries `unconnected: true`. Since 2026-07-28 a too-far junction is off by default precisely so
+   this step gets whole trails and clean gap endpoints instead of an entry point in the middle of a trail.
 2. **Turn a built route into a real Tour.** Once gaps are closed, the assembled coordinate list can be
    concatenated and `len`/`up`/`down`/profile/`distStart`/`distEnd` derived from it — the same
    "derive-everything-from-the-assembled-geometry" rule that made the Challenge rebuild consistent by

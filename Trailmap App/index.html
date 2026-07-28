@@ -866,9 +866,15 @@ document.getElementById("builderExportBtn").addEventListener("click", () => {
       // The iConnect to the element AFTER this one: which candidate, how many there were, how far apart the
       // two lines are, or off (= neither side clipped here). from/to already pin the clip down; this records
       // how it was arrived at.
+      // An off junction reports how far the two lines are from meeting anyway, and whether that distance is
+      // the reason it is off (`tooFar`) rather than a choice. That is the input for closing the gap later:
+      // the assembler needs a connector of roughly this length, from this element's end to the next one's
+      // start -- which is precisely why a too-far junction is left off instead of clipping into the middle
+      // of the next trail.
       iConnect: r.junction
         ? (r.junction.off
-            ? { off: true }
+            ? { off: true, gapM: Math.round(r.junction.gapOff), nearestM: Math.round(r.junction.dist),
+                ...(r.junction.tooFar ? { tooFar: true } : {}) }
             : { alt: r.junction.alt, of: r.junction.count, gapM: Math.round(r.junction.dist) })
         : null,
       // The junction existed but lay behind this element's direction of travel, so it was skipped and the
@@ -1448,6 +1454,16 @@ function builderResolve(){
     const arrive = builderItems[i].reversed ? g[0] : g[g.length - 1];
     return [side === "entry" ? board : arrive];
   };
+  // The point this element actually ends (or starts) at on a given side, once no junction cuts it there:
+  // the terminus its own direction points at, or a lift's boarding/arrival station. Used to measure the real
+  // gap left by a junction that is switched off -- see `gapOff` below.
+  const facingTerminus = (i, side) => {
+    const g = geoms[i];
+    if (!g || !g.length) return null;
+    if (builderItems[i].kind === "lift") return junctionRef(i, side)[0];
+    const rev = !!builderItems[i].reversed;
+    return side === "exit" ? (rev ? g[0] : g[g.length - 1]) : (rev ? g[g.length - 1] : g[0]);
+  };
   // A junction is a property of the PAIR, so index i describes the pair (i, i+1) and its state lives on
   // the earlier element as `connectAlt` / `connectOff`. Storing it on one element and *showing* it there
   // was the mistake: whichever side you pick, it misattributes the other half. The user hit it from both
@@ -1465,12 +1481,39 @@ function builderResolve(){
     if (!A || !B) continue;
     const cands = junctionCandidates(A, B);
     const item = builderItems[i];
-    const off = !!item.connectOff;
     const alt = Math.min(Math.max(item.connectAlt | 0, 0), cands.length - 1);
     const j = cands[alt];
+    // TOO FAR APART IS OFF BY DEFAULT (2026-07-28). `junctionCandidates` can never answer "no junction":
+    // when nothing passes the 150m filter it still returns the single closest approach, which is why chaining
+    // two trails that simply do not touch produced a "junction" 1.6 km wide and clipped the second trail to
+    // start in its middle. Measured over all 49 Saalbach trails, that fallback fires for 94% of pairs, and in
+    // 796 of them it cut more than a kilometre away -- the worst being two trails 10.4 km apart in different
+    // sub-regions.
+    //
+    // The fallback is kept, because a wide gap is sometimes a genuine long connector (Steinberg Line at
+    // 614 m), but it is no longer the default -- the user, 2026-07-28: "zu weit weg, iconnect aus". Their
+    // decisive argument is about what comes next rather than honesty: gaps are meant to be closed by real
+    // connections later, and a connection has to run from A's end to B's OWN START. An entry landing in B's
+    // middle would make the connector route into the middle of a trail while B's first kilometres silently
+    // vanish -- a gap that is already half-wrongly closed.
+    //
+    // `connectOff` is therefore TRI-STATE: absent = this derived default, true/false = your explicit choice.
+    // A far junction needs to be switchable ON, and "on" used to be expressed by the flag's absence.
+    const tooFar = cands[0].dist > JUNCTION_MAX_GAP_M;   // i.e. the filtered pool was empty
+    const off = item.connectOff !== undefined ? !!item.connectOff : tooFar;
     // A junction between two lifts clips nothing -- neither side is ever cut -- so it gets no control.
     const clips = item.kind === "trail" || builderItems[i + 1].kind === "trail";
-    junctionInfo[i] = { count: cands.length, alt, off, dist: j.dist, clips };
+    // Two different distances, and mixing them up would misinform in exactly the way this change is meant to
+    // stop. `dist` is the candidate's: how close the two LINES come, which is the gap you would still have to
+    // bridge if the junction is used. Once it is OFF, though, both neighbours ride to their own termini, so
+    // the real gap is end-of-A to start-of-B -- and that can be far bigger. Steinbergbahn II -> Asitz-Trail
+    // is 300 m at the closest approach (the lift arrives near the trail's END) but 1609 m from the arrival
+    // station to where you would actually start riding.
+    const gapOff = (() => {
+      const a = facingTerminus(i, "exit"), b = facingTerminus(i + 1, "entry");
+      return a && b ? haversineM(a, b) : j.dist;
+    })();
+    junctionInfo[i] = { count: cands.length, alt, off, dist: j.dist, clips, tooFar, gapOff };
     if (off) continue;
     if (item.kind === "trail") exit[i] = j.ia;
     if (builderItems[i + 1].kind === "trail") entry[i + 1] = j.ib;
@@ -1601,9 +1644,13 @@ function builderClearStaleAlts(snapshot){
     }
   });
 }
-// Cycle order: candidate 1 … candidate n, then off, then back to the first.
-function builderCycleConnect(item, count){
-  if (item.connectOff) { delete item.connectOff; item.connectAlt = 0; return; }
+// Cycle order: candidate 1 … candidate n, then off, then back to the first. `off` is passed in rather than
+// read off the item, because since 2026-07-28 it can also be the DERIVED default for a junction whose
+// candidates are all too far away -- and cycling has to start from the state you can actually see.
+// Both flags are written explicitly (`connectOff = false` rather than deleted) so that turning a far
+// junction on survives; deleting it would drop straight back to the off default.
+function builderCycleConnect(item, count, off){
+  if (off) { item.connectOff = false; item.connectAlt = 0; return; }
   const next = (item.connectAlt | 0) + 1;
   if (next >= count) { item.connectOff = true; delete item.connectAlt; }
   else item.connectAlt = next;
@@ -1946,17 +1993,27 @@ function renderBuilder(){
     if (j && j.clips) {
       const cx = document.createElement("button");
       cx.className = "builder-connector" + (j.off ? " is-off" : "");
+      // An off junction still shows the distance when it was switched off BECAUSE of that distance: it says
+      // why it is off, and that there is something to be had by tapping. Without the number, "aus" on a pair
+      // 1.6 km apart looks like an arbitrary default rather than a measurement.
       cx.title = j.off
-        ? "iConnect aus — beide Nachbarn fahren bis zu ihren eigenen Enden. Antippen für die erste Kreuzung."
+        ? (j.tooFar
+            ? `Kein Übergang: die beiden Linien kommen sich nur bis auf ${Math.round(j.dist)} m nahe, deutlich über ${JUNCTION_MAX_GAP_M} m. Beide fahren ganz, dazwischen bleibt eine Lücke von ${Math.round(j.gapOff)} m. Antippen erzwingt den Übergang trotzdem.`
+            : `iConnect aus — beide Nachbarn fahren bis zu ihren eigenen Enden, dazwischen bleibt eine Lücke von ${Math.round(j.gapOff)} m. Antippen für die erste Kreuzung.`)
         : `Kreuzung ${j.alt + 1} von ${j.count} — antippen für die nächste, nach der letzten aus`;
+      // While off, the number shown is the gap you would actually have to ride (end of one to start of the
+      // next), NOT the candidate's closest approach -- those differ by more than a kilometre in the
+      // Steinbergbahn -> Asitz case, and the whole point of switching off is to leave that gap visible.
       cx.innerHTML = j.off
-        ? `<span class="bx-label">iConnect</span><span class="bx-state">aus</span><span class="bx-cycle">⟳</span>`
+        ? `<span class="bx-label">iConnect</span><span class="bx-state">aus</span>${
+             j.tooFar ? `<span class="bx-gap is-far">${Math.round(j.gapOff)} m</span>` : ""
+           }<span class="bx-cycle">⟳</span>`
         : `<span class="bx-label">iConnect</span>
            <span class="bx-gap${j.dist > JUNCTION_MAX_GAP_M ? " is-far" : ""}">${Math.round(j.dist)} m</span>
            <span class="bx-alt">${j.alt + 1}/${j.count}</span><span class="bx-cycle">⟳</span>`;
       cx.addEventListener("click", () => {
         const snapshot = builderPredecessorSnapshot();
-        builderCycleConnect(item, j.count);
+        builderCycleConnect(item, j.count, j.off);
         if (builderTouchLayout()) builderActiveIdx = i;
         builderClearStaleAlts(snapshot);
         persistBuilder();
