@@ -107,12 +107,11 @@ A row is a shell, not the visible box:
 ├ .builder-row        positioning shell, overflow:hidden, carries the 🗑 delete hint in ::before
 │ └ .bi-body          the visible box (border, background) -- this is what slides on a swipe
 │   └ .bi-main        ⠿ handle · number · name · [∅] · km · →/← · ✕
-├ .builder-warning     "runs against the trail's direction", when it does
 └ .builder-connector   iConnect for the junction to the NEXT row -- a sibling, not a child
 ```
 
-`.builder-warning` and `.builder-connector` are siblings of the rows on purpose: both annotate the *chain*
-rather than an element, and both use negative margins so they sit between the boxes they talk about.
+`.builder-connector` is a sibling of the rows on purpose: it annotates the *chain* rather than an element,
+and its negative margins let it sit between the two boxes it talks about.
 
 **Button icons carry state, not actions** (user, 2026-07-27): **→** / **←** is the direction, and pressing
 the arrow flips it. The old `↺` after a reversed row's name is gone — the arrow says it, and saying it twice
@@ -121,16 +120,45 @@ cost width the name needed.
 **The arrow shows YOUR choice (`reversed`), never a direction derived from the geometry.** This was tried
 the other way for one iteration and the user ruled it out (2026-07-28): *"ich würde keine automatische
 Rückwärtserkennung machen. Das sollte eine bewusste Entscheidung sein. Wenn der User Murks zusammenbaut ist
-das halt so. Man könnte höchstens eine Warnung anzeigen."* So when a sequence ends up running a stretch
-against its trail's own direction, that is a **`.builder-warning` strip** below the row — placed like the
-connector, since it annotates the chain rather than the element — and nothing is quietly rewritten.
-`uphill`-flagged trails are exempt; for those a climb is the point.
+das halt so. Man könnte höchstens eine Warnung anzeigen."* Nothing is ever quietly rewritten.
 
-Worth knowing how those two interact, because it is the whole model in one example. `Back-to-Black → X-Line
-→ Sprinter` pins both X-Line ends, forcing 2.95 km uphill: the arrow is disabled and the warning appears.
-Switching the **first** iConnect off frees the entry — the X-Line becomes 1.31 km, the arrow is usable again,
-the warning is gone, and the tour's climb drops from 686 m to 258 m. Turning a junction off is both the
-replacement for the flag and the tool against "Murks".
+### The direction wins over the junction (2026-07-28)
+
+That principle was still being violated one level down, in the clipping itself. A junction pins *both* ends
+of a stretch, and honouring both is what produced a backwards ride without anyone choosing it —
+`Back-to-Black → X-Line → Sprinter` ran the X-Line 2.95 km **uphill**, and the arrow was then disabled
+because both ends were fixed. The user, twice: *"dann fährt er die xline hoch"*, and *"Ich möchte nicht, dass
+er automatisch erkennt, dass er ihn rückwärts einplanen soll. Das mache ich dann von Hand."*
+
+So the clip is now **direction-first**. The entry junction is always honoured; the exit junction only if it
+lies *ahead* of the entry along the direction the element is actually being ridden:
+
+```js
+const rev = !!item.reversed;
+const ownStart = rev ? last : 0, ownEnd = rev ? 0 : last;
+const ahead = (from, to) => (rev ? to < from : to > from);
+const a = entry[i] !== null ? entry[i] : ownStart;
+const b = (exit[i] !== null && ahead(a, exit[i])) ? exit[i] : ownEnd;
+const skippedExit = exit[i] !== null && b !== exit[i];
+```
+
+A skipped exit is not silently absorbed: it **leaves a real gap** in the chain (the user's call — *"Trailrichtung
+behalten, Lücke entsteht"*), which is honest in exactly the way the rest of this feature is. `dirFixed` is
+gone with it, so the arrow is now always usable — and pressing it is what *closes* such a gap, since riding
+the other way makes the far junction lie ahead again. Same case, verified against the real Saalbach data:
+
+| | length | profile | gap |
+|---|---|---|---|
+| X-Line, direction kept | 2.38 km | 1412 → 990 m downhill | yes, exit skipped |
+| X-Line, arrow pressed | 2.95 km | 1412 → 1826 m uphill | no |
+
+The gap is reported as **one symbol in the row** — `.bi-gap` `⤳`, rust-coloured, with the full explanation in
+its `title`. It replaced a full-width `.builder-warning` strip below the row, at the user's request (*"Nur
+ein Symbol in der Zeile"*), which also keeps the row height unchanged. `uphill`-flagged trails are exempt
+from the whole notion; for those a climb is the point.
+
+Turning the offending iConnect **off** remains the other way out, and is still the tool against "Murks":
+the X-Line becomes 1.31 km and the tour's climb drops from 686 m to 258 m.
 
 Two touch details that go with them:
 
@@ -191,12 +219,26 @@ not work on mobile Safari at all.
   row is only ever shifted by a `transform`, so the measurements stay valid for the whole gesture. Move/end
   listeners live on `window`, and `setPointerCapture` is wrapped in try/catch: it is an enhancement, and it
   throws outright for a pointer id the browser does not consider active.
-- **The list reorders live**: the rows between the grab point and the destination step aside by the dragged
-  row's own height + the list gap, so the opening gap *is* the drop indicator. A marker line on the
-  destination row came first and the user found it hard to read. `.builder-row` gets a
-  `transition: transform .16s` for that glide, and `.is-dragging` sets `transition: none` — the dragged row
-  has to track the finger exactly. Measuring once is also what stops the shifted rows from feeding back into
-  the target calculation and flickering.
+- **The list reorders live**: the rows between the grab point and the destination step aside, so the opening
+  gap *is* the drop indicator. A marker line on the destination row came first and the user found it hard to
+  read. `.builder-row` gets a `transition: transform .16s` for that glide, and `.is-dragging` sets
+  `transition: none` — the dragged row has to track the finger exactly. Measuring once is also what stops the
+  shifted rows from feeding back into the target calculation and flickering.
+- **How far a displaced row travels comes from the measured slot centres, not from `rowHeight + gap`.** That
+  formula was wrong and had to go (2026-07-28): an iConnect pill sits between two rows and, even on its
+  negative margins, still contributes ~5px of layout plus a second 4px gap. Real distance 46px against a
+  computed 37px on desktop, and **71px against 56px on mobile** — the larger error on the one device where
+  dragging is the *only* way to reorder. The visible symptom is mild (rows land short of the gap they open)
+  but the drop threshold is off by the same amount, so short drags did nothing at all. `slotShift(from, to)
+  = mids[to] - mids[from]` is exact per row, survives rows of unequal height, and cannot drift if the pill's
+  metrics ever change.
+- **The iConnect pills hide for the duration of a drag** (`#builderList.is-dragging .builder-connector`,
+  user 2026-07-28). They sit between the rows on negative margins, so while the rows glide aside the pills
+  would stay put and read as leftover garbage — and a pill labelled with a junction that is mid-reorder is
+  meaningless anyway.
+- **`#builderSheet` sets `touch-action: manipulation`** so a quick double-tap on a row does not zoom the page
+  (user 2026-07-28). It goes on the sheet deliberately: `.bi-body`'s `pan-y` and `.bi-drag`'s `none` are more
+  specific and still win, so the gesture split above is unaffected.
 - **Swipe**: right only, deletes past `SWIPE_DELETE_PX` (96), snaps back below it. Any movement past
   `GESTURE_SLOP_PX` sets `data-gesture` on the row so the click that follows does not also toggle the row
   focus.
@@ -332,8 +374,9 @@ Two details that are easy to get wrong:
   filter removes the duplicates that produces.
 
 The chosen candidate is stored as `junctionAlt` on the **later** element, meaning "the Nth candidate for the
-junction with whatever is in front of me". That reading matches the UI and keeps a row's control from
-reaching backwards past its own row. It also means the value is nonsense as soon as that neighbour changes,
+junction with whatever is in front of me". *(Superseded later the same week: it is now `connectAlt` on the
+**earlier** element, once the control moved between the rows — see "iConnect" above. The staleness argument
+below applies unchanged, only the direction it looks in flipped.)* It also means the value is nonsense as soon as that neighbour changes,
 so every structural edit brackets itself in `builderPredecessorSnapshot()` /
 `builderClearStaleAlts()`, which clears the alts of exactly the pairs the edit touched and leaves the rest
 tuned. A lift's `reversed` is part of that key, since flipping a lift changes which station it contributes.
@@ -348,7 +391,8 @@ when it is being joined, its arrival station when it is being left. This matters
 leaving the X-Line for the Schattberg Sprinter, and you quit the trail where the *valley station* is, not
 where the cable happens to pass overhead. Lifts themselves are never clipped; you ride a cable end to end.
 
-Direction falls out of the clip (entry index vs exit index).
+~~Direction falls out of the clip (entry index vs exit index).~~ **Reversed 2026-07-28**: the direction is
+the input now and the clip follows it. See "The direction wins over the junction".
 
 ### An open end follows the trail's own direction (fixed 2026-07-27)
 
@@ -381,18 +425,20 @@ rust).
 So there is no fallback at all now: `lo === hi` yields a zero-length stretch, marked `r.empty`. The row
 shows `∅ 0.00 / 1.53 km` and the map draws **no glow** for it (the user: *"Müsste ja eigentlich gar nix gelb
 leuchten, oder?"*) — only its numbered dot, hollow instead of solid green, so the element stays locatable.
-🔄 then gives the backwards option by explicit choice (1.53 km, flagged ↑) and ⇔ the whole trail in its own
-direction.
+The arrow then gives the backwards option by explicit choice (1.53 km), and switching that iConnect off gives
+the whole trail in its own direction.
 
-One knock-on: `ScheeLeitn Line → Wurzel-Trail` is now empty for the ScheeLeitn too (it joins the Wurzel at
-its own index 0), where it used to report 1.70 km ridden backwards. That sequence really is geometrically
-backwards — `Wurzel-Trail → ScheeLeitn Line` resolves cleanly — and it is better seen than silently
-smoothed over.
+Note that `empty` is reachable only through the **entry** junction, which is the case above: the junction
+pins the start, the direction points away from the rest of the trail, and nothing is left. A behind-you
+**exit** junction no longer produces an empty stretch — since 2026-07-28 it is skipped and leaves a gap
+instead. `ScheeLeitn Line → Wurzel-Trail` is the example that moved: it briefly resolved as empty, and now
+rides the ScheeLeitn's own full 1.70 km with `⤳` marking the unmade connection (the Wurzel is joined at the
+ScheeLeitn's index 0, i.e. behind it). That sequence really is geometrically backwards —
+`Wurzel-Trail → ScheeLeitn Line` resolves cleanly — and it is better seen than silently smoothed over.
 
-Some sequences genuinely force a climb: `Back-to-Black → X-Line → Sprinter` pins both X-Line ends down and
-the lift station is above where the trail was joined, so it has to be pedalled up. Nothing in the row said
-so, hence **`r.against`** — a stretch ridden against its trail's own direction shows a rust ↑ with a
-tooltip. `uphill`-flagged trails are exempt, since for those a climb is the point.
+~~Some sequences genuinely force a climb … hence **`r.against`**, a rust ↑ in the row.~~ **Gone
+2026-07-28**: no sequence can force a climb any more, so the flag had no case left to report. What replaced
+it is `r.skippedExit` / `⤳`, which reports the gap that *not* forcing the climb leaves.
 
 ### What 🔄 means on a clipped trail (fixed 2026-07-27)
 
@@ -408,10 +454,11 @@ ran *into* its own entry junction. Now it instead runs 114 → 117, the other wa
 
 Consequences worth knowing:
 
-- A trail clipped at **both** ends has no freedom left, so its 🔄 is `disabled` with a title saying why
-  (`r.dirFixed`). Opting out with ⇔ frees both ends and makes 🔄 a plain reversal again — which is the way
-  to force a direction the sequence would otherwise dictate.
-- An element with no junction at all (single-element tour, or `full`) reverses exactly as before.
+- ~~A trail clipped at **both** ends has no freedom left, so its 🔄 is `disabled`~~ — **superseded
+  2026-07-28** (see "The direction wins over the junction"). Both ends can no longer be pinned against the
+  direction of travel: the exit junction is skipped when it lies behind, leaving a gap, and the arrow stays
+  usable. `r.dirFixed` no longer exists.
+- An element with no junction at all (single-element tour, or both junctions off) reverses exactly as before.
 - The degenerate-clip fallback (`hi - lo < 1` → whole trail) now also catches "the flip picked the terminus
   the junction sits on", which would otherwise be a zero-length stretch.
 

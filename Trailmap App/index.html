@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=22" />
+<link rel="stylesheet" href="style.css?v=23" />
 </head>
 <body>
 <div id="fatalError">
@@ -870,7 +870,11 @@ document.getElementById("builderExportBtn").addEventListener("click", () => {
         ? (r.junction.off
             ? { off: true }
             : { alt: r.junction.alt, of: r.junction.count, gapM: Math.round(r.junction.dist) })
-        : null
+        : null,
+      // The junction existed but lay behind this element's direction of travel, so it was skipped and the
+      // connection to the next element was never made. The assembler has to close this gap rather than
+      // assume the two stretches meet -- same reason from/to are exported at all.
+      ...(r.skippedExit ? { unconnected: true } : {})
     }))
   };
   ta.value = JSON.stringify(out, null, 2);
@@ -1509,17 +1513,29 @@ function builderResolve(){
     // einplanen soll. Das mache ich dann von Hand." Their example: Steinbergbahn I -> II -> Asitz-Trail,
     // where the mountain station is 298 m from the Asitz-Trail's END and 1600 m from its start, so the
     // only junction candidate lands on the last point -- and the whole trail lit up.
-    let a = entry[i], b = exit[i];
+    // DIRECTION FIRST, junctions second. The trail is ridden the way it is drawn -- or the opposite, if you
+    // pressed the arrow -- and never the other way round because the sequence happened to work out that
+    // way. Then, and only then, the junctions are allowed to cut it: you start at the entry junction if
+    // there is one, and you stop at the exit junction ONLY IF it lies ahead of you. An exit that lies
+    // behind you is skipped and a gap to the next element is left instead.
+    //
+    // This is the user's call (2026-07-28), on the case where both ends are pinned and the older rule
+    // therefore rode a descent uphill with nothing pressed (Back-to-Black-Line -> X-Line -> Schattberg
+    // Sprinter, entry 311, exit 118): "ich würde keine automatische Rückwärtserkennung machen. Das sollte
+    // eine bewusste Entscheidung sein." A visible gap is the honest outcome -- and gaps between elements
+    // are the builder's declared scope anyway, not a new defect.
+    //
+    // It also removes a concept: the sequence can no longer fix a stretch's direction, so `dirFixed` is
+    // gone and the arrow is always usable.
     const rev = !!item.reversed;
-    if (a === null && b === null) {
-      // no junction at all (single element, or opted out with `full`) -- a plain reversal
-      a = rev ? last : 0;
-      b = rev ? 0 : last;
-    } else if (a === null) {
-      a = rev ? last : 0;   // ride TO the exit junction, starting where the trail itself starts
-    } else if (b === null) {
-      b = rev ? 0 : last;   // ride FROM the entry junction, on to where the trail itself ends
-    }
+    const ownStart = rev ? last : 0;
+    const ownEnd = rev ? 0 : last;
+    const ahead = (from, to) => (rev ? to < from : to > from);
+    const a = entry[i] !== null ? entry[i] : ownStart;
+    const b = (exit[i] !== null && ahead(a, exit[i])) ? exit[i] : ownEnd;
+    // An exit junction we had to ignore: the connection to the next element is not made, which the row
+    // reports so the gap is never silent.
+    const skippedExit = exit[i] !== null && b !== exit[i];
     const lo = Math.min(a, b), hi = Math.max(a, b);
     let coords = g.slice(lo, hi + 1);
     const forward = a <= b;
@@ -1534,7 +1550,7 @@ function builderResolve(){
     const t0 = lineTrails.find(tr => tr.id === item.id);
     if (!clipped && t0) {
       const u = forward ? t0.up : t0.down, dn2 = forward ? t0.down : t0.up;
-      return { item, coords, len, up: u, down: dn2, fullLen, clipped: false, against: !forward };
+      return { item, coords, len, up: u, down: dn2, fullLen, clipped: false, skippedExit };
     }
     const prof = ELEVATION_PROFILES[item.id];
     let up = 0, down = 0;
@@ -1550,16 +1566,17 @@ function builderResolve(){
     // `empty`: the two ends of the clip landed on the same point, so there is nothing to ride here. The
     // row flags it and the map draws only the numbered dot, no glow -- the user's own expectation for the
     // Asitz-Trail case ("Müsste ja eigentlich gar nix gelb leuchten, oder?").
+    // `against` used to ride here, flagging a stretch running counter to its trail's own direction. Dropped
+    // 2026-07-28: the clip is direction-first now, so that state cannot arise unless you asked for it with
+    // the arrow -- which the arrow itself already shows.
     return { item, coords, len, up: Math.round(up), down: Math.round(down), fullLen, clipped,
-             against: !forward, empty: hi <= lo };
+             empty: hi <= lo, skippedExit };
   });
   resolved.forEach((r, i) => {
     // `junction` is the one AFTER this element -- the connector drawn below its row.
     r.junction = junctionInfo[i];
-    // Clipped at both ends: the sequence fully determines which way this stretch is ridden, so there is
-    // nothing left for the arrow to flip -- the row disables it instead of offering a control that does
-    // nothing. Switching either neighbouring iConnect off frees an end and makes the arrow meaningful.
-    r.dirFixed = r.item.kind === "trail" && entry[i] !== null && exit[i] !== null;
+    // No `dirFixed` any more: since 2026-07-28 the direction is always the trail's own (or your flip), so
+    // the sequence can never take the choice away and the arrow is always usable.
   });
   return resolved;
 }
@@ -1747,10 +1764,17 @@ function wireBuilderRowDrag(row, idx){
     // keeps the live reorder below from feeding back into its own input and flickering.
     const rects = rows.map(r => r.getBoundingClientRect());
     const mids = rects.map(b => b.top + b.height / 2);
-    const shift = rects[idx].height + 4;   // how far a displaced row travels: dragged height + list gap
+    // How far a row travels when it steps aside is the distance between two SLOT CENTRES, which is not
+    // `rowHeight + list gap`: an iConnect pill sits between the rows, and even on its negative margins it
+    // still contributes ~5px of layout plus a second gap (33+4+5+4 = 46, not 37). Deriving it from the
+    // measured centres also survives rows of unequal height and any future change to the pill's metrics.
+    const slotShift = (from, to) => mids[to] - mids[from];
     const startY = e.clientY;
     let target = idx;
     row.classList.add("is-dragging");
+    // Hides the iConnect pills for the duration (CSS). They sit between the rows on negative margins, so
+    // while the rows glide aside they would stay put and read as leftover garbage (user, 2026-07-28).
+    document.getElementById("builderList").classList.add("is-dragging");
     // Capture is an enhancement, not a requirement: the move/end listeners sit on `window`, so the gesture
     // survives the pointer leaving the handle either way -- and setPointerCapture throws outright for a
     // pointer id the browser does not consider active.
@@ -1767,7 +1791,11 @@ function wireBuilderRowDrag(row, idx){
       // the user found it hard to read ("die Animation beim Drag n drop etwas schwer verständlich").
       rows.forEach((r, k) => {
         if (k === idx) return;
-        const d = (k > idx && k <= target) ? -shift : (k >= target && k < idx) ? shift : 0;
+        // A displaced row moves into its neighbour's slot: up one when the dragged row passes it going
+        // down, down one when it passes going up.
+        const d = (k > idx && k <= target) ? slotShift(k, k - 1)
+                : (k >= target && k < idx) ? slotShift(k, k + 1)
+                : 0;
         r.style.transform = d ? `translateY(${d}px)` : "";
       });
     };
@@ -1777,6 +1805,7 @@ function wireBuilderRowDrag(row, idx){
       window.removeEventListener("pointercancel", onEnd);
       rows.forEach(r => { r.style.transform = ""; });
       row.classList.remove("is-dragging");
+      document.getElementById("builderList").classList.remove("is-dragging");
       if (target !== idx) {
         const snapshot = builderPredecessorSnapshot();
         builderItems.splice(target, 0, builderItems.splice(idx, 1)[0]);
@@ -1854,8 +1883,9 @@ function renderBuilder(){
     // The arrow shows YOUR OWN choice (`reversed`), never a direction derived from the geometry. The user
     // was explicit (2026-07-28): "ich würde keine automatische Rückwärtserkennung machen. Das sollte eine
     // bewusste Entscheidung sein. Wenn der User Murks zusammenbaut ist das halt so. Man könnte höchstens
-    // eine Warnung anzeigen." So when the sequence ends up running a stretch against its trail's own
-    // direction, that is reported as a warning strip below the row instead of quietly rewriting the button.
+    // eine Warnung anzeigen." Since 2026-07-28 the sequence can no longer force a backwards ride at all --
+    // the clip follows the direction and skips a junction lying behind it -- so the only thing left to
+    // report is the gap that skipping leaves, via the .bi-gap symbol below.
     const goesBack = !!item.reversed;
     row.innerHTML = `
       <div class="bi-body">
@@ -1865,12 +1895,16 @@ function renderBuilder(){
           <span class="bi-name">${item.kind === "lift" ? "🚡 " : ""}${builderNameOf(item)}</span>
           <span class="bi-tail">
             ${r.empty ? `<span class="bi-empty" title="Der Übergang liegt genau auf dem Trailende — in Trailrichtung bleibt nichts zu fahren. Mit ← rückwärts einplanen, oder iConnect aus.">∅</span>` : ""}
+            <!-- A symbol in the row, not a strip: the sequence's iConnect to the next element pointed
+                 backwards along this trail, so it was skipped and the chain has a gap here. Replaces the
+                 .builder-warning strip -- the user wanted the height back ("Nur ein Symbol in der Zeile"),
+                 and the old warning's own case (a forced backwards ride) no longer exists. -->
+            ${r.skippedExit ? `<span class="bi-gap" title="Der iConnect zum nächsten Element liegt entgegen der Trailrichtung und wurde übersprungen — hier bleibt eine Lücke in der Kette. Zum Schließen: Reihenfolge ändern, Richtung umdrehen oder eine andere Kreuzung wählen.">⤳</span>` : ""}
             <span class="bi-meta${r.clipped ? " is-clipped" : ""}">${meta}</span>
             <!-- The arrow IS the state, and pressing it flips: → ridden in the element's own direction,
-                 ← against it (user, 2026-07-27). No separate marker after the name any more. -->
-            <button data-act="flip" class="bi-dir"${r.dirFixed
-              ? ` disabled title="Richtung liegt durch die Reihenfolge fest — dazu einen der beiden iConnect ausschalten"`
-              : ` title="${goesBack ? "Rückwärts — antippen für vorwärts" : "Vorwärts — antippen für rückwärts"}"`}>${goesBack ? "←" : "→"}</button>
+                 ← against it (user, 2026-07-27). Always enabled since 2026-07-28: the sequence can no
+                 longer take the choice away. -->
+            <button data-act="flip" class="bi-dir" title="${goesBack ? "Rückwärts — antippen für vorwärts" : "Vorwärts — antippen für rückwärts"}">${goesBack ? "←" : "→"}</button>
             <button data-act="del" class="bi-del" title="Entfernen">✕</button>
           </span>
         </div>
@@ -1903,18 +1937,6 @@ function renderBuilder(){
     wireBuilderRowDrag(row, i);
     wireBuilderRowSwipe(row, i);
     listEl2.appendChild(row);
-
-    // Warning strip: this stretch runs against its trail's own direction. Not a correction and not folded
-    // into the arrow -- direction stays the user's own decision, and "wenn der User Murks zusammenbaut ist
-    // das halt so. Man könnte höchstens eine Warnung anzeigen" (2026-07-28). Uphill-flagged trails are
-    // exempt: for those a climb is the point.
-    const tMeta = item.kind === "trail" ? lineTrails.find(tr => tr.id === item.id) : null;
-    if (r.against && !(tMeta && tMeta.uphill)) {
-      const warn = document.createElement("div");
-      warn.className = "builder-warning";
-      warn.innerHTML = `<span class="bw-icon">⚠</span><span>Gegen die Trailrichtung — dieser Abschnitt geht bergauf</span>`;
-      listEl2.appendChild(warn);
-    }
 
     // iConnect: one control per JUNCTION, drawn between the two rows it belongs to, straddling both boxes
     // so it cannot be misread as a property of either (user, 2026-07-28). It cycles candidate 1..n and then
@@ -3630,7 +3652,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v22"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v23"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
