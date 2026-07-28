@@ -166,15 +166,18 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    region's name and trail count, so it never had a predictable position. Lifted by the same translateY(-50%)
    as the legend so both straddle the border line, and it cuts its own gap in that border via the background,
    exactly like the legend does. */
-/* Aligned on the GLYPH, not on the button box -- the difference is what the user still saw after the first
-   attempt. With symmetric 6px padding and right:0 the box ended at 332 (right:0 is the border's inner edge)
-   while the pin itself ended at 326, seven pixels short of the section triangles at 333. The padding is all
-   on the left now and the box is nudged out onto the border, so the pin's own layout box ends at 333; both
-   glyphs carry nearly the same right-side bearing (~5px, measured), so aligning the boxes aligns the ink.
-   Total width and therefore the tap target are unchanged. */
+/* Two requirements that pull against each other, so both are handled explicitly:
+   1. The PIN (not the button box) lines up with the section triangles at x=333. Aligning the box was the
+      first attempt and the user still saw it off, because 6px of padding left the pin 7px short.
+   2. The pin is CENTRED in the box, which becomes visible on hover/touch. The fix for (1) was all-left
+      padding, which parked the pin against the box's right edge -- visible as soon as the background showed.
+   So: a fixed-size flex-centred box, shifted right by half its slack so the centred pin still lands on 333.
+   The box therefore overhangs the region box's border by ~6px, into the sidebar's own padding where there is
+   nothing to collide with. Size stays 30x28 -- the same tap target as before, not shrunk. */
 .region-group-fly-btn{ border:none; cursor:pointer; font-size:14px; line-height:1;
-  padding: 7px 0 7px 12px; color: var(--stone); border-radius: 6px;
-  position: absolute; top: 0; right: -1.5px; transform: translateY(-50%);
+  display:flex; align-items:center; justify-content:center;
+  width:30px; height:28px; padding:0; color: var(--stone); border-radius: 6px;
+  position: absolute; top: 0; right: -6px; transform: translateY(-50%);
   background: var(--card-bg); }
 .region-group-fly-btn:hover{ background: #e4ece0; color: var(--forest-dark); }
 .hub-group{ border-bottom: 1px solid #eceee4; }
