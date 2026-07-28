@@ -483,7 +483,7 @@ def build_profile(coords, elevations, smooth=2):
     return prof, gain, loss
 
 
-def build_trail(trail_id, name, region, diff, raw_points, *, url=None, uphill=False,
+def build_trail(trail_id, name, region, diff, raw_points, *, uphill=False,
                 official=None, elevation=None, descend=True, eps_m=SIMPLIFY_EPS_M):
     """Turn raw GPX/OSM points into the three things a region JSON needs for one trail.
 
@@ -530,8 +530,8 @@ def build_trail(trail_id, name, region, diff, raw_points, *, url=None, uphill=Fa
              "len": length, "up": up, "down": down}
     if uphill:
         entry["uphill"] = True
-    if url:                     # omit entirely when there is no official page -- never set it to ""
-        entry["url"] = url
+    # No `url`: the info panel's "Zur Tour auf der Website" link was dropped on 2026-07-28 at the user's
+    # request and the field went with it, so writing one here would only put dead weight back into the data.
     return entry, coords, prof
 
 

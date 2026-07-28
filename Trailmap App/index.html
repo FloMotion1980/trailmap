@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=27" />
+<link rel="stylesheet" href="style.css?v=29" />
 </head>
 <body>
 <div id="fatalError">
@@ -1277,18 +1277,23 @@ locateBtn.addEventListener("click", () => {
 });
 
 
-// ---- Permanent place labels (village names) — always visible, independent of zoom.
+// ---- Place labels (village names) — independent of zoom, and switchable via "Orte" (see showPlaces).
 // Data comes from each activated region's JSON `places` field; see buildPlaceMarkers below.
-const placeMarkers = {}; // groupKey -> array of Leaflet markers, for teardown on deactivate
+const placeMarkers = {}; // groupKey -> array of L.tooltip layers, for teardown on deactivate
 
+// A standalone label sitting exactly ON the place's coordinate — no dot, and deliberately not offset above
+// it (user, 2026-07-28). Our coordinates come from OSM's own `place` nodes, which is precisely where the base
+// map renders ITS village name, so a dot there plus our pill above it showed the name twice: OSM's text at
+// the dot, ours over it. Centred on the same point, our opaque pill covers OSM's text instead, and the name
+// appears once. The dot then had nothing left to mark — these labels were never interactive.
+//
+// L.tooltip added straight to the map with no source layer, the same pattern as a Trailrunde's per-segment
+// name labels; `map.addLayer`/`removeLayer` is all the visibility handling it needs.
 function buildPlaceMarkers(groupKey, places){
-  placeMarkers[groupKey] = places.map(p => {
-    const m = L.circleMarker([p.lat, p.lng], {
-      radius: 4, color:"#f2f3ec", weight:2, fillColor:"#1c2620", fillOpacity:1
-    }).addTo(map);
-    m.bindTooltip(p.name, { permanent:true, direction:"top", offset:[0,-4], className:"place-label-tooltip", interactive:false }).openTooltip();
-    return m;
-  });
+  placeMarkers[groupKey] = places.map(p =>
+    L.tooltip({ permanent:true, direction:"center", className:"place-label-tooltip", interactive:false })
+      .setLatLng([p.lat, p.lng]).setContent(p.name).addTo(map)
+  );
 }
 function destroyPlaceMarkers(groupKey){
   (placeMarkers[groupKey] || []).forEach(m => map.removeLayer(m));
@@ -1300,8 +1305,8 @@ function destroyPlaceMarkers(groupKey){
 // that is the same trap the lift hit-lines have to work around in the other direction.
 function applyPlaceVisibility(){
   Object.values(placeMarkers).forEach(list => list.forEach(m => {
-    if (showPlaces) { map.addLayer(m); m.openTooltip(); }
-    else map.removeLayer(m);
+    if (showPlaces && !map.hasLayer(m)) m.addTo(map);
+    else if (!showPlaces && map.hasLayer(m)) map.removeLayer(m);
   }));
 }
 
@@ -2831,8 +2836,12 @@ function buildInfoPanelHtml(t){
       <button class="solo-btn${isSolo ? " active" : ""}" data-id="${t.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button>
       <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">🔄</button>
       ${profile ? buildElevationSvg(profile, highlight, diffColor[t.diff], t.id, isReversed, chartSegments) : ""}
+      <!-- The "Zur Tour auf der Website" link was removed on 2026-07-28 at the user's request, together with
+           the url field it read from; see the lineTrails note in CLAUDE.md. GPX export stays.
+           NOTE: never use a backtick in this comment. It sits inside a JS template literal, where a backtick
+           ends the string: writing the field name in code quotes here silently broke the whole script block,
+           and with it the fatal-error panel, which lives in that same block and so could not report it. -->
       <div class="ip-actions">
-        ${t.url ? `<a class="ip-link" href="${t.url}" target="_blank" rel="noopener">Zur Tour auf der Website ↗</a>` : ""}
         <button class="ip-link gpx-download-btn" data-id="${t.id}" title="GPX herunterladen">GPX ⬇</button>
       </div>
       ${segmentInfoHtml}
@@ -2863,11 +2872,17 @@ function showLiftInfo(l){
   infoPanel.classList.add("visible");
 }
 
-function showTrailInfo(t){
+function showTrailInfo(t, opts){
   openLiftId = null;      // opening a trail closes any lift that was showing
   hideAllLiftEndpoints();
+  // `keepSegment` is set by the per-segment click handlers of a Trailrunde: they have just chosen which
+  // segment is selected and must not have it wiped by the reset below. They used to achieve that by setting
+  // `openTrailId = t.id` themselves before calling in, which also made `isNewSelection` false — and that
+  // silently disabled the auto-solo further down, so clicking a segment of a loop never soloed it while
+  // clicking the loop itself did (user, 2026-07-28). Saying what is meant instead of faking the state.
+  const keepSegment = !!(opts && opts.keepSegment);
   const isNewSelection = openTrailId !== t.id;
-  if (isNewSelection) selectedSegmentId = null; // switching to a genuinely different trail/loop
+  if (isNewSelection && !keepSegment) selectedSegmentId = null; // switching to a genuinely different trail/loop
   openTrailId = t.id;
   if (soloId && soloId !== t.id) clearSolo();
   // Selecting a Trailrunde auto-enables solo (not for a regular trail) -- with dozens of loops now
@@ -3042,9 +3057,8 @@ function buildTrailLayer(t){
           liftHit.on("click", () => {
             if (builderTryAdd("lift", refLift.id)) return;
             const wasOpen = openTrailId === t.id;
-            openTrailId = t.id;
             selectedSegmentId = (wasOpen && selectedSegmentId === refLift.id) ? null : refLift.id;
-            showTrailInfo(t);
+            showTrailInfo(t, { keepSegment: true });
             selectCardFor(t.id);
           });
           segmentHitLines.push(liftHit);
@@ -3080,9 +3094,8 @@ function buildTrailLayer(t){
           segHit.on("click", () => {
             if (builderTryAdd("trail", refTrail.id)) return;
             const wasOpen = openTrailId === t.id;
-            openTrailId = t.id; // pre-empt showTrailInfo's own "switched to a different trail" reset below
             selectedSegmentId = (wasOpen && selectedSegmentId === refTrail.id) ? null : refTrail.id;
-            showTrailInfo(t);
+            showTrailInfo(t, { keepSegment: true });
             selectCardFor(t.id);
           });
           segmentHitLines.push(segHit);
@@ -3909,7 +3922,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v27"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v29"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

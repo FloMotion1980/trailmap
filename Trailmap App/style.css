@@ -145,7 +145,11 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   text-transform: uppercase; letter-spacing: 1px; color: var(--forest-dark); font-weight: 700;
   border-top: 2px solid #e3e6da; margin-top: 6px; }
 .region-group-title:first-child{ border-top: none; margin-top: 0; }
-.region-groups-container{ display:flex; flex-direction:column; gap: 18px; margin-top: 14px; margin-bottom: 10px; }
+/* margin-top exists so the first box's legend — lifted onto the top border by translateY(-50%) — has room
+   below the "Region" heading instead of covering it (regression found by the user 2026-07-23). Raised 14 ->
+   18px on 2026-07-28, when the 📍 moved onto the same border line: at 14px it ended up 1px under that
+   heading's own ▾, i.e. two different tap targets touching. */
+.region-groups-container{ display:flex; flex-direction:column; gap: 18px; margin-top: 18px; margin-bottom: 10px; }
 .region-group-block{ position: relative; border: 1.5px solid #d3d9c9; border-radius: 10px;
   padding: 14px 10px 10px; }
 .region-group-row{ position: absolute; top: 0; left: 8px; transform: translateY(-50%);
@@ -164,7 +168,7 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    exactly like the legend does. */
 .region-group-fly-btn{ border:none; cursor:pointer; font-size:14px; line-height:1;
   padding: 7px 6px; color: var(--stone); border-radius: 6px;
-  position: absolute; top: 0; right: 8px; transform: translateY(-50%);
+  position: absolute; top: 0; right: 0; transform: translateY(-50%);
   background: var(--card-bg); }
 .region-group-fly-btn:hover{ background: #e4ece0; color: var(--forest-dark); }
 .hub-group{ border-bottom: 1px solid #eceee4; }

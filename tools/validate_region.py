@@ -142,10 +142,10 @@ def check(key, cat):
             bad.append("%s: region %r is not a subRegion of %s" % (tid, t["region"], key))
         if t.get("diff") not in DIFFS:
             bad.append("%s: diff %r is not one of %s" % (tid, t.get("diff"), sorted(DIFFS)))
-        # The info panel checks `t.url ? ... : ""`, so an empty string is not the same as absent --
-        # CLAUDE.md is explicit: omit the field for trails with no official page.
-        if "url" in t and not t["url"]:
-            bad.append("%s: empty url -- omit the field instead" % tid)
+        # `url` was removed from the data model on 2026-07-28 together with the info panel's link to it, so
+        # any occurrence now is leftover weight -- previously this check only rejected an EMPTY one.
+        if "url" in t:
+            bad.append("%s: has a url -- the field was removed from the data model" % tid)
         if tid not in geo:
             bad.append("%s: no trailGeo" % tid)
         elif len(geo[tid]) < 2:

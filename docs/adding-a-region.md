@@ -44,7 +44,7 @@ for src in sources:
     entry, coords, prof = build_trail(
         trail_id="zta_blue_bird", name="Blue Bird", region="ehrwald",
         diff="blau", raw_points=parse_gpx(open(src, encoding="utf-8").read()),
-        url="https://…", official=(3.4, 12, 410),   # operator figures win over GPX-derived ones
+        official=(3.4, 12, 410),   # operator figures win over GPX-derived ones
         elevation=ele)
     trails.append(entry); geo[entry["id"]] = coords; profs[entry["id"]] = prof
 
@@ -88,8 +88,8 @@ unversioned and that copy stays cached forever. `validate_region.py` now fails o
 python tools/validate_region.py zugspitzarena
 ```
 
-It checks the invariants that have actually bitten: sub-region keys that exist, valid difficulties, no
-empty `url` (the info panel tests truthiness, so `""` is not the same as absent), geometry and a profile
+It checks the invariants that have actually bitten: sub-region keys that exist, valid difficulties, no `url`
+(the field was removed from the data model on 2026-07-28), geometry and a profile
 per trail and no orphans of either, `trailCount` matching reality, lifts stored bottom-first, sub-region
 colours distinct within the group, the loop invariant that `trailGeo[loopId]` is the exact concatenation of
 its `trailSegments`, a sanity check that no trail's geometry sits further from the region centre than
