@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=23" />
+<link rel="stylesheet" href="style.css?v=26" />
 </head>
 <body>
 <div id="fatalError">
@@ -842,6 +842,19 @@ document.getElementById("builderSheetHandle").addEventListener("click", (e) => {
 // The sheet's own way out. Needed because on a phone the sheet is full width at z-index 1600 and the 🧭
 // map button sits at 1000 -- it is behind the sheet, so it could not be used to switch back off.
 document.getElementById("builderSheetOff").addEventListener("click", () => setBuilderMode(false));
+// The list's scrollbar is painted transparent on touch layouts and only shown while the list actually moves
+// (user, 2026-07-28: the permanent grey bar). CSS has no "is scrolling" state, hence this class. The delay
+// outlasts a flick's inertia, so the bar does not blink out mid-glide -- and the edge auto-scroll during a
+// drag fires scroll events too, which is exactly when seeing the position helps most.
+{
+  const sheetBody = document.getElementById("builderSheetBody");
+  let scrollIdleTimer = null;
+  sheetBody.addEventListener("scroll", () => {
+    sheetBody.classList.add("is-scrolling");
+    if (scrollIdleTimer) clearTimeout(scrollIdleTimer);
+    scrollIdleTimer = setTimeout(() => sheetBody.classList.remove("is-scrolling"), 700);
+  }, { passive: true });
+}
 document.getElementById("builderClearBtn").addEventListener("click", () => {
   builderItems = [];
   document.getElementById("builderExport").classList.remove("visible");
@@ -1718,12 +1731,37 @@ function restoreBuilder(){
 // Adding is routed through here from every click site (map line, endpoint dots, sidebar card, and a Tour's
 // own segment hit-lines). Returns true when the builder consumed the click, so each caller can bail out of
 // its normal "open the info panel" behaviour.
+// Set just before a render so the row created for this index gets the `is-new` flash, then cleared again --
+// otherwise every later render (tapping a pill, hovering a row) would replay the animation on that row.
+let builderNewIdx = null;
+
 function builderTryAdd(kind, id){
   if (!builderMode || !id) return false;
   builderItems.push({ kind, id, reversed: false });
+  builderNewIdx = builderItems.length - 1;
   persistBuilder();
   renderBuilder();
+  builderScrollToNewest();
   return true;
+}
+
+// A new element is always appended, so once the list is long enough to scroll, it lands out of sight: you
+// tap a trail on the map and nothing visibly happens (user, 2026-07-28, on a phone). Scroll it into view,
+// smoothly, so the movement itself shows where the addition went -- paired with the row's own `is-new` flash
+// for the case where the list was already at the bottom and nothing needs to move.
+function builderScrollToNewest(){
+  const body = document.getElementById("builderSheetBody");
+  if (!body || !builderSheetOpen || !builderMode) return;   // collapsed sheet: nothing to scroll
+  const rows = document.querySelectorAll("#builderList .builder-row");
+  const last = rows[rows.length - 1];
+  if (!last) return;
+  // scrollTo on the container rather than scrollIntoView on the row: the latter also scrolls every ANCESTOR,
+  // which on a phone drags the whole page/map about when the sheet sits near the viewport edge.
+  const target = body.scrollHeight - body.clientHeight;
+  if (target <= 0) return;                                  // not scrollable yet
+  const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  try { body.scrollTo({ top: target, behavior: reduce ? "auto" : "smooth" }); }
+  catch (err) { body.scrollTop = target; }                   // older WebKit: no options object
 }
 
 // ---- Row focus: which element is being pointed at --------------------------------------------------
@@ -1838,7 +1876,9 @@ function wireBuilderRowDrag(row, idx){
     const rows = [...document.querySelectorAll("#builderList .builder-row")];
     // Geometry is measured ONCE, before anything moves. Nothing here changes the layout -- every row is
     // only ever shifted by a transform -- so these stay valid for the whole gesture, which is also what
-    // keeps the live reorder below from feeding back into its own input and flickering.
+    // keeps the live reorder below from feeding back into its own input and flickering. They are viewport
+    // coordinates, so they describe the moment the drag began; `scrollDelta` in layout() keeps everything
+    // else expressed in that same frame once the list starts scrolling under the finger.
     const rects = rows.map(r => r.getBoundingClientRect());
     const mids = rects.map(b => b.top + b.height / 2);
     // How far a row travels when it steps aside is the distance between two SLOT CENTRES, which is not
@@ -1848,6 +1888,24 @@ function wireBuilderRowDrag(row, idx){
     const slotShift = (from, to) => mids[to] - mids[from];
     const startY = e.clientY;
     let target = idx;
+    // The list is the scrolling element, and `.bi-drag` carries `touch-action:none` so the browser will not
+    // scroll it for us during a drag -- which on a phone made a long list impossible to reorder at all: you
+    // hit the edge of the visible area and simply could not get any further (user, 2026-07-28).
+    //
+    // Scrolling mid-gesture invalidates the measurements above, though, since they are viewport coordinates.
+    // Rather than re-measuring (which would let the shifted rows feed back into the target calculation, the
+    // flicker this design avoids by measuring once), everything below works in the coordinate frame of the
+    // drag's START: `scrollDelta` converts today's pointer position back into it.
+    const scroller = document.getElementById("builderSheetBody");
+    const startScroll = scroller ? scroller.scrollTop : 0;
+    // Measured NOW, while no row carries a transform yet, because a transform extends its scroll container's
+    // scrollable overflow area. Without this clamp the edge scroll runs away: scrolling grows `dy` (which
+    // includes scrollDelta), which pushes the dragged row further down, which extends scrollHeight, which
+    // allows more scrolling. Held at the bottom edge it reached scrollTop 825 on a list whose real maximum is
+    // 275, and snapped back only on release.
+    const maxScroll = scroller ? Math.max(0, scroller.scrollHeight - scroller.clientHeight) : 0;
+    let lastY = e.clientY;
+    let raf = null;
     row.classList.add("is-dragging");
     // Hides the iConnect pills for the duration (CSS). They sit between the rows on negative margins, so
     // while the rows glide aside they would stay put and read as leftover garbage (user, 2026-07-28).
@@ -1856,8 +1914,12 @@ function wireBuilderRowDrag(row, idx){
     // survives the pointer leaving the handle either way -- and setPointerCapture throws outright for a
     // pointer id the browser does not consider active.
     try { handle.setPointerCapture(e.pointerId); } catch (err) { /* keep going without it */ }
-    const onMove = (ev) => {
-      const dy = ev.clientY - startY;
+    // Positions every row from `lastY` plus however far the list has scrolled since the drag began. Called
+    // from pointermove AND from the auto-scroll ticker, because a finger held still at the edge keeps
+    // scrolling while firing no pointer events at all.
+    const layout = () => {
+      const scrollDelta = scroller ? scroller.scrollTop - startScroll : 0;
+      const dy = lastY - startY + scrollDelta;   // keeps the row under the finger as the list moves beneath it
       row.style.transform = `translateY(${dy}px)`;
       const y = mids[idx] + dy;
       let slot = 0;
@@ -1876,7 +1938,29 @@ function wireBuilderRowDrag(row, idx){
         r.style.transform = d ? `translateY(${d}px)` : "";
       });
     };
+    // Speed ramps up over the edge zone instead of being constant: a fixed step is either too slow to cross a
+    // long list or too fast to stop on the row you want.
+    const EDGE_PX = 30, EDGE_MAX_STEP = 14;
+    const edgeStep = () => {
+      if (!scroller) return 0;
+      const b = scroller.getBoundingClientRect();
+      const over = (d) => Math.ceil(EDGE_MAX_STEP * Math.min(1, d / EDGE_PX));
+      if (lastY < b.top + EDGE_PX) return -over(b.top + EDGE_PX - lastY);
+      if (lastY > b.bottom - EDGE_PX) return over(lastY - (b.bottom - EDGE_PX));
+      return 0;
+    };
+    const tick = () => {
+      const step = edgeStep();
+      if (step) {
+        const before = scroller.scrollTop;
+        scroller.scrollTop = Math.min(maxScroll, Math.max(0, before + step));
+        if (scroller.scrollTop !== before) layout();   // no-op at either end of the list
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    const onMove = (ev) => { lastY = ev.clientY; layout(); };
     const onEnd = () => {
+      if (raf !== null) cancelAnimationFrame(raf);
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onEnd);
       window.removeEventListener("pointercancel", onEnd);
@@ -1895,6 +1979,7 @@ function wireBuilderRowDrag(row, idx){
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onEnd);
     window.addEventListener("pointercancel", onEnd);
+    raf = requestAnimationFrame(tick);   // edge auto-scroll runs for the whole gesture, not per pointermove
   });
 }
 
@@ -1953,7 +2038,8 @@ function renderBuilder(){
     km += r.len; up += r.up; down += r.down;
     const row = document.createElement("div");
     row.className = "builder-row" + (item.kind === "lift" ? " is-lift" : "") + (item.reversed ? " is-reversed" : "")
-      + (builderActiveIdx === i ? " is-focused" : "");  // hover is always null right after a rebuild
+      + (builderActiveIdx === i ? " is-focused" : "")   // hover is always null right after a rebuild
+      + (builderNewIdx === i ? " is-new" : "");
     row.dataset.idx = i;
     // when a trail is only partly ridden, show both figures so it's obvious the clip happened
     const meta = r.clipped ? `${r.len.toFixed(2)} / ${r.fullLen.toFixed(2)} km` : `${r.len.toFixed(2)} km`;
@@ -2064,6 +2150,7 @@ function renderBuilder(){
   totalsEl.textContent = builderItems.length
     ? `${km.toFixed(2)} km · ${Math.round(up)} m ↑ / ${Math.round(down)} m ↓`
     : "";
+  builderNewIdx = null;   // one render only -- see the declaration
   builderResolved = resolved;
   drawBuilderHighlight();
   // The pinned sheet exists only while the mode is on; collapsed it is just its own handle. The <html>
@@ -3748,7 +3835,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v23"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v26"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

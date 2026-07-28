@@ -98,10 +98,56 @@ it is a work-in-progress document rather than a view preference.
 - **`renderBuilder()` after `render()`**, and after the regions are loaded — a row's name and length resolve
   against `lineTrails`/`LIFTS`, so doing it earlier renders a list of bare ids.
 
+## Long lists on a phone (2026-07-28)
+
+Three fixes for the same situation — more elements than the sheet is tall:
+
+**A new element scrolls itself into view and flashes once.** Elements are appended, so once the list scrolls,
+a new one lands below the fold: you tap a trail on the map and nothing visibly happens. `builderScrollToNewest()`
+scrolls the container (`scrollTo` on `#builderSheetBody`, *not* `scrollIntoView` on the row — that also scrolls
+every ancestor, which drags the page/map about when the sheet sits near the viewport edge), and the row gets a
+one-shot `is-new` class for the flash. `builderNewIdx` is set just before the render and cleared inside it, or
+every later render would replay the animation on that row. The flash is a **background**, not a ring:
+`.builder-row` has `overflow:hidden` for the swipe-delete hint, which would clip a box-shadow or outline.
+
+**Dragging to the list's edge auto-scrolls.** `.bi-drag` carries `touch-action:none`, so the browser will not
+scroll for us — a long list simply could not be reordered past the visible area. A `requestAnimationFrame`
+ticker does it, not the `pointermove` handler, because a finger resting at the edge fires no events at all;
+speed ramps up across a 30px zone so it neither crawls nor overshoots.
+
+Two traps in that, both hit while building it:
+
+- **Scrolling invalidates the once-measured geometry.** Rather than re-measuring (which would let the shifted
+  rows feed back into the target calculation — the flicker this design exists to avoid), everything works in
+  the coordinate frame of the drag's *start*, and `scrollDelta` converts the current pointer position back
+  into it. The dragged row's own offset includes that delta too, which is what keeps it under the finger while
+  the list slides beneath.
+- **A CSS transform extends its scroll container's scrollable overflow area**, so the naive version ran away:
+  scrolling grows the drag offset → pushes the transformed row further down → grows `scrollHeight` → allows
+  more scrolling. Held at the bottom edge it reached `scrollTop` 825, then 1133, on a list whose real maximum
+  is 275, and snapped back only on release. Fixed by capturing the true maximum at `pointerdown`, while no row
+  carries a transform yet, and clamping to it. The same effect is visible harmlessly in `builderRowIn`'s 7px
+  slide, which briefly reports a maximum of 346 instead of 275 before settling.
+
+**The scrollbar shows only while the list moves** (touch layouts only; the user asked for the permanent grey
+bar to go). The second of the two options they offered, because it keeps the one cue that there is more list
+below. The thumb is painted transparent rather than the bar removed — `display:none` or a width change would
+alter the content width mid-scroll and reflow the rows under the finger. `.is-scrolling` is toggled in JS with
+a 700ms idle timer, since CSS has no such state; the timer outlasts a flick's inertia so the bar does not blink
+out mid-glide.
+
+**Related simplification, same day:** `#locateBtn` now sits **top right on every layout**. It used to be
+bottom right and get pushed to the top only while the builder sheet was open; the user saw that and asked for
+it permanently — *"Die Stelle ist gut. Mach ihn immer dahin. Positiv. Wir sparen uns Sonderlogik"*. It did:
+four positioning rules collapsed into one, including an `!important` that existed only to beat another rule.
+Verified free of collisions in the one layout where `#infoPanel` is also top right (`landscape-compact`): the
+button ends at y=117 and the panel starts at y=125, both inside `.map-wrap`.
+
 ## Regression cases
 
 **`tools/builder_testcases.js` — paste it into the browser console with the `bikecircus` region active and
-Tourenbuilder mode on.** 16 cases, 82 checks, all green as of 2026-07-28. Every rule described below was
+Tourenbuilder mode on.** 19 cases, 97 checks, all green as of 2026-07-28. Run it at a phone viewport: the last
+three cases cover the touch-layout behaviour and one of them skips itself on a desktop layout. Every rule described below was
 derived from one concrete ride the user tried, and each of them broke an earlier rule when it landed (three
 separate direction bugs in two days), so the cases *are* those rides, with their real lengths and index
 ranges. Run it after touching `builderResolve`, `junctionCandidates`, the row rendering or the drag handler.

@@ -285,8 +285,14 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 }
 .place-label-tooltip::before{ display:none; }
 
+/* TOP RIGHT, always. It used to live bottom right and get pushed up here only while the Tourenbuilder sheet
+   was open -- the user saw that and asked for it permanently (2026-07-28: "Die Stelle ist gut. Mach ihn immer
+   dahin. Positiv. Wir sparen uns Sonderlogik"). It did: this replaced three separate overrides, one of them
+   needing !important to beat another. The corner is free on every layout -- drawer toggle top left,
+   #liveStatus top centre, and #infoPanel starts at y=70 in landscape where this button ends at y=62.
+   Only ever visible on touch layouts (display:flex in the mobile block below). */
 #locateBtn{
-  display:none; position:absolute; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); right: calc(16px + env(safe-area-inset-right, 0px)); z-index:1000;
+  display:none; position:absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: calc(16px + env(safe-area-inset-right, 0px)); z-index:1000;
   width:46px; height:46px; border-radius:50%;
   background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
   box-shadow: 0 3px 10px rgba(0,0,0,0.2);
@@ -431,15 +437,9 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
     width:max-content; max-width:min(92vw, 360px);
     max-height:min(38vh, 300px);
   }
-  #locateBtn{
-    display:flex;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px) + 54px);
-  }
+  #locateBtn{ display:flex; }   /* position comes from the base rule -- top right on every layout */
 }
 html.is-standalone #infoPanel{
-  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
-}
-html.is-standalone #locateBtn{
   bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
 }
 html.landscape-compact #infoPanel{
@@ -565,14 +565,6 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
   header{ flex-wrap:nowrap; gap:10px; }
   header h1{ font-size:17px; flex-shrink:0; }
   #regionsBtn{ min-width:0; flex-shrink:1; }
-  /* On a phone the sheet spans the full width and sits at z-index 1600, so the whole bottom strip belongs
-     to it -- collapsed too. The locate button therefore moves to the top right for the duration; that
-     corner is free (drawer toggle is top left, #liveStatus top centre). Needs !important to beat the
-     html.is-standalone rule further up, and wins on document order at equal specificity. */
-  html.has-builder-sheet #locateBtn{
-    top: calc(16px + env(safe-area-inset-top, 0px)) !important;
-    bottom: auto !important;
-  }
 }
 #builderList{ display:flex; flex-direction:column; gap:4px; }
 /* The row is only a positioning shell: the visible box is .bi-body, which is what slides sideways on a
@@ -610,6 +602,25 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
    also meaningless mid-drag: which junction belongs to which pair is exactly what is being changed. */
 #builderList.is-dragging .builder-connector{ opacity:0; pointer-events:none; transition:opacity .1s ease; }
 .builder-row.is-dragging .bi-body{ box-shadow:0 4px 14px rgba(0,0,0,.25); border-color:var(--highlight); }
+/* A freshly added element flashes once. Needed because a new row is appended, so on a phone with a long list
+   it lands below the fold: you tap a trail on the map and nothing visibly happens (user, 2026-07-28). The
+   list also scrolls itself to the bottom (builderScrollToNewest) -- the flash covers the case where it was
+   already there and no movement would be visible.
+   The flash is a BACKGROUND, not a ring: .builder-row has overflow:hidden for the swipe-delete hint, which
+   would clip a box-shadow or outline around .bi-body. */
+@keyframes builderRowIn{
+  from{ transform:translateY(7px); opacity:0; }
+  to{ transform:none; opacity:1; }
+}
+@keyframes builderRowFlash{
+  0%{ background:#ffe9ad; border-color:var(--highlight); }
+  100%{ background:var(--card-bg); border-color:rgba(0,0,0,.12); }
+}
+.builder-row.is-new{ animation:builderRowIn .18s ease-out; }
+.builder-row.is-new .bi-body{ animation:builderRowFlash .85s ease-out; }
+@media (prefers-reduced-motion: reduce){
+  .builder-row.is-new, .builder-row.is-new .bi-body{ animation:none; }
+}
 .builder-row .bi-num{ min-width:1.6em; text-align:right; opacity:.6; font-variant-numeric:tabular-nums; }
 .builder-row .bi-name{ flex:1 1 auto; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .builder-row .bi-meta{ opacity:.7; font-size:11px; white-space:nowrap; font-variant-numeric:tabular-nums; }
@@ -703,6 +714,19 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
   /* Strictly ONE line. Wrapping the tail onto a second one was tried and rejected outright -- "Ich wollte
      auf keinen Fall dass das Listenelement größer wird. Wir sind auf dem Handy und haben eh wenig platz"
      (2026-07-28). The name gets its room by making everything around it narrower instead; see below. */
+
+  /* The scrollbar shows only WHILE scrolling (user, 2026-07-28: "die graue Scrollbar wegmachen? Oder nur
+     anzeigen, wenn wirklich gescrollt wird?"). Taking the second option, because it keeps the one cue that
+     there is more list below -- on a phone the sheet is short and a hidden overflow is easy to miss.
+     The thumb is painted transparent rather than the bar being removed: `display:none` or a width change
+     would alter the content width mid-scroll and reflow the rows under the finger. Only its colour changes,
+     so nothing moves. `.is-scrolling` is toggled in JS -- CSS has no "is scrolling" state. */
+  #builderSheetBody{ scrollbar-width:thin; scrollbar-color:transparent transparent; }
+  #builderSheetBody.is-scrolling{ scrollbar-color:rgba(0,0,0,.30) transparent; }
+  #builderSheetBody::-webkit-scrollbar{ width:4px; }
+  #builderSheetBody::-webkit-scrollbar-track{ background:transparent; }
+  #builderSheetBody::-webkit-scrollbar-thumb{ background:transparent; border-radius:2px; }
+  #builderSheetBody.is-scrolling::-webkit-scrollbar-thumb{ background:rgba(0,0,0,.30); }
 }
 
 /* The chain glows so it stays findable on any base layer, satellite included (user, 2026-07-27). The

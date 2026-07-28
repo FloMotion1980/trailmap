@@ -20,6 +20,8 @@
 //        not one, i.e. that rule fixed 16 pairs beyond the one the user reported.
 //   * in wireBuilderRowDrag, `slotShift = (from, to) => (to - from) * (rects[idx].height + 4)`
 //     -> the drag test fails with "got translateY(-37px), want ≈ translateY(-46px)".
+//   * in the drag's auto-scroll ticker, drop the clamp: `scroller.scrollTop = before + step`
+//     -> the edge-scroll test fails with "got {held: 1133, max: 275}".
 //
 // WHY IT DRIVES THE DOM instead of calling the resolver with arguments: `builderItems`, `TRAIL_GEO` and
 // `lineTrails` are `let`/`const` inside the app's top-level try{} block, so they are NOT reachable from a
@@ -379,6 +381,99 @@
     ok("…flagged as distance-driven", off.tooFar === true, off.tooFar, true);
   }
 
+  // =====================================================================================
+  // 8. LONG LISTS ON A PHONE (2026-07-28). All three need a list taller than the sheet, so they build
+  //    8 elements first. Run the browser at a phone viewport for the touch-only parts.
+  // =====================================================================================
+  const LONG = [T.hacklberg, T.z, T.sky12, T.x, T.backtoblack, T.asitz, T.wurzel, T.scheeleitn];
+  const sheetBody = () => $("#builderSheetBody");
+
+  test("adding an element scrolls the list to it and flashes the new row");
+  {
+    await build(LONG.map((id) => ["trail", id]));
+    const body = sheetBody();
+    const max = Math.round(body.scrollHeight - body.clientHeight);
+    ok("list is actually scrollable", max > 0, max, "> 0");
+    // The smooth scroll has to finish, and each add restarts it -- 500ms was not enough and looked like a
+    // failure while checking this by hand.
+    await wait(1600);
+    ok("scrolled to the bottom", Math.round(body.scrollTop) >= Math.round(body.scrollHeight - body.clientHeight) - 2,
+       Math.round(body.scrollTop), `≈ ${Math.round(body.scrollHeight - body.clientHeight)}`);
+    // One more add, to see the flash class on the row it created.
+    await add("trail", T.asitz);
+    const flashed = $$("#builderList .builder-row.is-new");
+    ok("exactly one row carries is-new", flashed.length === 1, flashed.length, 1);
+    ok("…and it is the last one", flashed[0] === $$("#builderList .builder-row").pop(),
+       true, "last row");
+    ok("row animation is running", getComputedStyle(flashed[0]).animationName === "builderRowIn",
+       getComputedStyle(flashed[0]).animationName, "builderRowIn");
+    ok("body flash is running", getComputedStyle(flashed[0].querySelector(".bi-body")).animationName === "builderRowFlash",
+       getComputedStyle(flashed[0].querySelector(".bi-body")).animationName, "builderRowFlash");
+    renderBuilder();
+    ok("flash does not replay on a later render", $$(".builder-row.is-new").length === 0,
+       $$(".builder-row.is-new").length, 0);
+  }
+
+  test("dragging to the list edge auto-scrolls, and stops at the real end");
+  {
+    await build(LONG.map((id) => ["trail", id]));
+    const body = sheetBody();
+    await wait(1200);
+    body.scrollTop = 0;
+    await wait(60);
+    const max = Math.round(body.scrollHeight - body.clientHeight);
+    const rows = () => $$("#builderList .builder-row");
+    const names = () => rows().map((r) => r.querySelector(".bi-name").textContent.trim());
+    const b = body.getBoundingClientRect();
+    const before = names();
+
+    // Hold at the bottom edge and fire NO further pointer events: the ticker has to keep scrolling on its
+    // own, which is the whole point -- a stationary finger produces no pointermove.
+    const h = rows()[0].querySelector(".bi-drag"), hb = h.getBoundingClientRect();
+    const edgeY = b.bottom - 8;
+    h.dispatchEvent(new PointerEvent("pointerdown", { bubbles: true, clientX: hb.left + 5, clientY: hb.top + 5, pointerId: 98, isPrimary: true }));
+    window.dispatchEvent(new PointerEvent("pointermove", { bubbles: true, clientX: hb.left + 5, clientY: edgeY, pointerId: 98, isPrimary: true }));
+    await wait(300);
+    const mid = Math.round(body.scrollTop);
+    await wait(1400);
+    const held = Math.round(body.scrollTop);
+    ok("it scrolls while the finger just rests at the edge", mid > 0, mid, "> 0");
+    // A transform extends its scroll container's scrollable overflow, so without clamping this runs away:
+    // scrolling grows the drag offset, which pushes the row further down, which allows more scrolling.
+    // Measured before the clamp: 825 on a list whose maximum is 275.
+    ok("clamped to the list's real maximum", held <= max + 1, { held, max }, `≤ ${max}`);
+    window.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, clientX: hb.left + 5, clientY: edgeY, pointerId: 98, isPrimary: true }));
+    await wait(250);
+    ok("the dragged element ended up last", names().indexOf(before[0]) === before.length - 1,
+       names().indexOf(before[0]), before.length - 1);
+    const after = Math.round(body.scrollTop);
+    await wait(400);
+    ok("the ticker stopped on release", Math.round(body.scrollTop) === after,
+       [after, Math.round(body.scrollTop)], "unchanged");
+  }
+
+  test("the scrollbar is only visible while the list is moving (touch layouts)");
+  {
+    await build(LONG.map((id) => ["trail", id]));
+    const body = sheetBody();
+    await wait(1200);
+    const colour = () => getComputedStyle(body).scrollbarColor;
+    if (!builderTouchLayout()) {
+      current.skipped = "desktop layout — the scrollbar stays visible here on purpose";
+      ok("skipped on desktop", true, "skipped", "skipped");
+    } else {
+      const idleWidth = body.clientWidth;
+      ok("invisible at rest", /rgba\(0, 0, 0, 0\)/.test(colour()), colour(), "transparent thumb");
+      body.scrollTop = Math.max(0, body.scrollTop - 40);
+      await wait(90);
+      ok("visible while scrolling", body.classList.contains("is-scrolling"), colour(), "has is-scrolling");
+      ok("no reflow when it appears", body.clientWidth === idleWidth,
+         [idleWidth, body.clientWidth], "equal");
+      await wait(900);
+      ok("invisible again once idle", !body.classList.contains("is-scrolling"), colour(), "transparent again");
+    }
+  }
+
   // ---------- report ----------
   await clearBuilder();
   let passed = 0, failed = 0;
@@ -386,6 +481,7 @@
   for (const t of results) {
     const bad = t.checks.filter((c) => !c.pass);
     if (bad.length) { failed++; lines.push(`FAIL  ${t.name}`); for (const c of bad) lines.push(`        ${c.label}: got ${JSON.stringify(c.got)}, want ${JSON.stringify(c.want)}`); }
+    else if (t.skipped) { passed++; lines.push(`skip  ${t.name}\n        ${t.skipped}`); }
     else { passed++; lines.push(`ok    ${t.name}`); }
   }
   console.log(lines.join("\n"));
