@@ -166,9 +166,15 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    region's name and trail count, so it never had a predictable position. Lifted by the same translateY(-50%)
    as the legend so both straddle the border line, and it cuts its own gap in that border via the background,
    exactly like the legend does. */
+/* Aligned on the GLYPH, not on the button box -- the difference is what the user still saw after the first
+   attempt. With symmetric 6px padding and right:0 the box ended at 332 (right:0 is the border's inner edge)
+   while the pin itself ended at 326, seven pixels short of the section triangles at 333. The padding is all
+   on the left now and the box is nudged out onto the border, so the pin's own layout box ends at 333; both
+   glyphs carry nearly the same right-side bearing (~5px, measured), so aligning the boxes aligns the ink.
+   Total width and therefore the tap target are unchanged. */
 .region-group-fly-btn{ border:none; cursor:pointer; font-size:14px; line-height:1;
-  padding: 7px 6px; color: var(--stone); border-radius: 6px;
-  position: absolute; top: 0; right: 0; transform: translateY(-50%);
+  padding: 7px 0 7px 12px; color: var(--stone); border-radius: 6px;
+  position: absolute; top: 0; right: -1.5px; transform: translateY(-50%);
   background: var(--card-bg); }
 .region-group-fly-btn:hover{ background: #e4ece0; color: var(--forest-dark); }
 .hub-group{ border-bottom: 1px solid #eceee4; }
