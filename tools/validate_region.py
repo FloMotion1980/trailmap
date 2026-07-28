@@ -8,6 +8,7 @@ Each check exists because breaking it produced a real, user-visible bug at some 
 CLAUDE.md and docs/*.md as prose; this makes them executable, which is the difference between "documented"
 and "enforced". Exit code is non-zero if anything failed, so it can gate a commit.
 """
+import hashlib
 import json
 import os
 import re
@@ -223,6 +224,26 @@ def check(key, cat):
             if span > 0 and d > span:          # closest point is further away than the whole region is wide
                 bad.append("%s: geometry is %.0f km from the region centre -- wrong way matched?"
                            % (tid, d / 1000))
+
+    # regions/version.json is what actually invalidates a cached region: the app fetches
+    # regions/<key>.json?v=<hash> and the service worker serves those cache-first. A stale hash means an
+    # edited region never reaches a device that already has it; a MISSING entry is worse, because the URL is
+    # then unversioned and that copy stays cached forever. Both had happened by 2026-07-28 -- an edit to
+    # paznaun.json left its hash untouched, and three regions added the night before were never listed.
+    # tools/update_region_versions.py fixes it.
+    try:
+        manifest = json.load(open(os.path.join(REGIONS, "version.json"), encoding="utf-8"))
+    except (IOError, ValueError):
+        bad.append("regions/version.json missing or unreadable -- run tools/update_region_versions.py")
+    else:
+        want = hashlib.md5(open(path, "rb").read()).hexdigest()[:10]
+        have = manifest.get(key)
+        if have is None:
+            bad.append("not listed in regions/version.json -- it would be cached forever; "
+                       "run tools/update_region_versions.py")
+        elif have != want:
+            bad.append("regions/version.json hash is stale (%s, file is %s) -- edits will not reach "
+                       "cached clients; run tools/update_region_versions.py" % (have, want))
     return bad
 
 

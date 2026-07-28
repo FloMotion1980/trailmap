@@ -76,6 +76,7 @@
           </div>
           <div class="toggle-row-group">
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showNamesToggle"><span class="slider"></span></span>Namen</label>
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showPlacesToggle" checked><span class="slider"></span></span>Orte</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDirectionArrowsToggle"><span class="slider"></span></span>Richtungspfeile</label>
           </div>
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
@@ -639,6 +640,10 @@ let showUphill = true; // hides/shows trails flagged uphill:true (EMTB uphill tr
 let showLoop = true; // hides/shows trails flagged loop:true (Trailrunden) — independent of diff
 let showDownhill = true; // hides/shows "regular" trails (neither uphill nor loop) — independent of diff
 let showLifts = true; // hides/shows bike lifts (see LIFTS) — one global switch, no per-difficulty axis
+// Village labels used to be unconditional whenever their region was active (user, 2026-07-28: "Können wir
+// eine Kartenoption einbauen um Orte zu filtern"). One global switch, default on, because a `places` entry
+// carries no sub-region — it belongs to a whole region group, so there is nothing finer to filter on.
+let showPlaces = true;
 // Direction arrows (added 2026-07-25) are off by default -- per the user, "so gefallen sie mir noch
 // nicht" (not happy with how they look yet) -- kept in the app as a Kartenoptionen toggle rather than
 // removed outright, in case the look gets refined later. Persisted like the other Kartenoptionen/
@@ -801,6 +806,12 @@ document.getElementById("showLiftsToggle").addEventListener("change", (e) => {
   showLifts = e.target.checked;
   persistActiveState();
   render();
+});
+
+document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
+  showPlaces = e.target.checked;
+  persistActiveState();
+  applyPlaceVisibility();
 });
 
 // ---- Tourenbuilder controls ----
@@ -1263,10 +1274,24 @@ function destroyPlaceMarkers(groupKey){
   (placeMarkers[groupKey] || []).forEach(m => map.removeLayer(m));
   delete placeMarkers[groupKey];
 }
+// Adds/removes every activated group's place markers according to `showPlaces`. Called by the toggle and at
+// the end of activateRegionGroup, so a group activated while the switch is off does not light its labels up.
+// Re-adding needs an explicit openTooltip(): a permanent tooltip does come back on re-add, but relying on
+// that is the same trap the lift hit-lines have to work around in the other direction.
+function applyPlaceVisibility(){
+  Object.values(placeMarkers).forEach(list => list.forEach(m => {
+    if (showPlaces) { map.addLayer(m); m.openTooltip(); }
+    else map.removeLayer(m);
+  }));
+}
 
 const diffColor = { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" };
 const BASE_WEIGHT = 3.5;
 const HOVER_WEIGHT = 6.5;
+// A Trailrunde's connector stretches (fireroad/access, no component trail) are drawn a little thinner than a
+// real trail — user, 2026-07-28: "einen Tick schmaler". They are the least important part of a loop and were
+// competing visually with the trails at the same 3.5. Same size of step as the lift dots' 4.5 -> 3.8.
+const CONNECTOR_WEIGHT = 2.8;
 // Neutral mid-grey, deliberately far from every diffColor tone (especially schwarz #1c1c1c, which
 // the old #222222 was nearly indistinguishable from on the map and the elevation chart) -- a
 // connector's dash pattern alone wasn't a reliable-enough visual cue that it isn't a black-rated
@@ -2900,10 +2925,23 @@ function baselineLineOpacity(lid){
   return lid === soloId ? 0.9 : SOLO_DIM_OPACITY;
 }
 
+// Restoring a line's resting/hover width cannot be one flat `setStyle` any more: a segmented Trailrunde's
+// styleTarget is a featureGroup whose connector stretches are deliberately thinner (CONNECTOR_WEIGHT), so a
+// group-wide BASE_WEIGHT would silently fatten them back on the first hover anywhere. Each layer therefore
+// carries its own `_tmBaseWeight`, and hovering adds the same delta to whatever that is — so the connector
+// stays a tick thinner while hovered too.
+function applyLineWeight(target, hover, opacity){
+  const apply = (l) => {
+    const base = l._tmBaseWeight || BASE_WEIGHT;
+    l.setStyle({ weight: hover ? base + (HOVER_WEIGHT - BASE_WEIGHT) : base, opacity });
+  };
+  if (target.eachLayer) target.eachLayer(apply); else apply(target);   // featureGroup vs. a single polyline
+}
+
 function resetAllHoverStyles(exceptId){
   Object.entries(lineLayers).forEach(([lid, layer]) => {
     if (lid !== exceptId) {
-      layer.styleTarget.setStyle({ weight: BASE_WEIGHT, opacity: baselineLineOpacity(lid) });
+      applyLineWeight(layer.styleTarget, false, baselineLineOpacity(lid));
       if (layer.card) layer.card.classList.remove("hovered");
       if (currentSelectedId !== lid) hideEndpoints(lid);
     }
@@ -2956,8 +2994,11 @@ function buildTrailLayer(t){
           visibleSeg = L.polyline(seg.coords, {
             color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
             dashArray: refTrail ? null : "6,6",
-            weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false
+            weight: refTrail ? BASE_WEIGHT : CONNECTOR_WEIGHT,
+            opacity: 0.85, bubblingMouseEvents:false, interactive:false
           });
+          // Read back by applyLineWeight, which restores per-layer widths rather than one group-wide value.
+          visibleSeg._tmBaseWeight = refTrail ? BASE_WEIGHT : CONNECTOR_WEIGHT;
           segmentLayers.push(visibleSeg);
           styleableLayers.push(visibleSeg);
         }
@@ -3001,7 +3042,7 @@ function buildTrailLayer(t){
             if (!showNames) segHit.openTooltip();
           });
           segHit.on("mouseout", () => {
-            visibleSeg.setStyle({ weight: BASE_WEIGHT });
+            visibleSeg.setStyle({ weight: visibleSeg._tmBaseWeight || BASE_WEIGHT });
             segHit.closeTooltip();
           });
           // Keeps the loop itself as the selection/highlight (per the user, 2026-07-23: clicking one
@@ -3080,7 +3121,7 @@ function buildTrailLayer(t){
 
   function setHover(on){
     if (on) resetAllHoverStyles(t.id); // force any stuck "fat" trail (common on touch, missed mouseout) back to normal first
-    styleTarget.setStyle({ weight: on ? HOVER_WEIGHT : BASE_WEIGHT, opacity: on ? 1 : baselineLineOpacity(t.id) });
+    applyLineWeight(styleTarget, on, on ? 1 : baselineLineOpacity(t.id));
     const card = lineLayers[t.id].card;
     if (card) card.classList.toggle("hovered", on);
     if (on) {
@@ -3147,6 +3188,7 @@ function persistActiveState(){
       showLoop,
       showDownhill,
       showLifts,
+      showPlaces,
       showDirectionArrows
     }));
   } catch (e) { /* localStorage unavailable (private mode etc.) — filters just won't persist */ }
@@ -3164,6 +3206,7 @@ function restoreActiveState(){
     if (typeof saved.showLoop !== "boolean") saved.showLoop = true;
     if (typeof saved.showDownhill !== "boolean") saved.showDownhill = true;
     if (typeof saved.showLifts !== "boolean") saved.showLifts = true;
+    if (typeof saved.showPlaces !== "boolean") saved.showPlaces = true;
     if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = false;
     return saved;
   } catch (e) { return null; }
@@ -3231,6 +3274,7 @@ async function activateRegionGroup(groupKey){
     data.lineTrails.forEach(buildTrailLayer);
     if (data.lifts) data.lifts.forEach(buildLiftLayer);
     buildPlaceMarkers(groupKey, data.places);
+    applyPlaceVisibility();   // a group activated while "Orte" is off must not light its labels up
 
     activeRegionGroups.add(groupKey);
     persistActiveState();
@@ -3688,6 +3732,7 @@ async function boot(){
     showLoop = saved.showLoop;
     showDownhill = saved.showDownhill;
     showLifts = saved.showLifts;
+    showPlaces = saved.showPlaces;
     showDirectionArrows = saved.showDirectionArrows;
     // rebuildRegionChips() re-derives region-chip DOM from activeRegions fresh, but the difficulty
     // chips (and the uphill/loop/downhill toggles) are static markup (all "active"/checked by
@@ -3699,6 +3744,7 @@ async function boot(){
     document.getElementById("showLoopToggle").checked = showLoop;
     document.getElementById("showDownhillToggle").checked = showDownhill;
     document.getElementById("showLiftsToggle").checked = showLifts;
+    document.getElementById("showPlacesToggle").checked = showPlaces;
     document.getElementById("showDirectionArrowsToggle").checked = showDirectionArrows;
   }
   // Builder STATE before render(), because render() hides Tours while builder mode is on -- restoring it

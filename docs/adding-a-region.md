@@ -70,7 +70,19 @@ tag — **that tag does not decide membership**, it was wrong in both directions
 bottom-station-first; `ElevationLookup` on the two end points tells you which end that is. See
 `docs/lifts-feature.md`.
 
-**5. Verify.**
+**5. Update the version manifest.** This is not optional and it is the step most easily forgotten — it was
+missed for three regions in a row (2026-07-28), and once for an edit to an existing one:
+
+```bash
+python tools/update_region_versions.py
+```
+
+The app fetches `regions/<key>.json?v=<hash>` from `regions/version.json`, and the service worker serves those
+**cache-first**. The hash is therefore the only thing that invalidates a cached region. A stale hash means an
+edit never reaches a device that already has the region; a **missing** entry is worse, because the URL is then
+unversioned and that copy stays cached forever. `validate_region.py` now fails on both.
+
+**6. Verify.**
 
 ```bash
 python tools/validate_region.py zugspitzarena
@@ -80,8 +92,22 @@ It checks the invariants that have actually bitten: sub-region keys that exist, 
 empty `url` (the info panel tests truthiness, so `""` is not the same as absent), geometry and a profile
 per trail and no orphans of either, `trailCount` matching reality, lifts stored bottom-first, sub-region
 colours distinct within the group, the loop invariant that `trailGeo[loopId]` is the exact concatenation of
-its `trailSegments`, and a sanity check that no trail's geometry sits further from the region centre than
-the region is wide — which is how a same-named lift 8 km away nearly got into Portes du Soleil.
+its `trailSegments`, a sanity check that no trail's geometry sits further from the region centre than
+the region is wide — which is how a same-named lift 8 km away nearly got into Portes du Soleil — and the
+`version.json` hash from step 5.
+
+## Changing an existing region
+
+Same two obligations as a new one, and both were missed on 2026-07-28 while removing one lift and moving one
+village label:
+
+- **Write the file with the pipeline's own writer** (`json.dump(..., separators=(", ", ": "))`, one line).
+  Re-dumping it with `indent=` reformatted 24 350 lines for a two-value change; the diff was unreviewable.
+- **Then run `tools/update_region_versions.py`**, or the change reaches nobody who already has the region.
+
+For a place label specifically, take the coordinate from OSM (`node[place][name=...]`) rather than typing one:
+the base map *is* OSM, so its node is the position every user compares against. Samnaun's hand-typed
+`46.933, 10.35` sat 1 460 m from the village.
 
 Then load it in a browser (`python3 -m http.server` from inside `Trailmap App/`, **not** `file://`) and
 look at the lines against the base map.
