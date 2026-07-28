@@ -338,12 +338,25 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    needing !important to beat another. The corner is free on every layout -- drawer toggle top left,
    #liveStatus top centre, and #infoPanel starts at y=70 in landscape where this button ends at y=62.
    Only ever visible on touch layouts (display:flex in the mobile block below). */
+/* The location feature's anchor. The button keeps the top-right corner it has always had; what changed on
+   2026-07-29 is that it is now the anchor of a cluster the readout grows out of, instead of the readout
+   floating separately over the map (user: "nicht schön positioniert"). `align-items:center` keeps the pill
+   vertically centred on the round button; `flex-direction:row` with the readout first puts the button on the
+   right, so its own position is unchanged.
+   Only ever visible on touch layouts -- #locateBtn used to carry that display toggle itself, now the cluster
+   does, or an empty cluster would still reserve space on desktop. */
+#locateCluster{
+  display:none; position:absolute; z-index:1000;
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  right: calc(16px + env(safe-area-inset-right, 0px));
+  align-items:center; gap:8px;
+}
 #locateBtn{
-  display:none; position:absolute; top: calc(16px + env(safe-area-inset-top, 0px)); right: calc(16px + env(safe-area-inset-right, 0px)); z-index:1000;
+  flex-shrink:0;
   width:46px; height:46px; border-radius:50%;
   background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
   box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-  font-size:22px; align-items:center; justify-content:center;
+  font-size:22px; display:flex; align-items:center; justify-content:center;
   cursor:pointer;
 }
 #locateBtn:hover{ background:#f5f7ef; }
@@ -370,12 +383,39 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   0%   { transform: scale(1);   opacity:0.55; }
   100% { transform: scale(3.2); opacity:0; }
 }
+/* Slides out to the LEFT of the locate button and folds back into it. No absolute positioning any more --
+   it is a flex sibling of the button, so it can never drift into another control the way the viewport-centred
+   version did (it ended up 1px from the Trails button, whose free space is not symmetric with this one's).
+   The collapse animates `max-width` rather than `width`: `width:auto` is not animatable, and scaleX would
+   squash the text. `overflow:hidden` + `white-space:nowrap` is what makes the text disappear INTO the button
+   rather than wrapping while it shrinks. */
 #liveStatus{
-  display:none; position:absolute; top: calc(16px + env(safe-area-inset-top, 0px)); left:50%; transform:translateX(-50%); z-index:1500;
+  display:none; align-items:center;
   background: rgba(28,38,32,0.92); color:#f2f3ec; font-family: Arial, sans-serif; font-size:12.5px; font-weight:600;
-  padding:6px 14px; border-radius:16px; box-shadow:0 3px 10px rgba(0,0,0,0.25); align-items:center; gap:6px;
+  border-radius:16px; box-shadow:0 3px 10px rgba(0,0,0,0.25);
 }
 #liveStatus.visible{ display:flex; }
+#liveStatusPanel{
+  display:flex; align-items:center; gap:6px;
+  overflow:hidden; white-space:nowrap;
+  /* Capped so the cluster can never reach the Trails button on the left, whatever the readout says: the
+     reserved 176px are that button plus both gaps plus the locate button plus the margins. Without it a wide
+     reading (3-digit accuracy, "10 min", 3-digit counters) grew back into it -- expanded it already sat 5px
+     away at 375px. The tail is what gets cut, which is why the counters are last: accuracy and fix age are
+     the parts worth reading first. */
+  max-width: min(320px, calc(100vw - 196px)); padding:6px 4px 6px 14px;
+  transition: max-width .22s ease, padding .22s ease, opacity .18s ease;
+}
+#liveStatus.collapsed #liveStatusPanel{ max-width:0; padding-left:0; padding-right:0; opacity:0; }
+/* The fold handle stays put when everything else folds away, so there is always something to tap to get the
+   readout back -- the reason this is a handle and not "tap the readout to hide it". */
+#liveStatusToggle{
+  flex-shrink:0; border:none; background:none; cursor:pointer;
+  color:#f2f3ec; font-size:15px; line-height:1; font-family:inherit;
+  padding:8px 10px; border-radius:16px;
+  transition: transform .22s ease;
+}
+#liveStatus.collapsed #liveStatusToggle{ transform: rotate(180deg); }
 /* Fixes have stopped arriving (see STALE_FIX_MS). Worth its own colour rather than just a climbing number:
    the whole point is to notice it without reading, while riding. */
 #liveStatus.stale{ background: rgba(181,80,31,0.94); }
@@ -488,13 +528,7 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
     width:max-content; max-width:min(92vw, 360px);
     max-height:min(38vh, 300px);
   }
-  #locateBtn{ display:flex; }   /* position comes from the base rule -- top right on every layout */
-  /* Below the top button row, not beside it. The pill is centred on the viewport while the free space
-     between the Trails button (ends at 93px) and the locate button (starts at 313px) is not symmetric, so a
-     viewport-centred pill drifts left and touched the Trails button with 1px to spare at 375px -- and its
-     width grows with the readout (3-digit accuracy, "10 min", larger counters). Moving it down removes the
-     whole class of collisions instead of tuning a max-width against content that varies. */
-  #liveStatus{ top: calc(70px + env(safe-area-inset-top, 0px)); }
+  #locateCluster{ display:flex; }   /* touch-only; the button inside it is always display:flex */
 }
 html.is-standalone #infoPanel{
   bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;

@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=34" />
+<link rel="stylesheet" href="style.css?v=37" />
 </head>
 <body>
 <div id="fatalError">
@@ -98,7 +98,22 @@
     <div class="map-wrap">
       <div id="map"></div>
       <button id="sidebarToggle">☰ Trails</button>
-      <button id="locateBtn" title="Mein Standort">📍</button>
+      <!-- The locate button anchors a CLUSTER (user, 2026-07-29): everything belonging to the location
+           feature grows out of it instead of floating elsewhere on the map. The readout slides out to the
+           LEFT; the same mechanism is meant to carry a second button DOWNWARDS later (re-centre, once
+           tap/hold modes exist). Order in the DOM is readout-then-button so the flex row puts the button on
+           the right, where it has always been. -->
+      <div id="locateCluster">
+        <!-- Reads out the live state of the tracking rather than just saying it is on: accuracy, how old the
+             last fix is, whether the compass is delivering, and fixes-vs-pans. Added 2026-07-29 because two
+             field reports could not be diagnosed from the code alone -- the map not following while the dot
+             moved, and the heading cone freezing during a lift ride. See updateLiveStatus(). -->
+        <div id="liveStatus">
+          <div id="liveStatusPanel"><span class="rec-dot"></span><span id="liveStatusText">Live-Tracking</span></div>
+          <button id="liveStatusToggle" title="Anzeige ein-/ausklappen">‹</button>
+        </div>
+        <button id="locateBtn" title="Mein Standort">📍</button>
+      </div>
       <!-- The one and only builder list, pinned to the map on every screen size so the map stays
            clickable while you assemble a tour. Collapsed it is just its handle. -->
       <div id="builderSheet">
@@ -121,11 +136,6 @@
           <textarea id="builderExport" readonly rows="6" spellcheck="false"></textarea>
         </div>
       </div>
-      <!-- Reads out the live state of the tracking rather than just saying it is on: accuracy, how old the
-           last fix is, and whether the compass is delivering. Added 2026-07-29 because two field reports
-           could not be diagnosed from the code alone -- the map not following while the dot moved, and the
-           heading cone freezing during a lift ride. See updateLiveStatus(). -->
-      <div id="liveStatus"><span class="rec-dot"></span><span id="liveStatusText">Live-Tracking</span></div>
       <div id="infoPanel">
         <button class="ip-close" id="ipClose" title="Schließen">&times;</button>
         <div id="ipContent"></div>
@@ -1242,6 +1252,22 @@ document.addEventListener("visibilitychange", () => {
 const liveStatusEl = document.getElementById("liveStatus");
 const liveStatusTextEl = document.getElementById("liveStatusText");
 
+// The readout folds into the locate button and back out to the left (user, 2026-07-29). Its own handle does
+// the folding rather than "tap the readout to hide it", because once folded there would be nothing left to
+// tap. Persisted with the other UI toggles: someone who rides with it folded away wants it to stay that way.
+let liveStatusOpen = true;
+function applyLiveStatusOpen(){
+  liveStatusEl.classList.toggle("collapsed", !liveStatusOpen);
+  const btn = document.getElementById("liveStatusToggle");
+  btn.title = liveStatusOpen ? "Anzeige einklappen" : "Anzeige ausklappen";
+  btn.setAttribute("aria-expanded", liveStatusOpen ? "true" : "false");
+}
+document.getElementById("liveStatusToggle").addEventListener("click", () => {
+  liveStatusOpen = !liveStatusOpen;
+  applyLiveStatusOpen();
+  persistActiveState();
+});
+
 // ---- Live readout for the tracking mode (2026-07-29) ----------------------------------------------
 // Two field reports could not be diagnosed from the code: the map not scrolling along while the dot kept
 // updating, and the heading cone freezing during a lift ride. Both are invisible failures -- nothing errors,
@@ -1260,25 +1286,27 @@ const STALE_FIX_MS = 12000;   // beyond this the pill turns rust: fixes have sto
 
 function formatAge(ms){
   const s = Math.round(ms / 1000);
-  return s < 60 ? s + " s" : Math.floor(s / 60) + " min";
+  return s < 60 ? s + "s" : Math.floor(s / 60) + "min";
 }
 
 function updateLiveStatus(){
   if (!liveStatusTextEl) return;
   const now = Date.now();
+  // Compact on purpose: the whole cluster has to fit between the Trails button and the screen edge at 375px,
+  // and the units already separate the fields, so "14m 3s" needs no "±" and no " · ".
   const parts = [];
-  parts.push(lastAccuracy !== null ? "±" + Math.round(lastAccuracy) + " m" : "kein Fix");
+  parts.push(lastAccuracy !== null ? Math.round(lastAccuracy) + "m" : "kein Fix");
   if (lastFixAt !== null) parts.push(formatAge(now - lastFixAt));
   // Compass: the heading, or a dash when nothing has ever arrived. A "!" means readings HAVE arrived but
   // stopped -- the gondola case. Deliberately a marker and not the age in seconds: at 375px the pill sits
   // between the Trails button and the locate button, and the longer form wrapped onto a second line.
   if (compassActive && smoothedCompassHeading !== null) {
-    parts.push("🧭 " + Math.round(smoothedCompassHeading) + "°" + (now - lastCompassAt > 4000 ? "!" : ""));
+    parts.push("🧭" + Math.round(smoothedCompassHeading) + "°" + (now - lastCompassAt > 4000 ? "!" : ""));
   } else {
-    parts.push("🧭 —");
+    parts.push("🧭—");
   }
   parts.push(fixCount + "/" + panCount);   // fixes received / map pans issued
-  liveStatusTextEl.textContent = parts.join(" · ");
+  liveStatusTextEl.textContent = parts.join(" ");
   liveStatusEl.classList.toggle("stale", lastFixAt !== null && now - lastFixAt > STALE_FIX_MS);
 }
 
@@ -3285,7 +3313,8 @@ function persistActiveState(){
       showDownhill,
       showLifts,
       showPlaces,
-      showDirectionArrows
+      showDirectionArrows,
+      liveStatusOpen
     }));
   } catch (e) { /* localStorage unavailable (private mode etc.) — filters just won't persist */ }
 }
@@ -3303,6 +3332,7 @@ function restoreActiveState(){
     if (typeof saved.showDownhill !== "boolean") saved.showDownhill = true;
     if (typeof saved.showLifts !== "boolean") saved.showLifts = true;
     if (typeof saved.showPlaces !== "boolean") saved.showPlaces = true;
+    if (typeof saved.liveStatusOpen !== "boolean") saved.liveStatusOpen = true;
     if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = false;
     return saved;
   } catch (e) { return null; }
@@ -3829,6 +3859,7 @@ async function boot(){
     showDownhill = saved.showDownhill;
     showLifts = saved.showLifts;
     showPlaces = saved.showPlaces;
+    liveStatusOpen = saved.liveStatusOpen;
     showDirectionArrows = saved.showDirectionArrows;
     // rebuildRegionChips() re-derives region-chip DOM from activeRegions fresh, but the difficulty
     // chips (and the uphill/loop/downhill toggles) are static markup (all "active"/checked by
@@ -3841,6 +3872,7 @@ async function boot(){
     document.getElementById("showDownhillToggle").checked = showDownhill;
     document.getElementById("showLiftsToggle").checked = showLifts;
     document.getElementById("showPlacesToggle").checked = showPlaces;
+    applyLiveStatusOpen();
     document.getElementById("showDirectionArrowsToggle").checked = showDirectionArrows;
   }
   // Builder STATE before render(), because render() hides Tours while builder mode is on -- restoring it
@@ -3977,7 +4009,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v34"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v37"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
