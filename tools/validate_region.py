@@ -188,6 +188,17 @@ def check(key, cat):
             if s.get("liftId") and s["liftId"] not in {l["id"] for l in lifts}:
                 bad.append("%s: segment references unknown lift %r" % (tid, s["liftId"]))
 
+    # A region with no place labels is unreadable zoomed out -- and it is a silent failure, because nothing
+    # else complains. It happened on 2026-07-30: a rebuild of Bike Kingdom's trail geometry rewrote the region
+    # file without its `places`, and the tours script that runs afterwards only restores lifts and tours. Every
+    # one of a region's four pieces has to survive a rebuild (docs/adding-a-region.md).
+    places = d.get("places") or []
+    if not places:
+        bad.append("no places -- the region has no labels at all; did a rebuild drop them?")
+    for p in places:
+        if not p.get("name") or not isinstance(p.get("lat"), (int, float)) or not isinstance(p.get("lng"), (int, float)):
+            bad.append("place %r is not {name, lat, lng}" % (p,))
+
     lift_ids = [l["id"] for l in lifts]
     for dup in {i for i in lift_ids if lift_ids.count(i) > 1}:
         bad.append("duplicate lift id %r" % dup)

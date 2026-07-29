@@ -319,10 +319,12 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   box-shadow:none;
 }
 .trail-label-tooltip::before{ display:none; }
-/* The label of the line currently under the cursor, so it can be picked out of a crowd of labels while
-   "Namen" is on (user, 2026-07-30). Only opacity/colour/border change, deliberately not the font size or the
-   padding: labels sit close together on a dense hub, and a growing box would shove its neighbours around.
-   The z-index lifts it clear of any label it overlaps. */
+/* The label of the line under the cursor, and of the selected trail, so it can be picked out of a crowd of
+   labels while "Namen" is on (user, 2026-07-30). The border COLOUR is set inline from that trail's own
+   difficulty (see setLabelHovered) -- the same colour as the .tl-diff dot inside the label and as the line on
+   the map; the value here is only the fallback. The box keeps its size: 2px of border against 1px less
+   padding, and no font-size change, because labels sit close together on a dense hub and a growing box would
+   shove its neighbours around. The z-index lifts it clear of any label it overlaps. */
 .trail-label-tooltip.tl-hover{
   background: #fff; border-color: var(--rust); border-width: 2px; padding: 0 5px;
   box-shadow: 0 1px 5px rgba(0,0,0,.28); z-index: 700;

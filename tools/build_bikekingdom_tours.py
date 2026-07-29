@@ -142,6 +142,7 @@ DENSIFY_M = 10.0      # both the tour track and the candidate trails, so a short
 MATCH_M = 25.0        # a tour point this close to a trail counts as riding it
 MIN_RUN_M = 200.0     # shorter runs are crossings or a shared first corner, not a ride
 GAP_FILL_M = 150.0    # same trail either side of a gap this short -> one ride, not two
+MERGE_SAME_TRAIL_M = 600.0  # ...and up to this far, when the trail also continues where it left off
 LIFT_NEAR_M = 60.0    # a tour point this close to a cable may be a ride on it
 LIFT_STATION_M = 250.0  # ...but only if the run reaches both stations, one at each end
 LIFT_SPAN_FRAC = 0.6  # ...and covers at least this much of the cable, so passing UNDER one is not a ride
@@ -407,20 +408,49 @@ def match_components(track, trails, geo, lifts, verbose=True):
             for k in range(a, b + 1):
                 labels[k] = None
 
-    # gap-fill: the same trail either side of a short gap is one ride through a junction, not two
+    def vertex_at(a, b, last=False):
+        """First (or last) matched trail vertex index within a run -- gap-fill leaves some points without."""
+        span = vidx[a:b + 1]
+        return next((v for v in (reversed(span) if last else span) if v is not None), None)
+
+    # Gap-fill: the same trail either side of a short gap is one ride through a junction, not two.
+    #
+    # Two thresholds, because there are two different situations. Up to GAP_FILL_M it is enough that the same
+    # trail is on both sides -- that is a junction or a few stray points. Up to MERGE_SAME_TRAIL_M it also has
+    # to be the SAME CONTINUING ride: the tour must re-join the trail near where it left it, and travel the
+    # same way. Without that second test a trail ridden twice from the top would be welded into one segment.
+    #
+    # This is what the user hit on the E-bike tour: the Hörnli Trail came out as three segments with 295 m and
+    # 475 m connectors between them and the Weisshorn Trail as two with 480 m, because the tour's own recording
+    # drifts more than MATCH_M off the trail there. The trails themselves are fine -- only the tour's stretches
+    # were broken up, and the three overlapping clips also drew the Hörnli Trail 1.6x longer than it was
+    # ridden. Merging them gives one clean stretch per ride.
     changed = True
     while changed:
         changed = False
         rs = runs_of(labels)
         for i in range(1, len(rs) - 1):
             (lab, a, b) = rs[i]
-            if lab is not None:
+            tid = rs[i - 1][0]
+            if lab is not None or tid is None or tid != rs[i + 1][0] or tid in lift_ids:
                 continue
-            if rs[i - 1][0] is not None and rs[i - 1][0] == rs[i + 1][0] and run_len_m(pts, a, b) < GAP_FILL_M:
-                for k in range(a, b + 1):
-                    labels[k] = rs[i - 1][0]
-                changed = True
-                break
+            gap = run_len_m(pts, a, b)
+            if gap >= GAP_FILL_M:
+                if gap > MERGE_SAME_TRAIL_M:
+                    continue
+                left_out, right_in = vertex_at(*rs[i - 1][1:], last=True), vertex_at(*rs[i + 1][1:])
+                left_in, right_out = vertex_at(*rs[i - 1][1:]), vertex_at(*rs[i + 1][1:], last=True)
+                if None in (left_in, left_out, right_in, right_out):
+                    continue
+                # re-joins the trail near where it left it, and keeps going the same way
+                if haversine_m(geo[tid][left_out], geo[tid][right_in]) > MERGE_SAME_TRAIL_M:
+                    continue
+                if (left_out >= left_in) != (right_out >= right_in):
+                    continue
+            for k in range(a, b + 1):
+                labels[k] = tid
+            changed = True
+            break
 
     out = []
     for lab, a, b in runs_of(labels):

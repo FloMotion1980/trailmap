@@ -19,7 +19,36 @@ from xml.etree import ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from trailmap_pipeline import (build_profile, douglas_peucker, dedupe_points, bounds_of,  # noqa
-                               write_region, haversine_m, cumulative_km)
+                               write_region, haversine_m, cumulative_km, overpass, chain_ways,
+                               ElevationLookup)
+
+#: Trails whose geometry comes from OSM instead of the Outdooractive sections, keyed by lower-case title.
+#: Only for trails whose OA sections do not form one line while OSM has the whole trail mapped -- and it is
+#: the right call there for the reason the four Donnersberg trails come from OSM too: this app renders
+#: OSM/OpenTopoMap tiles, so OSM's line is the one every user compares ours against on the same screen.
+#: "701 Brambi Flow" arrives from OA as two pieces 348 m apart (the stretch between them is mapped once, as
+#: part of Rock'n'Roll); OSM has it as seven ways that chain into one continuous 2 643 m line.
+OSM_GEOMETRY = {
+    "701 brambi flow": r"^Brambi Flow$",
+}
+OSM_BBOX = "46.64,9.42,46.89,9.77"
+
+#: Place labels, coordinates from OSM `node[place]` (never typed -- a hand-typed Samnaun sat 1 460 m from the
+#: village). They live HERE rather than only in the region file, because this script rewrites that file from
+#: scratch: the first version wrote no places at all, so a rebuild for one trail's geometry silently dropped
+#: all 19 of them, and the tours script that runs afterwards only restores lifts and tours. Every one of a
+#: region's four pieces has to survive a rebuild -- see docs/adding-a-region.md.
+#: Picked as one reference point per area plus the larger settlements; Zorten, Alp Stätz, Scharmoin,
+#: Brambrüesch and Innerarosa were dropped again at the user's request as too fine-grained.
+PLACES = [
+    ("Chur", 46.85475, 9.52649), ("Passugg", 46.82942, 9.54748), ("Maladers", 46.83628, 9.5604),
+    ("Malix", 46.81187, 9.53137), ("Praden", 46.82409, 9.58156), ("Tschiertschen", 46.81739, 9.60665),
+    ("Churwalden", 46.77845, 9.54297), ("Parpan", 46.75963, 9.55982), ("Valbella", 46.74579, 9.55415),
+    ("Lenzerheide", 46.72803, 9.55844), ("Sporz", 46.71356, 9.54088), ("Arosa", 46.77972, 9.67814),
+    ("Maran", 46.79296, 9.68185), ("Litzirüti", 46.79872, 9.70278), ("Langwies", 46.82056, 9.71264),
+    ("Medergen", 46.80444, 9.73942), ("Tiefencastel", 46.66156, 9.57649),
+    ("Alvaschein", 46.67506, 9.55032), ("Mon", 46.64996, 9.56398),
+]
 
 #: Two consecutive sections further apart than this do not form one line. Same value as the pipeline's
 #: MAX_TRACK_GAP_M, for the same reason: beyond it, concatenating welds a phantom straight line onto the map.
@@ -121,6 +150,27 @@ def parse_geometry(s):
     return pts
 
 
+def osm_line(name_regex):
+    """The named trail as ONE ordered [[lat, lon], ...] line from OSM. Raises if it does not chain up.
+
+    OSM splits a trail wherever a tag changes, so this arrives as several ways in arbitrary order and
+    direction; chain_ways() stitches them by endpoint. Its leftovers are tolerated only while they are
+    negligible next to the chain (Brambi Flow has one redundant 10 m stub whose ends are already on the
+    chain) -- a real leftover means the ways do not form a single line and must not be drawn as one.
+    """
+    j = overpass('[out:json][timeout:180];way["name"~"%s"](%s);out tags geom;' % (name_regex, OSM_BBOX))
+    geoms = [[[p["lat"], p["lon"]] for p in e["geometry"]] for e in j["elements"]
+             if len(e.get("geometry") or []) >= 2]
+    if not geoms:
+        raise SystemExit("OSM has no way matching %r" % name_regex)
+    chain, left = chain_ways(geoms)
+    total = sum(cumulative_km(g)[-1] for g in geoms)
+    if cumulative_km(chain)[-1] < 0.9 * total:
+        raise SystemExit("%r: ways do not chain into one line (%.0f m of %.0f m, %d left over)"
+                         % (name_regex, cumulative_km(chain)[-1] * 1000, total * 1000, len(left)))
+    return [[round(c[0], 6), round(c[1], 6)] for c in chain]
+
+
 def is_access(title):
     return bool(re.match(r"^(access|uphill|aufstieg|connection|umleitung)\b", title.strip(), re.I))
 
@@ -141,6 +191,7 @@ def main():
         g.sort(key=lambda x: x[0])
 
     trails, geo, profs, unresolved, gaps = [], {}, {}, [], []
+    elev = ElevationLookup(os.path.join(MAT, "elevation_cache.json"))
     for key, members in sorted(groups.items()):
         base = members[0][2]
         title = re.sub(r"\s*:\s*(Sektion|Section)\s*\d+\s*$", "", base["title"]).strip()
@@ -169,11 +220,21 @@ def main():
         raw = chains[0]
         for c in chains[1:]:
             dropped.append(round(cumulative_km(c)[-1] * 1000))
-        if dropped:
+        from_osm = OSM_GEOMETRY.get(title.lower())
+        if from_osm:
+            raw = osm_line(from_osm)
+            dropped = []                    # OSM has the whole trail; nothing is left out
+            print("   %-40s aus OSM: %d Punkte, %d m"
+                  % (title, len(raw), round(cumulative_km(raw)[-1] * 1000)))
+        elif dropped:
             gaps.append((title, dropped, round(cumulative_km(raw)[-1] * 1000)))
         pts = douglas_peucker(dedupe_points(raw))
         coords = [[round(p[0], 6), round(p[1], 6)] for p in pts]
         eles = [p[2] if len(p) > 2 else None for p in pts]
+        # OSM carries no elevation at all, so a trail taken from there needs a DEM lookup -- simplified
+        # first, so it is a few dozen points rather than a few hundred, and cached on disk between runs.
+        if all(e is None for e in eles):
+            eles = elev(coords)
 
         info = ods.get(key)
         extra = EXTRA_DIFF.get(title.lower())
@@ -200,7 +261,10 @@ def main():
         # would describe a line longer than the one on the map, so the drawn line's own figures are used
         # instead and the difference is visible in the report rather than hidden in a mismatched number.
         prof_pre, gain_pre, loss_pre = build_profile(coords, eles)
-        if dropped:
+        if dropped or from_osm:
+            # An OSM line is longer than the sum of the OA sections (it includes the stretch OA maps only
+            # once, under the other trail that shares it), so the published sum would understate the drawn
+            # line -- the drawn line's own figures are the honest ones here.
             length, up, down = cumulative_km(coords)[-1], gain_pre, loss_pre
         else:
             length = sum((t.get("length") or 0) for _, _, t in members) / 1000.0
@@ -245,8 +309,10 @@ def main():
                 bestd, best = d, other["region"]
         t["region"] = best
 
-    data = write_region(OUT, trails, geo, profs)
-    print("Trails: %d" % len(trails))
+    places = [{"name": n, "lat": la, "lng": lo} for n, la, lo in PLACES]
+    data = write_region(OUT, trails, geo, profs, places=places)
+    print("Trails: %d, Orte: %d" % (len(trails), len(places)))
+    print("   (Lifte und Touren ergaenzt tools/build_bikekingdom_tours.py -- danach laufen lassen)")
     from collections import Counter
     print("je Unterregion:", dict(Counter(t["region"] for t in trails)))
     print("je Schwierigkeit:", dict(Counter(t["diff"] for t in trails)))

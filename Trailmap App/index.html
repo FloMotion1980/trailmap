@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=44" />
+<link rel="stylesheet" href="style.css?v=45" />
 </head>
 <body>
 <div id="fatalError">
@@ -3501,7 +3501,9 @@ function buildTrailLayer(t){
     applyLineWeight(styleTarget, on, on ? 1 : baselineLineOpacity(t.id));
     const card = lineLayers[t.id].card;
     if (card) card.classList.toggle("hovered", on);
-    setLabelHovered(t.id, on);
+    // Stays marked while this trail is the selection, mirroring the same `currentSelectedId !== t.id` guard
+    // that keeps its Start/Ziel dots visible past mouseout.
+    setLabelHovered(t.id, on || currentSelectedId === t.id);
     if (on) {
       showEndpoints(t.id);
       // Hover-triggered name tooltip — only when "Namen" is off. When it's on, hitLine's tooltip is
@@ -3794,17 +3796,25 @@ regionDialogEl.addEventListener("click", (e) => {
 });
 
 // ---- Name labels toggle ----
-// Marks the name label of the line under the cursor, so it can be told apart from its neighbours while
-// "Namen" is on (user, 2026-07-30: "wäre es praktisch, wenn bei Hover der tooltip des gehoverten Trails auch
-// gehighlightet wird"). Only meaningful in that mode -- with the labels off, the tooltip is opened *by* the
-// hover and is the only one on screen, so there is nothing to stand out from. `label` lets a Trailrunde's
-// segment pass its own per-segment label instead of the trail's whole-line one.
+// Marks the name label of the line under the cursor (or of the selected trail), so it can be told apart from
+// its neighbours while "Namen" is on (user, 2026-07-30: "wäre es praktisch, wenn bei Hover der tooltip des
+// gehoverten Trails auch gehighlightet wird", then: keep it while the trail is selected, and border it in the
+// trail's own colour rather than always rust). Only meaningful in that mode -- with the labels off, the
+// tooltip is opened *by* the hover and is the only one on screen, so there is nothing to stand out from.
+// `label` lets a Trailrunde's segment pass its own per-segment label instead of the trail's whole-line one.
+//
+// The border colour is set inline from the trail's difficulty, which is the same colour as the `.tl-diff` dot
+// inside the label itself -- so a marked label matches both its own dot and its line on the map. It has to be
+// cleared again on un-marking, or the CSS rule's grey border would stay overridden.
 function setLabelHovered(trailId, on, label){
   if (!showNames) return;
   const layer = lineLayers[trailId];
   const tip = label || (layer && layer.hitLine.getTooltip());
   const el = tip && tip.getElement && tip.getElement();
-  if (el) el.classList.toggle("tl-hover", on);
+  if (!el) return;
+  el.classList.toggle("tl-hover", on);
+  const trail = lineTrails.find(x => x.id === trailId);
+  el.style.borderColor = on && trail ? diffColor[trail.diff] : "";
 }
 
 function applyNameLabels(){
@@ -3836,6 +3846,10 @@ function applyNameLabels(){
       else if (!shouldShow && map.hasLayer(label)) map.removeLayer(label);
     });
   });
+  // openTooltip() above rebuilds the label element whenever it had been closed, which drops the mark with it.
+  // Re-apply it for the selected trail, so switching a filter or toggling "Namen" doesn't lose the marking on
+  // the trail that is still selected.
+  if (showNames && currentSelectedId) setLabelHovered(currentSelectedId, true);
 }
 
 // ---- Sidebar ----
@@ -3850,7 +3864,10 @@ const selectionOutline = L.polyline([], {
 function highlightSelectedTrail(id){
   const layer = lineLayers[id];
   clearLiftSelection(); // selecting a trail drops any lift highlight
-  if (currentSelectedId && currentSelectedId !== id) hideEndpoints(currentSelectedId);
+  if (currentSelectedId && currentSelectedId !== id) {
+    hideEndpoints(currentSelectedId);
+    setLabelHovered(currentSelectedId, false);   // only one trail's label is ever marked as the selected one
+  }
   if (!layer) { if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline); currentSelectedId = null; return; }
   selectionOutline.setLatLngs(layer.coords);
   if (!map.hasLayer(selectionOutline)) selectionOutline.addTo(map);
@@ -3858,13 +3875,14 @@ function highlightSelectedTrail(id){
   layer.line.bringToFront();
   showEndpoints(id);
   currentSelectedId = id;
+  setLabelHovered(id, true);  // the selected trail keeps its label marked, hover or not
   syncSelectedCardSoloBtn(); // a loop's own auto-solo (showTrailInfo) may have run before currentSelectedId
                              // pointed at this trail yet -- re-sync now that it's the current selection
 }
 
 function clearSelection(){
   if (selectedCard) { selectedCard.classList.remove("selected"); selectedCard = null; }
-  if (currentSelectedId) { hideEndpoints(currentSelectedId); currentSelectedId = null; }
+  if (currentSelectedId) { hideEndpoints(currentSelectedId); setLabelHovered(currentSelectedId, false); currentSelectedId = null; }
   if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline);
   clearLiftSelection(); // a lift and a trail are never selected at the same time
 }
@@ -4287,7 +4305,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v44"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v45"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
