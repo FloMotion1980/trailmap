@@ -349,18 +349,64 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   display:none; position:absolute; z-index:1000;
   top: calc(16px + env(safe-area-inset-top, 0px));
   right: calc(16px + env(safe-area-inset-right, 0px));
-  align-items:center; gap:8px;
+  /* A 2x2 grid rather than a flex row, because two things grow out of the button in two directions: the
+     readout to the LEFT (row 1, vertically centred on the button by align-self) and the re-centre button
+     DOWNWARDS (row 2). A flex row could not place the second one, and nesting a column would have made the
+     readout centre on the whole stack instead of on the button. */
+  grid-template-columns: auto auto;
+  grid-template-rows: 46px auto;
+  column-gap:8px;
 }
+#locateCluster > #liveStatus{ grid-column:1; grid-row:1; align-self:center; }
+#locateBtn{ grid-column:2; grid-row:1; }
+#recenterBtn{ grid-column:2; grid-row:2; justify-self:end; margin-top:8px; }
 #locateBtn{
-  flex-shrink:0;
   width:46px; height:46px; border-radius:50%;
   background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
   box-shadow: 0 3px 10px rgba(0,0,0,0.2);
   font-size:22px; display:flex; align-items:center; justify-content:center;
   cursor:pointer;
+  /* A long press is one of this button's two gestures, so the platform must not answer it with its own
+     callout/context menu or a text selection. */
+  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
+  -webkit-tap-highlight-color: transparent;
+  /* The half-second hold must not be handed to the map underneath as a pan gesture. */
+  touch-action: none;
+}
+/* Feedback WHILE holding: the ring fills over the hold duration, so you can tell the gesture registered
+   without staring at the map. Without it a long press is indistinguishable from a slow tap. */
+#locateBtn.holding{ box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 0 var(--forest); animation: locateHold .5s linear forwards; }
+@keyframes locateHold{
+  from{ box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 0 rgba(47,74,58,0.55); }
+  to  { box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 9px rgba(47,74,58,0.55); }
+}
+/* Following: the button pulses. Deliberately ONLY in follow mode -- a shown-once position and an active
+   follow must not look the same, since the whole difference is whether the map runs after you. */
+#locateBtn.active{ animation: locatePulse 1.9s ease-out infinite; }
+@keyframes locatePulse{
+  0%  { box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 0 rgba(47,74,58,0.45); }
+  70% { box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 13px rgba(47,74,58,0); }
+  100%{ box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 0 rgba(47,74,58,0); }
+}
+/* Waiting for the one-shot fix. getCurrentPosition can take seconds under trees, and without this the tap
+   looks like it did nothing at all. */
+#locateBtn.busy{ opacity:.65; }
+#recenterBtn{
+  width:38px; height:38px; border-radius:50%;
+  background: var(--forest); border:1px solid var(--forest-dark); color:#f2f3ec;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
+  font-size:19px; line-height:1; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; -webkit-tap-highlight-color: transparent;
+  opacity:0; pointer-events:none; transform: translateY(-10px) scale(.85);
+  transition: opacity .18s ease, transform .18s ease;
+}
+#locateCluster.is-detached #recenterBtn{ opacity:1; pointer-events:auto; transform:none; }
+@media (prefers-reduced-motion: reduce){
+  #locateBtn.holding, #locateBtn.active{ animation:none; }
+  #recenterBtn{ transition:none; }
 }
 #locateBtn:hover{ background:#f5f7ef; }
-#locateBtn.active{ background: var(--forest); }
+#locateBtn.active{ background: var(--forest); }   /* plus the pulse defined above */
 .geo-wrap{ position:relative; width:40px; height:40px; }
 .geo-cone{
   position:absolute; left:50%; top:50%;
@@ -528,7 +574,7 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
     width:max-content; max-width:min(92vw, 360px);
     max-height:min(38vh, 300px);
   }
-  #locateCluster{ display:flex; }   /* touch-only; the button inside it is always display:flex */
+  #locateCluster{ display:grid; }   /* touch-only; grid layout is defined in the base rule */
 }
 html.is-standalone #infoPanel{
   bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;

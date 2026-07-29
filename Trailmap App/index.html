@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=37" />
+<link rel="stylesheet" href="style.css?v=39" />
 </head>
 <body>
 <div id="fatalError">
@@ -112,7 +112,10 @@
           <div id="liveStatusPanel"><span class="rec-dot"></span><span id="liveStatusText">Live-Tracking</span></div>
           <button id="liveStatusToggle" title="Anzeige ein-/ausklappen">‹</button>
         </div>
-        <button id="locateBtn" title="Mein Standort">📍</button>
+        <button id="locateBtn" title="Tippen: Position zeigen – Halten: Folgen starten">📍</button>
+        <!-- Slides DOWN out of the cluster, and only while following AND detached (you panned the map away).
+             Re-attaching is its own control on purpose: the readout's job is to display, not to act. -->
+        <button id="recenterBtn" title="Zurück zur Position">◎</button>
       </div>
       <!-- The one and only builder list, pinned to the map on every screen size so the map stays
            clickable while you assemble a tour. Collapsed it is just its handle. -->
@@ -1108,6 +1111,9 @@ let userLocationMarker = null;
 let userAccuracyCircle = null;
 let geoWatchId = null;
 let followMode = false;
+// Following is on, but the map has stopped chasing because you panned it by hand. The position stays live;
+// only the panTo is suspended until you tap the re-centre button. See syncLocateChrome/map "dragstart".
+let followDetached = false;
 const locateBtn = document.getElementById("locateBtn");
 
 let compassActive = false;
@@ -1124,6 +1130,13 @@ function updateHeadingCone(headingDeg){
   const cone = el.querySelector(".geo-cone");
   cone.style.display = "block";
   wrap.style.transform = `rotate(${headingDeg}deg)`;
+}
+
+function hideHeadingCone(){
+  if (!userLocationMarker) return;
+  const el = userLocationMarker.getElement();
+  const cone = el && el.querySelector(".geo-cone");
+  if (cone) cone.style.display = "none";
 }
 
 function getScreenAngle(){
@@ -1220,13 +1233,12 @@ function updateUserLocation(pos, isFirstFix){
   if (!compassActive) {
     if (heading !== null && heading !== undefined && !isNaN(heading)) {
       updateHeadingCone(heading);
-    } else if (userLocationMarker.getElement()) {
-      const cone = userLocationMarker.getElement().querySelector(".geo-cone");
-      if (cone) cone.style.display = "none";
+    } else {
+      hideHeadingCone();
     }
   }
   if (isFirstFix) { map.flyTo(getOffsetCenter(L.latLng(latlng), 15), 15, { duration: 0.8 }); panCount++; }
-  else if (followMode) { map.panTo(getOffsetCenter(L.latLng(latlng), map.getZoom()), { animate: true, duration: 0.5 }); panCount++; }
+  else if (followMode && !followDetached) { map.panTo(getOffsetCenter(L.latLng(latlng), map.getZoom()), { animate: true, duration: 0.5 }); panCount++; }
   updateLiveStatus();
 }
 
@@ -1307,7 +1319,9 @@ function updateLiveStatus(){
   }
   parts.push(fixCount + "/" + panCount);   // fixes received / map pans issued
   liveStatusTextEl.textContent = parts.join(" ");
-  liveStatusEl.classList.toggle("stale", lastFixAt !== null && now - lastFixAt > STALE_FIX_MS);
+  // Only while following: with a one-shot position the fix is old by design, and turning the pill rust for
+  // that would be a false alarm.
+  liveStatusEl.classList.toggle("stale", followMode && lastFixAt !== null && now - lastFixAt > STALE_FIX_MS);
 }
 
 function startFollowing(){
@@ -1317,8 +1331,8 @@ function startFollowing(){
     return;
   }
   followMode = true;
-  locateBtn.classList.add("active");
-  locateBtn.title = "Folgen beenden";
+  followDetached = false;
+  syncLocateChrome();
   liveStatusEl.classList.add("visible");
   lastFixAt = null; lastAccuracy = null; fixCount = 0; panCount = 0;
   updateLiveStatus();
@@ -1340,8 +1354,8 @@ function startFollowing(){
 
 function stopFollowing(){
   followMode = false;
-  locateBtn.classList.remove("active");
-  locateBtn.title = "Mein Standort";
+  followDetached = false;
+  syncLocateChrome();
   liveStatusEl.classList.remove("visible");
   liveStatusEl.classList.remove("stale");
   if (liveStatusTimer !== null) { clearInterval(liveStatusTimer); liveStatusTimer = null; }
@@ -1354,10 +1368,121 @@ function stopFollowing(){
   releaseWakeLock();
 }
 
-locateBtn.addEventListener("click", () => {
-  if (followMode) stopFollowing();
-  else startFollowing();
+// ---- The locate button's two gestures (2026-07-29) -------------------------------------------------
+// TAP shows the position once, HOLD starts following. The user's own model, and the reason for it is that the
+// frequent action gets the cheap gesture: "where am I" is a tap, while following -- which costs a wake lock
+// and battery -- asks for a deliberate one. It also means a single tap gets you back OUT of following,
+// instead of cycling through three states to switch it off.
+//
+//   aus     + Tippen  -> Position, ONE-SHOT: getCurrentPosition, no watch, no wake lock
+//   aus     + Halten  -> Folgen (watchPosition + panTo + wake lock), the button pulses
+//   Folgen  + Tippen  -> aus
+//   Folgen  + Wischen auf der Karte -> abgekoppelt (see followDetached): the position stays live but the map
+//                        stops chasing, and the re-centre button appears below the locate button
+const HOLD_MS = 500;
+const ONESHOT_COMPASS_MS = 45000;
+let holdTimer = null, holdFired = false, oneShotCompassTimer = null;
+
+// A one-shot position brings the heading cone with it -- the user was explicit, because "where am I and which
+// way am I facing" is the actual question at a junction. But the compass listener has no business running for
+// the rest of the session, so it is dropped again after ONESHOT_COMPASS_MS, and the cone goes with it rather
+// than freezing at its last angle: a cone that no longer tracks is worse than no cone, which is exactly the
+// confusion the frozen cone during the lift ride caused.
+function scheduleOneShotCompassOff(){
+  if (oneShotCompassTimer !== null) clearTimeout(oneShotCompassTimer);
+  oneShotCompassTimer = setTimeout(() => {
+    oneShotCompassTimer = null;
+    if (followMode) return;                 // following owns the compass; leave it alone
+    detachOrientationListener();
+    hideHeadingCone();
+  }, ONESHOT_COMPASS_MS);
+}
+
+function oneShotLocate(){
+  if (!navigator.geolocation) {
+    layerWarningEl.textContent = "Dieser Browser unterstützt keine Standortabfrage.";
+    layerWarningEl.classList.add("visible");
+    return;
+  }
+  locateBtn.classList.add("busy");          // getCurrentPosition can take seconds under trees
+  liveStatusEl.classList.add("visible");
+  if (liveStatusTimer === null) liveStatusTimer = setInterval(updateLiveStatus, 1000);
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      locateBtn.classList.remove("busy");
+      updateUserLocation(pos, true);        // isFirstFix: flies to the position at zoom 15, as before
+      scheduleOneShotCompassOff();
+    },
+    (err) => {
+      locateBtn.classList.remove("busy");
+      if (!followMode) liveStatusEl.classList.remove("visible");
+      layerWarningEl.textContent = "Standort nicht verfügbar: " + err.message;
+      layerWarningEl.classList.add("visible");
+    },
+    { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
+  );
+}
+
+// The orientation permission is requested on POINTERDOWN, not from the hold timer: on iOS
+// DeviceOrientationEvent.requestPermission() only works inside a user gesture, and a setTimeout callback is
+// not one. Guarded so a second press does not stack listeners.
+locateBtn.addEventListener("pointerdown", () => {
+  if (orientationHandler === null) requestOrientationPermission();
+  if (followMode) return;                   // holding while following has no meaning
+  holdFired = false;
+  locateBtn.classList.add("holding");
+  holdTimer = setTimeout(() => {
+    holdTimer = null;
+    holdFired = true;
+    locateBtn.classList.remove("holding");
+    startFollowing();
+  }, HOLD_MS);
 });
+const cancelHold = () => {
+  if (holdTimer !== null) { clearTimeout(holdTimer); holdTimer = null; }
+  locateBtn.classList.remove("holding");
+};
+locateBtn.addEventListener("pointerup", cancelHold);
+locateBtn.addEventListener("pointercancel", cancelHold);
+// Deliberately NOT pointerleave: a thumb wanders a few pixels on a 46px target during a half-second hold, and
+// cancelling on that would make the gesture feel broken. Sliding off on purpose still completes the hold,
+// which costs one tap to undo.
+// Without this a long press opens the platform's own callout on the emoji instead of starting the follow.
+locateBtn.addEventListener("contextmenu", (e) => e.preventDefault());
+
+locateBtn.addEventListener("click", () => {
+  // A completed hold is followed by a click event; swallowing it is what stops the follow from being switched
+  // straight back off. Same pattern as the builder's swipe-to-delete.
+  if (holdFired) { holdFired = false; return; }
+  if (followMode) stopFollowing();
+  else oneShotLocate();
+});
+
+document.getElementById("recenterBtn").addEventListener("click", () => {
+  followDetached = false;
+  syncLocateChrome();
+  if (userLocationMarker) map.panTo(getOffsetCenter(userLocationMarker.getLatLng(), map.getZoom()),
+                                   { animate: true, duration: 0.4 });
+});
+
+// Panning by hand drops out of chasing without ending the tracking -- the fix for "ich kann die Karte nicht
+// mehr bewegen, das Tracking holt sie immer zurück". `dragstart` is user-only; panTo's own animation fires
+// movestart, not dragstart, so this cannot detach itself.
+map.on("dragstart", () => {
+  // Cancel any panTo still animating from the last fix. Without this the user's drag and Leaflet's own pan
+  // animation run against each other for up to half a second, which is precisely the moment a rider grabs the
+  // map -- right after the dot jumped. `map.stop()` is Leaflet's documented way to abort flyTo/panTo.
+  map.stop();
+  if (followMode && !followDetached) { followDetached = true; syncLocateChrome(); }
+});
+
+function syncLocateChrome(){
+  document.getElementById("locateCluster").classList.toggle("is-detached", followMode && followDetached);
+  locateBtn.classList.toggle("active", followMode);
+  locateBtn.title = followMode
+    ? "Folgen beenden"
+    : "Tippen: Position zeigen – Halten: Folgen starten";
+}
 
 
 // ---- Place labels (village names) — independent of zoom, and switchable via "Orte" (see showPlaces).
@@ -4009,7 +4134,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v37"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v39"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
