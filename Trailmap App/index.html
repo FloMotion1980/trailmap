@@ -1295,6 +1295,7 @@ document.getElementById("liveStatusToggle").addEventListener("click", () => {
 // is not being reached; if both climb and the map still does not move, Leaflet is swallowing the pan.
 let lastFixAt = null, lastAccuracy = null, fixCount = 0, panCount = 0, liveStatusTimer = null;
 const STALE_FIX_MS = 12000;   // beyond this the pill turns rust: fixes have stopped arriving
+const CONE_STALE_MS = 5000;   // beyond this the heading cone is hidden rather than left pointing the wrong way
 
 function formatAge(ms){
   const s = Math.round(ms / 1000);
@@ -1318,6 +1319,11 @@ function updateLiveStatus(){
     parts.push("🧭—");
   }
   parts.push(fixCount + "/" + panCount);   // fixes received / map pans issued
+  // A cone that stopped tracking points somewhere you are NOT looking, which at a junction is worse than no
+  // cone at all -- this is the "hängt total" half of the report. `compassActive` stays true on purpose: it
+  // stops the GPS course-over-ground fallback from taking over, which is the direction-of-travel arrow the
+  // user rejected. A fresh reading shows it again by itself, via updateHeadingCone.
+  if (compassActive && lastCompassAt !== null && now - lastCompassAt > CONE_STALE_MS) hideHeadingCone();
   liveStatusTextEl.textContent = parts.join(" ");
   // Only while following: with a one-shot position the fix is old by design, and turning the pill rust for
   // that would be a false alarm.
@@ -1339,7 +1345,10 @@ function startFollowing(){
   // Ticks so the fix age keeps counting up on its own -- that is what makes a stalled GPS visible.
   if (liveStatusTimer === null) liveStatusTimer = setInterval(updateLiveStatus, 1000);
   acquireWakeLock();
-  requestOrientationPermission();
+  // NO requestOrientationPermission() here any more. Since the hold gesture landed, this function is reached
+  // from a setTimeout callback -- and on iOS DeviceOrientationEvent.requestPermission() only resolves inside a
+  // user gesture, so calling it here rejects. The button's own pointerdown handler asks for it instead, which
+  // IS a gesture, and it does so for both the one-shot and the follow path.
   let firstFix = true;
   geoWatchId = navigator.geolocation.watchPosition(
     (pos) => { updateUserLocation(pos, firstFix); firstFix = false; },
@@ -1380,23 +1389,16 @@ function stopFollowing(){
 //   Folgen  + Wischen auf der Karte -> abgekoppelt (see followDetached): the position stays live but the map
 //                        stops chasing, and the re-centre button appears below the locate button
 const HOLD_MS = 500;
-const ONESHOT_COMPASS_MS = 45000;
-let holdTimer = null, holdFired = false, oneShotCompassTimer = null;
+let holdTimer = null, holdFired = false;
 
 // A one-shot position brings the heading cone with it -- the user was explicit, because "where am I and which
-// way am I facing" is the actual question at a junction. But the compass listener has no business running for
-// the rest of the session, so it is dropped again after ONESHOT_COMPASS_MS, and the cone goes with it rather
-// than freezing at its last angle: a cone that no longer tracks is worse than no cone, which is exactly the
-// confusion the frozen cone during the lift ride caused.
-function scheduleOneShotCompassOff(){
-  if (oneShotCompassTimer !== null) clearTimeout(oneShotCompassTimer);
-  oneShotCompassTimer = setTimeout(() => {
-    oneShotCompassTimer = null;
-    if (followMode) return;                 // following owns the compass; leave it alone
-    detachOrientationListener();
-    hideHeadingCone();
-  }, ONESHOT_COMPASS_MS);
-}
+// way am I facing" is the actual question at a junction.
+//
+// It used to drop the compass listener again after 45s to save battery. Removed 2026-07-29: the user reported
+// the cone "either does not work at all or hangs completely", and this timer produces exactly the first of
+// those -- tap, look at the phone a minute later, cone gone. It was only ever meant as a valve *if* keeping
+// the listener caused problems, and nothing has shown that it does. What replaced it is the staleness check in
+// updateLiveStatus, which hides the cone when the readings stop rather than at a fixed time.
 
 function oneShotLocate(){
   if (!navigator.geolocation) {
@@ -1411,7 +1413,6 @@ function oneShotLocate(){
     (pos) => {
       locateBtn.classList.remove("busy");
       updateUserLocation(pos, true);        // isFirstFix: flies to the position at zoom 15, as before
-      scheduleOneShotCompassOff();
     },
     (err) => {
       locateBtn.classList.remove("busy");
@@ -4134,7 +4135,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v39"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v40"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
