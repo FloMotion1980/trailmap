@@ -649,6 +649,35 @@ const REGION_CATALOG = {
       fieberbrunn: { label: "Fieberbrunn", color: "#2f6b8a" },
       challenges: { label: "Challenges", color: "#6b3a8a" }
     }
+  },
+  bikekingdom: {
+    // Built 2026-07-29. Geometry from the Outdooractive project API that Bike Kingdom's own trail map uses
+    // (project api-arosalenzerheide) -- it carries real per-point elevation, so no DEM lookups were needed.
+    // That API answers 404 to any plain HTTP client, so it has to be read from a browser: see
+    // tools/oa_harvest_server.py, and tools/build_bikekingdom.py for the build itself.
+    // Difficulties and sub-regions come from the user's OWN catalogue (Material/BikeKingdom/
+    // "Trails Lenzerheide.ods", from a visit) -- sehr einfach/einfach/mittel/schwierig map 1:1 onto this
+    // app's own four labels. Its "Zufahrtsweg" is not a difficulty, so those 28 access/connection routes are
+    // gruen ("technically easy", which a fire road is) with no special rendering, at the user's request:
+    // "Mach die Access Trails einfach grün. Sonst haben wir Sonderbehandlung." The 13 of them that actually
+    // climb carry `uphill: true`, decided from ascent-vs-descent rather than the name -- "Down to Town" and
+    // "Höhenweg Alp Scharmoin" are called connections but descend.
+    // The numbered park trails are stored as ONE trail each, not per section ("703 Rock'n'Roll: Sektion 1-4"
+    // became one line): the user does not need the sections.
+    // Cresta Bernard and Belfort are in the ods but not in the trail map, so there is no geometry for them
+    // and they are deliberately absent rather than invented.
+    label: "Bike Kingdom", file: "regions/bikekingdom.json", trailCount: 116,
+    bounds: [[46.65044, 9.43341], [46.88292, 9.76421]],
+    subRegions: {
+      bk_park_lenzerheide: { label: "Park Lenzerheide", color: "#b03a2e" },
+      bk_park_chur: { label: "Alpenbikepark Chur", color: "#7d3c98" },
+      bk_bear_mountains: { label: "Bear Mountains (Arosa)", color: "#16788a" },
+      bk_western_summits: { label: "Western Summits", color: "#b8860b" },
+      bk_red_peak: { label: "Red Peak", color: "#d35400" },
+      bk_the_capital: { label: "The Capital (Chur)", color: "#2c6fa8" },
+      bk_steep_trees: { label: "Steep Trees", color: "#4a7c3f" },
+      bk_southern_delights: { label: "Southern Delights", color: "#a0416e" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;

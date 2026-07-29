@@ -1,0 +1,133 @@
+# Bike Kingdom (Arosa/Lenzerheide/Chur) -- aus der Outdooractive-Projekt-API der offiziellen Trailmap
+# Projekt api-arosalenzerheide, Key IETVOSAR-EMWGMZIJ-4OSSIQCH (steht offen in deren eigener Seite)
+# Quelle der IDs: die /api/oois/jsonp/<ids>-Sammelrequests, die die Karte selbst absetzt
+# Details: https://www.outdooractive.com/api/oois/<ids>?project=api-arosalenzerheide&key=<key>&lang=de&format=json
+#   -- laeuft NUR aus dem Seitenkontext des Browsers; blankes urllib bekommt 404
+# GPX:     https://www.outdooractive.com/en/download.tour.gpx?i=<id>&project=outdooractive  -- das geht mit urllib
+# Spalten: id, name, laenge_km, aufstieg_m, abstieg_m, oa_difficulty(0-3)
+29431734	Hörnli Trail	6.787	1	590	1
+33600222	Dark side of the moon	2.18	0	202	2
+40914614	Ninos Gold-Trail	3.68	64	63	2
+44901091	Parpan one way	2.103	0	440	3
+44901096	Alp Stätz	1.663	0	331	3
+44901097	Dunkler Wald Trail	0.609	0	115	2
+44901103	Roll the dice	1.178	8	59	1
+44901112	Homerun	1.807	0	202	1
+45019042	Älplisee Trail	7.187	9	735	3
+45019044	Urdental Trail	2.115	153	103	2
+45032533	Furcletta Connection	7.913	557	827	3
+45032535	Furcletta Trail	8.393	2	954	3
+45032555	Weisshorn Trail	3.46	1	503	2
+45032557	Back home	1.147	0	135	1
+45032568	Löser Trail	2.482	1	377	3
+45034685	Känzeli - Malix Trail	2.483	21	201	2
+45034698	Antennatrail	2.831	3	466	3
+45034706	Brambrüesch - Churwalden Trail	5.438	97	472	2
+45034709	Brambrüesch - Pradaschier Trail	4.368	163	163	1
+45034724	Dreibündenstein Trail	13.137	131	1408	2
+45034734	Fürhörnli Trail	2.244	0	399	3
+45034737	Lady Patricia Trail	3.944	232	92	2
+45034742	Malix Flow Trail	1.521	2	203	2
+45034745	Mittenberg Freeride	2.618	0	344	2
+45034760	Mittenberg St. Luzi Trail	2.939	0	352	2
+45034762	Access Mittenberg	4.945	439	0	2
+45034766	Mittenberg - Maladers Trail	1.87	0	104	1
+45034770	Nasstobel Trail	1.401	0	224	1
+45034776	Ochsenberg Trail	1.828	3	385	3
+45034779	Ochsenberg Uphill	4.057	486	0	1
+45034780	Sand Trail	1.094	0	175	3
+45034785	Schönegg Trail	2.367	2	365	1
+45034790	Spundis - Juchs Trail	1.986	0	432	3
+45034807	Zig Zag Trail	1.441	0	148	3
+45119795	Fanüllatobel	2.838	15	418	2
+45119831	FLOWline	2.359	0	278	1
+45119842	FLOWline lower	1.245	0	119	1
+45119896	Handicap	1.366	42	128	3
+45119899	Höhenweg Alp Stätz	2.586	2	285	1
+45119933	Scalottas - June Hütte	1.299	1	109	1
+45119947	Lavoz Trail	0.802	0	202	3
+45119950	Loamer Boner	0.328	0	95	1
+45119958	Lord Steepness	0.612	1	168	3
+45119959	Motta Express	2.002	4	182	2
+45119962	PRIMEline	1.914	0	264	2
+45119966	PRIMEline lower	0.587	0	93	2
+45119973	Top Fops	2.996	0	268	2
+45119985	The Pipe	1.12	0	130	3
+45119993	SHOREline / STYLEline	0.753	1	99	3
+45120006	STRAIGHTline	1.853	0	404	3
+45120011	Switchbacks - Overkill	2.556	27	458	3
+45120013	Tgantieni	0.813	0	127	1
+45136384	Rocks and Boulders	0.49	0	164	3
+45136393	Scalottas Nord	1.705	0	141	1
+45136735	Hauptji Trail	1.518	4	145	2
+45136739	Scheidegg Trail	0.892	0	107	2
+45136743	Prätschalp Trail	1.425	0	88	2
+45251740	Medergen Trail	5.351	57	435	3
+45251803	Ochsenalp Trail	2.692	0	191	2
+45251849	Urdensee Trail	4.643	0	606	2
+45251890	Joch	2.11	0	532	3
+45251917	Ochsenalp - Löser	3.379	1	244	1
+45251947	Tschiertschen - Praden	1.934	19	130	1
+45251953	Back to town	2.373	13	268	1
+45287098	Flow City Trail	2.66	0	128	1
+45287106	Juchs Trail	3.389	2	627	3
+45302553	Urdenfürggli Twister	1.622	0	161	2
+45376650	Access Joch	6.617	521	0	2
+45377877	Jumpline	0.141	0	13	1
+45377901	Urdenfürggli Connection	2.016	0	164	1
+45377916	Bual Trail	7.993	45	568	1
+45378056	Uphill Höhenweg	0.445	73	0	2
+45378062	Connection Lavoz	1.342	2	165	1
+45378067	Alp Stätz - Lenzerheide	5.368	0	431	2
+49759949	Isla Trail	3.315	11	201	1
+49760127	Kirchli Trail	0.653	1	43	1
+51203582	Rongg Trail	1.341	0	297	2
+51203630	Sapün Trail	3.446	81	321	3
+51203704	Ried Trail	0.868	1	107	1
+51203733	Heimfahrtspiste	0.997	0	111	1
+52044598	Plessur Trail	1.667	1	158	3
+55644318	The Great White	3.134	0	369	3
+58414946	Mon Trail	2.012	1	339	2
+58414998	Hexenwald	2.438	13	52	1
+58415114	Crap la Tretscha	2.802	93	94	1
+58415377	Val Malera Trail	1.157	0	97	1
+58415563	St. Cassian	3.297	34	59	1
+58416102	Got da Lai	1.101	17	29	0
+58416215	Alp Nova Trail	0.854	27	17	1
+58416478	Höhenweg Alp Scharmoin	4.499	64	328	1
+58680108	Down to town	2.906	3	228	1
+59377784	703 Rock'n'Roll: Sektion 3	0.481	0	50	3
+59377804	703 Rock'n'Roll: Sektion 2	0.634	0	145	3
+59377817	702 Alpenride: Sektion 1	1.394	0	289	3
+59378163	703 Rock'n'Roll: Sektion 1	0.302	5	58	3
+59381189	702 Alpenride: Sektion 2	0.348	0	62	2
+59381210	701 Brambi Flow: Sektion 2	0.54	1	99	1
+59381220	701 Brambi Flow: Sektion 1	1.229	0	203	1
+59381247	708 Vertigo: Sektion 1	0.773	0	150	3
+59381259	708 Vertigo: Sektion 2	0.752	0	160	3
+59381264	708 Vertigo: Sektion 3	1.195	0	224	3
+59381284	707 Chur Flow: Sektion 1	1.119	0	194	1
+59381286	707 Chur Flow: Sektion 2	1.025	0	136	1
+59381293	707 Chur Flow: Sektion 3	1.579	0	196	1
+59408697	ScaläraTrail	2.647	3	316	2
+61585362	Bike Attack Traverse	0.904	1	60	2
+800447753	Sonnenrüti Trail	1.04	10	28	2
+800455177	Uphill Medergen	5.514	549	0	2
+800455200	Aufstieg Prätschli	2.633	201	0	2
+800455230	Aufstieg Mittelstation Weisshorn	2.05	104	1	2
+800455264	Uphill Hörnli	5.212	488	3	2
+800552823	No turning back	0.456	0	66	1
+804380084	Spundisköpfe	1.455	24	204	3
+804380297	703 Rock'n'Roll: Sektion 4	0.581	0	151	3
+804380403	703 Rock'n'Roll: Jump Section	0.347	1	52	3
+807921623	Access Fanüllatobel	6.173	104	187	1
+808139489	Connection Pedra Grossa - Tgantieni	1.972	1	233	1
+808139685	Connection Pedra Grossa - Lavoz	0.882	0	63	1
+808139768	Connection Lavoz Trail- Dunkler Wald Trail	0.404	1	53	1
+808214989	Access Motta	1.668	99	8	1
+808215161	Access Weisshorn Speed	0.802	2	73	1
+808229205	Access Langwies	5.909	83	392	1
+808231358	Access Prätschalp	1.763	66	20	1
+808253710	Access Fürhörnli	3.417	588	1	2
+808254695	Access Spundis/Lady Patricia	2.861	229	3	1
+808254870	Access Schönegg	4.07	391	4	2

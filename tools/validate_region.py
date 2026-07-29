@@ -154,6 +154,12 @@ def check(key, cat):
             bad.append("%s: no elevationProfile" % tid)
         elif len(prof[tid]) < 2:
             bad.append("%s: elevationProfile has %d point(s)" % (tid, len(prof[tid])))
+        # SHAPE, not just count: build_profile returns (profile, gain, loss), and storing that whole tuple
+        # by mistake produced a 3-element "profile" that passed the count check while the chart drew nothing
+        # meaningful (2026-07-29, Bike Kingdom). Every entry has to be a [km, metres] pair.
+        elif not all(isinstance(p, (list, tuple)) and len(p) == 2
+                     and all(isinstance(v, (int, float)) for v in p) for p in prof[tid]):
+            bad.append("%s: elevationProfile is not a list of [km, m] pairs" % tid)
         for fld in ("len", "up", "down"):
             if not isinstance(t.get(fld), (int, float)):
                 bad.append("%s: %s is %r" % (tid, fld, t.get(fld)))
