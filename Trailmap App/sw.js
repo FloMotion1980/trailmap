@@ -8,7 +8,7 @@
 // cannot answer. Bump CACHE_NAME only to force every cached asset to be re-fetched. v6-v15 were all
 // "style.css changed" bumps, back when the URL was constant -- and the last of those did not reach the
 // user's phone, which left the pinned builder sheet invisible there (2026-07-27).
-const CACHE_NAME = "trailmap-v40";
+const CACHE_NAME = "trailmap-v41";
 // Must stay identical to the href of the <link rel="stylesheet"> in index.html.
 const STYLE_URL = "./style.css?v=39";
 const APP_SHELL = [

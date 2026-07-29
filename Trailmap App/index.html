@@ -1118,6 +1118,12 @@ const locateBtn = document.getElementById("locateBtn");
 
 let compassActive = false;
 let lastCompassAt = null;          // when the last USABLE compass reading arrived (see updateLiveStatus)
+// How far the compass got. "idle" -> never asked, "asking" -> iOS dialog open, "denied" -> refused or the
+// promise rejected, "unsupported" -> no DeviceOrientationEvent at all, "listening" -> attached but nothing
+// received yet, "noheading" -> events arrive but carry neither webkitCompassHeading nor absolute alpha,
+// "ok" -> real headings. Only the last one can draw a cone.
+let compassState = "idle";
+let compassEvents = 0;
 let smoothedCompassHeading = null; // normalized 0-360, used only for computing the shortest-path delta
 let compassDisplayAngle = null;    // unbounded, ever-increasing/decreasing — this is what we actually render
 let orientationHandler = null;
@@ -1146,13 +1152,22 @@ function getScreenAngle(){
 }
 
 function handleOrientation(event){
+  compassEvents++;              // counted BEFORE any early return -- "events arrive but carry no heading" is
+                                // its own failure and looks identical on screen to "no events at all"
   let heading = null;
   if (typeof event.webkitCompassHeading === "number" && !isNaN(event.webkitCompassHeading)) {
     heading = event.webkitCompassHeading; // iOS Safari: already 0° = North, clockwise
   } else if (event.absolute && event.alpha !== null && event.alpha !== undefined) {
     heading = 360 - event.alpha; // Android absolute orientation: alpha is counter-clockwise from North
   }
-  if (heading === null || isNaN(heading)) return;
+  if (heading === null || isNaN(heading)) {
+    // Deliberately NOT falling back to a non-absolute alpha: on iOS that is measured from wherever the phone
+    // happened to be when the listener started, so the cone would point confidently in a wrong direction --
+    // the exact thing the user rejected about the GPS course arrow.
+    compassState = "noheading";
+    return;
+  }
+  compassState = "ok";
   // The sensor reports heading relative to the device's physical (portrait) top, not the
   // current screen orientation — correct for landscape rotation so "up" on screen is right.
   heading = (heading + getScreenAngle() + 360) % 360;
@@ -1183,12 +1198,21 @@ function attachOrientationListener(){
   }
 }
 
+// Every stage of getting a compass reading can fail silently, and on screen all of them look the same: no
+// cone. So each one records where it stopped, and updateLiveStatus shows it -- see the legend there. Without
+// this the only honest answer to "the cone is missing" is a guess, which is where the last two rounds went.
 function requestOrientationPermission(){
-  if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+  if (typeof DeviceOrientationEvent === "undefined") { compassState = "unsupported"; return; }
+  if (typeof DeviceOrientationEvent.requestPermission === "function") {
+    compassState = "asking";
     DeviceOrientationEvent.requestPermission()
-      .then((state) => { if (state === "granted") attachOrientationListener(); })
-      .catch((err) => console.warn("Kompass-Berechtigung nicht erteilt:", err));
-  } else if (window.DeviceOrientationEvent) {
+      .then((state) => {
+        if (state === "granted") { compassState = "listening"; attachOrientationListener(); }
+        else compassState = "denied";
+      })
+      .catch((err) => { compassState = "denied"; console.warn("Kompass-Berechtigung nicht erteilt:", err); });
+  } else {
+    compassState = "listening";
     attachOrientationListener();
   }
 }
@@ -1202,6 +1226,8 @@ function detachOrientationListener(){
   compassActive = false;
   smoothedCompassHeading = null;
   compassDisplayAngle = null;
+  compassState = "idle";
+  compassEvents = 0;
 }
 
 function updateUserLocation(pos, isFirstFix){
@@ -1316,7 +1342,19 @@ function updateLiveStatus(){
   if (compassActive && smoothedCompassHeading !== null) {
     parts.push("🧭" + Math.round(smoothedCompassHeading) + "°" + (now - lastCompassAt > 4000 ? "!" : ""));
   } else {
-    parts.push("🧭—");
+    // Which stage failed, in one character, because each needs a different fix:
+    //   ?  the iOS permission dialog is open / was never answered
+    //   ✕  refused, or this browser has no DeviceOrientationEvent  -> iPhone: Einstellungen > Safari >
+    //      Bewegung & Ausrichtung
+    //   0  listener attached, not a single event arrived            -> sensor or browser, not permission
+    //   E7 events arrived (7 of them) but none carried a usable heading -> no magnetometer reading;
+    //      calibrate by waving the phone in a figure eight, or it is interference
+    const code = compassState === "asking" ? "?"
+               : compassState === "denied" || compassState === "unsupported" ? "✕"
+               : compassState === "noheading" ? "E" + compassEvents
+               : compassState === "listening" ? "0"
+               : "—";
+    parts.push("🧭" + code);
   }
   parts.push(fixCount + "/" + panCount);   // fixes received / map pans issued
   // A cone that stopped tracking points somewhere you are NOT looking, which at a junction is worse than no
@@ -4135,7 +4173,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v40"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v41"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
