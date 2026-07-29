@@ -652,6 +652,32 @@ const REGION_CATALOG = {
       challenges: { label: "Challenges", color: "#6b3a8a" }
     }
   },
+  laax: {
+    // Built 2026-07-30 by tools/build_laax.py. Geometry and the published length/descent come from the trails'
+    // own Outdooractive routes (GPX with real per-point elevation, fetched unauthenticated as documented in
+    // docs/finale-ligure.md, cached in Material/Laax/). Difficulty is the operator's own colour where
+    // flimslaax.com/laax.com states one, and Outdooractive's S-rating for the rest, on the same
+    // S1->blau/S2->rot/S3->schwarz/S4->schwarz shift agreed for Finale.
+    // Three things to know about this data:
+    //  - "Never End Trail" is schwarz because the region itself grades it black; Outdooractive says S2, which
+    //    would be rot. The operator's own grading of their own trail wins, and OSM's mtb:scale:imba=3 agrees.
+    //  - "Runca Trail" is 8.91 km here against the published 7.6 km: the only Outdooractive route that covers
+    //    it as one continuous line starts at the Startgels gravel road rather than at the trail head, so the
+    //    drawn line's own figures are used. The extra ~1.3 km is that approach.
+    //  - "Gronda Trail" has no Outdooractive route at all and comes from OSM (655 m, chained without gaps).
+    //    Short enough to be suspect -- worth a look on the map.
+    // Sub-regions are the two sides of the resort, decided by which lift a trail's start sits next to.
+    // Lifts: FlemXpress (4 sections), Arena Express (3) and the Laax cable car, all carrying bikes per both
+    // the operator and OSM. The Vorab chain (Crap Masegn/Fuorcla/Vorab) is deliberately absent -- laax.com
+    // mentions a "Vorab cable car" for bike access in prose, but no OSM way in that chain carries a bike tag,
+    // and guessing which of four sections take bikes would be inventing operator policy.
+    label: "Flims Laax Falera", file: "regions/laax.json", trailCount: 12,
+    bounds: [[46.81323, 9.17777], [46.88297, 9.28562]],
+    subRegions: {
+      flims: { label: "Flims (FlemXpress)", color: "#2f7d95" },
+      laax:  { label: "Laax (Crap Sogn Gion)", color: "#a3552a" }
+    }
+  },
   bikekingdom: {
     // Built 2026-07-29. Geometry from the Outdooractive project API that Bike Kingdom's own trail map uses
     // (project api-arosalenzerheide) -- it carries real per-point elevation, so no DEM lookups were needed.

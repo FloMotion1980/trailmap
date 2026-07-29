@@ -1,0 +1,742 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Alp Dadens Trail</name>
+    <author>
+      <name>Florian Frey - Flims Laax</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/801776324"/>
+    <time>2026-05-15T04:30:55.630Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Alp Dadens Trail</name>
+    <desc>The Alpweg to Alp Dadens is characterized by its natural character and numerous bridges. </desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="46.82243" lon="9.217379">
+        <ele>1808.53036</ele>
+        <name>ODA Alp Dadens</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>15</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.82242" lon="9.21737">
+        <ele>1808.47244</ele>
+      </trkpt>
+      <trkpt lat="46.82246" lon="9.21726">
+        <ele>1808.82732</ele>
+      </trkpt>
+      <trkpt lat="46.82247" lon="9.21714">
+        <ele>1808.85447</ele>
+      </trkpt>
+      <trkpt lat="46.822441" lon="9.21708">
+        <ele>1808.72859</ele>
+      </trkpt>
+      <trkpt lat="46.822361" lon="9.217011">
+        <ele>1808.21418</ele>
+      </trkpt>
+      <trkpt lat="46.82223" lon="9.21685">
+        <ele>1808.10159</ele>
+      </trkpt>
+      <trkpt lat="46.82222" lon="9.216811">
+        <ele>1807.40617</ele>
+      </trkpt>
+      <trkpt lat="46.822131" lon="9.21659">
+        <ele>1804.52188</ele>
+      </trkpt>
+      <trkpt lat="46.82207" lon="9.21647">
+        <ele>1803.21013</ele>
+      </trkpt>
+      <trkpt lat="46.82201" lon="9.2163">
+        <ele>1802.12062</ele>
+      </trkpt>
+      <trkpt lat="46.822" lon="9.21614">
+        <ele>1801.57658</ele>
+      </trkpt>
+      <trkpt lat="46.82201" lon="9.21584">
+        <ele>1802.86104</ele>
+      </trkpt>
+      <trkpt lat="46.82196" lon="9.21541">
+        <ele>1794.7915</ele>
+      </trkpt>
+      <trkpt lat="46.821941" lon="9.21527">
+        <ele>1794.0007</ele>
+      </trkpt>
+      <trkpt lat="46.821861" lon="9.215091">
+        <ele>1791.34225</ele>
+      </trkpt>
+      <trkpt lat="46.82183" lon="9.214921">
+        <ele>1791.5124</ele>
+      </trkpt>
+      <trkpt lat="46.82177" lon="9.21473">
+        <ele>1787.33066</ele>
+      </trkpt>
+      <trkpt lat="46.82173" lon="9.214691">
+        <ele>1785.68002</ele>
+      </trkpt>
+      <trkpt lat="46.8217" lon="9.214551">
+        <ele>1783.16</ele>
+      </trkpt>
+      <trkpt lat="46.821691" lon="9.214451">
+        <ele>1781.63351</ele>
+      </trkpt>
+      <trkpt lat="46.8217" lon="9.21419">
+        <ele>1778.91963</ele>
+      </trkpt>
+      <trkpt lat="46.82173" lon="9.21404">
+        <ele>1777.70649</ele>
+        <name>46.821730,9.214040</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>15</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.821741" lon="9.213961">
+        <ele>1777.24734</ele>
+      </trkpt>
+      <trkpt lat="46.821731" lon="9.2139">
+        <ele>1776.77569</ele>
+      </trkpt>
+      <trkpt lat="46.8217" lon="9.21384">
+        <ele>1776.5584</ele>
+      </trkpt>
+      <trkpt lat="46.82167" lon="9.213741">
+        <ele>1774.06925</ele>
+      </trkpt>
+      <trkpt lat="46.821671" lon="9.21348">
+        <ele>1770.66665</ele>
+      </trkpt>
+      <trkpt lat="46.82169" lon="9.21322">
+        <ele>1767.4931</ele>
+      </trkpt>
+      <trkpt lat="46.821741" lon="9.212801">
+        <ele>1765.48645</ele>
+      </trkpt>
+      <trkpt lat="46.82183" lon="9.2127">
+        <ele>1767.13273</ele>
+      </trkpt>
+      <trkpt lat="46.821851" lon="9.212671">
+        <ele>1767.2549</ele>
+      </trkpt>
+      <trkpt lat="46.82185" lon="9.212621">
+        <ele>1766.33739</ele>
+      </trkpt>
+      <trkpt lat="46.821861" lon="9.21254">
+        <ele>1765.54175</ele>
+        <name>46.821861,9.212540</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>15</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.82188" lon="9.2125">
+        <ele>1765.83314</ele>
+      </trkpt>
+      <trkpt lat="46.82187" lon="9.21245">
+        <ele>1765.16292</ele>
+      </trkpt>
+      <trkpt lat="46.82182" lon="9.21236">
+        <ele>1764.28482</ele>
+      </trkpt>
+      <trkpt lat="46.8218" lon="9.21231">
+        <ele>1763.80487</ele>
+      </trkpt>
+      <trkpt lat="46.82178" lon="9.21217">
+        <ele>1762.55562</ele>
+      </trkpt>
+      <trkpt lat="46.82176" lon="9.212">
+        <ele>1761.21606</ele>
+      </trkpt>
+      <trkpt lat="46.82173" lon="9.211921">
+        <ele>1759.76563</ele>
+      </trkpt>
+      <trkpt lat="46.821721" lon="9.21183">
+        <ele>1759.51713</ele>
+      </trkpt>
+      <trkpt lat="46.82166" lon="9.21171">
+        <ele>1757.58299</ele>
+      </trkpt>
+      <trkpt lat="46.82168" lon="9.211551">
+        <ele>1758.45041</ele>
+      </trkpt>
+      <trkpt lat="46.821671" lon="9.21152">
+        <ele>1758.5448</ele>
+      </trkpt>
+      <trkpt lat="46.82165" lon="9.21148">
+        <ele>1759.35964</ele>
+      </trkpt>
+      <trkpt lat="46.821611" lon="9.211431">
+        <ele>1760.43351</ele>
+      </trkpt>
+      <trkpt lat="46.82154" lon="9.211291">
+        <ele>1761.05826</ele>
+      </trkpt>
+      <trkpt lat="46.82152" lon="9.21119">
+        <ele>1760.86206</ele>
+      </trkpt>
+      <trkpt lat="46.82151" lon="9.21111">
+        <ele>1760.29623</ele>
+      </trkpt>
+      <trkpt lat="46.82152" lon="9.21099">
+        <ele>1759.836</ele>
+      </trkpt>
+      <trkpt lat="46.82154" lon="9.21092">
+        <ele>1759.96367</ele>
+      </trkpt>
+      <trkpt lat="46.821541" lon="9.21085">
+        <ele>1759.77644</ele>
+      </trkpt>
+      <trkpt lat="46.82155" lon="9.21082">
+        <ele>1759.88442</ele>
+      </trkpt>
+      <trkpt lat="46.82157" lon="9.21078">
+        <ele>1759.96989</ele>
+      </trkpt>
+      <trkpt lat="46.82157" lon="9.210731">
+        <ele>1759.49224</ele>
+      </trkpt>
+      <trkpt lat="46.821581" lon="9.21069">
+        <ele>1759.54804</ele>
+      </trkpt>
+      <trkpt lat="46.8216" lon="9.21064">
+        <ele>1759.91233</ele>
+      </trkpt>
+      <trkpt lat="46.8216" lon="9.21059">
+        <ele>1759.78542</ele>
+      </trkpt>
+      <trkpt lat="46.82159" lon="9.210451">
+        <ele>1758.60811</ele>
+      </trkpt>
+      <trkpt lat="46.82158" lon="9.21037">
+        <ele>1757.72018</ele>
+        <name>46.821580,9.210370</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>15</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.82158" lon="9.21031">
+        <ele>1757.28378</ele>
+      </trkpt>
+      <trkpt lat="46.8216" lon="9.21021">
+        <ele>1756.1647</ele>
+      </trkpt>
+      <trkpt lat="46.82162" lon="9.21018">
+        <ele>1756.08932</ele>
+      </trkpt>
+      <trkpt lat="46.82161" lon="9.21013">
+        <ele>1756.2108</ele>
+      </trkpt>
+      <trkpt lat="46.82155" lon="9.20963">
+        <ele>1754.11305</ele>
+      </trkpt>
+      <trkpt lat="46.821581" lon="9.20942">
+        <ele>1750.78876</ele>
+      </trkpt>
+      <trkpt lat="46.821601" lon="9.20917">
+        <ele>1747.75626</ele>
+      </trkpt>
+      <trkpt lat="46.82166" lon="9.20898">
+        <ele>1747.57534</ele>
+      </trkpt>
+      <trkpt lat="46.82174" lon="9.208781">
+        <ele>1746.95294</ele>
+      </trkpt>
+      <trkpt lat="46.82179" lon="9.208671">
+        <ele>1745.98565</ele>
+      </trkpt>
+      <trkpt lat="46.82179" lon="9.20857">
+        <ele>1746.4677</ele>
+      </trkpt>
+      <trkpt lat="46.821821" lon="9.208461">
+        <ele>1746.19647</ele>
+      </trkpt>
+      <trkpt lat="46.821981" lon="9.20818">
+        <ele>1745.65933</ele>
+      </trkpt>
+      <trkpt lat="46.822" lon="9.20814">
+        <ele>1745.80217</ele>
+      </trkpt>
+      <trkpt lat="46.821961" lon="9.208">
+        <ele>1745.32272</ele>
+      </trkpt>
+      <trkpt lat="46.82195" lon="9.20798">
+        <ele>1745.26574</ele>
+      </trkpt>
+      <trkpt lat="46.821881" lon="9.20789">
+        <ele>1744.28533</ele>
+      </trkpt>
+      <trkpt lat="46.82188" lon="9.207891">
+        <ele>1744.4</ele>
+        <name>46.821881,9.207890</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.821856" lon="9.207873">
+        <ele>1743.9</ele>
+      </trkpt>
+      <trkpt lat="46.821833" lon="9.207864">
+        <ele>1743.7</ele>
+      </trkpt>
+      <trkpt lat="46.821785" lon="9.207839">
+        <ele>1743.2</ele>
+      </trkpt>
+      <trkpt lat="46.821704" lon="9.207827">
+        <ele>1742.9</ele>
+      </trkpt>
+      <trkpt lat="46.821588" lon="9.207809">
+        <ele>1742.4</ele>
+      </trkpt>
+      <trkpt lat="46.821515" lon="9.207818">
+        <ele>1742.0</ele>
+      </trkpt>
+      <trkpt lat="46.82145" lon="9.207824">
+        <ele>1741.8</ele>
+      </trkpt>
+      <trkpt lat="46.821367" lon="9.207826">
+        <ele>1741.7</ele>
+      </trkpt>
+      <trkpt lat="46.821312" lon="9.207818">
+        <ele>1741.9</ele>
+      </trkpt>
+      <trkpt lat="46.821214" lon="9.207821">
+        <ele>1741.5</ele>
+      </trkpt>
+      <trkpt lat="46.821207" lon="9.207821">
+        <ele>1741.4</ele>
+      </trkpt>
+      <trkpt lat="46.821109" lon="9.207846">
+        <ele>1741.5</ele>
+      </trkpt>
+      <trkpt lat="46.821072" lon="9.207859">
+        <ele>1741.3</ele>
+      </trkpt>
+      <trkpt lat="46.821023" lon="9.207881">
+        <ele>1741.4</ele>
+      </trkpt>
+      <trkpt lat="46.820979" lon="9.207918">
+        <ele>1741.4</ele>
+      </trkpt>
+      <trkpt lat="46.820847" lon="9.207985">
+        <ele>1741.7</ele>
+      </trkpt>
+      <trkpt lat="46.820806" lon="9.208005">
+        <ele>1741.6</ele>
+      </trkpt>
+      <trkpt lat="46.820724" lon="9.208032">
+        <ele>1741.7</ele>
+      </trkpt>
+      <trkpt lat="46.82067" lon="9.208054">
+        <ele>1741.9</ele>
+      </trkpt>
+      <trkpt lat="46.820635" lon="9.208078">
+        <ele>1742.4</ele>
+      </trkpt>
+      <trkpt lat="46.820552" lon="9.208122">
+        <ele>1743.2</ele>
+      </trkpt>
+      <trkpt lat="46.820486" lon="9.208167">
+        <ele>1744.0</ele>
+      </trkpt>
+      <trkpt lat="46.820452" lon="9.208199">
+        <ele>1744.7</ele>
+      </trkpt>
+      <trkpt lat="46.820422" lon="9.208204">
+        <ele>1744.7</ele>
+      </trkpt>
+      <trkpt lat="46.820368" lon="9.208207">
+        <ele>1744.3</ele>
+      </trkpt>
+      <trkpt lat="46.820322" lon="9.208218">
+        <ele>1744.7</ele>
+      </trkpt>
+      <trkpt lat="46.820275" lon="9.208245">
+        <ele>1744.6</ele>
+      </trkpt>
+      <trkpt lat="46.820218" lon="9.208256">
+        <ele>1744.1</ele>
+      </trkpt>
+      <trkpt lat="46.820208" lon="9.208256">
+        <ele>1744.2</ele>
+      </trkpt>
+      <trkpt lat="46.82013" lon="9.208258">
+        <ele>1743.2</ele>
+      </trkpt>
+      <trkpt lat="46.820074" lon="9.208276">
+        <ele>1742.8</ele>
+      </trkpt>
+      <trkpt lat="46.820038" lon="9.208295">
+        <ele>1742.7</ele>
+      </trkpt>
+      <trkpt lat="46.819984" lon="9.20832">
+        <ele>1742.4</ele>
+      </trkpt>
+      <trkpt lat="46.819928" lon="9.208332">
+        <ele>1741.5</ele>
+      </trkpt>
+      <trkpt lat="46.819892" lon="9.208338">
+        <ele>1740.6</ele>
+      </trkpt>
+      <trkpt lat="46.819816" lon="9.208359">
+        <ele>1738.8</ele>
+      </trkpt>
+      <trkpt lat="46.819756" lon="9.208366">
+        <ele>1737.9</ele>
+      </trkpt>
+      <trkpt lat="46.819725" lon="9.208354">
+        <ele>1737.4</ele>
+        <name>Via Alp Dadens, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.819724" lon="9.208354">
+        <ele>1737.4</ele>
+      </trkpt>
+      <trkpt lat="46.819704" lon="9.208311">
+        <ele>1737.2</ele>
+      </trkpt>
+      <trkpt lat="46.819691" lon="9.208225">
+        <ele>1737.0</ele>
+      </trkpt>
+      <trkpt lat="46.819665" lon="9.208006">
+        <ele>1737.3</ele>
+      </trkpt>
+      <trkpt lat="46.819609" lon="9.20795">
+        <ele>1736.8</ele>
+      </trkpt>
+      <trkpt lat="46.819559" lon="9.207871">
+        <ele>1735.9</ele>
+      </trkpt>
+      <trkpt lat="46.819534" lon="9.207802">
+        <ele>1735.0</ele>
+      </trkpt>
+      <trkpt lat="46.81953" lon="9.207718">
+        <ele>1734.1</ele>
+      </trkpt>
+      <trkpt lat="46.819534" lon="9.207627">
+        <ele>1733.3</ele>
+      </trkpt>
+      <trkpt lat="46.819543" lon="9.207523">
+        <ele>1732.3</ele>
+      </trkpt>
+      <trkpt lat="46.819566" lon="9.207395">
+        <ele>1731.4</ele>
+      </trkpt>
+      <trkpt lat="46.819604" lon="9.20725">
+        <ele>1730.0</ele>
+      </trkpt>
+      <trkpt lat="46.819635" lon="9.207116">
+        <ele>1728.6</ele>
+      </trkpt>
+      <trkpt lat="46.819657" lon="9.207065">
+        <ele>1728.3</ele>
+      </trkpt>
+      <trkpt lat="46.819694" lon="9.206985">
+        <ele>1727.7</ele>
+      </trkpt>
+      <trkpt lat="46.819727" lon="9.206919">
+        <ele>1727.2</ele>
+      </trkpt>
+      <trkpt lat="46.819745" lon="9.206858">
+        <ele>1726.8</ele>
+      </trkpt>
+      <trkpt lat="46.81974" lon="9.206805">
+        <ele>1726.4</ele>
+      </trkpt>
+      <trkpt lat="46.819718" lon="9.206763">
+        <ele>1726.0</ele>
+      </trkpt>
+      <trkpt lat="46.819684" lon="9.206743">
+        <ele>1725.7</ele>
+      </trkpt>
+      <trkpt lat="46.819681" lon="9.206744">
+        <ele>1725.6</ele>
+        <name>Tegia Sut, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.819642" lon="9.206756">
+        <ele>1725.4</ele>
+      </trkpt>
+      <trkpt lat="46.81961" lon="9.206797">
+        <ele>1724.9</ele>
+      </trkpt>
+      <trkpt lat="46.819582" lon="9.206863">
+        <ele>1724.3</ele>
+      </trkpt>
+      <trkpt lat="46.819551" lon="9.20693">
+        <ele>1723.4</ele>
+      </trkpt>
+      <trkpt lat="46.819499" lon="9.20701">
+        <ele>1722.6</ele>
+      </trkpt>
+      <trkpt lat="46.819441" lon="9.207066">
+        <ele>1722.1</ele>
+      </trkpt>
+      <trkpt lat="46.819377" lon="9.207124">
+        <ele>1721.2</ele>
+      </trkpt>
+      <trkpt lat="46.819372" lon="9.207112">
+        <ele>1720.92793</ele>
+        <name>Alp Dadens, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.819144" lon="9.207144">
+        <ele>1714.50446</ele>
+        <name>Alp Dadens, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.818917" lon="9.207315">
+        <ele>1709.40221</ele>
+        <name>Alp Dadens, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.818748" lon="9.207562">
+        <ele>1704.00911</ele>
+        <name>Tegia Sut, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.818403" lon="9.207745">
+        <ele>1696.4222</ele>
+        <name>Tegia Sut, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.818248" lon="9.209107">
+        <ele>1677.03392</ele>
+        <name>Via Alp Dadens, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.817808" lon="9.209644">
+        <ele>1666.2691</ele>
+        <name>Tegia Sut, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.817162" lon="9.210148">
+        <ele>1650.39818</ele>
+        <name>Tegia Sut, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.816802" lon="9.210652">
+        <ele>1636.92612</ele>
+        <name>Via Alp Dadens, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.816516" lon="9.210888">
+        <ele>1630.31826</ele>
+        <name>Via Alp Dadens, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.816105" lon="9.210792">
+        <ele>1624.64834</ele>
+        <name>Via Alp Dadens, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.815444" lon="9.210706">
+        <ele>1612.57605</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.815099" lon="9.211457">
+        <ele>1598.02261</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.81471" lon="9.211285">
+        <ele>1587.95298</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.814548" lon="9.212025">
+        <ele>1576.86713</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.814673" lon="9.212583">
+        <ele>1566.6535</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.814724" lon="9.212583">
+        <ele>1568.43561</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.814665" lon="9.213924">
+        <ele>1549.51106</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.814438" lon="9.213871">
+        <ele>1540.98524</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.814218" lon="9.213549">
+        <ele>1535.66247</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.813748" lon="9.213367">
+        <ele>1526.44013</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.813234" lon="9.21297">
+        <ele>1515.45729</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.813322" lon="9.214246">
+        <ele>1502.77585</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.813557" lon="9.214815">
+        <ele>1494.62904</ele>
+        <name>Via Prau da Punt, Falera</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+            <oa:routingFailed>true</oa:routingFailed>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.813733" lon="9.216113">
+        <ele>1475.52626</ele>
+        <name>Via Prau da Punt, Falera</name>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
