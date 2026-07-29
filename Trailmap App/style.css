@@ -498,6 +498,10 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 }
 #preloadBtn:hover{ background:#f5f7ef; }
 #preloadBtn:disabled{ opacity:0.6; cursor:default; }
+/* Which build is running. Small and quiet -- it only matters when something looks unfixed. */
+#appVersion{ margin-top:8px; font-family:Arial, sans-serif; font-size:10.5px; color:var(--stone);
+  font-variant-numeric:tabular-nums; }
+#appVersion.update-waiting{ color:var(--rust); font-weight:700; }
 
 #fatalError{
   position:fixed; inset:0; z-index:5000; background: var(--paper);

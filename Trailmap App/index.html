@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=39" />
+<link rel="stylesheet" href="style.css?v=43" />
 </head>
 <body>
 <div id="fatalError">
@@ -80,6 +80,10 @@
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDirectionArrowsToggle"><span class="slider"></span></span>Richtungspfeile</label>
           </div>
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
+          <!-- Which build is actually running. Added 2026-07-29 after several rounds of "is this fixed or am I
+               looking at a cached version?" -- read from the live service-worker cache rather than a constant,
+               so it reports what is really serving the page instead of what the source says it should be. -->
+          <div id="appVersion" title="Aktive Version. Weicht sie von der neuesten ab, liegt eine gecachte Fassung im Zugriff.">Version …</div>
         </details>
       </div>
       <!-- The Tourenbuilder has no sidebar section at all any more: its switch is the header button and
@@ -996,6 +1000,33 @@ document.getElementById('scrollTopBtn').addEventListener('click', () => {
   topBtn.addEventListener('click', () => asideEl.scrollTo({ top: 0, behavior: 'smooth' }));
   syncTopBtn();
 }
+
+// Reports the build that is actually serving this page, which is not necessarily the newest one deployed: on
+// iOS a home-screen PWA can keep an old service worker alive until the app is fully killed. Derived from the
+// live cache name and the SW's own state -- a constant in the source would only ever tell us what the source
+// says, which is exactly the question that was already in doubt.
+async function showAppVersion(){
+  const el = document.getElementById("appVersion");
+  if (!el) return;
+  let cacheName = null, waiting = false;
+  try {
+    const keys = await caches.keys();
+    cacheName = keys.filter(k => k.startsWith("trailmap-v")).sort().pop() || null;
+  } catch (e) { /* private mode: no caches API */ }
+  try {
+    const reg = await navigator.serviceWorker.getRegistration();
+    waiting = !!(reg && reg.waiting);          // a newer worker is installed but not yet in control
+  } catch (e) { /* no service worker */ }
+  el.textContent = "Version " + (cacheName ? cacheName.replace("trailmap-", "") : "unbekannt")
+                 + (waiting ? " · Update wartet — App schließen und neu öffnen" : "");
+  el.classList.toggle("update-waiting", waiting);
+}
+showAppVersion();
+// On a first load the cache does not exist yet, so the immediate call above reports "unbekannt". Re-run once
+// the worker is actually in charge.
+if (navigator.serviceWorker) navigator.serviceWorker.ready.then(showAppVersion).catch(() => {});
+// Re-checked when the section is opened, so it is current at the moment someone actually looks at it.
+document.getElementById("secMapOptions").addEventListener("toggle", showAppVersion);
 
 function isMobileLayout(){
   return window.innerWidth <= 768 || window.matchMedia("(pointer: coarse)").matches;
@@ -4187,7 +4218,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v42"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v43"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
