@@ -1118,8 +1118,9 @@ const locateBtn = document.getElementById("locateBtn");
 
 let compassActive = false;
 let lastCompassAt = null;          // when the last USABLE compass reading arrived (see updateLiveStatus)
-// How far the compass got. "idle" -> never asked, "asking" -> iOS dialog open, "denied" -> refused or the
-// promise rejected, "unsupported" -> no DeviceOrientationEvent at all, "listening" -> attached but nothing
+// How far the compass got. "idle" -> never asked, "asking" -> iOS dialog open, "refused" -> the OS or user
+// said no, "rejected" -> the promise rejected because we asked without a user activation (our bug, and the
+// reason it is told apart from "refused"), "unsupported" -> no DeviceOrientationEvent, "listening" -> nothing
 // received yet, "noheading" -> events arrive but carry neither webkitCompassHeading nor absolute alpha,
 // "ok" -> real headings. Only the last one can draw a cone.
 let compassState = "idle";
@@ -1208,9 +1209,13 @@ function requestOrientationPermission(){
     DeviceOrientationEvent.requestPermission()
       .then((state) => {
         if (state === "granted") { compassState = "listening"; attachOrientationListener(); }
-        else compassState = "denied";
+        // Resolving to "denied" means the OS or the user said no -- either the dialog was declined or
+        // "Bewegung & Ausrichtung" is off in Safari's settings. No amount of code fixes that one.
+        else compassState = "refused";
       })
-      .catch((err) => { compassState = "denied"; console.warn("Kompass-Berechtigung nicht erteilt:", err); });
+      // A REJECTED promise is a different thing entirely: it means we asked from the wrong place, i.e. without
+      // a valid user activation. That is a bug on our side, and the reason these two are told apart.
+      .catch((err) => { compassState = "rejected"; console.warn("Kompass-Anfrage zurückgewiesen:", err); });
   } else {
     compassState = "listening";
     attachOrientationListener();
@@ -1344,13 +1349,16 @@ function updateLiveStatus(){
   } else {
     // Which stage failed, in one character, because each needs a different fix:
     //   ?  the iOS permission dialog is open / was never answered
-    //   ✕  refused, or this browser has no DeviceOrientationEvent  -> iPhone: Einstellungen > Safari >
-    //      Bewegung & Ausrichtung
+    //   ✕D the OS or the user said no -> iPhone: Einstellungen > Safari > Bewegung & Ausrichtung
+    //   ✕R the request was REJECTED, i.e. we asked without a valid user activation -> our bug
+    //   ✕!  this browser has no DeviceOrientationEvent at all
     //   0  listener attached, not a single event arrived            -> sensor or browser, not permission
     //   E7 events arrived (7 of them) but none carried a usable heading -> no magnetometer reading;
     //      calibrate by waving the phone in a figure eight, or it is interference
     const code = compassState === "asking" ? "?"
-               : compassState === "denied" || compassState === "unsupported" ? "✕"
+               : compassState === "refused" ? "✕D"
+               : compassState === "rejected" ? "✕R"
+               : compassState === "unsupported" ? "✕!"
                : compassState === "noheading" ? "E" + compassEvents
                : compassState === "listening" ? "0"
                : "—";
@@ -1490,6 +1498,12 @@ locateBtn.addEventListener("pointercancel", cancelHold);
 locateBtn.addEventListener("contextmenu", (e) => e.preventDefault());
 
 locateBtn.addEventListener("click", () => {
+  // The compass permission is asked for HERE, before the hold's early return, because Safari only grants the
+  // user activation that DeviceOrientationEvent.requestPermission() requires on click/touchend -- NOT on
+  // pointerdown. Moving it to pointerdown yesterday is what broke the cone: the request started being
+  // rejected, which shows up as ✕ in the readout. The pointerdown attempt is kept as well (it is the earlier
+  // of the two, and valid on Android), and both are guarded, so whichever one the platform honours wins.
+  if (orientationHandler === null) requestOrientationPermission();
   // A completed hold is followed by a click event; swallowing it is what stops the follow from being switched
   // straight back off. Same pattern as the builder's swipe-to-delete.
   if (holdFired) { holdFired = false; return; }
@@ -4173,7 +4187,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v41"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v42"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
