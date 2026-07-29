@@ -94,10 +94,22 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         n = int(self.headers.get("Content-Length", "0"))
         data = json.loads(self.rfile.read(n).decode("utf-8"))
+        # MERGE, never overwrite: a later `--ids 45120014` run to add one trail (Wasserfall Lenzerheide,
+        # 2026-07-29) would otherwise replace the whole 126-tour harvest with a single entry, and
+        # Material/ is the source this region is rebuilt from.
+        fresh = len(data)
+        if os.path.exists(OUT):
+            try:
+                with open(OUT, encoding="utf-8") as fh:
+                    have = json.load(fh)
+                have.update(data)
+                data = have
+            except ValueError:
+                pass
         with open(OUT, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(data, fh, ensure_ascii=False)
-        msg = ("%d Touren, %d mit Geometrie"
-               % (len(data), sum(1 for v in data.values() if v.get("geometry")))).encode("utf-8")
+        msg = ("%d neu -> %d Touren, %d mit Geometrie"
+               % (fresh, len(data), sum(1 for v in data.values() if v.get("geometry")))).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Length", str(len(msg)))
         self.end_headers()

@@ -27,8 +27,10 @@ body{
 .app{ display:flex; flex-direction:column; height:100vh; height:100dvh; }
 header{ padding: calc(14px + env(safe-area-inset-top, 0px)) 22px 12px; background: var(--forest-dark); color: #f2f3ec;
   display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; border-bottom: 3px solid var(--rust); }
-header h1{ font-family: 'Copperplate','Trebuchet MS',sans-serif; letter-spacing: 1.5px; font-size: 20px; margin:0; text-transform: uppercase; cursor:pointer; }
-header h1:hover{ color: var(--rust-light); }
+/* No cursor:pointer and no hover colour: the title stopped being the scroll-to-top trigger on 2026-07-30
+   (that is #sidebarTopBtn's job), and a heading that still looks clickable would promise an action it no
+   longer performs. */
+header h1{ font-family: 'Copperplate','Trebuchet MS',sans-serif; letter-spacing: 1.5px; font-size: 20px; margin:0; text-transform: uppercase; }
 header .sub{ font-family: Arial, sans-serif; font-size: 12.5px; color: #b9c6b6; }
 .layout{ flex:1; display:flex; min-height:0; }
 aside{ width: 350px; min-width: 300px; background: var(--card-bg); border-right: 1px solid #d8ddd0;
@@ -317,6 +319,14 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   box-shadow:none;
 }
 .trail-label-tooltip::before{ display:none; }
+/* The label of the line currently under the cursor, so it can be picked out of a crowd of labels while
+   "Namen" is on (user, 2026-07-30). Only opacity/colour/border change, deliberately not the font size or the
+   padding: labels sit close together on a dense hub, and a growing box would shove its neighbours around.
+   The z-index lifts it clear of any label it overlaps. */
+.trail-label-tooltip.tl-hover{
+  background: #fff; border-color: var(--rust); border-width: 2px; padding: 0 5px;
+  box-shadow: 0 1px 5px rgba(0,0,0,.28); z-index: 700;
+}
 /* The difficulty as a dot in front of the name, mirroring the 🚡 that starts a lift's label (user's own
    analogy, 2026-07-28). The thin dark ring keeps the black "schwarz" dot readable against the light tooltip
    and the green one from bleeding into it. */

@@ -18,7 +18,12 @@ import zipfile
 from xml.etree import ElementTree as ET
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from trailmap_pipeline import build_profile, douglas_peucker, dedupe_points, bounds_of, write_region  # noqa
+from trailmap_pipeline import (build_profile, douglas_peucker, dedupe_points, bounds_of,  # noqa
+                               write_region, haversine_m, cumulative_km)
+
+#: Two consecutive sections further apart than this do not form one line. Same value as the pipeline's
+#: MAX_TRACK_GAP_M, for the same reason: beyond it, concatenating welds a phantom straight line onto the map.
+MAX_SECTION_GAP_M = 120.0
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MAT = os.path.join(ROOT, "Material", "BikeKingdom")
@@ -41,6 +46,17 @@ EXTRA_DIFF = {
     "ninos gold-trail": ("rot", "bk_western_summits"),
     "hexenwald": ("blau", "bk_southern_delights"),
     "val malera trail": ("blau", "bk_southern_delights"),
+    # Added 2026-07-29 on the user's request, with rot given by them. Outdooractive marks it "geschlossen";
+    # it is in anyway, and carries no closed flag -- same rule as the lifts, nothing in this app syncs
+    # operating status, so a hardcoded one would rot while looking authoritative (docs/lifts-feature.md).
+    # bk_red_peak, not bk_park_lenzerheide: it runs Scharmoin -> Lenzerheide right beside the park lines
+    # (79 m from FLOWline at its closest), but that sub-region is exactly the five built park lines, and
+    # this is a natural trail in the Rothorn area like "Got da Lai" next to it.
+    "wasserfall lenzerheide": ("rot", "bk_red_peak"),
+    # Corrected by the user 2026-07-29. It has no ods row, so it had inherited the sub-region of its nearest
+    # trail and landed in the park -- but it feeds the Weisshorn Speed chairlift, whose own closest trails are
+    # Red Peak's (Motta Express, 8 m).
+    "access weisshorn speed": ("gruen", "bk_red_peak"),
 }
 # ods spelling -> API spelling. Each one verified by eye against the harvested titles.
 ALIAS = {
@@ -124,20 +140,37 @@ def main():
     for g in groups.values():
         g.sort(key=lambda x: x[0])
 
-    trails, geo, profs, unresolved = [], {}, {}, []
+    trails, geo, profs, unresolved, gaps = [], {}, {}, [], []
     for key, members in sorted(groups.items()):
         base = members[0][2]
         title = re.sub(r"\s*:\s*(Sektion|Section)\s*\d+\s*$", "", base["title"]).strip()
         title = re.sub(r"\s*:\s*Jump Section\s*$", "", title).strip()
 
-        # geometry: concatenate the sections in order, then de-duplicate and simplify once over the whole line
-        raw = []
+        # Geometry: concatenate the sections in order -- but ONLY where each one actually continues where the
+        # previous ended. A blind extend() welded a 1065 m straight line across the map into
+        # "703 Rock'n'Roll", because its "Jump Section" is a parallel variant beside section 2 and order=99
+        # parks it behind section 4. Sections that do not connect start a new chain; the longest chain wins
+        # and the rest is reported, never bridged (the user's standing rule: leave the honest gap).
+        chains, dropped = [], []
         for _, _, t in members:
-            if t.get("geometry"):
-                raw.extend(parse_geometry(t["geometry"]))
-        if len(raw) < 2:
+            if not t.get("geometry"):
+                continue
+            seg = parse_geometry(t["geometry"])
+            if len(seg) < 2:
+                continue
+            if chains and haversine_m(chains[-1][-1], seg[0]) <= MAX_SECTION_GAP_M:
+                chains[-1].extend(seg)
+            else:
+                chains.append(list(seg))
+        if not chains:
             unresolved.append((title, "keine Geometrie"))
             continue
+        chains.sort(key=lambda c: cumulative_km(c)[-1], reverse=True)
+        raw = chains[0]
+        for c in chains[1:]:
+            dropped.append(round(cumulative_km(c)[-1] * 1000))
+        if dropped:
+            gaps.append((title, dropped, round(cumulative_km(raw)[-1] * 1000)))
         pts = douglas_peucker(dedupe_points(raw))
         coords = [[round(p[0], 6), round(p[1], 6)] for p in pts]
         eles = [p[2] if len(p) > 2 else None for p in pts]
@@ -162,10 +195,17 @@ def main():
             unresolved.append((title, "keine Schwierigkeit"))
             continue
 
-        # sum the sections' own official figures rather than recomputing from the simplified line
-        length = sum((t.get("length") or 0) for _, _, t in members) / 1000.0
-        up = sum((t.get("ascent") or 0) for _, _, t in members)
-        down = sum((t.get("descent") or 0) for _, _, t in members)
+        # Sum the sections' own official figures rather than recomputing from the simplified line -- but only
+        # while every section is actually drawn. Where a section was dropped as disconnected, the official sum
+        # would describe a line longer than the one on the map, so the drawn line's own figures are used
+        # instead and the difference is visible in the report rather than hidden in a mismatched number.
+        prof_pre, gain_pre, loss_pre = build_profile(coords, eles)
+        if dropped:
+            length, up, down = cumulative_km(coords)[-1], gain_pre, loss_pre
+        else:
+            length = sum((t.get("length") or 0) for _, _, t in members) / 1000.0
+            up = sum((t.get("ascent") or 0) for _, _, t in members)
+            down = sum((t.get("descent") or 0) for _, _, t in members)
 
         # norm() for the id too, so "Fanüllatobel" does not become "fan_llatobel"
         slug = title.lower()
@@ -188,13 +228,11 @@ def main():
         geo[entry["id"]] = coords
         # build_profile returns (profile, gain, loss) -- storing the whole tuple gave every trail a
         # "profile" of exactly 3 entries, which the validator's ">= 2 points" check happily accepted.
-        prof, _gain, _loss = build_profile(coords, eles)
-        profs[entry["id"]] = prof
+        profs[entry["id"]] = prof_pre
 
     # Access routes with no ods entry inherit the sub-region of the nearest trail that has one -- they exist
     # to serve those trails, so that is where they belong in the list.
     placed = [(t, geo[t["id"]]) for t in trails if t["region"]]
-    from trailmap_pipeline import haversine_m
     for t in trails:
         if t["region"]:
             continue
@@ -215,6 +253,11 @@ def main():
     print("Zufahrtswege: %d, davon uphill: %d"
           % (sum(1 for t in trails if t.get("access")), sum(1 for t in trails if t.get("uphill"))))
     print("bounds:", bounds_of(geo))
+    if gaps:
+        print("\nSektionen VERWORFEN, weil sie nicht anschliessen (Luecke > %.0f m):" % MAX_SECTION_GAP_M)
+        for name, dropped, kept in gaps:
+            print("   %-40s gezeichnet %5d m, weggelassen %s"
+                  % (name, kept, " + ".join("%d m" % x for x in dropped)))
     if unresolved:
         print("\nNICHT gebaut:")
         for name, why in unresolved:

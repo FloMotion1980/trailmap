@@ -7,6 +7,43 @@ need the user, and how to know you are done.
 Read first: the region-catalog architecture in `CLAUDE.md`, plus `docs/lifts-feature.md` if the region gets
 lifts and `docs/data-sourcing-general.md` if a source site blocks bots.
 
+## A region is FOUR things, not one
+
+Added 2026-07-29, after Bike Kingdom was reported "done" three times and each time something was missing —
+first the lifts, then the tours, then the place labels. The trails are the biggest piece of work, which is
+exactly why they get mistaken for the whole job. **A region is not finished until all four are present or
+consciously ruled out:**
+
+| # | Piece | Where it lives | Source of truth | Skip only when |
+|---|---|---|---|---|
+| 1 | **Trails** | `lineTrails` + `trailGeo` + `elevationProfiles` | operator GPX, else OSM; difficulty from the operator or the user | never |
+| 2 | **Lifts** | `lifts` | the operator's own summer lift list — never OSM's bike tag | the region has no lifts (Odenwald, Pfälzerwald, Donnersberg) |
+| 3 | **Tours** | `loop: true` entries + `trailSegments` | the operator's published routes, matched against pieces 1 and 2 | the operator publishes none |
+| 4 | **Places** | `places` | OSM `node[place]`, never a typed coordinate | never — a region with no labels is unreadable when zoomed out |
+
+Say explicitly which of the four are done and which are ruled out when reporting a region as finished.
+"121 trails and 12 lifts" reads like completion while `places: []` is still sitting in the file.
+
+**Checklist per piece**
+
+1. **Trails** — geometry from the best source (see step 1 below), one entry per trail the user wants (not per
+   section — collapse "Sektion 1-4" into one line, but only where the sections actually connect, see the
+   Rock'n'Roll trap in `docs/trailrunde-feature.md`), difficulty on this app's four-colour scale, `len`/`up`/
+   `down` from the operator where published, `uphill: true` decided from ascent-vs-descent rather than the
+   name.
+2. **Lifts** — research which lifts run in summer *and* carry bikes, get geometry from OSM by an **anchored**
+   name or `ref` match, store bottom-station-first, backfill `baseEle`/`topEle`. `docs/lifts-feature.md`.
+3. **Tours** — match the route's GPX against the region's own trails and lifts so each stretch is attributed;
+   never a single flat line if the operator's route is made of named trails. `docs/trailrunde-feature.md`
+   has the four matching traps that each drew a wrong line.
+4. **Places** — take the names the region is actually described by: the valley towns, the lift bases, the
+   points where trails start and end, and whatever appears in a tour's own title (the Pfälzerwald tours are
+   literally named after villages). Coordinates come from `node[place][name=...]` via Overpass — a
+   hand-typed Samnaun sat 1 460 m from the village. Sanity-check each candidate by its distance to the
+   nearest trail in that region and drop the ones far away; OSM knows hundreds of `locality`/
+   `isolated_dwelling` names in any Italian or Swiss hinterland, and 200 names in the woods are noise, not
+   orientation. Aim for one reference point per sub-region plus the larger settlements.
+
 ## What the user has to supply
 
 Everything else can be derived, but these cannot, and guessing at them has produced real errors:
@@ -67,10 +104,30 @@ iterate the catalog.
 **4. Lifts, if any.** The operator's summer list decides *which* lifts exist; OSM supplies geometry only,
 matched by name. `osm_aerialway_survey(bbox)` returns every named aerialway with its `aerialway:bicycle`
 tag — **that tag does not decide membership**, it was wrong in both directions in Serfaus. Store each lift
-bottom-station-first; `ElevationLookup` on the two end points tells you which end that is. See
-`docs/lifts-feature.md`.
+bottom-station-first; `ElevationLookup` on the two end points tells you which end that is. Anchor the name
+pattern and treat two matches as an error, not a choice. See `docs/lifts-feature.md`.
 
-**5. Update the version manifest.** This is not optional and it is the step most easily forgotten — it was
+**5. Tours, if the operator publishes any.** A published route through the region's own trails becomes a
+`loop: true` entry plus a `trailSegments` list attributing every stretch to a component trail, a lift, or a
+connector. Match it classically against pieces 1 and 2 — the Tourenbuilder is a tool for app users, not a
+build step. `tools/build_bikekingdom_tours.py` is the worked example (densify both sides, lifts before
+trails, clip to entry/exit, keep `trailGeo == concat(trailSegments)`), and
+`docs/trailrunde-feature.md` lists the traps.
+
+**6. Places.** One `places` entry per name the region is described by, coordinates from OSM:
+
+```python
+q = ('[out:json][timeout:180];node[place~"^(city|town|village|hamlet)$"](%s);out tags center;' % bbox)
+for e in overpass(q)["elements"]:
+    d = min(haversine_m([e["lat"], e["lon"]], c) for g in geo.values() for c in g[::4])
+    ...   # keep the ones near our trails, drop the hinterland localities
+```
+
+Sort by that distance and read the list: anything past a few hundred metres from every trail in the region
+is usually not worth a label. Include the villages a tour is named after — a rider looking for
+"Tour 12 - Hauenstein" should find Hauenstein on the map.
+
+**7. Update the version manifest.** This is not optional and it is the step most easily forgotten — it was
 missed for three regions in a row (2026-07-28), and once for an edit to an existing one:
 
 ```bash
@@ -82,7 +139,7 @@ The app fetches `regions/<key>.json?v=<hash>` from `regions/version.json`, and t
 edit never reaches a device that already has the region; a **missing** entry is worse, because the URL is then
 unversioned and that copy stays cached forever. `validate_region.py` now fails on both.
 
-**6. Verify.**
+**8. Verify.**
 
 ```bash
 python tools/validate_region.py zugspitzarena
@@ -94,7 +151,16 @@ per trail and no orphans of either, `trailCount` matching reality, lifts stored 
 colours distinct within the group, the loop invariant that `trailGeo[loopId]` is the exact concatenation of
 its `trailSegments`, a sanity check that no trail's geometry sits further from the region centre than
 the region is wide — which is how a same-named lift 8 km away nearly got into Portes du Soleil — and the
-`version.json` hash from step 5.
+`version.json` hash from step 7.
+
+**It does not check the four pieces above**, and deliberately so: whether a region *should* have lifts,
+tours or places is a judgement, not an invariant. Walk the table yourself before calling a region done, and
+**look at the map** — the two defects that reached the user in Bike Kingdom (a 1 065 m straight line welded
+into Rock'n'Roll, and no place labels at all) both pass every automated check.
+
+**9. And deploy.** `git push` to `main` is what makes any of this visible; the user tests the GitHub Pages
+build, not the working tree. A region that validates locally and was never pushed looks exactly like a
+region whose lifts are missing — that is what "In Bike Kingdom fehlen die Lifte" turned out to mean.
 
 ## Changing an existing region
 

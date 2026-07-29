@@ -244,12 +244,31 @@ kilometre-wide distance range (an off-by-one: a piece ending at index `i0` was g
 index `i0`, which belongs to the next piece). Watch for degenerate segments — `len(coords) < 2` or
 `distStart == distEnd` — if this is ever re-run.
 
+## Anchor the OSM name pattern — "longest match wins" picks the wrong cable
+
+Learned in Bike Kingdom (2026-07-29), where `ref` tags do not exist at all and the join has to be by name.
+A loose pattern plus a "take the longest hit" tiebreak silently chose a **T-bar** over the gondola it was
+meant to find: OSM spells the Chur gondola `Känzeli - Bramb**ü**esch` (no r), so `Brambr[üu]esch` missed it
+and matched `Brambrüesch - Hühnerköpfe` (1429 m) instead of the right way (1319 m). Three more patterns had
+the same trap waiting — `Urden` also matches the Sesselbahn *Urdenfürggli*, `Hörnli` the Sesselbahn *Hörnli*
+next to the Hörnli-**Express**, `Tschuggen` two lifts that are not Weisshorn Speed.
+
+So: anchor every pattern (`^Urdenbahn$`), spell the local variant into it (`^K[äa]nzeli - Bramb`), and make
+**more than one hit an error rather than a choice**. A wrong cable looks entirely plausible on the map — it
+starts at the right station — which is why this has to fail loudly instead of resolving itself.
+
+Also worth knowing: this is the region where OSM's own `aerialway:bicycle` tag happened to be *right*
+(`=summer` on exactly the twelve bike lifts, nothing on Pradaschier, which the operator lists under "Kein
+Biketransport"). That is a coincidence, not a licence to start trusting the tag — Saalbach had it wrong in
+both directions. Read it as a cross-check on the operator research, never as the source.
+
 ## Adding lifts to another region
 
 1. Research the operator's summer lift list: which lifts run, and which carry bikes. Note the official
    lift codes.
 2. Fetch `way["aerialway"]` from Overpass for that region's bbox (several small bboxes — one big one
-   times out) and join on `ref` == the official code.
+   times out) and join on `ref` == the official code, or on an **anchored** name pattern where the resort
+   publishes no codes (see the section above before writing one).
 3. Backfill `baseEle`/`topEle` for the two endpoints (OpenTopoData `eudem25m`), store `coords`
    bottom-first.
 4. Write the `lifts` array into `regions/<group>.json`. No app code changes needed — activation,

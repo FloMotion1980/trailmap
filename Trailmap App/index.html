@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=43" />
+<link rel="stylesheet" href="style.css?v=44" />
 </head>
 <body>
 <div id="fatalError">
@@ -38,7 +38,7 @@
   <header>
     <!-- The title doubles as the mode indicator: "Trailbuilder" while the builder mode is on (user,
          2026-07-27). It also still scrolls the sidebar back to the top, as before. -->
-    <h1 id="scrollTopBtn" title="Nach oben scrollen">Trailmap</h1>
+    <h1>Trailmap</h1>
     <button id="regionsBtn">🌍 Regionen wählen</button>
     <!-- The one and only mode switch. It lives here because the header is the only element that looks the
          same in both layouts, is reachable without opening the drawer, and covers no map. -->
@@ -459,7 +459,9 @@ const REGION_CATALOG = {
       shaped_lines: { label: "Shaped Lines", color: "#2f6b8a" },
       trails: { label: "Trails", color: "#8a5a2f" },
       trails_stille_seite: { label: "Trails Stille Seite", color: "#5a8a3a" },
-      trailcombis: { label: "Trailcombis", color: "#8a3a6a" }
+      // Renamed 2026-07-30 on the user's request; the key stays `trailcombis`, since changing it would mean
+      // moving every trail in the region file for a label change.
+      trailcombis: { label: "LONG Lines & Trails", color: "#8a3a6a" }
     }
   },
   // Dolomiti Paganella (Trentino, IT), 24 trails, built 2026-07-26. Sub-regions are the park's OWN three
@@ -666,7 +668,16 @@ const REGION_CATALOG = {
     // became one line): the user does not need the sections.
     // Cresta Bernard and Belfort are in the ods but not in the trail map, so there is no geometry for them
     // and they are deliberately absent rather than invented.
-    label: "Bike Kingdom", file: "regions/bikekingdom.json", trailCount: 116,
+    // Lifts and the four Biketicket-2-RIDE tours added 2026-07-29 by tools/build_bikekingdom_tours.py,
+    // which runs on top of build_bikekingdom.py's output. Which lifts carry bikes in summer comes from the
+    // operators' own pages (arosalenzerheide.swiss Betriebszeiten Sommer, churbergbahnen.ch for the two
+    // Chur sections); OSM supplied cable geometry only. Sesselbahn Pradaschier is deliberately absent --
+    // the operator lists it under "Kein Biketransport" even though it runs all summer. The four tours are
+    // the official routes (outdooractive r/2805733, r/2811055, r/3508125, r/37756137); their published
+    // ascent figures include the metres the mountain railways climb.
+    // "Wasserfall Lenzerheide" (rot, from the user) came in on 2026-07-29 as trail 117: Outdooractive marks
+    // it geschlossen, and it is in anyway with no closed flag, same rule as the lifts.
+    label: "Bike Kingdom", file: "regions/bikekingdom.json", trailCount: 121,
     bounds: [[46.65044, 9.43341], [46.88292, 9.76421]],
     subRegions: {
       bk_park_lenzerheide: { label: "Park Lenzerheide", color: "#b03a2e" },
@@ -676,7 +687,8 @@ const REGION_CATALOG = {
       bk_red_peak: { label: "Red Peak", color: "#d35400" },
       bk_the_capital: { label: "The Capital (Chur)", color: "#2c6fa8" },
       bk_steep_trees: { label: "Steep Trees", color: "#4a7c3f" },
-      bk_southern_delights: { label: "Southern Delights", color: "#a0416e" }
+      bk_southern_delights: { label: "Southern Delights", color: "#a0416e" },
+      bk_biketickets: { label: "Biketicket 2 Ride", color: "#5d6d7e" }
     }
   }
 };
@@ -1010,17 +1022,13 @@ sidebarToggleBtn.addEventListener('click', () => {
 });
 sidebarBackdrop.addEventListener('click', closeSidebar);
 
-// Scrolls the sidebar back to its very top (Region/Filter/Kartenoptionen/Trails accordions) -- handy
-// once a long trail list has been scrolled far down. The header title sits outside the scrollable
-// `aside` (it's part of the always-visible top-level <header>), so it doubles as this trigger without
-// adding any new floating UI element (2026-07-24, per the user -- rejected a floating scroll-to-top
-// button first, this reuses existing UI instead).
-document.getElementById('scrollTopBtn').addEventListener('click', () => {
-  asideEl.scrollTo({ top: 0, behavior: 'smooth' });
-});
-// The same job as a button inside the sidebar itself, because the header title above is unreachable on a
-// phone: the drawer is fixed at top:0 with z-index 2500 and covers the header whenever it is open (user,
-// 2026-07-28). Shown only once scrolled, so it never covers a short list for nothing.
+// Scrolling the sidebar back to its top is #sidebarTopBtn's job alone (2026-07-30, per the user). The header
+// title used to do it too -- added 2026-07-24 to avoid a new floating element, then made redundant on
+// 2026-07-28 when the sticky button turned out to be necessary anyway: on a phone the drawer is fixed at
+// top:0 with z-index 2500 and covers the header entirely, so the title is unreachable exactly when a long
+// list needs it. Two triggers for one action, one of them invisible on the layout where it matters most, is
+// worse than one that is always where the list is. The <h1> keeps its id but carries no handler.
+// Shown only once scrolled, so it never covers a short list for nothing.
 {
   const topBtn = document.getElementById('sidebarTopBtn');
   const SHOW_AFTER_PX = 180;
@@ -3400,12 +3408,19 @@ function buildTrailLayer(t){
           // when "Namen" is toggled on.
           segHit.bindTooltip(trailLabelHtml(refTrail), { permanent:true, direction:"top", className:"trail-label-tooltip", interactive:false });
           segHit.closeTooltip();
+          // Whichever label is the visible one for this stretch gets the hover mark: its own segment label,
+          // or -- when applyNameLabels() suppressed that because the component trail is separately visible
+          // right now -- that trail's own whole-line label. Both name the same trail, so marking the one on
+          // screen is what the user asked for either way.
+          const markSeg = on => setLabelHovered(refTrail.id, on, map.hasLayer(nameLabel) ? nameLabel : null);
           segHit.on("mouseover", () => {
             visibleSeg.setStyle({ weight: HOVER_WEIGHT });
+            markSeg(true);
             if (!showNames) segHit.openTooltip();
           });
           segHit.on("mouseout", () => {
             visibleSeg.setStyle({ weight: visibleSeg._tmBaseWeight || BASE_WEIGHT });
+            markSeg(false);
             segHit.closeTooltip();
           });
           // Keeps the loop itself as the selection/highlight (per the user, 2026-07-23: clicking one
@@ -3486,6 +3501,7 @@ function buildTrailLayer(t){
     applyLineWeight(styleTarget, on, on ? 1 : baselineLineOpacity(t.id));
     const card = lineLayers[t.id].card;
     if (card) card.classList.toggle("hovered", on);
+    setLabelHovered(t.id, on);
     if (on) {
       showEndpoints(t.id);
       // Hover-triggered name tooltip — only when "Namen" is off. When it's on, hitLine's tooltip is
@@ -3778,10 +3794,34 @@ regionDialogEl.addEventListener("click", (e) => {
 });
 
 // ---- Name labels toggle ----
+// Marks the name label of the line under the cursor, so it can be told apart from its neighbours while
+// "Namen" is on (user, 2026-07-30: "wäre es praktisch, wenn bei Hover der tooltip des gehoverten Trails auch
+// gehighlightet wird"). Only meaningful in that mode -- with the labels off, the tooltip is opened *by* the
+// hover and is the only one on screen, so there is nothing to stand out from. `label` lets a Trailrunde's
+// segment pass its own per-segment label instead of the trail's whole-line one.
+function setLabelHovered(trailId, on, label){
+  if (!showNames) return;
+  const layer = lineLayers[trailId];
+  const tip = label || (layer && layer.hitLine.getTooltip());
+  const el = tip && tip.getElement && tip.getElement();
+  if (el) el.classList.toggle("tl-hover", on);
+}
+
 function applyNameLabels(){
   Object.values(lineLayers).forEach(layer => {
     if (showNames) layer.hitLine.openTooltip(layer.coords[layer.midIdx]);
     else layer.hitLine.closeTooltip();
+    // Drop any leftover hover mark: turning "Namen" off mid-hover would otherwise leave the class on an
+    // element that setLabelHovered() no longer touches, and it would still be there when they come back on.
+    if (!showNames) {
+      const tip = layer.hitLine.getTooltip();
+      const el = tip && tip.getElement();
+      if (el) el.classList.remove("tl-hover");
+      (layer.segmentNameLabels || []).forEach(({ label }) => {
+        const le = label.getElement && label.getElement();
+        if (le) le.classList.remove("tl-hover");
+      });
+    }
     // A Trailrunde's own per-segment name labels (added 2026-07-23) — suppressed whenever that
     // specific component trail is *also* independently visible right now (map.hasLayer on its own
     // line), since the segment reuses that trail's exact geometry and would otherwise show the same
@@ -4247,7 +4287,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v43"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v44"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

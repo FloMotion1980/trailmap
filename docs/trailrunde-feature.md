@@ -65,6 +65,41 @@ The "Start"/"Ziel" tooltips on `startMarker`/`endMarker` could get stuck visible
 2. Added `.closeTooltip()` directly inside `startMarker`/`endMarker`'s own `mouseout` handlers, instead of relying on Leaflet's built-in hover-tooltip auto-close. Still didn't fix it.
 3. **What actually fixed it**: moved the `.closeTooltip()` calls into the shared `setHover(on)` closure itself (unconditionally, whenever `on` is false, for *both* markers) rather than any specific element's own mouseout handler. Root cause suspected: `startDot` (always on the map) and `startMarker` (only added on hover/selection) sit at the *exact same coordinate* — when `startMarker` gets added directly under an already-stationary cursor, the browser doesn't necessarily transfer "currently hovered" state to it the way a genuine pointer transition would. Since `hitLine`/`startDot`/`startMarker`/`endMarker` all already call the shared `setHover(false)` on their own mouseout, closing both tooltips unconditionally inside that one shared function no longer depends on that ambiguity at all.
 
+## Matching a tour against existing trails and lifts — four traps (Bike Kingdom, 2026-07-29)
+
+`tools/build_bikekingdom_tours.py` is the first repo-tracked implementation of this matching (the earlier
+ones were one-off scripts and are gone). Each of these produced a visibly wrong map before it was fixed, and
+each was found only because the script prints a per-segment report with two diagnostic numbers: the length it
+*drew* against the length the tour actually *rode* there, and every seam longer than 60 m.
+
+1. **Densify the cable, not just the trails.** An OSM aerialway is often two vertices, tower to tower.
+   Measuring track-point-to-vertex puts a point in the middle of a 937 m cable ~470 m from either end while
+   it sits exactly on the line, so the "within 60 m" run collapses to the two ends. First run: **0 lift rides
+   found across 4 tours**, with every station matching within 20 m.
+2. **Match lifts BEFORE trails, over the whole track.** In a bike park the trail runs directly under the
+   gondola that serves it, so trail-matching first dropped a 130 m sliver of "703 Rock'n'Roll" into the middle
+   of the Känzeli–Brambrüesch ride, split the cable run, and both halves then failed the span test — the
+   gondola vanished into a grey connector. Doing lifts first is safe because a ride is geometrically
+   unmistakable: station to station, and **straight**. A detour check (walked ≤ 1.2 × straight span) is what
+   separates it from a switchbacking uphill trail beneath the same cable.
+3. **Search within a near-cable run for a station-to-station piece**, don't test the run as a whole. A tour
+   rides the lift up and comes back down the trail beside it (Hörnli Trail under the Hörnli-Express), so both
+   directions land in one run whose walked length is twice its span — testing the whole run threw the ride
+   away. The descent can never win a candidate pair, because its own ratio fails.
+4. **Rebuild a connector from the densified track, not from a vertex range of the tour's own line.**
+   `own[min(vertex):max(vertex)+2]` looks right and is wrong: when the stretch falls inside a single long
+   Douglas-Peucker edge, min and max collapse and the slice draws that whole edge — one connector drew
+   **4384 m for 40 m of riding**. Densify-then-simplify reproduces the line exactly, since every densified
+   point lies on it.
+
+Also: clip a matched trail to where the tour **entered and left** it, not to min/max of every matched vertex.
+One outlier match inflated the substituted geometry ~10 % over the tour's own track (schwarz: 99.8 km against
+90.2 km ridden), drawing the line past the end of a trail the tour never rode that far on. After all of the
+above, schwarz draws 90.4 km against 90.2 km, and the worst remaining seam is 95 m instead of 1144 m.
+
+Seams are reported rather than silently trimmed, per the standing rule that an uncertain heuristic must
+produce the honest output plus a marker, not the clever guess.
+
 ## Deliberately not addressed
 
 The overlap-when-both-visible case (loop and its component trails simultaneously shown) was explicitly *not* addressed with extra suppression logic — the user was fine with it (toggle the relevant category filter off if it's ever distracting), especially now that the geometry lines up exactly instead of jittering.
