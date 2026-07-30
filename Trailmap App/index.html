@@ -63,7 +63,6 @@
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDownhillToggle" checked><span class="slider"></span></span>⬇ Downhill</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showUphillToggle" checked><span class="slider"></span></span>⚡ Uphill</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLoopToggle" checked><span class="slider"></span></span>🔁 Touren</label>
-            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLiftsToggle" checked><span class="slider"></span></span>🚡 Lifte</label>
           </div>
         </details>
         <details class="filter-section" id="secMapOptions">
@@ -89,6 +88,19 @@
       <!-- The Tourenbuilder has no sidebar section at all any more: its switch is the header button and
            its list is #builderSheet, pinned to the map. Keeping a copy of either here would mean one
            state with three owners -- see docs/tour-builder.md. -->
+      <!-- Lifts get their own section rather than rows in the trail list (user, 2026-07-30). A lift has no
+           difficulty, no category and no length, so it shares none of the Filter section's axes — the one
+           🚡 switch is its whole filter, which is why that switch lives in here rather than up there with
+           the trail filters. Closed by default and placed ABOVE Trails: it is short, and below a 250-trail
+           list nobody would ever scroll to it. Its count is deliberately separate from the "x/y sichtbar"
+           line in Filter, which counts rideable trails only. -->
+      <details class="filter-section" id="secLifts">
+        <summary><span class="section-title-row"><span>Lifte</span><span class="section-meta" id="liftCountLabel"></span></span></summary>
+        <div class="toggle-row-group">
+          <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLiftsToggle" checked><span class="slider"></span></span>🚡 Lifte anzeigen</label>
+        </div>
+        <div class="trail-list" id="liftList"></div>
+      </details>
       <details class="filter-section" id="secTrails" open>
         <summary>Trails</summary>
         <div class="trail-list" id="trailList"></div>
@@ -1751,21 +1763,14 @@ const LIFT_DOT_WEIGHT = 3.8;         // dot diameter (4.5 -> 3.8 on the user's r
 // connector's "6,6" looks identical at every zoom), so the dot spacing stays constant as you zoom:
 // zoom in and you get more dots, not longer gaps. No zoom handler needed.
 const LIFT_DOT_DASH = "1,13";
-// Solo mode dims the lifts too (2026-07-26, per the user: "Der Solo Button blendet Lifte nicht aus").
-// Dimmed rather than hidden, matching what solo does to the other trails. Read via
-// baselineLiftOpacity() everywhere, NEVER hardcoded -- hardcoding the equivalent for trails was a real
-// bug once: merely moving the mouse over another line silently cancelled solo's dimming, because the
-// hover-off path reset opacity to the undimmed constant.
-const LIFT_DIM_OPACITY = 0.15;
-function baselineLiftOpacity(){ return soloId ? LIFT_DIM_OPACITY : 1; }
-function applyLiftSoloStyles(){
-  Object.values(liftLayers).forEach(layer => {
-    const o = baselineLiftOpacity();
-    layer.mask.setStyle({ opacity: o });
-    layer.hairline.setStyle({ opacity: o });
-    layer.dots.setStyle({ opacity: o });
-  });
-}
+// Solo REMOVES the other lifts from the map instead of dimming them (2026-07-30). Dimming was tried first
+// (2026-07-26) and cannot work here, which is why the user reported solo as having no effect on lifts at
+// all: the grey band is a MASK over the base map's own aerialway line, so fading it to 15% merely uncovers
+// the tile's line again -- at full strength, since our opacity cannot reach it. A "dimmed" lift therefore
+// came out looking like an ordinary OSM lift rather than a faded one. Removal is handled by the same
+// applyLiftVisibility() that applies the filters, so there is exactly one place that decides whether a lift
+// is on the map. The former LIFT_DIM_OPACITY/baselineLiftOpacity/applyLiftSoloStyles trio is gone with it.
+//
 // Deliberately NO per-lift "currently closed" flag. It was tried and dropped the same day, per the user:
 // nothing in this app synchronises lift operating status, so a hardcoded flag would silently rot while
 // looking authoritative. `lifts` therefore states only the stable property "this lift carries bikes in
@@ -2737,7 +2742,10 @@ function buildLiftLayer(l){
       showLiftInfo(l);
     });
   });
-  liftLayers[l.id] = { mask, hairline, dots, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
+  // `setHover` and `card` mirror what a trail's layer entry carries, so the sidebar's lift cards can drive
+  // the map highlight and the solo button exactly like a trail card does -- see renderLiftList().
+  liftLayers[l.id] = { mask, hairline, dots, hitLine, startMarker, endMarker, lift: l,
+                       bounds: L.latLngBounds(l.coords), setHover: setLiftHover, card: null };
 }
 
 // Station markers reuse the shared showEndpoints/hideEndpoints defined further down (they resolve a
@@ -2802,6 +2810,10 @@ function setArrowOpacity(layer, opacity){
     if (el) el.style.opacity = opacity;
   });
 }
+// `id` may name a TRAIL or a LIFT (2026-07-30, per the user). A soloed lift dims every trail -- none of
+// them is the solo target -- and applyLiftVisibility() then keeps that one lift and drops the others.
+// Both object types therefore share one solo state, one toggle path and one button, rather than a
+// lift-specific copy of all of it.
 function applySolo(id){
   Object.entries(lineLayers).forEach(([lid, layer]) => {
     if (lid === id) {
@@ -2820,7 +2832,7 @@ function applySolo(id){
     }
   });
   soloId = id;
-  applyLiftSoloStyles(); // after soloId is set -- baselineLiftOpacity() reads it
+  applyLiftVisibility(); // after soloId is set -- liftHiddenBySolo() reads it
   syncSelectedCardSoloBtn();
 }
 function clearSolo(){
@@ -2832,7 +2844,7 @@ function clearSolo(){
     setArrowOpacity(layer, 1);
   });
   soloId = null;
-  applyLiftSoloStyles(); // after soloId is cleared -- restores the undimmed band opacity
+  applyLiftVisibility(); // after soloId is cleared -- brings the other lifts back onto the map
   applyNameLabels();
   syncSelectedCardSoloBtn();
 }
@@ -2840,21 +2852,35 @@ function clearSolo(){
 // ".trail-card.selected .card-solo-btn" CSS rule, not a render()-time check) in sync with the real
 // soloId -- needed because selecting a trail or toggling solo neither one goes through a full
 // render(), so nothing else would ever refresh this one button's active state/label otherwise.
+// Runs over both registries: a lift card carries the same button, and only one of the two ids is ever
+// set at a time (clearSelection/clearLiftSelection keep them mutually exclusive).
 function syncSelectedCardSoloBtn(){
-  if (!currentSelectedId) return;
-  const card = lineLayers[currentSelectedId] && lineLayers[currentSelectedId].card;
-  const btn = card && card.querySelector(".card-solo-btn");
-  if (!btn) return;
-  const active = soloId === currentSelectedId;
-  btn.classList.toggle("active", active);
-  btn.title = active ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen";
+  [[currentSelectedId, lineLayers, "Nur diesen Trail zeigen"],
+   [currentSelectedLiftId, liftLayers, "Nur diesen Lift zeigen"]].forEach(([id, registry, offTitle]) => {
+    if (!id) return;
+    const card = registry[id] && registry[id].card;
+    const btn = card && card.querySelector(".card-solo-btn");
+    if (!btn) return;
+    const active = soloId === id;
+    btn.classList.toggle("active", active);
+    btn.title = active ? "Alle wieder anzeigen" : offTitle;
+  });
 }
 
 function handleInfoPanelClick(e){
   const soloBtn = e.target.closest(".solo-btn");
   if (soloBtn) {
-    const id = soloBtn.dataset.id;
+    // A lift's own solo button carries data-lift-id, same split the locate button below already uses.
+    const liftId = soloBtn.dataset.liftId;
+    const id = liftId || soloBtn.dataset.id;
     if (soloId === id) clearSolo(); else applySolo(id);
+    // Re-render the open panel so its own button reflects the new state. showLiftInfo/showTrailInfo both
+    // leave an already-matching solo alone, so this does not undo what was just applied.
+    if (liftId) {
+      const l = LIFTS.find(lf => lf.id === liftId);
+      if (l) showLiftInfo(l);
+      return;
+    }
     const t = lineTrails.find(tr => tr.id === openTrailId);
     if (t) showTrailInfo(t);
     return;
@@ -3325,22 +3351,28 @@ function buildInfoPanelHtml(t){
 }
 
 // A lift's own info panel. Deliberately much sparser than a trail's: no difficulty, no elevation
-// profile (a lift's profile is a straight climb and would say nothing), no solo/reverse/GPX buttons.
-// Just what a rider needs to decide "does this get me and my bike up there, and how far up".
+// profile (a lift's profile is a straight climb and would say nothing), no reverse (a lift runs the way
+// it runs) and no GPX. It does carry a solo button since 2026-07-30 -- "nur dieser Lift" is a useful
+// view when you are working out which cable gets you to a trailhead.
 function showLiftInfo(l){
   openTrailId = null;      // a lift and a trail are never both open
   selectedSegmentId = null;
   openLiftId = l.id;
-  clearSolo();
-  clearSelection();       // a lift is not in the trail list, so nothing should stay highlighted there
+  // Same rule as showTrailInfo: opening a DIFFERENT object drops the previous solo, but opening the one
+  // that is currently soloed (which is what the panel's own solo button does) must keep it.
+  if (soloId && soloId !== l.id) clearSolo();
+  clearSelection();       // drops a trail's highlight/card -- a lift's own card is selected below
   hideAllLiftEndpoints(); // only the newly selected lift shows its stations
   showEndpoints(l.id);
   highlightSelectedLift(l.id);
+  selectLiftCard(l.id);
   const typeLabel = LIFT_TYPE_LABEL[l.type] || "Bergbahn";
+  const isSolo = soloId === l.id;
   ipContent.innerHTML = `
     <h3>🚡 ${l.name} <button class="locate-btn" data-lift-id="${l.id}" title="Zum Lift springen">📍</button></h3>
     <div class="ip-trail">
       ${typeLabel}${l.code ? ` &middot; ${l.code}` : ""} &middot; Biketransport
+      <button class="solo-btn${isSolo ? " active" : ""}" data-lift-id="${l.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Lift zeigen"}">👁</button>
       <div class="ip-lift-stats">
         ${l.baseEle} m → ${l.topEle} m &middot; <b>+${liftClimb(l)} m</b>
       </div>
@@ -3996,6 +4028,8 @@ function applyNameLabels(){
 // ---- Sidebar ----
 const listEl = document.getElementById("trailList");
 const countEl = document.getElementById("filterCountLabel");
+const liftListEl = document.getElementById("liftList");
+const liftCountEl = document.getElementById("liftCountLabel");
 let selectedCard = null;
 
 const selectionOutline = L.polyline([], {
@@ -4078,6 +4112,152 @@ function flyToTrailBounds(bounds){
   map.flyToBounds(bounds, { paddingTopLeft: pad.paddingTopLeft, paddingBottomRight: pad.paddingBottomRight, duration:0.6 });
 }
 
+// ---- Lifts: one place that decides visibility, one sidebar section --------------------------------
+// Lifts used by a currently-visible Tour. Same rule the component trails already follow: being part of a
+// visible Tour makes something visible regardless of the filters (a red trail still shows inside a Tour
+// when "rot" is off). So a lift a Tour rides shows its band even with the "Lifte" switch off, or when only
+// the "Challenges" sub-region is active and the lift's own sub-region isn't -- which is exactly the case
+// where the user first found lifts missing (2026-07-26). Filled by render()'s region loop; module-level
+// rather than local to it because applyLiftVisibility() is also called on its own from applySolo/clearSolo,
+// which must not have to re-derive it.
+let liftIdsInVisibleTours = new Set();
+
+function liftPassesFilters(l){
+  return (showLifts && activeRegions.has(l.region)) || liftIdsInVisibleTours.has(l.id);
+}
+// Solo hides a lift rather than dimming it -- see the LIFT_MASK_COLOR block for why dimming cannot work
+// for a masked line. A soloed Tour keeps the lifts it RIDES: they are part of that route, not competing
+// clutter, and the Tour draws its own lift stretches anyway.
+function liftHiddenBySolo(id){
+  if (!soloId || soloId === id) return false;
+  const t = lineTrails.find(tr => tr.id === soloId);
+  if (t && t.loop) return !(TRAIL_SEGMENTS[t.id] || []).some(s => s.liftId === id);
+  return true;
+}
+
+// Lifts are deliberately NOT gated on activeDiffs or the Downhill/Uphill/Touren switches (a lift has no
+// difficulty and is none of those categories), and deliberately left out of the trail counters.
+function applyLiftVisibility(){
+  LIFTS.forEach(l => {
+    const layer = liftLayers[l.id];
+    if (!layer) return;
+    const passes = liftPassesFilters(l);
+    if (passes && !liftHiddenBySolo(l.id)) {
+      map.addLayer(layer.mask);
+      map.addLayer(layer.hairline);
+      map.addLayer(layer.dots);
+      map.addLayer(layer.hitLine);
+      // Leaflet re-opens a permanent tooltip on every (re-)add, so close it again -- same gotcha the
+      // trails' segment hit-lines already have to work around.
+      layer.hitLine.closeTooltip();
+      // Station markers are NOT added here: they belong to the selected lift only (showLiftInfo).
+    } else {
+      // Only a FILTER can pull the open lift's panel out from under it. Solo never can -- showLiftInfo
+      // drops any solo that isn't this lift's own -- and it must not, since closeInfoPanelAndDeselect()
+      // calls clearSolo(), which re-enters this function.
+      if (!passes && openLiftId === l.id) closeInfoPanelAndDeselect();
+      layer.hitLine.closeTooltip();
+      map.removeLayer(layer.mask);
+      map.removeLayer(layer.hairline);
+      map.removeLayer(layer.dots);
+      map.removeLayer(layer.hitLine);
+      hideEndpoints(l.id);
+    }
+  });
+}
+
+// Selecting a lift's own card. Reuses `selectedCard` (the trail list's variable) rather than a second
+// one: a trail and a lift are never selected at the same time, so a single "which card is highlighted"
+// slot is the truth, and clearSelection() already knows how to clear it.
+function selectLiftCard(id){
+  const card = liftLayers[id] && liftLayers[id].card;
+  if (!card) return;
+  if (selectedCard) selectedCard.classList.remove("selected");
+  card.classList.add("selected");
+  selectedCard = card;
+  card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+// The "Lifte" sidebar section's list. Grouped the same two levels as the trail list (region group, then
+// sub-region) but with no difficulty badges, no length and no category filters -- a lift has none of those.
+// Membership follows the FILTERS only, not solo: solo dims the trail list rather than shortening it, and a
+// lift list that lost its rows would make solo impossible to undo from the list.
+function renderLiftList(){
+  liftListEl.innerHTML = "";
+  let shown = 0;
+  Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
+    const regionKeys = Object.keys(REGIONS).filter(k => REGIONS[k].group === groupKey);
+    let groupTitleEl = null, groupCount = 0;
+    regionKeys.forEach(regionKey => {
+      const lifts = LIFTS.filter(l => l.region === regionKey && liftPassesFilters(l))
+                         .sort((a, b) => a.name.localeCompare(b.name, "de"));
+      if (!lifts.length) return;
+      if (!groupTitleEl) {
+        groupTitleEl = document.createElement("div");
+        groupTitleEl.className = "region-group-title";
+        groupTitleEl.textContent = groupInfo.label;
+        liftListEl.appendChild(groupTitleEl);
+      }
+      const group = document.createElement("div");
+      group.className = "hub-group";
+      const title = document.createElement("div");
+      title.className = "hub-title";
+      title.textContent = REGIONS[regionKey].label;
+      title.style.color = REGIONS[regionKey].color;
+      const hubCount = document.createElement("span");
+      hubCount.className = "region-count";
+      hubCount.textContent = ` (${lifts.length})`;
+      title.appendChild(hubCount);
+      group.appendChild(title);
+
+      lifts.forEach(l => {
+        const layer = liftLayers[l.id];
+        shown++; groupCount++;
+        const card = document.createElement("div");
+        // Same classes as a trail card on purpose: every .trail-card rule (hover, .selected, and the
+        // ".trail-card.selected .card-solo-btn" reveal) then applies with no second set of styles.
+        card.className = "trail-card lift-card";
+        const regionColor = REGIONS[regionKey] && REGIONS[regionKey].color;
+        if (regionColor) card.style.setProperty("--card-tint", `color-mix(in srgb, ${regionColor} 16%, white)`);
+        card.innerHTML = `
+          <div class="trail-name">🚡 ${l.name}<button class="card-solo-btn${soloId === l.id ? " active" : ""}" title="${soloId === l.id ? "Alle wieder anzeigen" : "Nur diesen Lift zeigen"}">👁</button></div>
+          <div class="trail-meta"><span>${LIFT_TYPE_LABEL[l.type] || "Bergbahn"}</span><span>+${liftClimb(l)} m</span></div>`;
+        card.addEventListener("click", (e) => {
+          const soloBtn = e.target.closest(".card-solo-btn");
+          if (soloBtn) {
+            e.stopPropagation();
+            if (soloId === l.id) clearSolo(); else applySolo(l.id);
+            if (openLiftId === l.id) showLiftInfo(l); // keep an already-open panel's own button in sync
+            return;
+          }
+          // Lifts are addable to a tour from the list too, not just from the map (user, 2026-07-30) --
+          // the builder's own hint has always said "auf der Karte oder in der Liste".
+          if (builderTryAdd("lift", l.id)) return;
+          if (!layer) return;
+          flyToTrailBounds(layer.bounds);
+          showLiftInfo(l);
+          closeSidebarIfMobile();
+        });
+        card.addEventListener("mouseenter", () => { if (layer) layer.setHover(true); });
+        card.addEventListener("mouseleave", () => { if (layer) layer.setHover(false); });
+        if (layer) layer.card = card;
+        group.appendChild(card);
+      });
+      liftListEl.appendChild(group);
+    });
+    if (groupTitleEl) {
+      const c = document.createElement("span");
+      c.className = "region-count";
+      c.textContent = ` (${groupCount})`;
+      groupTitleEl.appendChild(c);
+    }
+  });
+  liftCountEl.textContent = shown ? `${shown} Lifte` : "keine";
+  // The card references above are fresh; re-apply the selection to the new element so a lift selected on
+  // the map keeps its highlighted card across a re-render.
+  if (currentSelectedLiftId) selectLiftCard(currentSelectedLiftId);
+}
+
 function render(){
   listEl.innerHTML = "";
   let shown = 0, total = 0;
@@ -4086,13 +4266,9 @@ function render(){
   // global shown/total line below (region + diff + category filters all applied), not just a raw
   // per-region trail count, so a chip reads "how many would you actually see right now".
   const regionVisibleCounts = {};
-  // Lifts used by a currently-visible Tour. Same rule the component trails already follow: being part
-  // of a visible Tour makes something visible regardless of the filters (a red trail still shows inside
-  // a Tour when "rot" is off). So a lift a Tour rides shows its band even with the "Lifte" switch off,
-  // or when only the "Challenges" sub-region is active and the lift's own sub-region isn't -- which is
-  // exactly the case where the user first found lifts missing (2026-07-26). Filled during the region
-  // loop below and consumed by the LIFTS loop after it.
-  const liftIdsInVisibleTours = new Set();
+  // Refilled from scratch on every render; consumed by applyLiftVisibility()/renderLiftList() below and,
+  // between renders, by applySolo/clearSolo. See its declaration above the lift block.
+  liftIdsInVisibleTours = new Set();
   const groupVisibleCounts = {};
 
   Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
@@ -4227,35 +4403,11 @@ function render(){
     }
   });
 
-  // Lifts: shown when the "Lifte" switch is on AND their own sub-region is active. Deliberately NOT
-  // gated on activeDiffs or the Downhill/Uphill/Touren category switches -- a lift has no difficulty
-  // and is not one of those categories -- and deliberately left out of the shown/total counters above,
-  // which count rideable trails only.
-  LIFTS.forEach(l => {
-    const layer = liftLayers[l.id];
-    if (!layer) return;
-    const visible = (showLifts && activeRegions.has(l.region)) || liftIdsInVisibleTours.has(l.id);
-    if (visible) {
-      map.addLayer(layer.mask);
-      map.addLayer(layer.hairline);
-      map.addLayer(layer.dots);
-      map.addLayer(layer.hitLine);
-      // Leaflet re-opens a permanent tooltip on every (re-)add, so close it again -- same gotcha the
-      // segment hit-lines above already have to work around.
-      layer.hitLine.closeTooltip();
-      // Station markers are NOT added here: they belong to the selected lift only (showLiftInfo).
-    } else {
-      // closeInfoPanelAndDeselect() also hides the stations, but a filtered-out lift that wasn't the
-      // selected one still needs its own markers gone -- hence the unconditional hide too.
-      if (openLiftId === l.id) closeInfoPanelAndDeselect();
-      layer.hitLine.closeTooltip();
-      map.removeLayer(layer.mask);
-      map.removeLayer(layer.hairline);
-      map.removeLayer(layer.dots);
-      map.removeLayer(layer.hitLine);
-      hideEndpoints(l.id);
-    }
-  });
+  // Lifts: their own visibility rule and their own list, both above (liftIdsInVisibleTours is final by
+  // now -- the region loop has fully run). Left out of the shown/total counters, which count rideable
+  // trails only; the Lifte section carries its own count.
+  applyLiftVisibility();
+  renderLiftList();
 
   countEl.textContent = `${shown}/${total} sichtbar`;
 

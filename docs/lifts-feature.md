@@ -84,6 +84,49 @@ unreadable) and then a wide translucent band meant to let the tile's line show t
 below). Covering the tile's line and drawing our own symbol on it ends the conflict and loses nothing —
 our symbol says the same thing plus "this one carries bikes".
 
+### The mask is why solo cannot DIM a lift — it has to remove it (2026-07-30)
+
+Solo mode dims trails to 15% opacity. Applying the same to a lift was the first attempt (2026-07-26,
+`LIFT_DIM_OPACITY` / `baselineLiftOpacity()` / `applyLiftSoloStyles()`) and it silently did the opposite of
+what it looked like in the code. Fading the mask **uncovers the tile's own aerialway line underneath**, and
+our opacity cannot reach that — it is painted into the tile. A "dimmed" lift therefore came out looking like
+an ordinary OSM lift at full strength, which is why the user reported solo as having no effect on lifts at
+all, four days after the dimming had supposedly been implemented.
+
+Lifts are therefore **removed from the map** in solo mode, not dimmed. That trio of functions is gone, and
+the decision now lives in exactly one place, `applyLiftVisibility()`, which applies filters and solo
+together — so there is no second code path that could disagree with it. Two rules inside it:
+
+- **A soloed Tour keeps the lifts it rides** (`liftHiddenBySolo()` checks `TRAIL_SEGMENTS` for the soloed
+  trail). They are part of that route, not competing clutter, and the Tour draws its own lift stretches
+  anyway.
+- **Only a filter may close the open lift's info panel, never solo.** `closeInfoPanelAndDeselect()` calls
+  `clearSolo()`, which re-enters `applyLiftVisibility()` — closing the panel from the solo branch would
+  recurse and then continue removing layers for a lift that had just become visible again. It cannot happen
+  anyway (`showLiftInfo` drops any solo that isn't this lift's own), but the guard says so explicitly.
+
+Lifts are soloable themselves since the same day. There is **one** solo state (`soloId`), holding a trail id
+or a lift id, rather than a lift-specific copy of the mechanism: a soloed lift matches no entry in `lineLayers`,
+so `applySolo`'s existing "everything else" branch dims every trail with no change needed. The button in
+the lift panel carries `data-lift-id` — the same split the locate button already used — and
+`syncSelectedCardSoloBtn()` walks both registries.
+
+### The sidebar's own "Lifte" section (2026-07-30)
+
+Lifts get a section of their own rather than rows in the trail list, and the 🚡 switch moved into it: a
+lift has no difficulty, no category and no length, so it shares none of the Filter section's axes, and that
+one switch is its entire filter. Deliberately *not* a mirror of the Trails section — no difficulty chips, no
+count in the `x/y sichtbar` line (that counts rideable trails). Placed **above** Trails and collapsed by
+default: it is short, and below a 250-trail list nobody would find it.
+
+Cards carry `class="trail-card lift-card"` so every existing `.trail-card` rule applies — hover, `.selected`,
+and the `.trail-card.selected .card-solo-btn` reveal — with no second set of styles. Two things they share
+with trail cards by design: clicking one in builder mode routes through `builderTryAdd("lift", id)` (the
+builder's hint has always promised "auf der Karte **oder in der Liste**"), and `selectLiftCard()` reuses the
+trail list's own `selectedCard` variable, since a trail and a lift are never selected at the same time.
+List membership follows the **filters only**, not solo — a lift list that lost its rows during solo would
+make solo impossible to undo from the list.
+
 ### A Tour draws its own lift stretch, and is style-exempt there — `line` vs `styleTarget`
 
 A Tour draws its lift stretch itself, with the same two strokes, exactly as it draws a component-trail
