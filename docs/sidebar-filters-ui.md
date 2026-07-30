@@ -34,6 +34,8 @@ Being outside `.filters` meant `#secTrails`'s summary didn't inherit `.filters`'
 
 The old standalone always-visible `#countLine` ("X von Y Trails sichtbar") was removed entirely — that text moved *into* `#secFilter`'s own summary line instead (shortened to `${shown}/${total} sichtbar` to fit the tighter space), since it's Filter's settings that determine what counts as visible.
 
+**Split three ways on 2026-07-30**, once Lifte became a second list section: each summary now answers only the question its own section is about. **Trails** and **Lifte** each state what they are currently listing (`147 Trails`, `20 Lifte`); **Filter** — the section you open in order to change that — states what its settings are *costing* you (`12 Trails · 3 Lifte ausgeblendet`, or `alles sichtbar` when nothing is). No section repeats another's number, and the "nothing is hidden" case is stated outright instead of being left to infer from `147/147`. Both totals count loaded regions only: `total` is tallied inside the region loop, which iterates `REGION_GROUPS` (activated groups only), and `LIFTS` likewise holds only activated groups' lifts — so deactivating a region does not read as "hidden".
+
 A summary that needs this kind of dynamic meta text alongside its static label wraps both in one `.section-title-row` span:
 ```html
 <summary><span class="section-title-row"><span>Filter</span><span class="section-meta" id="…">…</span></span></summary>

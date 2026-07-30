@@ -94,20 +94,19 @@
       <!-- The Tourenbuilder has no sidebar section at all any more: its switch is the header button and
            its list is #builderSheet, pinned to the map. Keeping a copy of either here would mean one
            state with three owners -- see docs/tour-builder.md. -->
+      <details class="filter-section" id="secTrails" open>
+        <summary><span class="section-title-row"><span>Trails</span><span class="section-meta" id="trailCountLabel"></span></span></summary>
+        <div class="trail-list" id="trailList"></div>
+      </details>
       <!-- Lifts get their own list section rather than rows in the trail list (user, 2026-07-30) — a lift has
            no difficulty, no category and no length, so it shares none of the trail cards' axes. The 🚡 switch
            itself stays up in Filter with the other visibility switches. Structurally identical to #secTrails
-           (summary + one .trail-list) so both sections space and indent the same. Closed by default and
-           placed ABOVE Trails: it is short, and below a 250-trail list nobody would ever scroll to it. Its
-           count is deliberately separate from the "x/y sichtbar" line in Filter, which counts rideable
-           trails only. -->
+           (summary + one .trail-list) so both sections space and indent the same. Sits BELOW Trails and
+           collapsed (user, same day) — its own summary line carries the count, so it stays findable without
+           being open. Both sections' counts state what is SHOWN; Filter states what is hidden. -->
       <details class="filter-section" id="secLifts">
         <summary><span class="section-title-row"><span>Lifte</span><span class="section-meta" id="liftCountLabel"></span></span></summary>
         <div class="trail-list" id="liftList"></div>
-      </details>
-      <details class="filter-section" id="secTrails" open>
-        <summary>Trails</summary>
-        <div class="trail-list" id="trailList"></div>
       </details>
       <!-- Scroll-to-top for the sidebar. The header title does this too, but on a phone the sidebar is a
            fixed drawer starting at top:0 with z-index 2500 — it covers the header completely, so the title is
@@ -4065,6 +4064,7 @@ const listEl = document.getElementById("trailList");
 const countEl = document.getElementById("filterCountLabel");
 const liftListEl = document.getElementById("liftList");
 const liftCountEl = document.getElementById("liftCountLabel");
+const trailCountEl = document.getElementById("trailCountLabel");
 let selectedCard = null;
 
 const selectionOutline = L.polyline([], {
@@ -4289,10 +4289,11 @@ function renderLiftList(){
       groupTitleEl.appendChild(c);
     }
   });
-  liftCountEl.textContent = shown ? `${shown} Lifte` : "keine";
+  liftCountEl.textContent = shown ? `${shown} ${shown === 1 ? "Lift" : "Lifte"}` : "keine";
   // The card references above are fresh; re-apply the selection to the new element so a lift selected on
   // the map keeps its highlighted card across a re-render.
   if (currentSelectedLiftId) selectLiftCard(currentSelectedLiftId);
+  return shown;
 }
 
 function render(){
@@ -4444,9 +4445,22 @@ function render(){
   // now -- the region loop has fully run). Left out of the shown/total counters, which count rideable
   // trails only; the Lifte section carries its own count.
   applyLiftVisibility();
-  renderLiftList();
+  const liftsShown = renderLiftList();
 
-  countEl.textContent = `${shown}/${total} sichtbar`;
+  // The three summary lines split the same information by the question each section answers (user,
+  // 2026-07-30): a LIST section says how much it is currently listing, and FILTER — the section you open to
+  // change that — says what its settings are costing you. So no section repeats another's number, and
+  // "nothing is hidden" is stated outright rather than left to be inferred from two counts being equal.
+  // Both totals count only LOADED regions: `total` is tallied in the region loop above, which iterates
+  // REGION_GROUPS (activated groups only), and LIFTS likewise holds only activated groups' lifts.
+  trailCountEl.textContent = `${shown} ${shown === 1 ? "Trail" : "Trails"}`;
+  const hidden = [];
+  if (total - shown > 0) hidden.push(`${total - shown} ${total - shown === 1 ? "Trail" : "Trails"}`);
+  if (LIFTS.length - liftsShown > 0) {
+    const n = LIFTS.length - liftsShown;
+    hidden.push(`${n} ${n === 1 ? "Lift" : "Lifte"}`);
+  }
+  countEl.textContent = hidden.length ? `${hidden.join(" · ")} ausgeblendet` : "alles sichtbar";
 
   Object.entries(regionSubCountEls).forEach(([key, el]) => { el.textContent = ` (${regionVisibleCounts[key] || 0})`; });
   Object.entries(regionGroupCountEls).forEach(([key, el]) => { el.textContent = ` (${groupVisibleCounts[key] || 0})`; });
