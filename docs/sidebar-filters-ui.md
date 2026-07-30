@@ -34,7 +34,20 @@ Being outside `.filters` meant `#secTrails`'s summary didn't inherit `.filters`'
 
 The old standalone always-visible `#countLine` ("X von Y Trails sichtbar") was removed entirely — that text moved *into* `#secFilter`'s own summary line instead (shortened to `${shown}/${total} sichtbar` to fit the tighter space), since it's Filter's settings that determine what counts as visible.
 
-**Split three ways on 2026-07-30**, once Lifte became a second list section: each summary now answers only the question its own section is about. **Trails** and **Lifte** each state what they are currently listing (`147 Trails`, `20 Lifte`); **Filter** — the section you open in order to change that — states what its settings are *costing* you (`12 Trails · 3 Lifte ausgeblendet`, or `alles sichtbar` when nothing is). No section repeats another's number, and the "nothing is hidden" case is stated outright instead of being left to infer from `147/147`. Both totals count loaded regions only: `total` is tallied inside the region loop, which iterates `REGION_GROUPS` (activated groups only), and `LIFTS` likewise holds only activated groups' lifts — so deactivating a region does not read as "hidden".
+**Split on 2026-07-30, extended 2026-07-31** as Lifte and then Touren each became a list section of their own: each summary answers only the question its own section is about. **Trails**, **Touren** and **Lifte** each state what they are currently listing (`141 Trails`, `6 Touren`, `20 Lifte`); **Filter** — the section you open in order to change that — states what its settings are *costing* you (`27 Trails · 2 Touren · 20 Lifte ausgeblendet`, one term per hidden kind in list order, or `alles sichtbar` when nothing is). No section repeats another's number, and the "nothing is hidden" case is stated outright instead of being left to infer from `141/141`. Every total counts loaded regions only: the trail and Tour tallies come from the region loop, which iterates `REGION_GROUPS` (activated groups only), and `LIFTS` likewise holds only activated groups' lifts — so deactivating a region does not read as "hidden".
+
+## Three list sections: Trails, Touren, Lifte (2026-07-31)
+
+Each object kind gets its own list, in that order, because each is chosen by a different question — which trail do I ride next, which whole day out do I pick, which cable gets me up. The **sub-region chip counts stay "everything visible in this region", Tours included**: a sub-region like Bike Kingdom's "Biketicket 2 Ride" holds nothing but Tours, and a chip reading `(0)` next to four visible Tours would be a lie. Only the per-list hub headings count their own list, which is why `render()` keeps `regionTrailCounts`/`regionTourCounts` alongside `regionVisibleCounts`.
+
+Two things are deliberately *not* mirrored from the Trails list:
+
+- **Tours are sorted by name, not by difficulty** (numeric-aware, so `615` precedes `616` and both precede the unnumbered ones). A Tour is picked as a whole outing, and the numbered series a region publishes is the order a rider looks for. The difficulty *badge* stays — unlike a lift, a Tour has one — it just is not the sort key.
+- **The 🔁 badge is gone from the cards.** In a section that contains nothing but Tours it would be on every card and on none anywhere else. It stays in the info panel, which is the one place a Tour and a trail still meet.
+
+The visibility rule lives in **one** function, `trailPassesFilters(t)`, used by both the map loop in `render()` and `renderTourList()` — the two must not be able to disagree about what is shown. The card itself comes from one shared `makeTrailCard()`, so solo, hover, the builder route and the click behaviour cannot drift between the two lists. Both switches (🔁 and 🚡) stay up in **Filter** with the other visibility switches, per the user: a list section is a list, not a filter home.
+
+Every new list section also has to be added to the `#secTrails > summary, #secTouren > summary, #secLifts > summary` padding rule in `style.css` — they sit outside `.filters` and do not inherit its 16px indent, which has now been the same regression twice.
 
 A summary that needs this kind of dynamic meta text alongside its static label wraps both in one `.section-title-row` span:
 ```html

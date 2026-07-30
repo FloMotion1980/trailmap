@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=46" />
+<link rel="stylesheet" href="style.css?v=47" />
 </head>
 <body>
 <div id="fatalError">
@@ -97,6 +97,15 @@
       <details class="filter-section" id="secTrails" open>
         <summary><span class="section-title-row"><span>Trails</span><span class="section-meta" id="trailCountLabel"></span></span></summary>
         <div class="trail-list" id="trailList"></div>
+      </details>
+      <!-- Tours get their own list section too (user, 2026-07-31), between Trails and Lifte. They DO have a
+           difficulty, unlike a lift, so their cards keep the coloured badge — but they are not sorted by it
+           the way trails are: a Tour is picked as a whole day out, and the numbered series a region publishes
+           ("615", "616", …) is the order a rider looks for. So: sorted by name, numeric-aware. The 🔁 switch
+           stays up in Filter with the other visibility switches, same as 🚡. -->
+      <details class="filter-section" id="secTouren">
+        <summary><span class="section-title-row"><span>Touren</span><span class="section-meta" id="tourCountLabel"></span></span></summary>
+        <div class="trail-list" id="tourList"></div>
       </details>
       <!-- Lifts get their own list section rather than rows in the trail list (user, 2026-07-30) — a lift has
            no difficulty, no category and no length, so it shares none of the trail cards' axes. The 🚡 switch
@@ -4093,6 +4102,8 @@ const countEl = document.getElementById("filterCountLabel");
 const liftListEl = document.getElementById("liftList");
 const liftCountEl = document.getElementById("liftCountLabel");
 const trailCountEl = document.getElementById("trailCountLabel");
+const tourListEl = document.getElementById("tourList");
+const tourCountEl = document.getElementById("tourCountLabel");
 let selectedCard = null;
 
 const selectionOutline = L.polyline([], {
@@ -4322,15 +4333,124 @@ function renderLiftList(){
   return shown;
 }
 
+// One trail's (or Tour's) sidebar card. Shared by the Trails list and the Touren list rather than copied:
+// solo, hover, the builder route and the "clicking the card flies there and opens the panel" behaviour are
+// identical for both, and the Tour list would have drifted from the trail list otherwise.
+function makeTrailCard(t, regionKey){
+  const layer = lineLayers[t.id];
+  const card = document.createElement("div");
+  card.className = "trail-card";
+  const regionColor = REGIONS[regionKey] && REGIONS[regionKey].color;
+  if (regionColor) card.style.setProperty("--card-tint", `color-mix(in srgb, ${regionColor} 16%, white)`);
+  // The card-solo-btn is rendered on every card (cheap, one small button) but only ever shown
+  // via CSS (".trail-card.selected .card-solo-btn") -- selecting a trail toggles the "selected"
+  // class directly (selectTrail/clearSelection), with no full render() in between, so gating its
+  // visibility on a one-time isSelectedCard check baked in at render time would go stale the
+  // instant selection changes without also re-rendering the whole list (2026-07-24, found while
+  // testing -- the button never appeared until some unrelated re-render happened to run later).
+  // No 🔁 badge any more: a Tour is only ever listed in the Touren section, so the badge would be on every
+  // card there and on none anywhere else. It stays in the info panel, where a Tour and a trail do meet.
+  card.innerHTML = `
+    <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⚡</span>` : ""}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
+    <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span></div>`;
+  card.addEventListener("click", (e) => {
+    const soloBtn = e.target.closest(".card-solo-btn");
+    if (soloBtn) {
+      e.stopPropagation();
+      if (soloId === t.id) clearSolo(); else applySolo(t.id); // each syncs this button itself
+      if (openTrailId === t.id) showTrailInfo(t); // keep an already-open panel's own solo button in sync
+      return;
+    }
+    if (builderTryAdd("trail", t.id)) return;
+    if (!layer) return;
+    flyToTrailBounds(layer.bounds);
+    showTrailInfo(t);
+    selectTrail(t.id, card);
+    closeSidebarIfMobile();
+  });
+  card.addEventListener("mouseenter", () => { if (layer) layer.setHover(true); });
+  card.addEventListener("mouseleave", () => { if (layer) layer.setHover(false); });
+  if (layer) layer.card = card;
+  return card;
+}
+
+// The one visibility rule for a trail or a Tour, so the map loop in render() and the Touren list cannot
+// disagree about what is shown. Exactly one of the three category switches applies -- a trail is a Tour, an
+// uphill or a downhill, never two at once -- which is what lets you isolate e.g. only Tours by turning the
+// other two off. Builder mode hides Tours outright whatever the 🔁 switch says (user, 2026-07-27: "Die
+// stören da nur"): a Tour lies on top of the very trails you are picking, so its line, its per-segment name
+// labels and its wide hit-lines all get in the way of clicking them, which is the whole activity there.
+function trailPassesFilters(t){
+  const categoryOk = t.loop ? (showLoop && !builderMode) : (t.uphill ? showUphill : showDownhill);
+  return activeRegions.has(t.region) && activeDiffs.has(t.diff) && categoryOk;
+}
+
+// The "Touren" sidebar section, between Trails and Lifte. Same two-level grouping as the other two lists,
+// but sorted by NAME rather than by difficulty (user, 2026-07-31): a Tour is chosen as a whole outing, and
+// the numbered series a region publishes ("615", "616", …) is the order a rider looks for. `numeric: true`
+// keeps 615 ahead of 1615 and both ahead of the unnumbered ones. The difficulty badge stays -- unlike a
+// lift, a Tour does have one -- it just isn't the sort key.
+function renderTourList(){
+  tourListEl.innerHTML = "";
+  let shown = 0;
+  Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
+    const regionKeys = Object.keys(REGIONS).filter(k => REGIONS[k].group === groupKey);
+    let groupTitleEl = null, groupCount = 0;
+    regionKeys.forEach(regionKey => {
+      const tours = lineTrails
+        .filter(t => t.loop && t.region === regionKey && trailPassesFilters(t))
+        .sort((a, b) => a.name.localeCompare(b.name, "de", { numeric: true }));
+      if (!tours.length) return;
+      if (!groupTitleEl) {
+        groupTitleEl = document.createElement("div");
+        groupTitleEl.className = "region-group-title";
+        groupTitleEl.textContent = groupInfo.label;
+        tourListEl.appendChild(groupTitleEl);
+      }
+      const group = document.createElement("div");
+      group.className = "hub-group";
+      const title = document.createElement("div");
+      title.className = "hub-title";
+      title.textContent = REGIONS[regionKey].label;
+      title.style.color = REGIONS[regionKey].color;
+      const hubCount = document.createElement("span");
+      hubCount.className = "region-count";
+      hubCount.textContent = ` (${tours.length})`;
+      title.appendChild(hubCount);
+      group.appendChild(title);
+      tours.forEach(t => { shown++; groupCount++; group.appendChild(makeTrailCard(t, regionKey)); });
+      tourListEl.appendChild(group);
+    });
+    if (groupTitleEl) {
+      const c = document.createElement("span");
+      c.className = "region-count";
+      c.textContent = ` (${groupCount})`;
+      groupTitleEl.appendChild(c);
+    }
+  });
+  tourCountEl.textContent = shown ? `${shown} ${shown === 1 ? "Tour" : "Touren"}`
+                                  : (builderMode ? "im Builder aus" : "keine");
+  // Same reason as the lift list: the card elements are new, so the selection has to be re-applied to the
+  // new one or a Tour selected on the map loses its highlighted card on the next filter change.
+  if (currentSelectedId && lineLayers[currentSelectedId] && lineLayers[currentSelectedId].card
+      && tourListEl.contains(lineLayers[currentSelectedId].card)) {
+    selectTrail(currentSelectedId, lineLayers[currentSelectedId].card);
+  }
+  return shown;
+}
+
 function render(){
   listEl.innerHTML = "";
-  let shown = 0, total = 0;
+  let shownTrails = 0, totalTrails = 0, shownTours = 0, totalTours = 0;
   // Tallies for the "(n sichtbar)" counts on each region-group/sub-region chip (see
   // rebuildRegionChips's regionGroupCountEls/regionSubCountEls) — same "visible" definition as the
-  // global shown/total line below (region + diff + category filters all applied), not just a raw
-  // per-region trail count, so a chip reads "how many would you actually see right now".
+  // counts below (region + diff + category filters all applied), not just a raw per-region trail count,
+  // so a chip reads "how many would you actually see right now".
   const regionVisibleCounts = {};
   const groupVisibleCounts = {};
+  // Split per list, so the Trails list's own hub headings count trails and the Touren list's count Tours.
+  const regionTrailCounts = {};
+  const regionTourCounts = {};
 
   Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
     groupVisibleCounts[groupKey] = 0;
@@ -4358,15 +4478,17 @@ function render(){
 
       let anyVisibleInRegion = false;
       regionLineTrails.forEach(t => {
-        total++;
         const layer = lineLayers[t.id];
-        // Builder mode hides Tours outright, whatever the 🔁 switch says (user, 2026-07-27: "Die stören
-        // da nur"). A Tour lies on top of the very trails you are picking, so its line, its per-segment
-        // name labels and its wide hit-lines all get in the way of clicking the individual trails —
-        // which is the whole activity in this mode.
-        const categoryOk = t.loop ? (showLoop && !builderMode) : (t.uphill ? showUphill : showDownhill);
-        const visible = regionOk && activeDiffs.has(t.diff) && categoryOk;
-        if (visible) { regionVisibleCounts[regionKey]++; groupVisibleCounts[groupKey]++; }
+        const visible = trailPassesFilters(t);
+        if (visible) {
+          // The chip counts stay "everything visible in this region", Tours included -- a sub-region like
+          // "Biketicket 2 Ride" holds nothing else, and a chip reading (0) next to four visible Tours would
+          // be a lie. The per-list hub counts below are the ones that count only their own list.
+          regionVisibleCounts[regionKey]++; groupVisibleCounts[groupKey]++;
+          if (t.loop) { shownTours++; regionTourCounts[regionKey] = (regionTourCounts[regionKey] || 0) + 1; }
+          else        { shownTrails++; regionTrailCounts[regionKey] = (regionTrailCounts[regionKey] || 0) + 1; }
+        }
+        if (t.loop) totalTours++; else totalTrails++;
         if (layer) {
           if (visible) {
             map.addLayer(layer.line); map.addLayer(layer.hitLine);
@@ -4381,7 +4503,6 @@ function render(){
             // 2026-07-23, reported by the user). Close it again on every re-add, same as applyNameLabels
             // already does for the plain hitLine tooltip.
             (layer.segmentHitLines || []).forEach(h => { map.addLayer(h); h.closeTooltip(); });
-            shown++;
           } else {
             map.removeLayer(layer.line); map.removeLayer(layer.hitLine); map.removeLayer(layer.startDot);
             (layer.directionArrows || []).forEach(({ marker }) => map.removeLayer(marker));
@@ -4398,47 +4519,18 @@ function render(){
             if (currentSelectedId === t.id) closeInfoPanelAndDeselect();
           }
         }
-        if (!visible) { if (layer) layer.card = null; return; } // filtered out — don't add a list card at all
+        // Filtered out, or a Tour: Tours are listed in their own section, built by renderTourList() further
+        // down in this same render() -- which is what re-attaches layer.card for them.
+        if (!visible || t.loop) { if (layer) layer.card = null; return; }
         anyVisibleInRegion = true;
-        const card = document.createElement("div");
-        card.className = "trail-card";
-        const regionColor = REGIONS[regionKey] && REGIONS[regionKey].color;
-        if (regionColor) card.style.setProperty("--card-tint", `color-mix(in srgb, ${regionColor} 16%, white)`);
-        // The card-solo-btn is rendered on every card (cheap, one small button) but only ever shown
-        // via CSS (".trail-card.selected .card-solo-btn") -- selecting a trail toggles the "selected"
-        // class directly (selectTrail/clearSelection), with no full render() in between, so gating its
-        // visibility on a one-time isSelectedCard check baked in at render time would go stale the
-        // instant selection changes without also re-rendering the whole list (2026-07-24, found while
-        // testing -- the button never appeared until some unrelated re-render happened to run later).
-        card.innerHTML = `
-          <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⚡</span>` : ""}${t.loop ? ` <span class="badge-loop" title="Tour (mehrere Trails kombiniert)">🔁</span>` : ""}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button></div>
-          <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span></div>`;
-        card.addEventListener("click", (e) => {
-          const soloBtn = e.target.closest(".card-solo-btn");
-          if (soloBtn) {
-            e.stopPropagation();
-            if (soloId === t.id) clearSolo(); else applySolo(t.id); // each syncs this button itself
-            if (openTrailId === t.id) showTrailInfo(t); // keep an already-open panel's own solo button in sync
-            return;
-          }
-          if (builderTryAdd("trail", t.id)) return;
-          if (!layer) return;
-          flyToTrailBounds(layer.bounds);
-          showTrailInfo(t);
-          selectTrail(t.id, card);
-          closeSidebarIfMobile();
-        });
-        card.addEventListener("mouseenter", () => { if (layer) layer.setHover(true); });
-        card.addEventListener("mouseleave", () => { if (layer) layer.setHover(false); });
-        if (layer) layer.card = card;
-        group.appendChild(card);
+        group.appendChild(makeTrailCard(t, regionKey));
       });
       // Same "(n)" visible-count convention as the sidebar filter chips (regionVisibleCounts is now
       // final for this region — the forEach above has fully run) — added here too per the user
       // 2026-07-23: they wanted the count in the trail list itself, not just the filter chips above.
       const hubCount = document.createElement("span");
       hubCount.className = "region-count";
-      hubCount.textContent = ` (${regionVisibleCounts[regionKey]})`;
+      hubCount.textContent = ` (${regionTrailCounts[regionKey] || 0})`;
       title.appendChild(hubCount);
       if (anyVisibleInRegion) {
         if (!groupTitleAdded) {
@@ -4460,25 +4552,26 @@ function render(){
     }
   });
 
-  // Lifts: their own visibility rule and their own list, both above. Left out of the shown/total counters,
-  // which count rideable trails only; the Lifte section carries its own count.
+  // Tours and lifts each have their own list; the Tours' map layers were already handled by the loop above
+  // (a Tour is a `lineTrails` entry), only its cards live elsewhere.
+  const toursShown = renderTourList();
   applyLiftVisibility();
   applyLiftSegmentOpacity();  // also here, so a region activated while solo is on comes up consistent
   const liftsShown = renderLiftList();
 
-  // The three summary lines split the same information by the question each section answers (user,
+  // The four summary lines split the same information by the question each section answers (user,
   // 2026-07-30): a LIST section says how much it is currently listing, and FILTER — the section you open to
   // change that — says what its settings are costing you. So no section repeats another's number, and
   // "nothing is hidden" is stated outright rather than left to be inferred from two counts being equal.
-  // Both totals count only LOADED regions: `total` is tallied in the region loop above, which iterates
-  // REGION_GROUPS (activated groups only), and LIFTS likewise holds only activated groups' lifts.
-  trailCountEl.textContent = `${shown} ${shown === 1 ? "Trail" : "Trails"}`;
+  // Every total counts only LOADED regions: the trail/Tour tallies come from the region loop above, which
+  // iterates REGION_GROUPS (activated groups only), and LIFTS likewise holds only activated groups' lifts.
+  // So deactivating a region never reads as "hidden".
+  trailCountEl.textContent = `${shownTrails} ${shownTrails === 1 ? "Trail" : "Trails"}`;
   const hidden = [];
-  if (total - shown > 0) hidden.push(`${total - shown} ${total - shown === 1 ? "Trail" : "Trails"}`);
-  if (LIFTS.length - liftsShown > 0) {
-    const n = LIFTS.length - liftsShown;
-    hidden.push(`${n} ${n === 1 ? "Lift" : "Lifte"}`);
-  }
+  const add = (n, one, many) => { if (n > 0) hidden.push(`${n} ${n === 1 ? one : many}`); };
+  add(totalTrails - shownTrails, "Trail", "Trails");
+  add(totalTours - toursShown, "Tour", "Touren");
+  add(LIFTS.length - liftsShown, "Lift", "Lifte");
   countEl.textContent = hidden.length ? `${hidden.join(" · ")} ausgeblendet` : "alles sichtbar";
 
   Object.entries(regionSubCountEls).forEach(([key, el]) => { el.textContent = ` (${regionVisibleCounts[key] || 0})`; });
@@ -4690,7 +4783,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v46"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v47"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

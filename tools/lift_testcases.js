@@ -32,6 +32,10 @@
 //     -> "Namen an" fails: 0 lift labels, want one per lift.
 //   * in setLiftHover's off-branch, go back to an unconditional hitLine.closeTooltip()
 //     -> "Hover laesst das Label stehen" fails: the label count drops to 0 on mouseleave.
+//   * in render()'s card branch, drop the Tour term: `if (!visible) { … }`
+//     -> "Touren stehen in ihrem eigenen Abschnitt" fails: the Tours are back in the trail list.
+//   * in renderTourList, sort by difficulty instead of by name
+//     -> the same case fails on "nach Namen sortiert, nicht nach Schwierigkeit".
 //   * in syncBuilderModeChrome, rename the id back to scrollTopBtn (the crash of 2026-07-29)
 //     -> 2 tests fail, 5 checks: the builder case reports the TypeError as its value, and the fresh start
 //        comes up as the fatal-error panel with the title still "Trailmap" and its sheet closed. That
@@ -100,6 +104,7 @@
   const counts = () => ({
     filter: $("#filterCountLabel").textContent,
     trails: $("#trailCountLabel").textContent,
+    touren: $("#tourCountLabel").textContent,
     lifts: $("#liftCountLabel").textContent,
   });
   const num = (s) => { const m = /(\d+)/.exec(s || ""); return m ? +m[1] : null; };
@@ -356,18 +361,72 @@
     await wait(300);
     const c = counts();
     const hiddenNow = num(c.filter);
-    ok("Filter nennt die ausgeblendeten", /Trails? ausgeblendet/.test(c.filter), c.filter, "N Trails ausgeblendet");
+    // "schwarz" aus verdeckt Trails UND Touren, also steht der Trail-Posten am Anfang und nicht allein.
+    ok("Filter nennt die ausgeblendeten Trails zuerst", /^\d+ Trails?\b/.test(c.filter) && /ausgeblendet$/.test(c.filter),
+       c.filter, "N Trails · … ausgeblendet");
     ok("und die Summe stimmt", num(c.trails) + hiddenNow === trailsBefore,
        { shown: num(c.trails), hidden: hiddenNow }, `sum ${trailsBefore}`);
     ok("die Liftzahl bleibt davon unberuehrt", num(c.lifts) === LIFT_CARDS, c.lifts, `${LIFT_CARDS} Lifte`);
     await setSwitch("showLiftsToggle", false);
     await wait(300);
-    ok("beide Arten stehen zusammen in einer Zeile", /Trails? · \d+ Lifte? ausgeblendet/.test(counts().filter),
-       counts().filter, "N Trails · M Lifte ausgeblendet");
+    // Every hidden kind gets its own term, in list order (Trails, Touren, Lifte). Turning "schwarz" off
+    // hides Tours too, since a Tour has a difficulty like any trail -- so all three terms can appear.
+    ok("jede Art steht als eigener Posten in einer Zeile",
+       /^\d+ Trails? · \d+ Touren? · \d+ Lifte? ausgeblendet$/.test(counts().filter),
+       counts().filter, "N Trails · M Touren · K Lifte ausgeblendet");
     await setSwitch("showLiftsToggle", true);
     await setDiff("schwarz", true);
     await wait(300);
     ok("zurueck auf alles sichtbar", counts().filter === "alles sichtbar", counts().filter, "alles sichtbar");
+  }
+
+  // =====================================================================================
+  // 5b. TOUREN HABEN IHREN EIGENEN ABSCHNITT (2026-07-31) — zwischen Trails und Lifte. Eine Tour hat eine
+  //     Schwierigkeit, wird aber nicht wie ein Trail danach sortiert: sie wird als ganzer Tag gewaehlt, und
+  //     die Nummernserie einer Region ist die Ordnung, in der man sie sucht.
+  // =====================================================================================
+  test("Touren stehen in ihrem eigenen Abschnitt, nach Namen sortiert");
+  {
+    const secOrder = $$("aside > details").map((d) => d.id);
+    ok("Abschnittsreihenfolge", String(secOrder) === "secTrails,secTouren,secLifts", String(secOrder),
+       "secTrails,secTouren,secLifts");
+    const tourNames = $$("#tourList .trail-card .trail-name").map((e) => e.textContent.replace("👁", "").trim());
+    ok("Touren sind gelistet", tourNames.length > 0, tourNames.length, "> 0");
+    ok("keine Tour mehr in der Trailliste", $$("#trailList .trail-card").every((c) => !/Biketicket/i.test(c.textContent)),
+       $$("#trailList .trail-card").filter((c) => /Biketicket/i.test(c.textContent)).length, 0);
+    // Das 🔁-Abzeichen ist weg: in einem Abschnitt, der nur Touren enthaelt, traegt es jede Karte und sagt nichts.
+    ok("kein 🔁-Abzeichen in einer der beiden Listen",
+       $$("#trailList .badge-loop").length + $$("#tourList .badge-loop").length === 0,
+       $$("#trailList .badge-loop").length + $$("#tourList .badge-loop").length, 0);
+    ok("aber das Schwierigkeitsabzeichen ist da", $$("#tourList .trail-card .badge").length === tourNames.length,
+       $$("#tourList .trail-card .badge").length, tourNames.length);
+    // Nach Namen, numerisch: 615 vor 616 vor den unnummerierten.
+    const bk = tourNames.filter((n) => /Biketicket/i.test(n));
+    const sorted = bk.slice().sort((a, b) => a.localeCompare(b, "de", { numeric: true }));
+    ok("nach Namen sortiert, nicht nach Schwierigkeit", String(bk) === String(sorted), String(bk), String(sorted));
+    ok("die Zaehlung nennt Touren", num(counts().touren) === tourNames.length, counts().touren, `${tourNames.length} Touren`);
+    // Der Schwierigkeitsfilter greift auch hier -- eine Tour ist kein Lift.
+    await setDiff("schwarz", false);
+    await wait(350);
+    ok("schwarz aus entfernt die schwarze Tour", !$$("#tourList .trail-card").some((c) => /schwarz/i.test(c.textContent)),
+       $$("#tourList .trail-card").filter((c) => /schwarz/i.test(c.textContent)).length, 0);
+    await setDiff("schwarz", true);
+    await wait(350);
+    // Eine Tour-Karte tut dasselbe wie eine Trail-Karte: fliegt hin, oeffnet das Panel, wird ausgewaehlt.
+    const card = $$("#tourList .trail-card").find((c) => /615/.test(c.textContent));
+    card.click();
+    await wait(500);
+    ok("Klick oeffnet die Tour", /615/.test($("#ipContent h3")?.textContent || ""), $("#ipContent h3")?.textContent.trim(), "615 …");
+    ok("und waehlt ihre Karte aus", card.classList.contains("selected"), card.className, "selected");
+    // Die Karten werden bei jedem render() neu gebaut -- die Auswahl muss auf die NEUE Karte wandern.
+    render();
+    await wait(400);
+    const again = $$("#tourList .trail-card").find((c) => /615/.test(c.textContent));
+    ok("Auswahl ueberlebt ein render()", again.classList.contains("selected"), again.className, "selected");
+    $("#ipClose").click();
+    await wait(200);
+    closeInfoPanelAndDeselect();
+    await wait(200);
   }
 
   // =====================================================================================
