@@ -3081,19 +3081,64 @@ const eleHoverMapMarker = L.circleMarker([0, 0], {
 // Caches the (potentially expensive-ish to compute) cumulative-distance array per trail so it's
 // only recomputed when the hovered chart actually belongs to a different trail, not on every
 // mousemove pixel.
-let eleHoverCache = { trailId: null, coords: null, cumDist: null, profile: null };
+let eleHoverCache = { trailId: null, coords: null, cumDist: null, profile: null, axis: null };
 function getEleHoverData(svg){
   const trailId = svg.dataset.trailId;
   if (eleHoverCache.trailId !== trailId) {
     const coords = TRAIL_GEO[trailId];
+    const cumDist = coords ? cumulativeDistanceKm(coords) : null;
     eleHoverCache = {
       trailId,
       coords,
-      cumDist: coords ? cumulativeDistanceKm(coords) : null,
+      cumDist,
       profile: JSON.parse(svg.dataset.profile || "null"),
+      axis: buildProfileToGeometryAxis(trailId, cumDist),
     };
   }
   return eleHoverCache;
+}
+
+// A Tour has TWO distance axes and they are not the same length. The elevation profile's x-axis is the
+// tour's own RECORDED track (the only thing carrying elevation), while TRAIL_GEO is the substituted
+// geometry built from the region's own trail lines and lift cables -- on Bike Kingdom's E-Bike
+// Biketicket tour those are 63.58 km and 66.41 km, a 4.3% difference. Feeding a profile kilometre
+// straight into latLngAtDistance (which measures on the geometry) therefore let the map dot fall
+// further and further behind the chart dot, up to 2.8 km of route at the far end (user, 2026-07-30).
+// The builder already records each segment's distStart/distEnd on the PROFILE axis (see
+// build_bikekingdom_tours.py's `scale`), and every segment's coords are a contiguous slice of the
+// geometry, so each segment gives one exact anchor pair between the two axes. Piecewise rather than one
+// global ratio: today the recorded distances happen to be a uniform scaling of the geometry, so both
+// give the same answer -- but a tour built from real per-segment lengths would break a global ratio,
+// while the anchors stay right by construction. Returns null when there is nothing to anchor to (a
+// plain trail, or a loop with no segments), and the caller falls back to the global ratio.
+function buildProfileToGeometryAxis(trailId, cumDist){
+  const segs = TRAIL_SEGMENTS[trailId];
+  if (!segs || !cumDist) return null;
+  const axis = [];
+  let idx = 0;
+  for (const s of segs) {
+    const n = s.coords.length;
+    if (idx + n > cumDist.length) return null;   // not the contiguous concatenation we assume
+    if (s.distStart != null && s.distEnd != null) {
+      axis.push({ p0: s.distStart, p1: s.distEnd, g0: cumDist[idx], g1: cumDist[idx + n - 1] });
+    }
+    idx += n;
+  }
+  return (idx === cumDist.length && axis.length) ? axis : null;
+}
+// Profile kilometre -> geometry kilometre, via the anchors above where a tour has them.
+function profileKmToGeometryKm(km, axis, cumDist, distMax){
+  if (axis) {
+    for (let i = 0; i < axis.length; i++) {
+      const a = axis[i];
+      if (km <= a.p1 || i === axis.length - 1) {
+        const f = a.p1 > a.p0 ? (km - a.p0) / (a.p1 - a.p0) : 0;
+        return a.g0 + Math.max(0, Math.min(1, f)) * (a.g1 - a.g0);
+      }
+    }
+  }
+  const total = cumDist[cumDist.length - 1];
+  return distMax > 0 ? km * (total / distMax) : km;
 }
 function hideEleHoverChart(svg){
   const dot = svg.querySelector(".ele-hover-dot");
@@ -3122,7 +3167,7 @@ function handleEleChartHover(e){
     return;
   }
   if (touch) e.preventDefault(); // don't scroll while scrubbing the elevation profile
-  const { coords, cumDist, profile } = getEleHoverData(svg);
+  const { coords, cumDist, profile, axis } = getEleHoverData(svg);
   if (!coords || !profile) return;
   const rect = svg.getBoundingClientRect();
   if (!rect.width) return;
@@ -3151,7 +3196,14 @@ function handleEleChartHover(e){
   const dot = svg.querySelector(".ele-hover-dot");
   dot.setAttribute("cx", chartX.toFixed(1)); dot.setAttribute("cy", chartY.toFixed(1)); dot.style.display = "";
 
-  eleHoverMapMarker.setLatLng(latLngAtDistance(coords, cumDist, targetKm, reversed));
+  // `targetKm` is read off the chart, so it lives on the profile's axis -- convert before walking the
+  // geometry (see profileKmToGeometryKm). While reversed, the profile itself was mirrored by
+  // reverseElevationProfile, so undo that first: the anchors are recorded on the unmirrored axis. The
+  // conversion then already yields a geometry kilometre measured from the track's own start, which is
+  // why latLngAtDistance is called with reversed=false rather than being left to flip it a second time.
+  const profileKm = reversed ? (distMax - targetKm) : targetKm;
+  const geometryKm = profileKmToGeometryKm(profileKm, axis, cumDist, distMax);
+  eleHoverMapMarker.setLatLng(latLngAtDistance(coords, cumDist, geometryKm, false));
   if (!map.hasLayer(eleHoverMapMarker)) eleHoverMapMarker.addTo(map);
   eleHoverMapMarker.bringToFront();
 }
