@@ -220,6 +220,18 @@ def run_len_m(pts, a, b):
     return sum(haversine_m(pts[k], pts[k + 1]) for k in range(a, b))
 
 
+# How densely the tour's own GPX sampled one stretch, as the median step between its points. Reported
+# alongside every substituted-vs-ridden ratio, because that ratio alone cannot tell the two causes apart:
+# a clip that runs past where the tour went, and a recording too coarse to have measured the curves it
+# rode. The E-Bike tour's Hörnli Trail descent is the second kind -- the logger dropped from a 7 m step
+# to a 48 m one for that one descent, so its polyline chords across every switchback and comes out
+# 4.1 km against the trail's own 6.2 km. Trimming the clip there would have thrown away the better line.
+def own_spacing(own, v0, v1):
+    lo, hi = min(v0, v1), max(v0, v1)
+    steps = sorted(d for d in (haversine_m(own[k], own[k + 1]) for k in range(lo, hi)) if d > 0)
+    return steps[len(steps) // 2] if steps else 0.0
+
+
 # ---------------------------------------------------------------------------------------------------
 # Lifts
 # ---------------------------------------------------------------------------------------------------
@@ -638,6 +650,7 @@ def build_tour(spec, trails, geo, lifts, verbose=True):
     for kind, key, a, b in parts:
         # what the tour itself actually rode here, so the report can show substituted-vs-ridden length
         rode = run_len_m(tpts, a, b)
+        sampling = own_spacing(own, track[a][2], track[b][2])
         if kind == "trail":
             tid, lo, hi, fwd = key
             coords = [list(c) for c in geo[tid][lo:hi + 1]]
@@ -646,14 +659,15 @@ def build_tour(spec, trails, geo, lifts, verbose=True):
             if len(coords) < 2:
                 kind = "connector"          # an empty clip is left as an honest connector, never widened
             else:
-                segs.append({"coords": coords, "trailId": tid, "_rode": rode})
+                segs.append({"coords": coords, "trailId": tid, "_rode": rode, "_sampling": sampling})
                 continue
         if kind == "lift":
             cable = [list(c) for c in lift_by_id[key]["coords"]]
             # orient the cable the way the tour travels it
             if haversine_m(track[a][:2], cable[-1]) < haversine_m(track[a][:2], cable[0]):
                 cable = cable[::-1]
-            segs.append({"coords": cable, "trailId": None, "liftId": key, "_rode": rode})
+            segs.append({"coords": cable, "trailId": None, "liftId": key, "_rode": rode,
+                         "_sampling": sampling})
             continue
         # Connector: the tour's own line for exactly the stretch it rode, taken from the densified track and
         # simplified back down. NOT own[min(vertex):max(vertex)+2] as a first version did -- when the whole
@@ -664,7 +678,7 @@ def build_tour(spec, trails, geo, lifts, verbose=True):
         coords = [[round(p[0], 6), round(p[1], 6)]
                   for p in douglas_peucker([[t[0], t[1]] for t in track[a:b + 1]])]
         if len(coords) >= 2:
-            segs.append({"coords": coords, "trailId": None, "_rode": rode})
+            segs.append({"coords": coords, "trailId": None, "_rode": rode, "_sampling": sampling})
 
     segs = [s for s in segs if len(s["coords"]) >= 2]
     # Adjacent segments share their boundary point, exactly like the existing loops: the joins between a
@@ -716,18 +730,29 @@ def build_tour(spec, trails, geo, lifts, verbose=True):
                 what = "trail " + by_id[s["trailId"]]["name"]
             else:
                 what = "~~~~~ Verbindung"
-            # Substituted geometry against what the tour itself rode there. A ratio far from 1 means the clip
-            # is drawing a stretch the tour never rode -- reported rather than quietly trimmed, because the
-            # honest way to fix it is a better clip, not a silently shortened line.
+            # Substituted geometry against what the tour itself rode there. A ratio far from 1 means EITHER
+            # the clip is drawing a stretch the tour never rode, OR the recording was too coarse here to have
+            # measured the curves it did ride -- so the sampling step is printed with it, since the ratio
+            # alone cannot tell those apart and they call for opposite responses. Coarse (say beyond ~25 m,
+            # against this GPX's usual 7 m) means the substituted line is the better one and the clip should
+            # be left alone. Either way it is reported rather than quietly trimmed: the honest way to fix a
+            # bad clip is a better clip, not a silently shortened line.
             drawn = run_len_m([tuple(c) for c in s["coords"]], 0, len(s["coords"]) - 1)
             rode = s.pop("_rode", 0.0)
+            sampling = s.pop("_sampling", 0.0)
             ratio = (drawn / rode) if rode > 1 else 0.0
-            mark = "  <-- %.2fx geritten" % ratio if ratio and (ratio > 1.3 or ratio < 0.75) else ""
+            mark = ""
+            if ratio and (ratio > 1.3 or ratio < 0.75):
+                # A stretch short enough to sit between two points of the tour's own track has no step
+                # of its own to report -- say so rather than printing a 0 that reads like a measurement.
+                how = ("Aufzeichnung alle %.0f m" % sampling) if sampling else "kuerzer als ein Trackpunkt-Schritt"
+                mark = "  <-- %.2fx geritten, %s" % (ratio, how)
             say("   %6.2f - %6.2f km  %-48s %5.0f m%s" % (s["distStart"], s["distEnd"], what, drawn, mark))
         for i, gap in joins:
             say("   !! Naht vor Segment %d: %.0f m Luftlinie ueberbrueckt" % (i, gap))
     for s in segs:
         s.pop("_rode", None)        # diagnostic only -- must not reach the region file
+        s.pop("_sampling", None)
     return entry, loop_geo, prof, segs
 
 
