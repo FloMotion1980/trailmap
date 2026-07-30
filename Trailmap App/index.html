@@ -4148,6 +4148,24 @@ function selectTrail(id, card){
   }
   highlightSelectedTrail(id);
 }
+// After a render every card is a NEW element, so whichever one is selected has to be marked again. Without
+// this the map kept its yellow outline and the info panel stayed open while the highlighted CARD silently
+// went away -- so toggling any filter with a trail selected left the sidebar looking like nothing was
+// selected (found 2026-07-31 by tests/browser/lists.js). The Touren and Lifte lists had each grown their own
+// copy of this; one shared function at the end of render() replaces both.
+// Deliberately no scrollIntoView here: a render runs on every filter toggle, and scrolling the sidebar then
+// would yank the list around under the user. Scrolling belongs to selectTrail, i.e. to an actual selection.
+function reattachSelectedCard(){
+  const id = currentSelectedId || currentSelectedLiftId;
+  if (!id) return;
+  const layer = lineLayers[id] || liftLayers[id];
+  const card = layer && layer.card;
+  if (!card || card === selectedCard) return;
+  if (selectedCard) selectedCard.classList.remove("selected");
+  card.classList.add("selected");
+  selectedCard = card;
+}
+
 function selectCardFor(id){
   const layer = lineLayers[id];
   selectTrail(id, layer ? layer.card : null);
@@ -4327,9 +4345,8 @@ function renderLiftList(){
     }
   });
   liftCountEl.textContent = shown ? `${shown} ${shown === 1 ? "Lift" : "Lifte"}` : "keine";
-  // The card references above are fresh; re-apply the selection to the new element so a lift selected on
-  // the map keeps its highlighted card across a re-render.
-  if (currentSelectedLiftId) selectLiftCard(currentSelectedLiftId);
+  // Re-marking the selected card is reattachSelectedCard()'s job now, once at the end of render() for all
+  // three lists -- doing it per list meant each list needed its own copy, and the trail list never got one.
   return shown;
 }
 
@@ -4430,13 +4447,7 @@ function renderTourList(){
   });
   tourCountEl.textContent = shown ? `${shown} ${shown === 1 ? "Tour" : "Touren"}`
                                   : (builderMode ? "im Builder aus" : "keine");
-  // Same reason as the lift list: the card elements are new, so the selection has to be re-applied to the
-  // new one or a Tour selected on the map loses its highlighted card on the next filter change.
-  if (currentSelectedId && lineLayers[currentSelectedId] && lineLayers[currentSelectedId].card
-      && tourListEl.contains(lineLayers[currentSelectedId].card)) {
-    selectTrail(currentSelectedId, lineLayers[currentSelectedId].card);
-  }
-  return shown;
+  return shown;   // the selected card is re-marked by reattachSelectedCard() at the end of render()
 }
 
 function render(){
@@ -4453,7 +4464,8 @@ function render(){
   const regionTourCounts = {};
 
   Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
-    groupVisibleCounts[groupKey] = 0;
+    groupVisibleCounts[groupKey] = 0;   // trails AND Tours -- feeds the sub-region chips
+    let groupTrailCount = 0;            // trails only -- feeds this list's own group heading
     const regionKeysInGroup = Object.keys(REGIONS).filter(k => REGIONS[k].group === groupKey);
     let groupTitleAdded = false;
     let groupTitleEl = null;
@@ -4486,7 +4498,7 @@ function render(){
           // be a lie. The per-list hub counts below are the ones that count only their own list.
           regionVisibleCounts[regionKey]++; groupVisibleCounts[groupKey]++;
           if (t.loop) { shownTours++; regionTourCounts[regionKey] = (regionTourCounts[regionKey] || 0) + 1; }
-          else        { shownTrails++; regionTrailCounts[regionKey] = (regionTrailCounts[regionKey] || 0) + 1; }
+          else        { shownTrails++; groupTrailCount++; regionTrailCounts[regionKey] = (regionTrailCounts[regionKey] || 0) + 1; }
         }
         if (t.loop) totalTours++; else totalTrails++;
         if (layer) {
@@ -4547,7 +4559,11 @@ function render(){
     if (groupTitleEl) {
       const groupCount = document.createElement("span");
       groupCount.className = "region-count";
-      groupCount.textContent = ` (${groupVisibleCounts[groupKey]})`;
+      // Trails only, like the hub counts inside this same list -- `groupVisibleCounts` also counts Tours,
+      // which belong to their own section since 2026-07-31. Using it here made a group heading claim 147
+      // above hub headings adding up to 141 (found by tests/browser/lists.js). The sub-region CHIPS keep the
+      // broader count on purpose: a Tours-only sub-region reading (0) would be a lie.
+      groupCount.textContent = ` (${groupTrailCount})`;
       groupTitleEl.appendChild(groupCount);
     }
   });
@@ -4577,6 +4593,7 @@ function render(){
   Object.entries(regionSubCountEls).forEach(([key, el]) => { el.textContent = ` (${regionVisibleCounts[key] || 0})`; });
   Object.entries(regionGroupCountEls).forEach(([key, el]) => { el.textContent = ` (${groupVisibleCounts[key] || 0})`; });
 
+  reattachSelectedCard();   // every card above is a new element; whichever is selected has to be marked again
   applyNameLabels();
 }
 

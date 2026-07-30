@@ -450,6 +450,15 @@ def build_profile(coords, elevations, smooth=2):
         raise ValueError("build_profile: %d coords vs %d elevations" % (len(coords), len(elevations)))
     ele = list(elevations)
     # Fill gaps: GPS glitches and missing <ele> read as None or an implausible ~0 in an alpine region.
+    # The ~0 half of that sentence was only a comment until 2026-07-31 -- the code filled None alone, so a
+    # SINGLE <ele>0</ele> in the middle of a track (Donnersberg's downloads had them throughout, which
+    # build_trail catches because *every* value is 0) produced a full-depth dip and a matching phantom
+    # climb back out. Found by tests/python/pipeline.py; it changes no committed region, verified by the
+    # golden Laax rebuild in that same suite.
+    # Not applied when every value is ~0: there is nothing to interpolate from, and build_trail's own
+    # elevation-lookup path is what handles that case.
+    if not all(e is None or abs(e) < 0.5 for e in ele):
+        ele = [None if (e is not None and abs(e) < 0.5) else e for e in ele]
     for i, e in enumerate(ele):
         if e is None:
             back = next((ele[j] for j in range(i, -1, -1) if ele[j] is not None), None)

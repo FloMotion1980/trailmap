@@ -145,7 +145,9 @@ button ends at y=117 and the panel starts at y=125, both inside `.map-wrap`.
 
 ## Regression cases
 
-**`tools/builder_testcases.js` — paste it into the browser console with the `bikecircus` region active and
+**`tests/browser/builder.js`** (was `tools/builder_testcases.js` until 2026-07-31; it is `@standalone` in
+the test library, i.e. it brings its own harness and must be pasted ALONE, not with the shared bundle)
+**— paste it into the browser console with the `bikecircus` region active and
 Tourenbuilder mode on.** 19 cases, 97 checks, all green as of 2026-07-28. Run it at a phone viewport: the last
 three cases cover the touch-layout behaviour and one of them skips itself on a desktop layout. Every rule described below was
 derived from one concrete ride the user tried, and each of them broke an earlier rule when it landed (three

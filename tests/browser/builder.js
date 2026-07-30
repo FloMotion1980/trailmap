@@ -1,3 +1,10 @@
+// @suite   builder
+// @area    Tourenbuilder: junctions, direction, clipping, row list
+// @standalone
+// @files   Trailmap App/index.html
+// @touches builderResolve, junctionCandidates, builderTryAdd, renderBuilder, wireBuilderRowDrag, wireBuilderRowSwipe, drawBuilderHighlight, builderCoordsOf, builderNameOf, builderCycleConnect, persistBuilder, restoreBuilder, builderTouchLayout, syncBuilderRowFocus, JUNCTION_MAX_GAP_M
+// @needs   region=bikecircus, builder=ON, phone viewport, SELF-CONTAINED (paste alone, it brings its own harness)
+//
 // Tourenbuilder regression cases — paste into the browser console and run.
 //
 // WHY THIS FILE EXISTS: the builder's rules were each derived from one concrete ride the user tried, and
