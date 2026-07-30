@@ -2647,6 +2647,31 @@ function clearLiftSelection(){
 }
 const liftLayers = {}; // liftId -> { mask, hairline, dots, hitLine, startMarker, endMarker, lift, bounds }
 
+// Shared by every "a stretch of the open Tour was clicked" site (component trail, lift stretch of the
+// Tour's own segment layer, and the standalone lift line lying under it): keeps the TOUR as the open
+// panel and just toggles that stretch's own small block into it -- per the user's rule that clicking
+// into a Tour must not lose the Tour's context.
+function selectTourSegment(t, segId){
+  const wasOpen = openTrailId === t.id;
+  selectedSegmentId = (wasOpen && selectedSegmentId === segId) ? null : segId;
+  showTrailInfo(t, { keepSegment: true });
+  selectCardFor(t.id);
+}
+
+// A lift that the currently open Tour rides is answered BY that Tour, not by itself. Needed because a
+// lift's own layers are built after the trails (see activateRegionGroup), so its hit-line sits above the
+// Tour's own lift-segment hit-line and wins every hover and click -- which made a Tour's gondola stretch
+// behave differently from its trail stretches: it opened the bare lift panel instead of the Tour panel
+// with a lift block under it, and it revealed Tal-/Bergstation markers where a hovered trail stretch of
+// the same Tour shows no Start/Ziel (both reported by the user, 2026-07-30). Resolved here rather than by
+// z-order, so a lift with no Tour open stays a normal standalone lift.
+function openTourRidingLift(liftId){
+  if (!openTrailId) return null;
+  const t = lineTrails.find(tr => tr.id === openTrailId);
+  if (!t || !t.loop) return null;
+  return (TRAIL_SEGMENTS[t.id] || []).some(s => s.liftId === liftId) ? t : null;
+}
+
 function buildLiftLayer(l){
   const mask = L.polyline(l.coords, {
     pane: LIFT_BAND_PANE, color: LIFT_MASK_COLOR, weight: LIFT_MASK_WEIGHT, opacity: 1,
@@ -2680,8 +2705,10 @@ function buildLiftLayer(l){
     // and hiding the base map's own lift line that shows through it.
     mask.setStyle({ weight: on ? LIFT_MASK_WEIGHT + 3 : LIFT_MASK_WEIGHT });
     dots.setStyle({ weight: on ? LIFT_DOT_WEIGHT + 2 : LIFT_DOT_WEIGHT });
+    // While this lift is part of the open Tour, it is one stretch of that route, not a destination of
+    // its own -- so it highlights like the Tour's trail stretches do: line only, no station markers.
     if (on) {
-      showEndpoints(l.id);
+      if (!openTourRidingLift(l.id)) showEndpoints(l.id);
       if (!showNames) hitLine.openTooltip();
     } else {
       startMarker.closeTooltip();
@@ -2692,13 +2719,23 @@ function buildLiftLayer(l){
   }
   hitLine.on("mouseover", () => setLiftHover(true));
   hitLine.on("mouseout", () => setLiftHover(false));
-  hitLine.on("click", () => { if (builderTryAdd("lift", l.id)) return; showLiftInfo(l); });
+  hitLine.on("click", () => {
+    if (builderTryAdd("lift", l.id)) return;
+    const tour = openTourRidingLift(l.id);
+    if (tour) { selectTourSegment(tour, l.id); return; }
+    showLiftInfo(l);
+  });
   // The station markers sit on top of the hit-line, so they'd otherwise swallow the hover/click that
   // belongs to the lift -- same reason a trail wires its own startMarker/endMarker to setHover.
   [startMarker, endMarker].forEach(m => {
     m.on("mouseover", () => setLiftHover(true));
     m.on("mouseout", () => setLiftHover(false));
-    m.on("click", () => { if (builderTryAdd("lift", l.id)) return; showLiftInfo(l); });
+    m.on("click", () => {
+      if (builderTryAdd("lift", l.id)) return;
+      const tour = openTourRidingLift(l.id);
+      if (tour) { selectTourSegment(tour, l.id); return; }
+      showLiftInfo(l);
+    });
   });
   liftLayers[l.id] = { mask, hairline, dots, hitLine, startMarker, endMarker, lift: l, bounds: L.latLngBounds(l.coords) };
 }
@@ -3443,10 +3480,7 @@ function buildTrailLayer(t){
           liftHit.on("mouseout", () => { liftDots.setStyle({ weight: LIFT_DOT_WEIGHT }); liftHit.closeTooltip(); });
           liftHit.on("click", () => {
             if (builderTryAdd("lift", refLift.id)) return;
-            const wasOpen = openTrailId === t.id;
-            selectedSegmentId = (wasOpen && selectedSegmentId === refLift.id) ? null : refLift.id;
-            showTrailInfo(t, { keepSegment: true });
-            selectCardFor(t.id);
+            selectTourSegment(t, refLift.id);
           });
           segmentHitLines.push(liftHit);
         }
@@ -3487,10 +3521,7 @@ function buildTrailLayer(t){
           // buildInfoPanelHtml's selectedSegmentId handling), rather than opening a separate panel.
           segHit.on("click", () => {
             if (builderTryAdd("trail", refTrail.id)) return;
-            const wasOpen = openTrailId === t.id;
-            selectedSegmentId = (wasOpen && selectedSegmentId === refTrail.id) ? null : refTrail.id;
-            showTrailInfo(t, { keepSegment: true });
-            selectCardFor(t.id);
+            selectTourSegment(t, refTrail.id);
           });
           segmentHitLines.push(segHit);
           // Standalone (not bound to any layer) permanent tooltip for the "Namen" toggle — added

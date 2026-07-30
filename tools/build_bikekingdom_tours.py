@@ -391,6 +391,31 @@ def _edge_dense_pos(dense, v, toward_larger):
     return len(dense)
 
 
+#: How many densified trail points (~10 m each) the walk may consume for ONE track point while catching up.
+#: Needed because the tour's track and the trail are sampled at different effective speeds, so a strict
+#: one-for-one walk slowly loses sync and then fails a distance check while the tour is still on the trail.
+EXTEND_CATCHUP = 8
+
+
+def _advance(p, dense, pos, step):
+    """Next densified-trail index for track point `p`, moving only in `step` direction. None if it diverged.
+
+    Scans up to EXTEND_CATCHUP steps ahead and takes the closest candidate within EXTEND_MATCH_M. Strictly
+    monotonic by construction -- it can never return an index behind `pos`, which is what stops the walk from
+    latching onto an earlier stretch of the same trail that the tour happens to pass near later (verified on
+    Hörnli Trail's tail; see the docstring below).
+    """
+    best, best_d = None, None
+    for n in range(1, EXTEND_CATCHUP + 1):
+        cand = pos + step * n
+        if not (0 <= cand < len(dense)):
+            break
+        dist = haversine_m(p, dense[cand][:2])
+        if dist <= EXTEND_MATCH_M and (best_d is None or dist < best_d):
+            best, best_d = cand, dist
+    return best
+
+
 def extend_trail_ends(pts, labels, vidx, trails, geo, lift_ids, vertex_at):
     """Grow each trail run outward into its neighbouring connector, at a looser tolerance, in place.
 
@@ -414,14 +439,19 @@ def extend_trail_ends(pts, labels, vidx, trails, geo, lift_ids, vertex_at):
     would make a one-vertex-per-track-point walk overshoot and fail immediately from pacing alone, not from
     any real divergence.
 
-    Verified against real data where the walk stops, not just where it succeeds (Hörnli Trail's tail on the
-    E-bike tour): right at the point EXTEND_MATCH_M gives up, the closest-matching trail vertex, tracked
-    onward WITHOUT any distance cutoff, starts moving BACKWARD to smaller vertex numbers a few points later --
-    the tour genuinely leaves the trail's corridor there and happens to pass near an earlier stretch of the
-    same trail afterwards, it does not just drift a little further along the same line. A looser threshold or
-    a free nearest-vertex search (instead of the strict one-step-at-a-time walk) would have latched onto that
-    coincidence and drawn the tour riding backward along ground it had already covered. EXTEND_MATCH_M=100
-    reaches to within a couple hundred metres of that real boundary without crossing it.
+    The walk advances via _advance(), which may consume several trail points for one track point but can only
+    ever move FORWARD. Strict monotonicity is the load-bearing property: without it a free nearest-point
+    search latches onto an earlier stretch of the same trail that the tour passes near again later, and draws
+    the tour riding backward over ground it already covered (Hörnli Trail's tail is exactly such a case).
+
+    An earlier version advanced strictly one trail point per track point, which was too rigid -- the two are
+    sampled at different effective speeds, so the pairing slowly lost sync and then failed a distance check
+    while the tour was demonstrably still on the trail. That is what cut Hörnli Trail 404 m short of its own
+    end on the E-bike tour: past the cut, the track sits 2-22 m from the trail with its matched vertex index
+    climbing steadily (379 -> 385 -> 387 -> 399 -> 402 -> 408 -> 414), i.e. still riding it. Worth knowing WHY
+    that spot is hard: Hörnli Trail and Älplisee Trail share their final 1297 m and end 42 m apart, so on that
+    stretch the neighbouring trail is intermittently the closer of the two -- which a rigid lockstep walk
+    cannot survive but a catch-up window can.
     """
     dense_by_trail = {t["id"]: densify(geo[t["id"]]) for t in trails if not t.get("loop")}
     rs = runs_of(labels)
@@ -440,12 +470,13 @@ def extend_trail_ends(pts, labels, vidx, trails, geo, lift_ids, vertex_at):
             step = 1 if fwd else -1
             pos = _edge_dense_pos(dense, v_b, toward_larger=fwd)
             k = b + 1
-            while k <= cb and 0 <= pos + step < len(dense):
-                pos += step
+            while k <= cb:
                 if labels[k] is not None and labels[k] != tid:
                     break
-                if haversine_m(pts[k], dense[pos][:2]) > EXTEND_MATCH_M:
+                nxt = _advance(pts[k], dense, pos, step)
+                if nxt is None:
                     break
+                pos = nxt
                 labels[k], vidx[k] = tid, dense[pos][2]
                 k += 1
 
@@ -454,12 +485,13 @@ def extend_trail_ends(pts, labels, vidx, trails, geo, lift_ids, vertex_at):
             step = -1 if fwd else 1
             pos = _edge_dense_pos(dense, v_a, toward_larger=not fwd)
             k = a - 1
-            while k >= ca and 0 <= pos + step < len(dense):
-                pos += step
+            while k >= ca:
                 if labels[k] is not None and labels[k] != tid:
                     break
-                if haversine_m(pts[k], dense[pos][:2]) > EXTEND_MATCH_M:
+                nxt = _advance(pts[k], dense, pos, step)
+                if nxt is None:
                     break
+                pos = nxt
                 labels[k], vidx[k] = tid, dense[pos][2]
                 k -= 1
 
