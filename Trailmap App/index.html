@@ -549,29 +549,30 @@ const REGION_CATALOG = {
     }
   },
   schladming: {
-    // Built 2026-07-28. TWO DIFFERENT SOURCE QUALITIES, deliberately:
-    // * planai (12 trails) is solid -- the operator's own per-tour GPX, which the user pointed at. Each
-    //   tour page on planai.at links a real GPX with real elevation via tirol.mapservices.eu, and the
-    //   lengths match the operator's published figures. Difficulties are its own tables
-    //   (leicht->blau, mittel->rot, schwer->schwarz, as pinned by the Zugspitz Arena's colour words).
-    //   Two to check: Jack Lumber (409) GPX 0.52 km vs 0.33 km official, and Peak Flowline (402) whose
-    //   GPX has a second 0.93 km part that was set aside. 408's difficulty is not published by the
-    //   operator -- taken from OSM mtb:scale=1. 401 is the uphill trail the user linked.
-    //   NOT built: "Planai Runde" (304), a 34.2 km round tour -- belongs in the Touren feature.
-    // * reiteralm (8 trails) is WEAKER: no operator export exists, so geometry is OSM ways chained at
-    //   120 m and difficulty is OSM mtb:scale. The SELECTION is by name from OSM and is NOT confirmed
-    //   against an operator list. Joins to check: Buckelwald 159 m, Schnepfenwald 56 m, Eiskar 55 m,
-    //   Gassl 46 m, Jump Trail 40 m. Eiskar/Schnepfenwald/Enduro have branch fragments left out.
-    //   "Route 66" is named in OSM elsewhere but was not found in this bbox.
-    // Renamed 2026-07-30 to "Bikeland Schladming-Dachstein" per the user; the key stays `schladming`.
-    label: "Bikeland Schladming-Dachstein", file: "regions/schladming.json", trailCount: 20,
-    bounds: [[47.35919, 13.5857], [47.39554, 13.73611]],
+    // Rebuilt 2026-07-30 (originally 2026-07-28). The user found Peak Flowline and Bike Area visibly not
+    // matching schladming-dachstein.at's own map, and pointed at the fix: every trail there has its own
+    // tour page (schladming-dachstein.at/de/aktivitaeten/touren/<Name>-7C-<num>_tour_<id>) embedding a real
+    // per-point-elevation GPX at tirol.mapservices.eu/nefos_app/api/gpx/... -- the same CONTWISE MAPS
+    // backend other Tirol tourism sites use. All 25 trails across all three sub-regions now come from that
+    // one consistent source (cached in Material/Schladming/), replacing the old two-tier planai.at/OSM mix.
+    // No clean official length/up/down text exists on these pages (the stat widget loads via JS, not in the
+    // static HTML) -- every trail's len/up/down is GPX-derived, uniformly, rather than mixing sourced and
+    // derived numbers trail by trail.
+    // Difficulty is unchanged for every trail that already existed (not what was reported wrong, and it
+    // came from the operator's own colour words in the 2026-07-28 build). The rebuild surfaced 8 more
+    // trails the old OSM-name-search selection had missed entirely: Junior Trails (105) and Hochalm Enduro
+    // Trail (109) in Reiteralm, and all three of the new "Singletrack Haus-Aich" sub-region (Madame Flow,
+    // Jumper, Dr. Drop) -- see docs/adding-a-region.md's four-pieces checklist and tools/build_schladming.py
+    // for which of those five are OSM-mtb:scale-confirmed vs. inferred from a sibling trail.
+    // The old Reiteralm geometry was worse than a cosmetic mismatch: e.g. Eiskar Trail measured 2.0 km
+    // against the real 5.15 km -- confirming the prior build's own "branch fragments left out" note.
+    // NOT built: "Planai Runde" (304), a 34.2 km round tour -- belongs in the Touren feature, not here.
+    label: "Bikeland Schladming-Dachstein", file: "regions/schladming.json", trailCount: 25,
+    bounds: [[47.35919, 13.58599], [47.42899, 13.80129]],
     subRegions: {
-      // Renamed 2026-07-30 per the user: "Bikepark Schladming" and "Reiteralm Trails". Keys stay
-      // planai/reiteralm. A third sub-region, "Singletrack Haus-Aich", is confirmed to exist but has no
-      // trails built yet -- see the region-backlog memory / next session.
       planai: { label: "Bikepark Schladming", color: "#1c9c8a" },
-      reiteralm: { label: "Reiteralm Trails", color: "#9c5f1c" }
+      reiteralm: { label: "Reiteralm Trails", color: "#9c5f1c" },
+      hausaich: { label: "Singletrack Haus-Aich", color: "#7a3f9c" }
     }
   },
   paganella: {
