@@ -4484,13 +4484,14 @@ async function boot(){
   const saved = restoreActiveState();
   const initialGroups = (saved && saved.activeRegionGroups.length) ? saved.activeRegionGroups : ["paznaun"];
 
-  await loadRegionVersions(); // fresh per-file versions before any region fetch (see versionedRegionUrl)
-  await Promise.all(initialGroups.map(activateRegionGroup));
-
-  // Saved fine-grained filters take precedence over activateRegionGroup's "everything active by
-  // default" behavior — but only restore sub-region keys that actually got loaded just now.
+  // The plain on/off flags are restored BEFORE the regions load, deliberately split from the rest of the
+  // state below. activateRegionGroup() reads showPlaces (through its own applyPlaceVisibility() call, which
+  // exists so a group activated while "Orte" is off doesn't light its labels up) while it runs — and with
+  // the whole restore happening afterwards it saw the default `true`. Since nothing calls
+  // applyPlaceVisibility() again after boot, a hard reload always came up with the place labels showing
+  // whatever the switch said (user, 2026-07-30). Everything that depends on freshly LOADED data --
+  // activeRegions, the region-chip DOM -- has to stay below, and does.
   if (saved) {
-    activeRegions = new Set(saved.activeRegions.filter(k => REGIONS[k]));
     activeDiffs = new Set(saved.activeDiffs);
     showUphill = saved.showUphill;
     showLoop = saved.showLoop;
@@ -4499,6 +4500,15 @@ async function boot(){
     showPlaces = saved.showPlaces;
     liveStatusOpen = saved.liveStatusOpen;
     showDirectionArrows = saved.showDirectionArrows;
+  }
+
+  await loadRegionVersions(); // fresh per-file versions before any region fetch (see versionedRegionUrl)
+  await Promise.all(initialGroups.map(activateRegionGroup));
+
+  // Saved fine-grained filters take precedence over activateRegionGroup's "everything active by
+  // default" behavior — but only restore sub-region keys that actually got loaded just now.
+  if (saved) {
+    activeRegions = new Set(saved.activeRegions.filter(k => REGIONS[k]));
     // rebuildRegionChips() re-derives region-chip DOM from activeRegions fresh, but the difficulty
     // chips (and the uphill/loop/downhill toggles) are static markup (all "active"/checked by
     // default) — sync here.
