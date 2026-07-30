@@ -502,11 +502,26 @@ const REGION_CATALOG = {
     // Knuckle" Schwer), which pins Leicht=blau, Mittel=rot, Schwer=schwarz. `gruen` is unused here
     // because the operator's easiest tier is what it itself calls blue.
     // Sub-regions are the operator's own three areas, which are also its own URL segments.
-    // Not built: Bachtltrail, Barbarasteig, Rauhegasse and Blindsee Trail are named on the overview but
-    // have no tour page and therefore no geometry. Grubigalm and Wolfratshauser have tracks noticeably
-    // shorter than their published length (1.04 vs 1.80 km, 0.69 vs 1.00 km) -- the official figure is
-    // kept in `len` per the usual rule, but the drawn line is the shorter one.
-    label: "Tiroler Zugspitz Arena", file: "regions/zugspitzarena.json", trailCount: 13,
+    // Bachtl Trail, Barbarasteig Trail, Rauhe Gasse Trail and Blindsee Trail added 2026-07-30 -- all four
+    // now have tour pages with a real-elevation GPX (docs/finale-ligure.md's download.tour.gpx pattern
+    // doesn't apply here; these use zugspitzarena.com's own per-tour `*.gpx_dl_*` link instead).
+    //  - Barbarasteig Trail and Rauhe Gasse Trail come from ONE combined official GPX
+    //    ("Barbarasteig-Trail-and-Rauhegasse-Trail_tour_232092") -- the operator publishes no standalone
+    //    Rauhegasse page. Split at the point the track meets Rauhe Gasse's own OSM way (a sustained drop to
+    //    <60 m after 260 m of hovering around 140-160 m) -- 1.77 km Barbarasteig + 0.68 km Rauhe Gasse,
+    //    matching third-party figures (1.7-2 km / ~900 m) closely enough to trust the cut point.
+    //  - Blindsee Trail is closing to bikes from 2027 per the operator's own announcement -- included anyway,
+    //    same rule as everywhere else: nothing in this app tracks operating status, so a hardcoded closure
+    //    flag would rot silently.
+    //  - Singletrail Forest Aisle's geometry was rebuilt from a fresh official GPX and NO LONGER includes the
+    //    "Umfahrung" bypass loop (MTB route 860, an easier alternate ending) -- the earlier build drew both
+    //    the switchbacks and the bypass back to back, which loops back on itself near the end. Kept only the
+    //    switchbacks (the winding, low-speed final section the trail is actually known for), identified by
+    //    ratio of path length to straight-line span (6.0 for the switchbacks vs 3.1 for the bypass, at the
+    //    same junction and the same convergence point). `len` stays the official 3.25 km (already didn't
+    //    match the drawn line before this change either); `up`/`down` are recomputed from the new, shorter
+    //    line's own real elevation, since the old figures described a materially different, longer line.
+    label: "Tiroler Zugspitz Arena", file: "regions/zugspitzarena.json", trailCount: 17,
     bounds: [[47.35496, 10.73881], [47.42707, 10.94872]],
     subRegions: {
       lermoos_biberwier: { label: "Lermoos / Biberwier", color: "#2f7fa8" },
