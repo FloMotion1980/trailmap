@@ -567,8 +567,11 @@ const REGION_CATALOG = {
     label: "Bikeland Schladming-Dachstein", file: "regions/schladming.json", trailCount: 20,
     bounds: [[47.35919, 13.5857], [47.39554, 13.73611]],
     subRegions: {
-      planai: { label: "Planai (Bikepark)", color: "#1c9c8a" },
-      reiteralm: { label: "Reiteralm", color: "#9c5f1c" }
+      // Renamed 2026-07-30 per the user: "Bikepark Schladming" and "Reiteralm Trails". Keys stay
+      // planai/reiteralm. A third sub-region, "Singletrack Haus-Aich", is confirmed to exist but has no
+      // trails built yet -- see the region-backlog memory / next session.
+      planai: { label: "Bikepark Schladming", color: "#1c9c8a" },
+      reiteralm: { label: "Reiteralm Trails", color: "#9c5f1c" }
     }
   },
   paganella: {
