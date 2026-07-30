@@ -119,6 +119,11 @@ one switch is its entire filter. Deliberately *not* a mirror of the Trails secti
 count in the `x/y sichtbar` line (that counts rideable trails). Placed **above** Trails and collapsed by
 default: it is short, and below a 250-trail list nobody would find it.
 
+The 🚡 switch itself stays up in **Filter** with the other visibility switches (user, same day) — the section
+is a list, not a filter home. `#secLifts` and `#secTrails` both sit *outside* `.filters`, so neither gets its
+16px horizontal padding for free; the rule that pads their summaries now names both, rather than being
+`#secTrails`' private fix, which is why the new section came out unindented at first.
+
 Cards carry `class="trail-card lift-card"` so every existing `.trail-card` rule applies — hover, `.selected`,
 and the `.trail-card.selected .card-solo-btn` reveal — with no second set of styles. Two things they share
 with trail cards by design: clicking one in builder mode routes through `builderTryAdd("lift", id)` (the

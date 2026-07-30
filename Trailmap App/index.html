@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=45" />
+<link rel="stylesheet" href="style.css?v=46" />
 </head>
 <body>
 <div id="fatalError">
@@ -37,8 +37,10 @@
 <div class="app">
   <header>
     <!-- The title doubles as the mode indicator: "Trailbuilder" while the builder mode is on (user,
-         2026-07-27). It also still scrolls the sidebar back to the top, as before. -->
-    <h1>Trailmap</h1>
+         2026-07-27). It no longer scrolls the sidebar to the top (user, 2026-07-29 — that job belongs to
+         #sidebarTopBtn now), but it MUST keep an id: syncBuilderModeChrome() writes this text, and dropping
+         the id along with the handler crashed the app outright for anyone who had builder mode on. -->
+    <h1 id="appTitle">Trailmap</h1>
     <button id="regionsBtn">🌍 Regionen wählen</button>
     <!-- The one and only mode switch. It lives here because the header is the only element that looks the
          same in both layouts, is reachable without opening the drawer, and covers no map. -->
@@ -63,6 +65,10 @@
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDownhillToggle" checked><span class="slider"></span></span>⬇ Downhill</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showUphillToggle" checked><span class="slider"></span></span>⚡ Uphill</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLoopToggle" checked><span class="slider"></span></span>🔁 Touren</label>
+            <!-- Stays here with the other visibility switches, next to the categories it sits beside on the
+                 map, even though the lifts have had their own list section since 2026-07-30 (user, same day:
+                 "Der Filter für die Lifte bleibt bitte bei Filter"). -->
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLiftsToggle" checked><span class="slider"></span></span>🚡 Lifte</label>
           </div>
         </details>
         <details class="filter-section" id="secMapOptions">
@@ -88,17 +94,15 @@
       <!-- The Tourenbuilder has no sidebar section at all any more: its switch is the header button and
            its list is #builderSheet, pinned to the map. Keeping a copy of either here would mean one
            state with three owners -- see docs/tour-builder.md. -->
-      <!-- Lifts get their own section rather than rows in the trail list (user, 2026-07-30). A lift has no
-           difficulty, no category and no length, so it shares none of the Filter section's axes — the one
-           🚡 switch is its whole filter, which is why that switch lives in here rather than up there with
-           the trail filters. Closed by default and placed ABOVE Trails: it is short, and below a 250-trail
-           list nobody would ever scroll to it. Its count is deliberately separate from the "x/y sichtbar"
-           line in Filter, which counts rideable trails only. -->
+      <!-- Lifts get their own list section rather than rows in the trail list (user, 2026-07-30) — a lift has
+           no difficulty, no category and no length, so it shares none of the trail cards' axes. The 🚡 switch
+           itself stays up in Filter with the other visibility switches. Structurally identical to #secTrails
+           (summary + one .trail-list) so both sections space and indent the same. Closed by default and
+           placed ABOVE Trails: it is short, and below a 250-trail list nobody would ever scroll to it. Its
+           count is deliberately separate from the "x/y sichtbar" line in Filter, which counts rideable
+           trails only. -->
       <details class="filter-section" id="secLifts">
         <summary><span class="section-title-row"><span>Lifte</span><span class="section-meta" id="liftCountLabel"></span></span></summary>
-        <div class="toggle-row-group">
-          <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLiftsToggle" checked><span class="slider"></span></span>🚡 Lifte anzeigen</label>
-        </div>
         <div class="trail-list" id="liftList"></div>
       </details>
       <details class="filter-section" id="secTrails" open>
@@ -978,11 +982,14 @@ function setBuilderMode(on){
   render();  // Tours are hidden while the mode is on, so the map/list have to be rebuilt either way
 }
 // The header carries the state: the button fills in, and the title itself becomes the mode indicator
-// ("Trailbuilder" instead of "Trailmap", the user's own idea). Its scroll-the-sidebar-to-top job is
-// unaffected -- only the text changes.
+// ("Trailbuilder" instead of "Trailmap", the user's own idea).
+// This line crashed the whole app between 2026-07-29 and 2026-07-30: removing the title's
+// scroll-to-top handler also removed its id, so getElementById returned null here. Since
+// syncBuilderModeChrome() runs from boot() whenever builder mode was left on, the app came up as the
+// fatal-error panel and nothing else -- an uncaught TypeError, not a silent degradation.
 function syncBuilderModeChrome(){
   document.getElementById("builderModeBtn").classList.toggle("on", builderMode);
-  document.getElementById("scrollTopBtn").textContent = builderMode ? "Trailbuilder" : "Trailmap";
+  document.getElementById("appTitle").textContent = builderMode ? "Trailbuilder" : "Trailmap";
 }
 document.getElementById("builderModeBtn").addEventListener("click", () => setBuilderMode(!builderMode));
 document.getElementById("builderSheetHandle").addEventListener("click", (e) => {
@@ -2645,10 +2652,15 @@ function highlightSelectedLift(id){
   layer.hairline.bringToFront();
   layer.dots.bringToFront();
   currentSelectedLiftId = id;
+  setLabelHovered(id, true);   // the selected lift keeps its label marked, hover or not -- as a trail does
 }
 function clearLiftSelection(){
   if (map.hasLayer(liftSelectionOutline)) map.removeLayer(liftSelectionOutline);
-  if (currentSelectedLiftId) { hideEndpoints(currentSelectedLiftId); currentSelectedLiftId = null; }
+  if (currentSelectedLiftId) {
+    hideEndpoints(currentSelectedLiftId);
+    setLabelHovered(currentSelectedLiftId, false);
+    currentSelectedLiftId = null;
+  }
 }
 const liftLayers = {}; // liftId -> { mask, hairline, dots, hitLine, startMarker, endMarker, lift, bounds }
 
@@ -2714,11 +2726,15 @@ function buildLiftLayer(l){
     // its own -- so it highlights like the Tour's trail stretches do: line only, no station markers.
     if (on) {
       if (!openTourRidingLift(l.id)) showEndpoints(l.id);
-      if (!showNames) hitLine.openTooltip();
+      hitLine.openTooltip();          // a no-op when applyNameLabels already holds it open permanently
+      setLabelHovered(l.id, true);    // mark it among its neighbours, exactly like a hovered trail's label
     } else {
       startMarker.closeTooltip();
       endMarker.closeTooltip();
-      hitLine.closeTooltip();
+      // While "Namen" is on the label is permanent: only drop the hover MARK, since closing it would blank
+      // the very label the switch exists to keep on screen. The selected lift keeps its mark, like a trail.
+      if (showNames) setLabelHovered(l.id, currentSelectedLiftId === l.id);
+      else hitLine.closeTooltip();
       if (currentSelectedLiftId !== l.id) hideEndpoints(l.id);
     }
   }
@@ -3979,15 +3995,18 @@ regionDialogEl.addEventListener("click", (e) => {
 // The border colour is set inline from the trail's difficulty, which is the same colour as the `.tl-diff` dot
 // inside the label itself -- so a marked label matches both its own dot and its line on the map. It has to be
 // cleared again on un-marking, or the CSS rule's grey border would stay overridden.
-function setLabelHovered(trailId, on, label){
+function setLabelHovered(id, on, label){
   if (!showNames) return;
-  const layer = lineLayers[trailId];
+  const layer = lineLayers[id] || liftLayers[id];
   const tip = label || (layer && layer.hitLine.getTooltip());
   const el = tip && tip.getElement && tip.getElement();
   if (!el) return;
   el.classList.toggle("tl-hover", on);
-  const trail = lineTrails.find(x => x.id === trailId);
-  el.style.borderColor = on && trail ? diffColor[trail.diff] : "";
+  const trail = lineTrails.find(x => x.id === id);
+  // A lift has no difficulty to borrow a colour from, so it borders in its own symbol colour -- which is
+  // still the same rule as a trail's: the label's border matches the line it belongs to.
+  const color = trail ? diffColor[trail.diff] : (liftLayers[id] ? LIFT_LINE_COLOR : null);
+  el.style.borderColor = on && color ? color : "";
 }
 
 function applyNameLabels(){
@@ -4019,10 +4038,26 @@ function applyNameLabels(){
       else if (!shouldShow && map.hasLayer(label)) map.removeLayer(label);
     });
   });
+  // Lifts carry the same permanent name label as a trail while "Namen" is on (user, 2026-07-30). Before
+  // this, turning the switch ON actually took the lift labels AWAY: nothing ever opened their permanent
+  // tooltip, and setLiftHover only opened one while the switch was OFF -- so "Namen" cost you the only way
+  // to read a lift's name. Gated on the lift actually being on the map, so a filtered-out or solo-hidden
+  // one doesn't get its label back.
+  Object.values(liftLayers).forEach(layer => {
+    const tip = layer.hitLine.getTooltip();
+    const el = tip && tip.getElement && tip.getElement();
+    if (showNames && map.hasLayer(layer.hitLine)) {
+      layer.hitLine.openTooltip();
+    } else {
+      if (el) el.classList.remove("tl-hover");   // before closing, while the element still exists
+      layer.hitLine.closeTooltip();
+    }
+  });
   // openTooltip() above rebuilds the label element whenever it had been closed, which drops the mark with it.
-  // Re-apply it for the selected trail, so switching a filter or toggling "Namen" doesn't lose the marking on
-  // the trail that is still selected.
+  // Re-apply it for the selected trail (or lift), so switching a filter or toggling "Namen" doesn't lose the
+  // marking on the one that is still selected.
   if (showNames && currentSelectedId) setLabelHovered(currentSelectedId, true);
+  if (showNames && currentSelectedLiftId) setLabelHovered(currentSelectedLiftId, true);
 }
 
 // ---- Sidebar ----
@@ -4147,9 +4182,11 @@ function applyLiftVisibility(){
       map.addLayer(layer.hairline);
       map.addLayer(layer.dots);
       map.addLayer(layer.hitLine);
-      // Leaflet re-opens a permanent tooltip on every (re-)add, so close it again -- same gotcha the
-      // trails' segment hit-lines already have to work around.
-      layer.hitLine.closeTooltip();
+      // Leaflet re-opens a permanent tooltip on every (re-)add -- same gotcha the trails' segment hit-lines
+      // already have to work around. Decided here rather than left to applyNameLabels(), because applySolo()
+      // calls this function without calling that one (it must not: applyNameLabels would re-open the very
+      // trail labels solo has just closed), and a re-added lift would otherwise lose its name label.
+      if (showNames) layer.hitLine.openTooltip(); else layer.hitLine.closeTooltip();
       // Station markers are NOT added here: they belong to the selected lift only (showLiftInfo).
     } else {
       // Only a FILTER can pull the open lift's panel out from under it. Solo never can -- showLiftInfo
@@ -4598,7 +4635,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v45"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v46"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

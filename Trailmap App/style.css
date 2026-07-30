@@ -104,14 +104,15 @@ details.filter-section summary{ font-size: 11px; text-transform: uppercase; lett
   font-weight:700; cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between;
   margin: 0 0 8px; -webkit-tap-highlight-color: transparent; }
 details.filter-section summary::-webkit-details-marker{ display:none; }
-/* #secTrails (the trail-list's own collapsible wrapper) sits OUTSIDE .filters, unlike the other
-   three sections — so its summary doesn't get .filters' own 16px horizontal padding for free, and
-   sat flush against the sidebar edge while its own content (.hub-title/.trail-card etc., which each
-   carry their own left padding/margin already) stayed correctly indented — found by the user
-   2026-07-23 ("Trails ist nicht richtig eingerückt"). Padding only the summary, not the whole
-   #secTrails container, since the content below already supplies its own indentation and doubling
-   it up would misalign things the other way. */
-#secTrails > summary{ padding: 0 16px; }
+/* #secTrails and #secLifts (the two list sections' collapsible wrappers) sit OUTSIDE .filters, unlike
+   the other three sections — so their summaries don't get .filters' own 16px horizontal padding for
+   free, and sat flush against the sidebar edge while their own content (.hub-title/.trail-card etc.,
+   which each carry their own left padding/margin already) stayed correctly indented — found by the user
+   2026-07-23 ("Trails ist nicht richtig eingerückt"), and again 2026-07-30 for the new Lifte section,
+   which is why the rule now names both rather than being one section's private fix. Padding only the
+   summary, not the whole container, since the content below already supplies its own indentation and
+   doubling it up would misalign things the other way. */
+#secTrails > summary, #secLifts > summary{ padding: 0 16px; }
 details.filter-section summary::after{ content:"▸"; font-size:22px; font-weight:700; line-height:1; color: var(--forest); transition: transform .15s ease; }
 details.filter-section[open] summary::after{ transform: rotate(90deg); }
 /* Wraps a summary's label + dynamic meta text (visible-count / current-region) as ONE flex item, so
