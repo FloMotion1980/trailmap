@@ -160,8 +160,21 @@ back, solo 0.85→0.15 with the soloed one at 0.9, and back).
 — which also means the Tour never has a gap there, unlike the earlier "band only, no line in the Tour"
 version. Hovering the stretch itself still gives feedback: its own dots grow.
 
-The grey mask is not duplicated per Tour — it belongs to the lift object, and render() keeps that object
-visible wherever a visible Tour rides it, so the mask is already under the Tour's stretch.
+**All three strokes, mask included, are drawn per Tour** (since 2026-07-30). Until then the mask was borrowed
+from the lift object, which `render()` kept on the map wherever a visible Tour rode it — see the filter rule
+below for why that exemption is gone. A Tour is now self-sufficient for a lift stretch exactly as it already
+was for a trail stretch: it borrows nothing from the object it references. Without its own mask, a Tour's
+lift stretch would have let the tile's aerialway line show through under the symbol as soon as the 🚡 switch
+was off.
+
+### A lift obeys its filters exactly as a trail does — no Tour exemption (2026-07-30)
+
+From 2026-07-26 a lift ridden by a currently-visible Tour stayed on the map regardless of the 🚡 switch or
+its sub-region being active, and (once the list existed) counted as shown. The user rejected that as
+inconsistent, and they were right: a `rot` trail inside a Tour is equally gone from the map, the list and the
+counts when "rot" is off. What keeps showing in both cases is the Tour's own *stretch*, because the Tour
+draws it — not the standalone object. So `liftPassesFilters()` is now just `showLifts && activeRegions.has(l.region)`,
+and turning the switch off with 20 lifts loaded reads "20 Lifte ausgeblendet", not 10.
 
 Hover on a lift widens the mask slightly and thickens the symbol to `HOVER_WEIGHT`. The selection outline
 is opaque again (a yellow rim around the mask) — there is nothing underneath left to preserve now that the

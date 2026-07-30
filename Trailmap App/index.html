@@ -3541,8 +3541,8 @@ function buildTrailLayer(t){
   //   `styleTarget` -- only the non-lift segments, used for every setStyle call.
   // Consequence, deliberate: a Tour's lift stretch does not dim or thicken with the Tour. It stays put,
   // which also means the Tour never has a gap there.
-  // The grey MASK is not duplicated here -- it belongs to the lift object, and render() keeps that object
-  // visible wherever a visible Tour rides it, so the mask is already in place under this stretch.
+  // All THREE strokes of a lift are drawn here, mask included -- the Tour is self-sufficient and borrows
+  // nothing from the lift object, exactly as its trail stretches borrow nothing from the component trails.
   const segmentLayers = [];      // all segments -> `line`
   const styleableLayers = [];    // non-lift segments -> `styleTarget`
   let line, styleTarget;
@@ -3553,9 +3553,17 @@ function buildTrailLayer(t){
         let visibleSeg = null; // the styleable line, for a trail or connector stretch
         let liftDots = null;   // a lift stretch's dots, hovered instead of a line of its own
         if (refLift) {
+          // The grey MASK is drawn here too (2026-07-30). It used to be borrowed from the lift object, which
+          // render() kept visible wherever a visible Tour rode it -- but that exemption is gone now that
+          // lifts follow the same filter rules as trails, and without its own mask a Tour's lift stretch
+          // would let the tile's aerialway line show through under the symbol. Own pane, so it stays BELOW
+          // the trails and cannot tint a trail crossing it -- the reason LIFT_BAND_PANE exists.
+          const liftMask = L.polyline(seg.coords, { pane: LIFT_BAND_PANE, color: LIFT_MASK_COLOR, weight: LIFT_MASK_WEIGHT, opacity: 1, lineCap:"round", lineJoin:"round", bubblingMouseEvents:false, interactive:false });
           const liftHairline = L.polyline(seg.coords, { color: LIFT_LINE_COLOR, weight: LIFT_HAIRLINE_WEIGHT, opacity: 1, bubblingMouseEvents:false, interactive:false });
           liftDots = L.polyline(seg.coords, { color: LIFT_LINE_COLOR, weight: LIFT_DOT_WEIGHT, opacity: 1, dashArray: LIFT_DOT_DASH, lineCap:"round", bubblingMouseEvents:false, interactive:false });
-          segmentLayers.push(liftHairline, liftDots);
+          // segmentLayers only, never styleableLayers: all three are width/opacity-defined, so a group-wide
+          // setStyle would flatten them (see the two-handles comment above).
+          segmentLayers.push(liftMask, liftHairline, liftDots);
         } else {
           visibleSeg = L.polyline(seg.coords, {
             color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
@@ -4148,17 +4156,15 @@ function flyToTrailBounds(bounds){
 }
 
 // ---- Lifts: one place that decides visibility, one sidebar section --------------------------------
-// Lifts used by a currently-visible Tour. Same rule the component trails already follow: being part of a
-// visible Tour makes something visible regardless of the filters (a red trail still shows inside a Tour
-// when "rot" is off). So a lift a Tour rides shows its band even with the "Lifte" switch off, or when only
-// the "Challenges" sub-region is active and the lift's own sub-region isn't -- which is exactly the case
-// where the user first found lifts missing (2026-07-26). Filled by render()'s region loop; module-level
-// rather than local to it because applyLiftVisibility() is also called on its own from applySolo/clearSolo,
-// which must not have to re-derive it.
-let liftIdsInVisibleTours = new Set();
-
+// A lift obeys its filters exactly as a trail obeys its own -- no exemption for being ridden by a visible
+// Tour. There WAS one (2026-07-26 to 2026-07-30): a lift a Tour rides stayed on the map even with the
+// "Lifte" switch off, or with its sub-region inactive. The user rejected it as inconsistent, and they are
+// right: a red trail inside a Tour is also gone from the map, the list and the counts when "rot" is off --
+// the Tour keeps showing that *stretch* because the Tour draws it itself, which is now equally true of a
+// lift stretch (buildTrailLayer draws its mask too since the exemption went, or the tile's own aerialway
+// line would have shown through it).
 function liftPassesFilters(l){
-  return (showLifts && activeRegions.has(l.region)) || liftIdsInVisibleTours.has(l.id);
+  return showLifts && activeRegions.has(l.region);
 }
 // Solo hides a lift rather than dimming it -- see the LIFT_MASK_COLOR block for why dimming cannot work
 // for a masked line. A soloed Tour keeps the lifts it RIDES: they are part of that route, not competing
@@ -4304,9 +4310,6 @@ function render(){
   // global shown/total line below (region + diff + category filters all applied), not just a raw
   // per-region trail count, so a chip reads "how many would you actually see right now".
   const regionVisibleCounts = {};
-  // Refilled from scratch on every render; consumed by applyLiftVisibility()/renderLiftList() below and,
-  // between renders, by applySolo/clearSolo. See its declaration above the lift block.
-  liftIdsInVisibleTours = new Set();
   const groupVisibleCounts = {};
 
   Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
@@ -4344,10 +4347,6 @@ function render(){
         const categoryOk = t.loop ? (showLoop && !builderMode) : (t.uphill ? showUphill : showDownhill);
         const visible = regionOk && activeDiffs.has(t.diff) && categoryOk;
         if (visible) { regionVisibleCounts[regionKey]++; groupVisibleCounts[groupKey]++; }
-        // Note the lifts a visible Tour rides, so the LIFTS loop below can show their bands too.
-        if (visible && t.loop) {
-          (TRAIL_SEGMENTS[t.id] || []).forEach(s => { if (s.liftId) liftIdsInVisibleTours.add(s.liftId); });
-        }
         if (layer) {
           if (visible) {
             map.addLayer(layer.line); map.addLayer(layer.hitLine);
@@ -4441,9 +4440,8 @@ function render(){
     }
   });
 
-  // Lifts: their own visibility rule and their own list, both above (liftIdsInVisibleTours is final by
-  // now -- the region loop has fully run). Left out of the shown/total counters, which count rideable
-  // trails only; the Lifte section carries its own count.
+  // Lifts: their own visibility rule and their own list, both above. Left out of the shown/total counters,
+  // which count rideable trails only; the Lifte section carries its own count.
   applyLiftVisibility();
   const liftsShown = renderLiftList();
 
