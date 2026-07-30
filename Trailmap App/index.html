@@ -4572,7 +4572,19 @@ async function boot(){
     regionDialogEl.classList.add("visible");
   }
 }
-boot();
+// The catch matters: everything past boot()'s first `await` is asynchronous, so the top-level try{} at the
+// start of this block cannot see it and neither can window.onerror (an unhandled promise rejection is not an
+// error event). Without this, a throw in the second half of boot() produced a SILENT half-started app --
+// trails on the map, because activateRegionGroup renders on its own, but no restored sub-region filters, no
+// builder state, no map fit, and no hint that anything went wrong. Found 2026-07-31 while mutation-testing
+// tools/lift_testcases.js: the #appTitle crash of two days earlier had exactly this shape.
+boot().catch((err) => {
+  console.error(err);
+  const msgEl = document.getElementById("fatalErrorMsg");
+  if (msgEl) msgEl.textContent = (err && err.message) ? err.message : String(err);
+  const panel = document.getElementById("fatalError");
+  if (panel) panel.classList.add("visible");
+});
 
 // ---- Offline support: service worker + online/offline indicator + manual tile preload ----
 if ("serviceWorker" in navigator) {
