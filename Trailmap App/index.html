@@ -2819,6 +2819,21 @@ const ipContent = document.getElementById("ipContent");
 let soloId = null;
 const SOLO_DIM_OPACITY = 0.15;
 
+// A Tour's own lift stretches while solo is active. They are exempt from the Tour's group styling (width
+// contrast, see buildTrailLayer) and were therefore the ONE thing solo never touched: soloing a trail left
+// 15 fully opaque grey-and-dotted lift stretches lying across the map, which is what the user reported twice
+// as "Solo blendet Lifte nicht aus". Hidden outright for every non-soloed Tour, not dimmed -- dimming the
+// mask would just uncover the tile's own aerialway line, the same trap documented at LIFT_MASK_COLOR. Nothing
+// interactive is lost: these strokes carry no handlers (the user confirmed the stretches are already neither
+// hoverable nor clickable while solo is on), and a gap in a Tour that is itself dimmed to 15% is not visible.
+// The soloed Tour keeps its own, at full strength, exactly as a soloed lift stays on the map.
+function applyLiftSegmentOpacity(){
+  Object.entries(lineLayers).forEach(([lid, layer]) => {
+    const o = !soloId || lid === soloId ? 1 : 0;
+    (layer.liftSegments || []).forEach(l => l.setStyle({ opacity: o }));
+  });
+}
+
 function setArrowOpacity(layer, opacity){
   (layer.directionArrows || []).forEach(({ marker }) => {
     const el = marker.getElement();
@@ -2847,7 +2862,8 @@ function applySolo(id){
     }
   });
   soloId = id;
-  applyLiftVisibility(); // after soloId is set -- liftHiddenBySolo() reads it
+  applyLiftVisibility();      // after soloId is set -- liftHiddenBySolo() reads it
+  applyLiftSegmentOpacity();  // ditto: the Tours' own lift stretches, which the group styling above misses
   syncSelectedCardSoloBtn();
 }
 function clearSolo(){
@@ -2859,7 +2875,8 @@ function clearSolo(){
     setArrowOpacity(layer, 1);
   });
   soloId = null;
-  applyLiftVisibility(); // after soloId is cleared -- brings the other lifts back onto the map
+  applyLiftVisibility();     // after soloId is cleared -- brings the other lifts back onto the map
+  applyLiftSegmentOpacity(); // ditto for the Tours' own lift stretches
   applyNameLabels();
   syncSelectedCardSoloBtn();
 }
@@ -3545,6 +3562,7 @@ function buildTrailLayer(t){
   // nothing from the lift object, exactly as its trail stretches borrow nothing from the component trails.
   const segmentLayers = [];      // all segments -> `line`
   const styleableLayers = [];    // non-lift segments -> `styleTarget`
+  const liftSegmentLayers = [];  // the lift stretches' three strokes -> `liftSegments`, for solo only
   let line, styleTarget;
   if (segments) {
       segments.forEach(seg => {
@@ -3562,8 +3580,10 @@ function buildTrailLayer(t){
           const liftHairline = L.polyline(seg.coords, { color: LIFT_LINE_COLOR, weight: LIFT_HAIRLINE_WEIGHT, opacity: 1, bubblingMouseEvents:false, interactive:false });
           liftDots = L.polyline(seg.coords, { color: LIFT_LINE_COLOR, weight: LIFT_DOT_WEIGHT, opacity: 1, dashArray: LIFT_DOT_DASH, lineCap:"round", bubblingMouseEvents:false, interactive:false });
           // segmentLayers only, never styleableLayers: all three are width/opacity-defined, so a group-wide
-          // setStyle would flatten them (see the two-handles comment above).
+          // setStyle would flatten them (see the two-handles comment above). `liftSegments` is the one
+          // exception to that exemption -- solo alone reaches these three, and only their opacity.
           segmentLayers.push(liftMask, liftHairline, liftDots);
+          liftSegmentLayers.push(liftMask, liftHairline, liftDots);
         } else {
           visibleSeg = L.polyline(seg.coords, {
             color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
@@ -3732,7 +3752,7 @@ function buildTrailLayer(t){
   endMarker.on("mouseover", () => setHover(true));
   endMarker.on("mouseout", () => setHover(false));
 
-  lineLayers[t.id] = { line, styleTarget, hitLine, segmentHitLines, segmentNameLabels, startDot, startMarker, endMarker, directionArrows, bounds, setHover, midIdx, coords, card:null };
+  lineLayers[t.id] = { line, styleTarget, hitLine, segmentHitLines, segmentNameLabels, liftSegments: liftSegmentLayers, startDot, startMarker, endMarker, directionArrows, bounds, setHover, midIdx, coords, card:null };
 }
 
 // Undoes buildTrailLayer: removes every layer this trail owns from the map and forgets it.
@@ -4443,6 +4463,7 @@ function render(){
   // Lifts: their own visibility rule and their own list, both above. Left out of the shown/total counters,
   // which count rideable trails only; the Lifte section carries its own count.
   applyLiftVisibility();
+  applyLiftSegmentOpacity();  // also here, so a region activated while solo is on comes up consistent
   const liftsShown = renderLiftList();
 
   // The three summary lines split the same information by the question each section answers (user,

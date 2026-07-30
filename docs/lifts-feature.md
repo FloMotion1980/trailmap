@@ -160,6 +160,21 @@ back, solo 0.85→0.15 with the soloed one at 0.9, and back).
 — which also means the Tour never has a gap there, unlike the earlier "band only, no line in the Tour"
 version. Hovering the stretch itself still gives feedback: its own dots grow.
 
+**One exception, added 2026-07-30: solo.** Being exempt from the group styling made these stretches the one
+thing solo never reached — soloing a trail removed all 20 standalone lifts and left 15 fully opaque
+grey-and-dotted lift stretches lying across the map. That is the same complaint ("Solo blendet Lifte nicht
+aus") the mask/dim discovery above had already answered once, arriving a second time from a different
+direction, and it got louder the same day the Tour started drawing its own mask. `liftSegments` is a third
+per-trail handle holding exactly those three strokes, and `applyLiftSegmentOpacity()` — called from
+`applySolo`, `clearSolo` and `render()` — is the only thing that touches it, and only its opacity.
+
+Hidden outright (`opacity: 0`) for every non-soloed Tour rather than dimmed, for the reason given above:
+dimming the mask would just uncover the tile's aerialway line. Two things make that safe — the user
+confirmed these stretches are already neither hoverable nor clickable while solo is on, so nothing
+interactive is lost, and a gap in a Tour that is itself dimmed to 15% is not visible. The *soloed* Tour keeps
+its own stretches at full strength, alongside the standalone lifts it rides (`liftHiddenBySolo`), so soloing
+a Tour still shows its whole route including every cable.
+
 **All three strokes, mask included, are drawn per Tour** (since 2026-07-30). Until then the mask was borrowed
 from the lift object, which `render()` kept on the map wherever a visible Tour rode it — see the filter rule
 below for why that exemption is gone. A Tour is now self-sufficient for a lift stretch exactly as it already
