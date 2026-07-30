@@ -567,7 +567,16 @@ const REGION_CATALOG = {
     // The old Reiteralm geometry was worse than a cosmetic mismatch: e.g. Eiskar Trail measured 2.0 km
     // against the real 5.15 km -- confirming the prior build's own "branch fragments left out" note.
     // NOT built: "Planai Runde" (304), a 34.2 km round tour -- belongs in the Touren feature, not here.
-    label: "Bikeland Schladming-Dachstein", file: "regions/schladming.json", trailCount: 25,
+    // Corrected 2026-07-30 (same day): the user pushed back that difficulty IS a structured field, not just
+    // loose prose -- right. It's a `teaser__difficulty--{blue,red,black}` badge on each trail's LISTING-page
+    // card, not on the trail's own tour page. Re-checked every trail against it: fixed Gassl Trail
+    // (rot->schwarz), Hochalm Trail (blau->rot), Junior Trails (guessed gruen->blau), and the same listing
+    // page named two more real trails neither build had found: Skill Area (110) and Route 66 (66). Also:
+    // "Bike Area (400)" was never one trail -- it's three parallel beginner lines (Bobby/Cool/Rocket Line)
+    // sharing one top and bottom station, recorded as one GPX riding all three back to back, which is why it
+    // drew as a self-crossing loop. Split into three generically-numbered entries (which recorded segment is
+    // really which named line isn't knowable from the data -- the user's call). See tools/build_schladming.py.
+    label: "Bikeland Schladming-Dachstein", file: "regions/schladming.json", trailCount: 29,
     bounds: [[47.35919, 13.58599], [47.42899, 13.80129]],
     subRegions: {
       planai: { label: "Bikepark Schladming", color: "#1c9c8a" },
