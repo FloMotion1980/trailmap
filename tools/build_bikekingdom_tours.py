@@ -140,6 +140,8 @@ TOUR_REGION = "bk_biketickets"
 DENSIFY_M = 10.0      # both the tour track and the candidate trails, so a short component cannot fall
                       # between two raw vertices (GPX tracks here are up to ~90 m apart in places)
 MATCH_M = 25.0        # a tour point this close to a trail counts as riding it
+EXTEND_MATCH_M = 100.0  # looser -- only to GROW an already-found run into its neighbouring connector,
+                        # never to start a new match from scratch (see extend_trail_ends)
 MIN_RUN_M = 200.0     # shorter runs are crossings or a shared first corner, not a ride
 GAP_FILL_M = 150.0    # same trail either side of a gap this short -> one ride, not two
 MERGE_SAME_TRAIL_M = 600.0  # ...and up to this far, when the trail also continues where it left off
@@ -147,7 +149,11 @@ LIFT_NEAR_M = 60.0    # a tour point this close to a cable may be a ride on it
 LIFT_STATION_M = 250.0  # ...but only if the run reaches both stations, one at each end
 LIFT_SPAN_FRAC = 0.6  # ...and covers at least this much of the cable, so passing UNDER one is not a ride
 LIFT_DETOUR_MAX = 1.2   # ...and runs almost straight, which a switchbacking uphill trail under it does not
-MAX_QUIET_JOIN_M = 60.0  # a longer seam between two segments is a defect to report, not one to bridge
+MAX_QUIET_JOIN_M = 115.0  # a longer seam between two segments is a defect to report, not one to bridge --
+                          # raised from 60 once extend_trail_ends existed: it deliberately stops a trail
+                          # extension right at EXTEND_MATCH_M (100 m), so the following connector's own
+                          # recorded point can legitimately sit up to that far from the trail's last accepted
+                          # point. That is not a defect, it is where extension correctly gave up.
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -365,6 +371,99 @@ def label_lifts(pts, labels, lifts):
                 todo.append((b + 1, e))
 
 
+def _edge_dense_pos(dense, v, toward_larger):
+    """A starting index into `dense` (a (lat,lon,srcIdx) list, srcIdx non-decreasing) next to vertex `v`.
+
+    toward_larger=True: the LAST dense index with srcIdx <= v, so stepping +1 moves into larger srcIdx.
+    toward_larger=False: the FIRST dense index with srcIdx >= v, so stepping -1 moves into smaller srcIdx.
+    """
+    if toward_larger:
+        pos = -1
+        for i, (_, _, s) in enumerate(dense):
+            if s <= v:
+                pos = i
+            else:
+                break
+        return pos
+    for i, (_, _, s) in enumerate(dense):
+        if s >= v:
+            return i
+    return len(dense)
+
+
+def extend_trail_ends(pts, labels, vidx, trails, geo, lift_ids, vertex_at):
+    """Grow each trail run outward into its neighbouring connector, at a looser tolerance, in place.
+
+    MATCH_M's strict 25 m is right for deciding WHICH trail a point belongs to, but it also means a GPS
+    recording that drifts off a narrow trail falls out of the match entirely -- the user found this on the
+    E-bike tour: Älplisee Trail lost ~1.3 km in the middle and ~600 m at the end, Hörnli Trail lost 50 m at the
+    start and 1.26 km at the end, even though the tour's own track stays within roughly 90-200 m of the trail
+    there the whole time. The visible defect was exactly what the user described: the gap gets drawn using the
+    tour's own (drifted) recording, a visibly different line than the trail's real one shown everywhere else.
+
+    The fix is the one already agreed for the multi-run overlap case: draw the trail's OWN clean geometry
+    instead of the tour's line, wherever the tour plausibly still follows it. This walks outward from each
+    trail run's two edges, one track point and one trail vertex at a time, absorbing connector points into the
+    run as long as they stay within EXTEND_MATCH_M of the trail's next vertex -- looser than MATCH_M, since
+    rescuing exactly this kind of drift is the point, but it still stops the moment the tour genuinely diverges
+    (a real fork), or the connector, or the trail itself, runs out. Two runs of the SAME trail extending toward
+    each other close the gap between them entirely, which is how Älplisee's middle stretch gets bridged.
+
+    Walks along DENSIFIED trail points (~10 m apart, same spacing as the densified track), not the original
+    simplified vertices directly -- those can be tens or hundreds of metres apart on a straight stretch, which
+    would make a one-vertex-per-track-point walk overshoot and fail immediately from pacing alone, not from
+    any real divergence.
+
+    Verified against real data where the walk stops, not just where it succeeds (Hörnli Trail's tail on the
+    E-bike tour): right at the point EXTEND_MATCH_M gives up, the closest-matching trail vertex, tracked
+    onward WITHOUT any distance cutoff, starts moving BACKWARD to smaller vertex numbers a few points later --
+    the tour genuinely leaves the trail's corridor there and happens to pass near an earlier stretch of the
+    same trail afterwards, it does not just drift a little further along the same line. A looser threshold or
+    a free nearest-vertex search (instead of the strict one-step-at-a-time walk) would have latched onto that
+    coincidence and drawn the tour riding backward along ground it had already covered. EXTEND_MATCH_M=100
+    reaches to within a couple hundred metres of that real boundary without crossing it.
+    """
+    dense_by_trail = {t["id"]: densify(geo[t["id"]]) for t in trails if not t.get("loop")}
+    rs = runs_of(labels)
+    for i, (lab, a, b) in enumerate(rs):
+        if lab is None or lab in lift_ids:
+            continue
+        tid = lab
+        dense = dense_by_trail[tid]
+        v_a, v_b = vertex_at(a, b), vertex_at(a, b, last=True)
+        if v_a is None or v_b is None:
+            continue
+        fwd = v_b >= v_a
+
+        if i < len(rs) - 1 and rs[i + 1][0] is None:
+            _, _ca, cb = rs[i + 1]
+            step = 1 if fwd else -1
+            pos = _edge_dense_pos(dense, v_b, toward_larger=fwd)
+            k = b + 1
+            while k <= cb and 0 <= pos + step < len(dense):
+                pos += step
+                if labels[k] is not None and labels[k] != tid:
+                    break
+                if haversine_m(pts[k], dense[pos][:2]) > EXTEND_MATCH_M:
+                    break
+                labels[k], vidx[k] = tid, dense[pos][2]
+                k += 1
+
+        if i > 0 and rs[i - 1][0] is None:
+            _, ca, _cb = rs[i - 1]
+            step = -1 if fwd else 1
+            pos = _edge_dense_pos(dense, v_a, toward_larger=not fwd)
+            k = a - 1
+            while k >= ca and 0 <= pos + step < len(dense):
+                pos += step
+                if labels[k] is not None and labels[k] != tid:
+                    break
+                if haversine_m(pts[k], dense[pos][:2]) > EXTEND_MATCH_M:
+                    break
+                labels[k], vidx[k] = tid, dense[pos][2]
+                k -= 1
+
+
 def match_components(track, trails, geo, lifts, verbose=True):
     """Label each point of `track` with the component trail it is riding, then find the lift rides.
 
@@ -451,6 +550,8 @@ def match_components(track, trails, geo, lifts, verbose=True):
                 labels[k] = tid
             changed = True
             break
+
+    extend_trail_ends(pts, labels, vidx, trails, geo, lift_ids, vertex_at)
 
     out = []
     for lab, a, b in runs_of(labels):

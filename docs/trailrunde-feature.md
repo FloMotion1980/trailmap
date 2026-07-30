@@ -100,6 +100,38 @@ above, schwarz draws 90.4 km against 90.2 km, and the worst remaining seam is 95
 Seams are reported rather than silently trimmed, per the standing rule that an uncertain heuristic must
 produce the honest output plus a marker, not the clever guess.
 
+## A fifth trap, found after the first four (2026-07-30): MATCH_M is right for deciding, wrong for extending
+
+Even with all four fixes above, the user found the E-bike tour's Hörnli Trail still missing 50 m at the
+start and 1.26 km at the end, and Älplisee Trail missing ~1.3 km in the middle and ~600 m at the end — every
+one of those gaps was drawn using the tour's own recorded line, which visibly diverges from the trail's real
+line rendered everywhere else on the map. In every case the tour's actual track stayed within roughly
+90-200 m of the true trail there — well beyond `MATCH_M` (25 m, correct for *deciding which trail a point
+belongs to*, since two trails can run that close together) but well within what a human looking at the map
+would call "still riding this trail."
+
+**Fix: `extend_trail_ends`**, a second pass after the initial match + despeckle + gap-fill. It grows each
+matched trail run outward into its neighbouring connector, one *densified* trail point (~10 m spacing, same
+as the densified track — walking the original, coarser simplified vertices directly overshoots on a long
+straight stretch and fails from pacing alone) and one track point at a time, accepting each step only while
+it stays within `EXTEND_MATCH_M` (100 m — looser, and used *only* to grow an already-found run, never to
+start one). Two runs of the same trail extending toward each other close the gap between them entirely,
+which is how Älplisee's middle stretch got bridged.
+
+**Why a strict one-step lockstep walk, not a free "nearest point within 100 m" search**: verified directly
+against where the walk gives up (Hörnli Trail's tail, E-bike tour) that stopping is correct there, not just a
+threshold that could be nudged further. Tracking the closest-matching trail vertex onward with no distance
+cutoff at all shows it jump *backward* to smaller vertex numbers a few points later — the tour genuinely
+leaves the trail's corridor at that point and happens to pass near an *earlier* stretch of the same trail
+afterwards, rather than continuing forward along it. A free nearest-vertex search would have latched onto
+that coincidence and drawn the tour riding backward over ground already covered. The strict, monotonic,
+one-vertex-per-step walk cannot do that — it can only fail safely.
+
+**`MAX_QUIET_JOIN_M` raised from 60 to 115** as a consequence: a trail extension deliberately stops right at
+`EXTEND_MATCH_M`, so the following connector's own first recorded point can legitimately sit up to that far
+from the trail's last accepted point — not a defect, just where extension correctly gave up. Reports dropped
+from 20+ flagged seams to 1 on rebuilding all four tours.
+
 ## Deliberately not addressed
 
 The overlap-when-both-visible case (loop and its component trails simultaneously shown) was explicitly *not* addressed with extra suppression logic — the user was fine with it (toggle the relevant category filter off if it's ever distracting), especially now that the geometry lines up exactly instead of jittering.
