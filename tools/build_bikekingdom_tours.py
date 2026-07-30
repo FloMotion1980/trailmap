@@ -145,6 +145,7 @@ EXTEND_MATCH_M = 100.0  # looser -- only to GROW an already-found run into its n
 MIN_RUN_M = 200.0     # shorter runs are crossings or a shared first corner, not a ride
 GAP_FILL_M = 150.0    # same trail either side of a gap this short -> one ride, not two
 MERGE_SAME_TRAIL_M = 600.0  # ...and up to this far, when the trail also continues where it left off
+MAX_TRAIL_GAP_M = 600.0     # ...or any ridden distance, as long as this little TRAIL is missing in between
 LIFT_NEAR_M = 60.0    # a tour point this close to a cable may be a ride on it
 LIFT_STATION_M = 250.0  # ...but only if the run reaches both stations, one at each end
 LIFT_SPAN_FRAC = 0.6  # ...and covers at least this much of the cable, so passing UNDER one is not a ride
@@ -556,34 +557,50 @@ def match_components(track, trails, geo, lifts, verbose=True):
     # drifts more than MATCH_M off the trail there. The trails themselves are fine -- only the tour's stretches
     # were broken up, and the three overlapping clips also drew the Hörnli Trail 1.6x longer than it was
     # ridden. Merging them gives one clean stretch per ride.
-    changed = True
-    while changed:
-        changed = False
-        rs = runs_of(labels)
-        for i in range(1, len(rs) - 1):
-            (lab, a, b) = rs[i]
-            tid = rs[i - 1][0]
-            if lab is not None or tid is None or tid != rs[i + 1][0] or tid in lift_ids:
-                continue
-            gap = run_len_m(pts, a, b)
-            if gap >= GAP_FILL_M:
-                if gap > MERGE_SAME_TRAIL_M:
+    def merge_same_trail_gaps():
+        changed = True
+        while changed:
+            changed = False
+            rs = runs_of(labels)
+            for i in range(1, len(rs) - 1):
+                (lab, a, b) = rs[i]
+                tid = rs[i - 1][0]
+                if lab is not None or tid is None or tid != rs[i + 1][0] or tid in lift_ids:
                     continue
-                left_out, right_in = vertex_at(*rs[i - 1][1:], last=True), vertex_at(*rs[i + 1][1:])
-                left_in, right_out = vertex_at(*rs[i - 1][1:]), vertex_at(*rs[i + 1][1:], last=True)
-                if None in (left_in, left_out, right_in, right_out):
-                    continue
-                # re-joins the trail near where it left it, and keeps going the same way
-                if haversine_m(geo[tid][left_out], geo[tid][right_in]) > MERGE_SAME_TRAIL_M:
-                    continue
-                if (left_out >= left_in) != (right_out >= right_in):
-                    continue
-            for k in range(a, b + 1):
-                labels[k] = tid
-            changed = True
-            break
+                gap = run_len_m(pts, a, b)
+                if gap >= GAP_FILL_M:
+                    left_out, right_in = vertex_at(*rs[i - 1][1:], last=True), vertex_at(*rs[i + 1][1:])
+                    left_in, right_out = vertex_at(*rs[i - 1][1:]), vertex_at(*rs[i + 1][1:], last=True)
+                    if None in (left_in, left_out, right_in, right_out):
+                        continue
+                    # Keeps going the same way along the trail -- a trail ridden twice from the top must not
+                    # merge into one segment.
+                    if (left_out >= left_in) != (right_out >= right_in):
+                        continue
+                    # How much TRAIL is missing between leaving it and re-joining it. This, not the ridden
+                    # distance, is the size that matters: the user's Älplisee gaps had only 417 m and 340 m of
+                    # trail missing while the tour covered 986 m and more going around them, so a
+                    # ridden-distance limit rejected exactly the gaps that most obviously needed closing. Only
+                    # a connector can sit between the two runs (a lift or another trail would be its own run
+                    # and fail the `tid != rs[i+1][0]` test above), so a long ridden gap here just means the
+                    # recording wandered off the trail and came back -- which is what we want to draw over.
+                    lo, hi = sorted((left_out, right_in))
+                    trail_gap = cumulative_km(geo[tid][lo:hi + 1])[-1] * 1000 if hi > lo else 0.0
+                    if trail_gap > MAX_TRAIL_GAP_M and gap > MERGE_SAME_TRAIL_M:
+                        continue
+                for k in range(a, b + 1):
+                    labels[k] = tid
+                changed = True
+                break
 
+    # Runs BEFORE and AFTER the edge extension, deliberately. Before, it joins runs that are already close
+    # enough. After matters just as much: extending both runs' edges shrinks the trail gap between them, and
+    # a gap that was too wide to merge on the first pass can fall under the limit once the edges have grown.
+    # That is exactly what kept Älplisee Trail's 417 m gap open in the black tour -- the merge test ran while
+    # the two runs were still their un-extended, shorter selves.
+    merge_same_trail_gaps()
     extend_trail_ends(pts, labels, vidx, trails, geo, lift_ids, vertex_at)
+    merge_same_trail_gaps()
 
     out = []
     for lab, a, b in runs_of(labels):

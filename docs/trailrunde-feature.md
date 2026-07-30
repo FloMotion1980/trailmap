@@ -132,6 +132,37 @@ one-vertex-per-step walk cannot do that — it can only fail safely.
 from the trail's last accepted point — not a defect, just where extension correctly gave up. Reports dropped
 from 20+ flagged seams to 1 on rebuilding all four tours.
 
+### Two follow-ups the user found afterwards, both real
+
+**1. The walk must be allowed to catch up.** Advancing strictly one trail point per track point is too rigid:
+the two are sampled at different effective speeds, so the pairing slowly loses sync and then fails a distance
+check while the tour is demonstrably still on the trail. That cut Hörnli Trail 404 m short of its own end on
+the E-bike tour — past the cut the track sits 2–22 m from the trail with its matched vertex index climbing
+steadily. `_advance()` now consumes up to `EXTEND_CATCHUP` (8) trail points per track point, taking the
+closest within tolerance, while remaining **strictly monotonic** — that monotonicity is the property that
+stops a free nearest-point search from latching onto an earlier stretch of the same trail and drawing the
+tour riding backward. Worth knowing why that spot is hard: Hörnli Trail and Älplisee Trail **share their
+final 1297 m and end 42 m apart**, so the neighbouring trail is intermittently the closer of the two there.
+
+Also corrected an earlier wrong conclusion recorded here: I had verified that the tour "genuinely leaves the
+trail" at that cut. It does not — the backward vertex jump I measured only appears *further* on, past where
+the tour really does turn off. Measuring where a walk stops is not the same as proving it *should* stop.
+
+**2. Measure the missing TRAIL, not the ridden distance.** `MERGE_SAME_TRAIL_M` gated gap-closing on how far
+the tour rode around a gap, which rejected exactly the gaps that most needed closing: Älplisee Trail in the
+black tour had only **417 m of trail** missing while the tour covered 986 m going around it. `MAX_TRAIL_GAP_M`
+now measures the missing trail itself and allows any ridden distance under it. Safe because only a *connector*
+can sit between the two runs — a lift or a different trail would be its own run and fail the same-trail test —
+so a long ridden gap there just means the recording wandered off and came back.
+
+**And run the merge pass on both sides of the extension.** Extending both runs' edges shrinks the trail gap
+between them, so a gap too wide to merge on the first pass can fall under the limit afterwards. Running
+`merge_same_trail_gaps()` only before `extend_trail_ends()` is what kept that 417 m gap open. Result: all four
+tours now have a largest segment-to-segment seam of **0 m**.
+
+The one Älplisee gap left (340 m) is correct and deliberately kept: it sits exactly where the tour leaves the
+trail to reach the lift station, running ~125 m off it — outside the corridor, so not the same ride.
+
 ## Deliberately not addressed
 
 The overlap-when-both-visible case (loop and its component trails simultaneously shown) was explicitly *not* addressed with extra suppression logic — the user was fine with it (toggle the relevant category filter off if it's ever distracting), especially now that the geometry lines up exactly instead of jittering.
