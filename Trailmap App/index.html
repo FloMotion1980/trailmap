@@ -204,12 +204,15 @@ const LIFTS = [];
 // entry here + a matching regions/<key>.json (see activateRegionGroup below).
 const REGION_CATALOG = {
   paznaun: {
-    label: "Silvretta Bike Arena", file: "regions/paznaun.json", trailCount: 25,
+    // "Schrofa Trail" added 2026-07-30 from the user's own GPX (Material/Paznaun), 180 m -- confirmed by the
+    // user (visited that day) to be the trail's full length, not a truncated recording. No OSM/official
+    // source exists for it; difficulty (rot) is the user's own on-site judgement.
+    label: "Silvretta Bike Arena", file: "regions/paznaun.json", trailCount: 26,
     bounds: [[46.8344, 10.14123], [47.07058, 10.4054]],
     subRegions: {
       ischgl:  { label: "Ischgl/Samnaun", color: "#3a7a4a" },
       kappl:   { label: "Kappl",          color: "#3a6b8a" },
-      galtuer: { label: "Galtür",         color: "#8a3a63" }
+      galtuer: { label: "Silva Trails Galtür", color: "#8a3a63" }
     }
   },
   dreilaender: {
