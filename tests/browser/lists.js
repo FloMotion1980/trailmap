@@ -19,12 +19,47 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
   T.eq("order", ids, ["secTrails", "secTouren", "secLifts"]);
   T.ok("each has its own count label",
        ["#trailCountLabel", "#tourCountLabel", "#liftCountLabel"].every((s) => !!TM.$(s)), true, true);
-  // All three sit outside .filters and therefore do not inherit its 16px indent -- the same regression twice.
-  const pads = ids.map((id) => getComputedStyle(TM.$("#" + id + " > summary")).paddingLeft);
-  T.eq("all three summaries are indented the same", [...new Set(pads)], ["16px"]);
-  T.eq("and it matches the Filter section's own text indent",
-       Math.round(TM.$("#secFilter .section-title-row").getBoundingClientRect().left),
-       Math.round(TM.$("#secTrails .section-title-row").getBoundingClientRect().left));
+  // One content column for the whole sidebar (2026-08-01). Checked as the rendered LEFT EDGE, not as a padding
+  // value: these three sections sit outside .filters and get their indent from their own margin now, so a
+  // padding-based check would fail on a correct layout. Every content edge has to agree -- that was the
+  // complaint ("Trails, Lifte und Touren haben einen anderen Abstand als der Rahmen der Bike Regionen"), where
+  // the trail cards sat at 12px against the region boxes' 16px.
+  const leftOf = (sel) => Math.round(TM.$(sel).getBoundingClientRect().left);
+  const column = leftOf("#regionChips .region-group-block");
+  [["#secFilter .section-title-row", "the Filter heading"],
+   ["#secTrails .section-title-row", "the Trails heading"],
+   ["#secTouren .section-title-row", "the Touren heading"],
+   ["#secLifts .section-title-row", "the Lifte heading"],
+   ["#addRegionBtn", "the add-region button"],
+   ["#diffChips .chip", "the difficulty chips"],
+   ["#trailList .trail-card", "the trail cards"],
+   ["#trailList .hub-title", "the hub headings"],
+   ["#trailList .region-group-title", "the region-group headings"]].forEach(([sel, what]) => {
+    T.ok(what + " starts on the content column", Math.abs(leftOf(sel) - column) <= 1,
+         leftOf(sel) - column, "0 from the region boxes");
+  });
+
+  T.test("every separator line in the menu is the same length, and there is only one per boundary");
+  // Section lines used to be 349px outside .filters and 317px inside it, and each hub drew a third separator on
+  // top of its own coloured heading -- two lines and a title for one boundary before a new region group.
+  const seps = [];
+  TM.$$("aside *").forEach((e) => {
+    const cs = getComputedStyle(e), r = e.getBoundingClientRect();
+    if (r.width < 40) return;
+    // A separator is a line, i.e. a border on the top or bottom ONLY. Anything with a left or right border is a
+    // box (a card, a chip, the region pill, a button) and is not part of this question -- the first version of
+    // this check listed the region-group pills as 143px and 186px "separators".
+    if (parseFloat(cs.borderLeftWidth) > 0 || parseFloat(cs.borderRightWidth) > 0) return;
+    ["Top", "Bottom"].forEach((side) => {
+      if (parseFloat(cs["border" + side + "Width"]) > 0 && cs["border" + side + "Color"] !== "rgba(0, 0, 0, 0)") {
+        seps.push({ el: e.id || e.className.toString().split(" ")[0], w: Math.round(r.width) });
+      }
+    });
+  });
+  T.ok("there are separator lines to compare", seps.length >= 4, seps.length, ">= 4");
+  T.eq("all of them span the same width", [...new Set(seps.map((s) => s.w))], [Math.round(TM.$("#regionChips .region-group-block").getBoundingClientRect().width)]);
+  T.eq("no hub group draws its own line any more",
+       TM.$$("#trailList .hub-group").filter((g) => parseFloat(getComputedStyle(g).borderBottomWidth) > 0).length, 0);
 
   T.test("the trail list is grouped region -> sub-region, each with its own count");
   const groups = TM.$$("#trailList .region-group-title");

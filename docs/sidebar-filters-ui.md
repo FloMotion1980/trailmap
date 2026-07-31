@@ -75,6 +75,39 @@ One behaviour worth knowing rather than fixing: **closing a region and re-adding
 bottom**, because `REGION_GROUPS` is keyed in activation order. The `regions` suite compares the active set,
 not the order, for exactly this reason.
 
+## One content column, one kind of separator (2026-08-01)
+
+A measured pass over every inset and every line in the sidebar, after the user asked for one ("Solche Design
+Aspekte sind mir wichtig"). Five things were off, all of them for the same structural reason: the three list
+sections sit *outside* `.filters` and so never inherited its 16px padding, while everything inside it did.
+
+| | before | after |
+|---|---|---|
+| Trail/Tour/lift cards | left edge at **12px** | 16px, flush with the region boxes' frame |
+| Section lines inside `.filters` | 317px (16…333) | 317px |
+| Section lines outside it (Trails/Touren/Lifte) | **349px, full bleed** | 317px |
+| `.filters`' own bottom border | **349px, full bleed** | gone; `#secMapOptions` draws that separator now |
+| Line under every hub group | present | gone |
+| Region → Filter boundary | **31px** | 17px, like every other boundary |
+
+The fix is `margin: 0 16px` on `#secTrails`/`#secTouren`/`#secLifts` — which makes their own `border-bottom`
+the same line as the filter sections' — plus removing the 16px that their children were each adding a second
+time (`summary`, `.hub-title`, `.region-group-title`, and the cards' `margin`).
+
+**Why the hub line went.** A new sub-region already announces itself with its own coloured uppercase title, and
+before a new *region* group there is that group's 2px top border 12px further down as well — so the line was the
+third separator for one boundary. What is left inside a list is exactly one line, the 2px region-group rule; a
+different weight from the 1px section rules on purpose, because it is a different level of the hierarchy.
+
+**The one gap that is deliberately not uniform** is `.region-groups-container`'s `margin-top: 18px`: the first
+region box's legend is lifted onto its own top border and needs the room, or it covers the "Region" heading —
+a regression that has been fixed twice already.
+
+The `lists` suite now checks both properties directly: every content edge against the region boxes' own left
+edge, and every separator's width against the boxes' width. It discriminates a line from a box by asking
+whether the element has a left or right border — the first version reported the region-group pills as 143px and
+186px "separators".
+
 ## One vertical line for the caret, the ✕ and the 📍 (2026-08-01)
 
 All three are **centred on the line that frames the regions** — the region box's right border, which is also
