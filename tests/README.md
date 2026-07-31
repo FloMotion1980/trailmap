@@ -11,6 +11,15 @@ python tests/run.py --suite solo labels
 `tests/_bundle.js`, printing the path and the preconditions. That split is not a convenience — see *Two
 runners* below.
 
+**Keep the browser window visible while a suite runs.** A hidden or background tab has its timers
+throttled to roughly one tick per minute, and every wait in the harness is a timer: the full browser run
+takes **~25 seconds** in a visible window and does not finish at all in a hidden one. A run that seems to
+hang part-way through is almost always this, not a failure.
+
+Current state, all green: **12 suites, 114 cases, 464 checks** — 88 cases / 394 checks in the browser
+(filters 10, geometry 15, infopanel 10, labels 9, lifts 8, lists 13, regions 13, solo 10) and 26 cases /
+70 checks in Python.
+
 ## Serve the repo root, not the app folder
 
 ```bash
