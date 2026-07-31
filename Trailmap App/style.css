@@ -134,10 +134,10 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 .section-title-row > span:first-child{ flex-shrink:0; }
 .section-meta{ font-weight:400; text-transform:none; letter-spacing:normal; opacity:0.75; font-size:10.5px;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; flex:1 1 auto; }
-/* text-align:right because the box is width-RESERVED for the region's own total (see rebuildRegionChips): when
-   the visible count is shorter than that, the slack has to go somewhere, and a right-aligned number in a fixed
-   field reads like a table column. Left-aligned it produced "( 0 )" -- a gap before the closing paren, which
-   looks like a typo rather than alignment. */
+/* text-align:right because the box is width-RESERVED for the region's own total (see rebuildRegionChips). The
+   box holds the whole " (n)", so right-aligning it pushes the leftover width to the START -- between the label
+   and the opening paren, where it only widens a word space. Left-aligned it sat after ")" and made the chip
+   look right-padded; with the parens outside the box it sat inside them and read as "( 0 )". */
 .region-count{ font-weight:400; opacity:0.75; display:inline-block; font-variant-numeric: tabular-nums;
   text-align: right; }
 .chip-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
@@ -624,8 +624,24 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   box-shadow:0 10px 30px rgba(0,0,0,0.3); position:relative;
   display:flex; flex-direction:column;
 }
+/* padding-right keeps the rows off the scrollbar: the toggle buttons ended flush against it, which read as
+   the bar overlapping the list (user, 2026-08-01). The matching padding-left keeps the rows centred in the
+   box rather than shifting them left by 8px. */
 #regionDialogList{
-  overflow-y:auto; flex:1; min-height:0;
+  overflow-y:auto; flex:1; min-height:0; padding: 0 8px 0 0;
+  scrollbar-width: thin; scrollbar-color: #cdd5c6 transparent;
+}
+#regionDialogList::-webkit-scrollbar{ width:6px; }
+#regionDialogList::-webkit-scrollbar-track{ background:transparent; }
+#regionDialogList::-webkit-scrollbar-thumb{ background:#cdd5c6; border-radius:3px; }
+/* On touch layouts the bar shows only WHILE the list moves, the same mechanism and the same reasons as
+   #builderSheetBody: the thumb's COLOUR changes, never its width, so nothing reflows under the finger, and the
+   cue that there is more list below is kept rather than removed. `.is-scrolling` is set in JS. */
+@media (max-width: 768px), (pointer: coarse){
+  #regionDialogList{ scrollbar-color: transparent transparent; }
+  #regionDialogList.is-scrolling{ scrollbar-color: #cdd5c6 transparent; }
+  #regionDialogList::-webkit-scrollbar-thumb{ background: transparent; }
+  #regionDialogList.is-scrolling::-webkit-scrollbar-thumb{ background:#cdd5c6; }
 }
 #regionDialog h2{
   font-family:'Copperplate','Trebuchet MS',sans-serif; text-transform:uppercase; letter-spacing:.5px;

@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=59" />
+<link rel="stylesheet" href="style.css?v=60" />
 </head>
 <body>
 <div id="fatalError">
@@ -860,10 +860,8 @@ function rebuildRegionChips(){
     // e.g. " (0)" vs " (182)" — never changes this button's own footprint and shifts flex-wrapped
     // siblings after it (found 2026-07-23, reported by the user as chips "jumping" on activation).
     const groupTotalDigits = String(REGION_CATALOG[groupKey]?.trailCount ?? 0).length;
-    groupCountEl.style.minWidth = groupTotalDigits + "ch";   // digits only -- see the sub-region chips below
-    groupLabel.appendChild(document.createTextNode(" ("));
+    groupCountEl.style.minWidth = "calc(" + groupTotalDigits + "ch + 0.95em)";   // see the chips below
     groupLabel.appendChild(groupCountEl);
-    groupLabel.appendChild(document.createTextNode(")"));
     regionGroupCountEls[groupKey] = groupCountEl;
     groupLabel.title = "Klicken, um alle Unterregionen dieser Region ein-/auszublenden";
     groupLabel.addEventListener("click", () => {
@@ -940,17 +938,18 @@ function rebuildRegionChips(){
       btn.appendChild(document.createTextNode(r.label));
       const subCountEl = document.createElement("span");
       subCountEl.className = "region-count";
-      // Only the DIGITS are width-reserved (2026-08-01). The reservation exists so toggling a sub-region does
-      // not change the chip's footprint and reflow its flex-wrapped siblings -- but reserving `digits + 3`
-      // characters for " (n)" reserved three DIGIT widths for a space and two parentheses, all of which are
-      // much narrower in Arial. The slack landed at the end of the left-aligned box, i.e. as visible dead space
-      // on the chip's right edge (~9px per chip, spotted by the user), and it pushed chips into wrapping that
-      // would otherwise have fitted. So the parens are static text now and only the number is reserved.
+      // The reservation exists so toggling a sub-region cannot change the chip's footprint and reflow its
+      // wrapped siblings ("chips jumping", 2026-07-23). Where the leftover width SITS took three attempts:
+      //   * `digits + 3` characters for " (n)" over-reserved by ~9px, because a space and two parens are far
+      //     narrower than a digit in Arial, and it showed as dead space on the chip's right edge;
+      //   * moving the parens out and reserving the digits alone put that leftover *between* "(" and the
+      //     number, which reads as a typo -- "( 0 )";
+      //   * so: parens back inside the reserved box, right-aligned, and the box sized to the digits plus the
+      //     real width of " ()" (~0.95em at this font). The leftover now lands between the label and the "(",
+      //     i.e. it only ever widens a word space, which is the one place nobody sees it.
       const subTotalDigits = String(lineTrails.filter(t => t.region === key).length).length;
-      subCountEl.style.minWidth = subTotalDigits + "ch";
-      btn.appendChild(document.createTextNode(" ("));
+      subCountEl.style.minWidth = "calc(" + subTotalDigits + "ch + 0.95em)";
       btn.appendChild(subCountEl);
-      btn.appendChild(document.createTextNode(")"));
       regionSubCountEls[key] = subCountEl;
       btn.style.borderColor = r.color;
       if (activeRegions.has(key)) { btn.style.background = r.color; btn.style.color = "#fff"; }
@@ -4203,6 +4202,18 @@ function buildRegionRow(groupKey, entry, atLimit){
 
 // Filtering re-renders the list but must NOT re-render the slots' focus away from the field, so it goes
 // through the same renderRegionDialog -- the input itself lives outside the rebuilt list, which is why it can.
+// Same auto-hiding scrollbar the builder's list has, and for the same reason: on a phone a permanently grey
+// bar next to sixteen rows is noise, but removing it altogether loses the only cue that the list continues.
+// Only the thumb's colour is animated, so the content width never changes mid-scroll.
+{
+  let dialogScrollIdle = null;
+  regionDialogListEl.addEventListener("scroll", () => {
+    regionDialogListEl.classList.add("is-scrolling");
+    if (dialogScrollIdle) clearTimeout(dialogScrollIdle);
+    dialogScrollIdle = setTimeout(() => regionDialogListEl.classList.remove("is-scrolling"), 700);
+  }, { passive: true });
+}
+
 regionSearchEl.addEventListener("input", () => {
   regionSearchTerm = regionSearchEl.value;
   renderRegionDialog();
@@ -4800,10 +4811,10 @@ function render(){
   add(LIFTS.length - liftsShown, "Lift", "Lifte");
   countEl.textContent = hidden.length ? `${hidden.join(" · ")} ausgeblendet` : "alles sichtbar";
 
-  // The number only: the surrounding " (" and ")" are static text nodes next to these spans, so that the
-  // width reservation covers digits alone (see rebuildRegionChips for why that mattered).
-  Object.entries(regionSubCountEls).forEach(([key, el]) => { el.textContent = regionVisibleCounts[key] || 0; });
-  Object.entries(regionGroupCountEls).forEach(([key, el]) => { el.textContent = groupVisibleCounts[key] || 0; });
+  // " (n)" as one string inside the width-reserved, right-aligned box -- see rebuildRegionChips for why the
+  // parens belong inside it rather than beside it.
+  Object.entries(regionSubCountEls).forEach(([key, el]) => { el.textContent = ` (${regionVisibleCounts[key] || 0})`; });
+  Object.entries(regionGroupCountEls).forEach(([key, el]) => { el.textContent = ` (${groupVisibleCounts[key] || 0})`; });
 
   reattachSelectedCard();   // every card above is a new element; whichever is selected has to be marked again
   applyNameLabels();
@@ -5012,7 +5023,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v59"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v60"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
