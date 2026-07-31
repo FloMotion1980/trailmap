@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=50" />
+<link rel="stylesheet" href="style.css?v=51" />
 </head>
 <body>
 <div id="fatalError">
@@ -928,15 +928,14 @@ function rebuildRegionChips(){
     });
     groupBlock.appendChild(chipsRow);
 
-    // The 📍 is a right-aligned FOOTER ROW inside the box rather than a button pinned onto the bottom border.
-    // Pinning it there was the first attempt and it collides by construction: a 28px button centred on the
-    // bottom border reaches 14px below it, straight into the next box's legend -- whose own height depends on
-    // whether a long region name wraps, so the collision comes and goes with the region list. In normal flow
-    // it cannot overlap anything, and it is still the box's bottom-right corner, which is what was asked for.
-    const footer = document.createElement("div");
-    footer.className = "region-group-footer";
-    footer.appendChild(flyBtn);
-    groupBlock.appendChild(footer);
+    // Both corner buttons share the TOP border line, 📍 immediately left of ✕ (user, 2026-07-31, after the
+    // footer row it had for one iteration turned out to cost a whole line per region for a single icon). Two
+    // other spots are ruled out and worth knowing before moving it again: the BOTTOM border collides with the
+    // next box's legend by construction (a 28px button centred on a border overhangs it by 14px, and the
+    // legend's own height varies with whether a long region name wraps), and a footer row in flow is exactly
+    // what was just removed. The adjacency this brings back is mitigated rather than ignored -- see the gap
+    // between the two and the red-only hover on the ✕ in style.css.
+    groupBlock.appendChild(flyBtn);
 
     regionChipRow.appendChild(groupBlock);
   });
@@ -4851,7 +4850,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v50"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v51"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

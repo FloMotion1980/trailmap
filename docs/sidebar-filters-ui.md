@@ -46,12 +46,18 @@ was active. Now the section you look at is the section you act in:
   2026-07-28, and for the same reason that slot was chosen: it is the one position in the box that does not
   move with the length of the region's name. The 30×28 box and the `-6px` offset are inherited too, because
   they are what puts the *glyph* on the same vertical line as the section carets (x=333, verified).
-- **📍 in a right-aligned footer row inside the box.** The first attempt pinned it onto the *bottom* border,
-  mirroring the ✕ — and that collides by construction: a 28px button centred on a border reaches 14px past it,
-  straight into the next box's legend, whose own height depends on whether a long region name wraps to two
-  lines. So the overlap would appear and disappear as regions are added. In normal flow it cannot overlap
-  anything, and it is still the box's bottom-right corner. Diagonally opposite the ✕ either way, which is the
-  actual requirement: "jump to this region" and "unload this region" must not be adjacent tap targets.
+- **📍 on the same top border, immediately left of the ✕**, with a 6px gap between them. It took three
+  attempts, and the two rejected ones are worth knowing before moving it again:
+  - the **bottom** border, mirroring the ✕, *collides by construction* — a 28px button centred on a border
+    overhangs it by 14px, straight into the next box's legend, whose own height depends on whether a long
+    region name wraps, so the overlap appears and disappears as regions are added;
+  - a **footer row in flow** is collision-proof but costs a whole line (~28px) per region for one icon, which
+    the user rightly called out as wasteful.
+  Adjacency is therefore back, and mitigated rather than ignored: the 6px gap keeps them two targets, and only
+  the ✕ turns red on hover, so the destructive one is the marked one. `.region-group-row` gained a
+  `max-width: calc(100% - 74px)` at the same time — the legend is absolutely positioned and a long region name
+  would otherwise run straight under both buttons. It wraps rather than truncating; a shortened region name is
+  worse than a taller legend.
 - **`#addRegionBtn` below the boxes**, dashed outline, full width. **Disabled rather than hidden** at
   `MAX_ACTIVE_REGION_GROUPS` — a button that vanishes at three teaches nothing, a greyed one whose label reads
   "＋ Maximal 3 Regionen" does. It opens the same dialog the header button opens; one dialog, two entry points.

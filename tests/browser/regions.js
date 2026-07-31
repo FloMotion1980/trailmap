@@ -104,23 +104,28 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
          Math.round((x.top + x.bottom) / 2 - box.top), "≈ 0 from the top edge");
     T.ok("✕ is at the right edge", Math.abs(x.right - box.right) < 10,
          Math.round(x.right - box.right), "≈ 0 from the right edge");
-    // The 📍 sits INSIDE the box, in flow, as the last row -- pinning it onto the bottom border overlapped the
-    // next box's legend, by an amount that depended on whether a long region name wrapped.
-    T.ok("📍 is inside the box, not on its border", pin.bottom <= box.bottom + 1 && pin.top >= box.top,
-         [Math.round(pin.top - box.top), Math.round(box.bottom - pin.bottom)], "both >= 0");
-    T.ok("📍 is bottom-right", box.bottom - pin.bottom < 14 && box.right - pin.right < 14,
-         [Math.round(box.bottom - pin.bottom), Math.round(box.right - pin.right)], "both small");
-    T.ok("the two are diagonally opposite, not neighbours", pin.top - x.bottom > 20,
-         Math.round(pin.top - x.bottom), "> 20px apart");
+    // Both live on the top border now, 📍 left of ✕. The two spots that were tried and rejected: the BOTTOM
+    // border (overlaps the next box's legend, by an amount that depends on whether a long region name wraps)
+    // and a footer row in flow (a whole line per region for one icon).
+    T.ok("📍 straddles the same TOP border", Math.abs((pin.top + pin.bottom) / 2 - box.top) < 4,
+         Math.round((pin.top + pin.bottom) / 2 - box.top), "≈ 0 from the top edge");
+    T.ok("📍 is left of the ✕", pin.right <= x.left, [Math.round(pin.right), Math.round(x.left)], "📍 then ✕");
+    // The gap is the entire mitigation for making "jump there" a neighbour of "unload it". If it ever goes to
+    // zero the two become one blurred tap target on a phone, and nothing else would notice.
+    T.ok("with a real gap between them", x.left - pin.right >= 4,
+         Math.round(x.left - pin.right), ">= 4px");
+    T.ok("neither reaches into the box's content", pin.bottom < box.top + 16,
+         Math.round(pin.bottom - box.top), "< 16px into the box");
     if (boxes.length > 1) {
-      const nextLegend = boxes[1].querySelector(".region-group-row").getBoundingClientRect();
-      T.ok("nothing of a box reaches into the next box's legend", pin.bottom < nextLegend.top,
-           [Math.round(pin.bottom), Math.round(nextLegend.top)], "📍 above the next legend");
+      const prev = boxes[0].getBoundingClientRect();
+      T.ok("and nothing hangs into the box below", prev.bottom < boxes[1].getBoundingClientRect().top,
+           [Math.round(prev.bottom), Math.round(boxes[1].getBoundingClientRect().top)], "boxes clear");
     }
-    const chips = TM.$$(".region-group-chips .chip", boxes[0]);
-    const lowest = Math.max(...chips.map((c) => c.getBoundingClientRect().bottom));
-    T.ok("and the last chip row clears the 📍 row", lowest <= pin.top + 1,
-         [Math.round(lowest), Math.round(pin.top)], "chips above 📍");
+    // A long region name must not run under the buttons -- the legend is absolutely positioned, so only its
+    // max-width keeps it off them.
+    const legend = boxes[0].querySelector(".region-group-row").getBoundingClientRect();
+    T.ok("the legend stays clear of both buttons", legend.right <= pin.left + 1,
+         [Math.round(legend.right), Math.round(pin.left)], "legend ends before 📍");
   }
 
   T.test("✕ closes that region straight away, with no confirmation");

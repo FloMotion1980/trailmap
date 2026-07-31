@@ -154,7 +154,7 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    heading's own ▾, i.e. two different tap targets touching. */
 .region-groups-container{ display:flex; flex-direction:column; gap: 18px; margin-top: 18px; margin-bottom: 14px; }
 .region-group-block{ position: relative; border: 1.5px solid #d3d9c9; border-radius: 10px;
-  padding: 14px 10px 8px; }
+  padding: 14px 10px 10px; }
 .region-group-row{ position: absolute; top: 0; left: 8px; transform: translateY(-50%);
   display:flex; align-items:center; gap: 4px; background: var(--card-bg); padding: 0 4px; }
 .region-group-chips{ display:flex; flex-wrap:wrap; gap:6px; }
@@ -190,17 +190,24 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   position: absolute; top: 0; right: -6px; transform: translateY(-50%);
   background: var(--card-bg); font-size: 13px; font-weight: 700; color: var(--stone); }
 .region-group-close-btn:hover{ background: #f7e2df; color: var(--rot); }
-/* The 📍 is in NORMAL FLOW at the end of the box, right-aligned -- not pinned to the bottom border. Pinned
-   there it overlapped the next box's legend by ~8px, and worse, by a margin that depends on whether a long
-   region name wraps to two lines, so the collision would come and go as regions are added. Diagonally
-   opposite the ✕ either way, which is the point: "jump there" and "unload it" must not be neighbours under a
-   thumb. */
-.region-group-footer{ display:flex; justify-content:flex-end; margin-top: 4px; }
+/* 📍 sits on the SAME top border line, immediately left of the ✕ (user, 2026-07-31). Two rejected spots, so
+   nobody re-tries them: the BOTTOM border overlaps the next box's legend by ~8px -- and by an amount that
+   depends on whether a long region name wraps, so it comes and goes as regions are added -- and a footer row
+   in flow costs a whole line per region for one icon.
+   `right` leaves a 6px gap to the ✕ (its box starts at box.right-24; this one ends at box.right-30). That gap
+   is the whole mitigation for putting "jump there" next to "unload it": enough to feel as two targets, while
+   only the ✕ turns red on hover so the destructive one is the marked one. */
 .region-group-fly-btn{ border:none; cursor:pointer; line-height:1;
   display:flex; align-items:center; justify-content:center;
-  width:30px; height:26px; padding:0; border-radius: 6px;
-  background: transparent; font-size: 14px; color: var(--stone); }
+  width:30px; height:28px; padding:0; border-radius: 6px;
+  position: absolute; top: 0; right: 30px; transform: translateY(-50%);
+  background: var(--card-bg); font-size: 14px; color: var(--stone); }
 .region-group-fly-btn:hover{ background: #e4ece0; color: var(--forest-dark); }
+/* Keeps a long region name out from under the two corner buttons: the legend is absolutely positioned and
+   would otherwise run straight under them ("Bikeland Schladming-Dachstein (29)" gets close on a 350px
+   sidebar). It wraps instead of being truncated -- a shortened region name is worse than a taller legend. */
+.region-group-row{ max-width: calc(100% - 74px); }
+.region-group-label{ white-space: normal; text-align: left; }
 /* Under the boxes, full width, so "what have I got" and "add one more" read as one list. Disabled rather than
    hidden at the cap -- a button that disappears at three explains nothing. */
 .region-add-btn{ width: 100%; padding: 9px 12px; border-radius: 20px; cursor: pointer;
