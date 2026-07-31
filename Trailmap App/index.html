@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=47" />
+<link rel="stylesheet" href="style.css?v=50" />
 </head>
 <body>
 <div id="fatalError">
@@ -866,13 +866,30 @@ function rebuildRegionChips(){
 
     groupBlock.appendChild(groupRow);
 
+    // Closing the region lives HERE, in its own box, since 2026-07-31 — the region section became the place
+    // where you manage your regions, and the dialog is only one of two ways in now. Deliberately without a
+    // confirmation (the user's call): re-adding takes a moment but nothing is lost. Top-right corner, on the
+    // border line, which is the spot the 📍 used to have.
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "region-group-close-btn";
+    closeBtn.textContent = "✕";
+    closeBtn.title = "Diese Region schließen";
+    closeBtn.setAttribute("aria-label", "Region " + groupInfo.label + " schließen");
+    closeBtn.addEventListener("click", () => {
+      deactivateRegionGroup(groupKey);   // rebuilds these chips and re-renders on its own
+      if (regionDialogEl.classList.contains("visible")) renderRegionDialog();
+    });
+    groupBlock.appendChild(closeBtn);
+
     // Separate button (own, generously-padded touch target) just for flying the map to this
     // region's bounds — split out from the label's toggle-visibility click so a single tap target
     // doesn't do two unrelated things (was hard to hit precisely on mobile too).
     //
-    // A child of the BLOCK, not of the legend row, since 2026-07-28: it now sits in the box's own top-right
-    // corner (user's request). In the legend it had to share a flex row with a label whose width varies with
-    // the region name and its trail count, so it never landed in a predictable spot.
+    // A child of the BLOCK, not of the legend row, since 2026-07-28: in the legend it had to share a flex row
+    // with a label whose width varies with the region name and its trail count, so it never landed in a
+    // predictable spot. It moved from the TOP-right to the BOTTOM-right corner on 2026-07-31 to make room for
+    // the ✕ — and the diagonal separation is the point: on a phone, "jump there" and "close it" must not be
+    // neighbours you can mis-tap into each other.
     const flyBtn = document.createElement("button");
     flyBtn.className = "region-group-fly-btn";
     flyBtn.textContent = "📍";
@@ -881,7 +898,6 @@ function rebuildRegionChips(){
       const catalogEntry = REGION_CATALOG[groupKey];
       if (catalogEntry) flyToTrailBounds(L.latLngBounds(catalogEntry.bounds));
     });
-    groupBlock.appendChild(flyBtn);
 
     const chipsRow = document.createElement("div");
     chipsRow.className = "region-group-chips";
@@ -912,8 +928,37 @@ function rebuildRegionChips(){
     });
     groupBlock.appendChild(chipsRow);
 
+    // The 📍 is a right-aligned FOOTER ROW inside the box rather than a button pinned onto the bottom border.
+    // Pinning it there was the first attempt and it collides by construction: a 28px button centred on the
+    // bottom border reaches 14px below it, straight into the next box's legend -- whose own height depends on
+    // whether a long region name wraps, so the collision comes and goes with the region list. In normal flow
+    // it cannot overlap anything, and it is still the box's bottom-right corner, which is what was asked for.
+    const footer = document.createElement("div");
+    footer.className = "region-group-footer";
+    footer.appendChild(flyBtn);
+    groupBlock.appendChild(footer);
+
     regionChipRow.appendChild(groupBlock);
   });
+
+  // "Add a region" sits under the boxes rather than only in the header (user, 2026-07-31), so adding and
+  // closing are both in the section that shows what you have. Disabled at the cap instead of hidden: a button
+  // that vanishes at three teaches nothing, a greyed one with a reason does. It opens the same dialog the
+  // header button does -- one dialog, two entry points, no second implementation.
+  const addBtn = document.createElement("button");
+  addBtn.id = "addRegionBtn";
+  addBtn.className = "region-add-btn";
+  const atCap = activeRegionGroups.size >= MAX_ACTIVE_REGION_GROUPS;
+  addBtn.textContent = atCap ? `＋ Maximal ${MAX_ACTIVE_REGION_GROUPS} Regionen` : "＋ Region hinzufügen";
+  addBtn.disabled = atCap;
+  addBtn.title = atCap
+    ? `Es können höchstens ${MAX_ACTIVE_REGION_GROUPS} Regionen gleichzeitig geladen sein — zuerst eine mit ✕ schließen.`
+    : "Weitere Region laden";
+  addBtn.addEventListener("click", () => {
+    renderRegionDialog();
+    regionDialogEl.classList.add("visible");
+  });
+  regionChipRow.appendChild(addBtn);
 }
 
 document.querySelectorAll("#diffChips .chip").forEach(btn => {
@@ -1703,11 +1748,17 @@ const placeMarkers = {}; // groupKey -> array of L.tooltip layers, for teardown 
 //
 // L.tooltip added straight to the map with no source layer, the same pattern as a Trailrunde's per-segment
 // name labels; `map.addLayer`/`removeLayer` is all the visibility handling it needs.
+// Built but only ADDED when "Orte" is on. Adding unconditionally and letting applyPlaceVisibility() take them
+// off again worked -- the count is 0 by the next frame -- but it flashed all 17 labels of a newly activated
+// region onto the map first (measured 2026-07-31 while testing the activation path with the switch off).
+// The switch is honoured at creation now; applyPlaceVisibility() is what adds them if it is turned on later.
 function buildPlaceMarkers(groupKey, places){
-  placeMarkers[groupKey] = places.map(p =>
-    L.tooltip({ permanent:true, direction:"center", className:"place-label-tooltip", interactive:false })
-      .setLatLng([p.lat, p.lng]).setContent(p.name).addTo(map)
-  );
+  placeMarkers[groupKey] = places.map(p => {
+    const tip = L.tooltip({ permanent:true, direction:"center", className:"place-label-tooltip", interactive:false })
+      .setLatLng([p.lat, p.lng]).setContent(p.name);
+    if (showPlaces) tip.addTo(map);
+    return tip;
+  });
 }
 function destroyPlaceMarkers(groupKey){
   (placeMarkers[groupKey] || []).forEach(m => map.removeLayer(m));
@@ -4800,7 +4851,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v47"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v50"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

@@ -152,9 +152,9 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    below the "Region" heading instead of covering it (regression found by the user 2026-07-23). Raised 14 ->
    18px on 2026-07-28, when the 📍 moved onto the same border line: at 14px it ended up 1px under that
    heading's own ▾, i.e. two different tap targets touching. */
-.region-groups-container{ display:flex; flex-direction:column; gap: 18px; margin-top: 18px; margin-bottom: 10px; }
+.region-groups-container{ display:flex; flex-direction:column; gap: 18px; margin-top: 18px; margin-bottom: 14px; }
 .region-group-block{ position: relative; border: 1.5px solid #d3d9c9; border-radius: 10px;
-  padding: 14px 10px 10px; }
+  padding: 14px 10px 8px; }
 .region-group-row{ position: absolute; top: 0; left: 8px; transform: translateY(-50%);
   display:flex; align-items:center; gap: 4px; background: var(--card-bg); padding: 0 4px; }
 .region-group-chips{ display:flex; flex-wrap:wrap; gap:6px; }
@@ -177,12 +177,38 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    So: a fixed-size flex-centred box, shifted right by half its slack so the centred pin still lands on 333.
    The box therefore overhangs the region box's border by ~6px, into the sidebar's own padding where there is
    nothing to collide with. Size stays 30x28 -- the same tap target as before, not shrunk. */
-.region-group-fly-btn{ border:none; cursor:pointer; font-size:14px; line-height:1;
+/* ✕ took the top-right slot on 2026-07-31 (user's request) -- the spot the 📍 had held since 2026-07-28, and
+   for the same reason: it is the one position in the box that does not move with the region's name length.
+   Straddles the top border like the legend, with the --card-bg background cutting its own gap in it.
+   The two alignment requirements from the 📍's time here still apply and are why the box is 30x28 with a
+   -6px offset: the GLYPH lines up with the section triangles at x=333, and it stays centred in its own box
+   (which becomes visible on hover), so the slack is spent on the offset rather than on padding. */
+.region-group-close-btn{
+  border:none; cursor:pointer; line-height:1;
   display:flex; align-items:center; justify-content:center;
-  width:30px; height:28px; padding:0; color: var(--stone); border-radius: 6px;
+  width:30px; height:28px; padding:0; border-radius: 6px;
   position: absolute; top: 0; right: -6px; transform: translateY(-50%);
-  background: var(--card-bg); }
+  background: var(--card-bg); font-size: 13px; font-weight: 700; color: var(--stone); }
+.region-group-close-btn:hover{ background: #f7e2df; color: var(--rot); }
+/* The 📍 is in NORMAL FLOW at the end of the box, right-aligned -- not pinned to the bottom border. Pinned
+   there it overlapped the next box's legend by ~8px, and worse, by a margin that depends on whether a long
+   region name wraps to two lines, so the collision would come and go as regions are added. Diagonally
+   opposite the ✕ either way, which is the point: "jump there" and "unload it" must not be neighbours under a
+   thumb. */
+.region-group-footer{ display:flex; justify-content:flex-end; margin-top: 4px; }
+.region-group-fly-btn{ border:none; cursor:pointer; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  width:30px; height:26px; padding:0; border-radius: 6px;
+  background: transparent; font-size: 14px; color: var(--stone); }
 .region-group-fly-btn:hover{ background: #e4ece0; color: var(--forest-dark); }
+/* Under the boxes, full width, so "what have I got" and "add one more" read as one list. Disabled rather than
+   hidden at the cap -- a button that disappears at three explains nothing. */
+.region-add-btn{ width: 100%; padding: 9px 12px; border-radius: 20px; cursor: pointer;
+  font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+  font-weight: 700; color: var(--forest); background: transparent;
+  border: 1.5px dashed var(--forest); transition: all .15s ease; }
+.region-add-btn:hover:not(:disabled){ background: var(--forest); color: #fff; border-style: solid; }
+.region-add-btn:disabled{ cursor: not-allowed; opacity: .45; border-color: var(--stone); color: var(--stone); }
 .hub-group{ border-bottom: 1px solid #eceee4; }
 .hub-title{ padding: 10px 16px 4px; font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase;
   letter-spacing: .6px; color: var(--rust); font-weight: 700; cursor:pointer; }

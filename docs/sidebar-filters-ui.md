@@ -36,6 +36,33 @@ The old standalone always-visible `#countLine` ("X von Y Trails sichtbar") was r
 
 **Split on 2026-07-30, extended 2026-07-31** as Lifte and then Touren each became a list section of their own: each summary answers only the question its own section is about. **Trails**, **Touren** and **Lifte** each state what they are currently listing (`141 Trails`, `6 Touren`, `20 Lifte`); **Filter** — the section you open in order to change that — states what its settings are *costing* you (`27 Trails · 2 Touren · 20 Lifte ausgeblendet`, one term per hidden kind in list order, or `alles sichtbar` when nothing is). No section repeats another's number, and the "nothing is hidden" case is stated outright instead of being left to infer from `141/141`. Every total counts loaded regions only: the trail and Tour tallies come from the region loop, which iterates `REGION_GROUPS` (activated groups only), and `LIFTS` likewise holds only activated groups' lifts — so deactivating a region does not read as "hidden".
 
+## The Region section became the region manager (2026-07-31)
+
+Adding and removing regions used to live entirely in the `#regionDialog`, while the sidebar only *showed* what
+was active. Now the section you look at is the section you act in:
+
+- **✕ per region box**, top-right, straddling the border like the legend. Calls `deactivateRegionGroup`
+  **immediately, without a confirmation** — the user's explicit choice. It took the slot the 📍 had held since
+  2026-07-28, and for the same reason that slot was chosen: it is the one position in the box that does not
+  move with the length of the region's name. The 30×28 box and the `-6px` offset are inherited too, because
+  they are what puts the *glyph* on the same vertical line as the section carets (x=333, verified).
+- **📍 in a right-aligned footer row inside the box.** The first attempt pinned it onto the *bottom* border,
+  mirroring the ✕ — and that collides by construction: a 28px button centred on a border reaches 14px past it,
+  straight into the next box's legend, whose own height depends on whether a long region name wraps to two
+  lines. So the overlap would appear and disappear as regions are added. In normal flow it cannot overlap
+  anything, and it is still the box's bottom-right corner. Diagonally opposite the ✕ either way, which is the
+  actual requirement: "jump to this region" and "unload this region" must not be adjacent tap targets.
+- **`#addRegionBtn` below the boxes**, dashed outline, full width. **Disabled rather than hidden** at
+  `MAX_ACTIVE_REGION_GROUPS` — a button that vanishes at three teaches nothing, a greyed one whose label reads
+  "＋ Maximal 3 Regionen" does. It opens the same dialog the header button opens; one dialog, two entry points.
+- **The header button and the full dialog both stay.** The header doubles as the "what is loaded" readout and
+  is reachable without opening the drawer; the dialog still lists every region with active ones marked, so
+  deactivating works in either place.
+
+One behaviour worth knowing rather than fixing: **closing a region and re-adding it moves its box to the
+bottom**, because `REGION_GROUPS` is keyed in activation order. The `regions` suite compares the active set,
+not the order, for exactly this reason.
+
 ## Three list sections: Trails, Touren, Lifte (2026-07-31)
 
 Each object kind gets its own list, in that order, because each is chosen by a different question — which trail do I ride next, which whole day out do I pick, which cable gets me up. The **sub-region chip counts stay "everything visible in this region", Tours included**: a sub-region like Bike Kingdom's "Biketicket 2 Ride" holds nothing but Tours, and a chip reading `(0)` next to four visible Tours would be a lie. Only the per-list hub headings count their own list, which is why `render()` keeps `regionTrailCounts`/`regionTourCounts` alongside `regionVisibleCounts`.

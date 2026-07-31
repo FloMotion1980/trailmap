@@ -16,6 +16,7 @@ current; a stale count is worse than none, because it looks like evidence.
 | `lists` | **The selected card lost its highlight on every re-render.** `render()` rebuilds every card, and only the Tour and lift lists re-marked the selected one — the trail list never did. So toggling any filter with a trail selected left the map showing a selection the sidebar denied. Fixed by one shared `reattachSelectedCard()`. Check: "the selection survives a re-render". |
 | `pipeline` | **`build_profile` ignored implausible `0 m` elevations** although its own comment claimed to fill them, so a single `<ele>0</ele>` mid-track produced a full-depth dip plus a phantom climb back out. Fixed; the golden Laax rebuild in the same suite proved it changes no committed region. Check: "build_profile interpolates missing and implausible elevations". |
 | `appshell` | Corrected a false belief rather than a bug: the `no-cors` rule for tiles lives in `index.html`'s preload, **not** in `sw.js`, where CLAUDE.md's wording had put it. |
+| `regions` | **A region activated while "Orte" was off flashed all 17 of its place labels onto the map** before `applyPlaceVisibility()` took them away again a frame later. The count was 0 by the time anything looked, which is why it had never been noticed; the check that caught it sampled mid-fade and read 3. `buildPlaceMarkers` honours the switch at creation now, and the case watches the tooltip pane with a MutationObserver instead of sampling, so it asserts "never added" rather than "gone by now". |
 
 ## Verified by mutation
 

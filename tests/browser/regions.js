@@ -32,6 +32,9 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
   const inactiveRows = () => rows().filter((r) => !toggle(r).classList.contains("active"));
   const activeRows = () => rows().filter((r) => toggle(r).classList.contains("active"));
   const activeGroupCount = () => TM.$$("#regionChips .region-group-block").length;
+  // MAX_ACTIVE_REGION_GROUPS is a const inside the app's try{} block and therefore unreachable; the
+  // dialog publishes the same number in its own hint, so read it from there rather than hardcoding 3.
+  const MAX_GROUPS = +((TM.$("#regionLimitText") || {}).textContent || "3").replace(/\D/g, "") || 3;
 
   // THIS SUITE IS THE ONE THAT CHANGES WHICH REGIONS ARE LOADED, so it is also the only one that has to put
   // them back itself: TM.baseline() deliberately does not touch the region set (loading a region is slow, and
@@ -71,10 +74,110 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
   } finally {
     await restoreRegions();
     T.test("the suite put the region set back");
-    T.eq("same active regions as before it ran", TM.$("#regionsBtn").textContent, startingLabel);
+    // Compared as a SET: closing a region and re-adding it moves it to the END of the header label and of the
+    // sidebar, because REGION_GROUPS is keyed in activation order. That is the app's actual behaviour, not a
+    // defect, so the check must not demand the original ordering.
+    const asSet = (s) => s.replace("🌍", "").split("·").map((x) => x.trim()).filter(Boolean).sort();
+    T.eq("same active regions as before it ran", asSet(TM.$("#regionsBtn").textContent), asSet(startingLabel));
   }
 
   async function regionCases(T) {
+  T.test("every active region has its own box with a ✕ and a 📍, diagonally opposite");
+  // The section became the place where regions are managed (2026-07-31): ✕ closes the region, the 📍 flies to
+  // it, and they sit in opposite corners so a mis-tap on a phone cannot turn "show me this" into "unload it".
+  const boxes = TM.$$("#regionChips .region-group-block");
+  T.eq("one box per active region", boxes.length, activeGroupCount());
+  T.ok("each has a close button", boxes.every((b) => !!b.querySelector(".region-group-close-btn")), true, true);
+  T.ok("each has a fly button", boxes.every((b) => !!b.querySelector(".region-group-fly-btn")), true, true);
+  // Geometry only means something once the sidebar is really laid out. It is 1px wide when the browser pane is
+  // not compositing, and every position then reads as nonsense -- better an honest skip than four checks that
+  // pass or fail at random.
+  const laidOut = TM.$("aside").getBoundingClientRect().width > 120;
+  if (!laidOut) {
+    T.skip("sidebar not laid out (width " + Math.round(TM.$("aside").getBoundingClientRect().width) +
+           "px) — open the drawer or use a wider viewport for the geometry checks");
+  } else {
+    const box = boxes[0].getBoundingClientRect();
+    const x = boxes[0].querySelector(".region-group-close-btn").getBoundingClientRect();
+    const pin = boxes[0].querySelector(".region-group-fly-btn").getBoundingClientRect();
+    T.ok("✕ straddles the TOP border", Math.abs((x.top + x.bottom) / 2 - box.top) < 4,
+         Math.round((x.top + x.bottom) / 2 - box.top), "≈ 0 from the top edge");
+    T.ok("✕ is at the right edge", Math.abs(x.right - box.right) < 10,
+         Math.round(x.right - box.right), "≈ 0 from the right edge");
+    // The 📍 sits INSIDE the box, in flow, as the last row -- pinning it onto the bottom border overlapped the
+    // next box's legend, by an amount that depended on whether a long region name wrapped.
+    T.ok("📍 is inside the box, not on its border", pin.bottom <= box.bottom + 1 && pin.top >= box.top,
+         [Math.round(pin.top - box.top), Math.round(box.bottom - pin.bottom)], "both >= 0");
+    T.ok("📍 is bottom-right", box.bottom - pin.bottom < 14 && box.right - pin.right < 14,
+         [Math.round(box.bottom - pin.bottom), Math.round(box.right - pin.right)], "both small");
+    T.ok("the two are diagonally opposite, not neighbours", pin.top - x.bottom > 20,
+         Math.round(pin.top - x.bottom), "> 20px apart");
+    if (boxes.length > 1) {
+      const nextLegend = boxes[1].querySelector(".region-group-row").getBoundingClientRect();
+      T.ok("nothing of a box reaches into the next box's legend", pin.bottom < nextLegend.top,
+           [Math.round(pin.bottom), Math.round(nextLegend.top)], "📍 above the next legend");
+    }
+    const chips = TM.$$(".region-group-chips .chip", boxes[0]);
+    const lowest = Math.max(...chips.map((c) => c.getBoundingClientRect().bottom));
+    T.ok("and the last chip row clears the 📍 row", lowest <= pin.top + 1,
+         [Math.round(lowest), Math.round(pin.top)], "chips above 📍");
+  }
+
+  T.test("✕ closes that region straight away, with no confirmation");
+  {
+    const before = activeGroupCount();
+    if (before < 2) {
+      T.skip("needs at least two active regions, so one can be closed");
+    } else {
+      const box = TM.$$("#regionChips .region-group-block")[before - 1];
+      const label = box.querySelector(".region-group-label").textContent;
+      const name = label.replace(/\s*\(\d+\)\s*$/, "").trim();
+      // How much this region currently contributes. It can legitimately be 0 -- every sub-region chip may be
+      // switched off -- and then the trail count must NOT drop, so the assertion below has to know which case
+      // it is in rather than always demanding a decrease. (That is what failed first: a region whose chips were
+      // all off was closed, nothing changed, and the check called it a bug.)
+      const ownCount = +(/\((\d+)\)\s*$/.exec(label.trim()) || [0, 0])[1];
+      const trailsBefore = TM.ui.num(TM.ui.counts().trails);
+      box.querySelector(".region-group-close-btn").click();
+      const gone = await TM.until(() => activeGroupCount() === before - 1, 6000, 120);
+      T.ok("no dialog or prompt appeared in between", !TM.$("#regionDialog").classList.contains("visible"), false, false);
+      T.ok("the box is gone", gone, activeGroupCount(), before - 1);
+      T.ok("its name left the header label", TM.$("#regionsBtn").textContent.indexOf(name) === -1,
+           TM.$("#regionsBtn").textContent, "without " + name);
+      const trailsAfter = TM.ui.num(TM.ui.counts().trails);
+      T.ok("its trails left the list", ownCount > 0 ? trailsAfter < trailsBefore : trailsAfter === trailsBefore,
+           [trailsBefore, trailsAfter, "own " + ownCount], ownCount > 0 ? "fewer" : "unchanged");
+      T.eq("its own box is gone from the sidebar",
+           TM.$$("#regionChips .region-group-label").filter((l) => l.textContent.indexOf(name) > -1).length, 0);
+    }
+  }
+
+  T.test("the add-region button sits under the boxes and is disabled only at the cap");
+  {
+    const add = () => TM.$("#addRegionBtn");
+    T.ok("it exists", !!add(), !!add(), true);
+    const lastBox = TM.$$("#regionChips .region-group-block").slice(-1)[0];
+    T.ok("below the last region box",
+         add().getBoundingClientRect().top >= lastBox.getBoundingClientRect().bottom - 1,
+         [Math.round(add().getBoundingClientRect().top), Math.round(lastBox.getBoundingClientRect().bottom)],
+         "add button below");
+    const atCap = activeGroupCount() >= 3;
+    T.eq("disabled exactly when three are active", add().disabled, atCap);
+    T.ok("and it says why when it is", !atCap || /3|maximal/i.test(add().textContent + add().title),
+         add().textContent.trim(), "mentions the limit");
+    if (!atCap) {
+      add().click();
+      const opened = await TM.until(() => TM.$("#regionDialog").classList.contains("visible"), 2000);
+      T.ok("clicking it opens the region dialog", opened, opened, true);
+      T.ok("which still lists every region, active ones included",
+           rows().length > activeGroupCount() && activeRows().length === activeGroupCount(),
+           [rows().length, activeRows().length], "all rows, actives marked");
+      await closeDialog();
+    } else {
+      T.skip("at the cap — the click-through is checked when fewer than three are active");
+    }
+  }
+
   T.test("the dialog lists every catalogued region and marks the active ones");
   await openDialog();
   T.ok("more rows than are active", rows().length > activeGroupCount(), rows().length, "> " + activeGroupCount());
@@ -94,8 +197,13 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
   const startTrails = TM.ui.num(TM.ui.counts().trails);
   await openDialog();
   const candidates = inactiveRows().filter((r) => !toggle(r).disabled);
-  if (!candidates.length || startGroups >= 3) {
-    T.skip("already at the limit or nothing left to activate — run with 2 active regions");
+  if (!candidates.length || startGroups >= MAX_GROUPS) {
+    // Spell out WHICH condition bailed. The first version said "already at the limit or nothing left" and a
+    // run that skipped for a third reason -- the dialog not being open, so rows() was empty -- looked
+    // identical to a legitimately full catalog.
+    T.skip("skipped: " + startGroups + " groups active, " + rows().length + " rows in the dialog, " +
+           candidates.length + " of them activatable" +
+           (dialog().classList.contains("visible") ? "" : " — DIALOG WAS NOT OPEN"));
     await closeDialog();
   } else {
     // Activate it with "Orte" OFF: activateRegionGroup ends in applyPlaceVisibility() precisely so a group
@@ -106,12 +214,26 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     await TM.ui.setSwitch("showPlacesToggle", false);
     await TM.until(() => TM.map.placeLabels() === 0, 3000);
     const placesOffBefore = TM.map.placeLabels();
+    // Watch the tooltip pane rather than sampling it: the first version of this check caught the labels
+    // MID-FADE and reported 3, which looked like a leak and was actually a flash -- every label of the new
+    // region was added and then removed again a frame later. buildPlaceMarkers honours the switch at creation
+    // now, so the honest assertion is "not even added once", and an observer says that without any timing luck.
+    let addedWhileOff = 0;
+    const paneObserver = new MutationObserver((records) => {
+      records.forEach((rec) => [...rec.addedNodes].forEach((n) => {
+        if (n.classList && n.classList.contains("place-label-tooltip")) addedWhileOff++;
+      }));
+    });
+    paneObserver.observe(TM.$(".leaflet-tooltip-pane") || document.body, { childList: true, subtree: true });
     await openDialog();
     toggle(candidates[0]).click();
     // Region data is fetched, so wait for the group to actually appear rather than guessing.
     const grew = await TM.until(() => activeGroupCount() === startGroups + 1, 15000, 200);
     T.ok("the new group is active", grew, activeGroupCount(), startGroups + 1);
+    await TM.wait(600);
+    paneObserver.disconnect();
     T.eq("its place labels stayed off, as the switch says", TM.map.placeLabels(), placesOffBefore);
+    T.eq("and were never even flashed onto the map", addedWhileOff, 0);
     await closeDialog();
     await TM.ui.setSwitch("showPlacesToggle", true);
     await TM.until(() => TM.map.placeLabels() > 0, 3000);
@@ -122,17 +244,41 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
          TM.ui.num(TM.ui.counts().trails), "> " + startTrails);
     T.ok("the header label grew with it", TM.$("#regionsBtn").textContent.split("·").length === startGroups + 1,
          TM.$("#regionsBtn").textContent, (startGroups + 1) + " groups");
+    // Fill up to the cap rather than stopping after one. Reaching MAX_ACTIVE_REGION_GROUPS is the whole point
+    // of this case -- and it cannot be reached with a single activation, because the ✕ case above deliberately
+    // leaves one region fewer. Without this the limit checks silently skipped every run.
     await openDialog();
-    if (activeGroupCount() >= 3) {
-      const still = inactiveRows();
-      T.ok("at the limit, the remaining rows are disabled",
-           still.every((r) => toggle(r).disabled), still.filter((r) => !toggle(r).disabled).length, 0);
-      T.ok("and the dialog says why", getComputedStyle(TM.$("#regionLimitNote")).display !== "none",
-           getComputedStyle(TM.$("#regionLimitNote")).display, "shown");
-    } else {
-      T.skip("fewer than 3 regions in the catalog to reach the limit");
+    let guard = 0;
+    while (activeGroupCount() < MAX_GROUPS && guard++ < MAX_GROUPS + 2) {
+      const next = inactiveRows().filter((r) => !toggle(r).disabled)[0];
+      if (!next) break;
+      const n = activeGroupCount();
+      toggle(next).click();
+      await TM.until(() => activeGroupCount() === n + 1, 15000, 200);
+      await openDialog();
     }
+    T.eq("the cap can be filled exactly", activeGroupCount(), MAX_GROUPS);
+    const still = inactiveRows();
+    T.ok("at the limit, every remaining row is disabled",
+         still.length > 0 && still.every((r) => toggle(r).disabled),
+         still.filter((r) => !toggle(r).disabled).length, 0);
+    T.ok("and the dialog says why", getComputedStyle(TM.$("#regionLimitNote")).display !== "none",
+         getComputedStyle(TM.$("#regionLimitNote")).display, "shown");
+    T.ok("the already-active rows stay clickable, so you can still make room",
+         activeRows().every((r) => !toggle(r).disabled), activeRows().filter((r) => toggle(r).disabled).length, 0);
     await closeDialog();
+    // The new add-region button has to agree with the dialog about the cap.
+    T.ok("the add-region button is disabled at the cap", TM.$("#addRegionBtn").disabled,
+         TM.$("#addRegionBtn").disabled, true);
+    T.ok("and its label states the limit", new RegExp(String(MAX_GROUPS)).test(TM.$("#addRegionBtn").textContent),
+         TM.$("#addRegionBtn").textContent.trim(), "mentions " + MAX_GROUPS);
+    // Closing one with ✕ must re-enable it -- the button is rebuilt by rebuildRegionChips, which
+    // deactivateRegionGroup calls, so this also pins that it is rebuilt at all.
+    TM.$$("#regionChips .region-group-close-btn").slice(-1)[0].click();
+    await TM.until(() => activeGroupCount() === MAX_GROUPS - 1, 6000, 120);
+    T.ok("closing one re-enables it", !TM.$("#addRegionBtn").disabled, TM.$("#addRegionBtn").disabled, false);
+    T.ok("and its label invites again", /hinzuf/i.test(TM.$("#addRegionBtn").textContent),
+         TM.$("#addRegionBtn").textContent.trim(), "Region hinzufügen");
 
     T.test("deactivating is the exact inverse");
     // It resolves which sub-regions belong to the group through REGION_CATALOG, not through the mutated
