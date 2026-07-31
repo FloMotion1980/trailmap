@@ -113,7 +113,12 @@ details.filter-section summary::-webkit-details-marker{ display:none; }
    Padding only the summary, not the whole container, since the content below already supplies its own
    indentation and doubling it up would misalign things the other way. */
 #secTrails > summary, #secTouren > summary, #secLifts > summary{ padding: 0 16px; }
-details.filter-section summary::after{ content:"▸"; font-size:22px; font-weight:700; line-height:1; color: var(--forest); transition: transform .15s ease; }
+/* margin-right: -10px is half the glyph box (~20px at 22px font): it centres the caret ON the sidebar's
+   content edge, which is the same vertical line the region boxes' right border runs along and where the ✕
+   and 📍 now sit (user, 2026-08-01: "alle drei Elemente mittig auf die Linie"). Without it the caret ends
+   AT that edge, i.e. 10px shy of the line. */
+details.filter-section summary::after{ content:"▸"; font-size:22px; font-weight:700; line-height:1;
+  color: var(--forest); transition: transform .15s ease; margin-right: -10px; }
 details.filter-section[open] summary::after{ transform: rotate(90deg); }
 /* Wraps a summary's label + dynamic meta text (visible-count / current-region) as ONE flex item, so
    justify-content:space-between on the summary still only ever spaces two things apart — this group
@@ -122,7 +127,12 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 .section-title-row > span:first-child{ flex-shrink:0; }
 .section-meta{ font-weight:400; text-transform:none; letter-spacing:normal; opacity:0.75; font-size:10.5px;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; flex:1 1 auto; }
-.region-count{ font-weight:400; opacity:0.75; display:inline-block; font-variant-numeric: tabular-nums; }
+/* text-align:right because the box is width-RESERVED for the region's own total (see rebuildRegionChips): when
+   the visible count is shorter than that, the slack has to go somewhere, and a right-aligned number in a fixed
+   field reads like a table column. Left-aligned it produced "( 0 )" -- a gap before the closing paren, which
+   looks like a typo rather than alignment. */
+.region-count{ font-weight:400; opacity:0.75; display:inline-block; font-variant-numeric: tabular-nums;
+  text-align: right; }
 .chip-row{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
 .chip{ border: 1.5px solid var(--forest); color: var(--forest); background: transparent; border-radius: 20px;
   padding: 4px 11px; font-size: 12px; cursor: pointer; transition: all .15s ease; font-family: Arial, sans-serif; }
@@ -188,9 +198,13 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    between them and read as a seam (user, 2026-07-31: "die graue Linie ... sieht komisch aus"). One background
    over both cuts one clean gap in the border, and the buttons touch, so there is nothing left to show through.
    translateY(-14px) rather than -50%: it puts the ✕ centred on the border (its own half-height), which is what
-   keeps its glyph on the same vertical line as the section carets at x=333 — the group as a whole is 54px tall
-   and centring THAT would push the ✕ up by 13px. */
-.region-group-corner{ position: absolute; top: 0; right: -6px; transform: translateY(-14px);
+   keeps its glyph on the same vertical line as the section carets — the group as a whole is 54px tall and
+   centring THAT would push the ✕ up by 13px.
+   `right: -15px` = half the group's own 30px width, so the box's RIGHT BORDER runs through the middle of both
+   glyphs (user, 2026-08-01: all three elements centred on the line that frames the regions). It used to sit
+   just inside at -6px, which aligned it with the section carets but left both of them 10px shy of the line.
+   The 10px this frees inside the box is what let the legend and the chips grow below. */
+.region-group-corner{ position: absolute; top: 0; right: -15px; transform: translateY(-14px);
   display: flex; flex-direction: column; align-items: center;
   background: var(--card-bg); border-radius: 6px; overflow: hidden; }
 .region-group-close-btn{
@@ -206,7 +220,7 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    the chips are inline-block in a block row, and the 6px "gap" becomes a margin on the chips themselves. */
 .region-group-chips{ display:block; }
 .region-group-chips .chip{ display:inline-block; margin: 0 6px 6px 0; vertical-align:top; }
-.region-group-chip-spacer{ float:right; width:26px; height:24px; }
+.region-group-chip-spacer{ float:right; width:18px; height:24px; }
 .region-group-fly-btn{ border:none; cursor:pointer; line-height:1;
   display:flex; align-items:center; justify-content:center;
   width:30px; height:26px; padding:0; border-radius: 6px;
@@ -215,11 +229,16 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 /* Keeps a long region name out from under the two corner buttons: the legend is absolutely positioned and
    would otherwise run straight under them ("Bikeland Schladming-Dachstein (29)" gets close on a 350px
    sidebar). It wraps instead of being truncated -- a shortened region name is worse than a taller legend. */
-.region-group-row{ max-width: calc(100% - 74px); }
+/* Was 74px while the corner group sat inside the box. With the group centred ON the border it only reaches
+   15px in, so the legend gets that room back -- which is what stops "Bikeland Schladming-Dachstein (29)"
+   from wrapping to two lines. */
+.region-group-row{ max-width: calc(100% - 34px); }
 .region-group-label{ white-space: normal; text-align: left; }
 /* Under the boxes, full width, so "what have I got" and "add one more" read as one list. Disabled rather than
    hidden at the cap -- a button that disappears at three explains nothing. */
-.region-add-btn{ width: 100%; padding: 9px 12px; border-radius: 20px; cursor: pointer;
+/* border-radius matches .region-group-block (10px), not a pill: it sits directly under those boxes and the
+   two shapes read as one column (user, 2026-08-01). */
+.region-add-btn{ width: 100%; padding: 9px 12px; border-radius: 10px; cursor: pointer;
   font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
   font-weight: 700; color: var(--forest); background: transparent;
   border: 1.5px dashed var(--forest); transition: all .15s ease; }

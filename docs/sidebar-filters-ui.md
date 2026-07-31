@@ -75,6 +75,29 @@ One behaviour worth knowing rather than fixing: **closing a region and re-adding
 bottom**, because `REGION_GROUPS` is keyed in activation order. The `regions` suite compares the active set,
 not the order, for exactly this reason.
 
+## One vertical line for the caret, the ✕ and the 📍 (2026-08-01)
+
+All three are **centred on the line that frames the regions** — the region box's right border, which is also
+the sidebar's own content edge. They were aligned with each other before but 10px shy of that line, because the
+corner group sat just *inside* the box (`right: -6px`) and the caret ended *at* the summary's edge.
+
+- `.region-group-corner` uses `right: -15px`, i.e. half its own 30px width, so the border runs through the
+  middle of both glyphs.
+- `summary::after` gets `margin-right: -10px`, half the caret's ~20px glyph box, for the same reason.
+
+The 10px this frees *inside* every box is the reason the two rules below could be relaxed: `.region-group-row`
+went from `max-width: calc(100% - 74px)` to `- 34px`, which is what stops **"Bikeland Schladming-Dachstein
+(29)" from wrapping to two lines**, and the floated chip spacer went from 26px to 18px. Measured after: caret,
+✕ and 📍 all centred on x=333 on desktop and x=313 in the phone drawer, where the group's outer edge still has
+3px of clearance to the drawer edge.
+
+`.region-add-btn` took the region boxes' own `border-radius: 10px` instead of a pill, so the column of boxes
+and the button under them read as one shape.
+
+One knock-on the reservation made visible: with the slack now *inside* the parens, a count shorter than its
+reserved width printed as `( 0 )`. `.region-count` is `text-align: right`, so a short number sits where a table
+column would put it rather than leaving a gap before the closing paren.
+
 ## Two chip-layout fixes worth not undoing (2026-08-01)
 
 **The 📍's clearance is a floated spacer, not padding on the chip row.** `padding-right: 34px` reserved that

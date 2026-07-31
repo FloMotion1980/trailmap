@@ -103,15 +103,23 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     const pin = boxes[0].querySelector(".region-group-fly-btn").getBoundingClientRect();
     T.ok("✕ straddles the TOP border", Math.abs((x.top + x.bottom) / 2 - box.top) < 4,
          Math.round((x.top + x.bottom) / 2 - box.top), "≈ 0 from the top edge");
-    T.ok("✕ is at the right edge", Math.abs(x.right - box.right) < 10,
-         Math.round(x.right - box.right), "≈ 0 from the right edge");
+    // All three of the section caret, the ✕ and the 📍 are centred ON the box's right border (user,
+    // 2026-08-01). Checked as the glyph CENTRE against that border, not as "near the right edge" -- the group
+    // deliberately overhangs it by half its width now, so an edge-based check would read as broken.
+    T.ok("✕ is centred on the right border", Math.abs((x.left + x.right) / 2 - box.right) < 3,
+         Math.round((x.left + x.right) / 2 - box.right), "≈ 0 from the border");
+    const caretAfter = getComputedStyle(TM.$("#secRegion > summary"), "::after");
+    const caretMid = TM.$("#secRegion > summary").getBoundingClientRect().right +
+                     parseFloat(caretAfter.marginRight) + parseFloat(caretAfter.width) / 2;
+    T.ok("and so is the section caret above it", Math.abs(caretMid - box.right) < 3,
+         Math.round(caretMid - box.right), "≈ 0 from the same border");
     // 📍 is STACKED directly under the ✕ inside one corner group. Three earlier positions lost, and the
     // reasons are all still live: the bottom border collides with the next box's legend by construction; a
     // footer row in flow costs a whole line per region; side by side on the border, the grey border showed
     // through the gap between them and read as a seam.
     T.eq("📍 sits directly under the ✕, with no gap", Math.round(pin.top - x.bottom), 0);
-    T.ok("and shares its horizontal position", Math.abs(pin.right - x.right) < 3,
-         Math.round(pin.right - x.right), "≈ 0");
+    T.ok("and shares its vertical centre line", Math.abs((pin.left + pin.right) / 2 - (x.left + x.right) / 2) < 2,
+         Math.round((pin.left + pin.right) / 2 - (x.left + x.right) / 2), "≈ 0");
     const corner = boxes[0].querySelector(".region-group-corner");
     const cRect = corner.getBoundingClientRect();
     T.ok("both are in one corner group", !!corner && corner.contains(boxes[0].querySelector(".region-group-fly-btn")),
@@ -124,7 +132,8 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
          [Math.round(cRect.top - box.top), Math.round(cRect.bottom - box.top)], "spans the top edge");
     // The 📍 hangs into the box, so the wrapping chip row has to stay clear of it horizontally.
     const chips = TM.$$(".region-group-chips .chip", boxes[0]);
-    T.ok("the chips keep clear of it", Math.max(...chips.map((c) => c.getBoundingClientRect().right)) <= cRect.left,
+    // The group hangs half outside the box, so "clear of it" means clear of the part that is inside.
+    T.ok("the chips keep clear of it", Math.max(...chips.map((c) => c.getBoundingClientRect().right)) <= cRect.left + 1,
          [Math.round(Math.max(...chips.map((c) => c.getBoundingClientRect().right))), Math.round(cRect.left)],
          "chips left of the group");
     if (boxes.length > 1) {
