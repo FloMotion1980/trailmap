@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=53" />
+<link rel="stylesheet" href="style.css?v=54" />
 </head>
 <body>
 <div id="fatalError">
@@ -773,10 +773,10 @@ const REGION_CATALOG = {
     subRegions: {
       bk_park_lenzerheide: { label: "Park Lenzerheide", color: "#b03a2e" },
       bk_park_chur: { label: "Alpenbikepark Chur", color: "#7d3c98" },
-      bk_bear_mountains: { label: "Bear Mountains (Arosa)", color: "#16788a" },
+      bk_bear_mountains: { label: "Bear Mountains", color: "#16788a" },
       bk_western_summits: { label: "Western Summits", color: "#b8860b" },
       bk_red_peak: { label: "Red Peak", color: "#d35400" },
-      bk_the_capital: { label: "The Capital (Chur)", color: "#2c6fa8" },
+      bk_the_capital: { label: "The Capital", color: "#2c6fa8" },
       bk_steep_trees: { label: "Steep Trees", color: "#4a7c3f" },
       bk_southern_delights: { label: "Southern Delights", color: "#a0416e" },
       bk_biketickets: { label: "Biketicket 2 Ride", color: "#5d6d7e" }
@@ -860,8 +860,10 @@ function rebuildRegionChips(){
     // e.g. " (0)" vs " (182)" — never changes this button's own footprint and shifts flex-wrapped
     // siblings after it (found 2026-07-23, reported by the user as chips "jumping" on activation).
     const groupTotalDigits = String(REGION_CATALOG[groupKey]?.trailCount ?? 0).length;
-    groupCountEl.style.minWidth = (groupTotalDigits + 3) + "ch";
+    groupCountEl.style.minWidth = groupTotalDigits + "ch";   // digits only -- see the sub-region chips below
+    groupLabel.appendChild(document.createTextNode(" ("));
     groupLabel.appendChild(groupCountEl);
+    groupLabel.appendChild(document.createTextNode(")"));
     regionGroupCountEls[groupKey] = groupCountEl;
     groupLabel.title = "Klicken, um alle Unterregionen dieser Region ein-/auszublenden";
     groupLabel.addEventListener("click", () => {
@@ -922,6 +924,15 @@ function rebuildRegionChips(){
 
     const chipsRow = document.createElement("div");
     chipsRow.className = "region-group-chips";
+    // A floated spacer, not padding on the row. The 📍 hangs into the box's top-right, so only the FIRST line
+    // of chips has to keep clear of it -- `padding-right` reserved that width on every line and cost Bike
+    // Kingdom's nine sub-regions their two-per-row layout entirely (user, 2026-08-01). A float is the one thing
+    // that makes wrapped content flow around a box on the lines it actually occupies and use the full width
+    // below it.
+    const spacer = document.createElement("div");
+    spacer.className = "region-group-chip-spacer";
+    spacer.setAttribute("aria-hidden", "true");
+    chipsRow.appendChild(spacer);
     subKeys.forEach(key => {
       const r = REGIONS[key];
       const btn = document.createElement("button");
@@ -929,11 +940,17 @@ function rebuildRegionChips(){
       btn.appendChild(document.createTextNode(r.label));
       const subCountEl = document.createElement("span");
       subCountEl.className = "region-count";
-      // Same fixed-width reservation as the group count above, sized to this sub-region's own total
-      // trail count (its visible count can never exceed that, whatever the current filters are).
+      // Only the DIGITS are width-reserved (2026-08-01). The reservation exists so toggling a sub-region does
+      // not change the chip's footprint and reflow its flex-wrapped siblings -- but reserving `digits + 3`
+      // characters for " (n)" reserved three DIGIT widths for a space and two parentheses, all of which are
+      // much narrower in Arial. The slack landed at the end of the left-aligned box, i.e. as visible dead space
+      // on the chip's right edge (~9px per chip, spotted by the user), and it pushed chips into wrapping that
+      // would otherwise have fitted. So the parens are static text now and only the number is reserved.
       const subTotalDigits = String(lineTrails.filter(t => t.region === key).length).length;
-      subCountEl.style.minWidth = (subTotalDigits + 3) + "ch";
+      subCountEl.style.minWidth = subTotalDigits + "ch";
+      btn.appendChild(document.createTextNode(" ("));
       btn.appendChild(subCountEl);
+      btn.appendChild(document.createTextNode(")"));
       regionSubCountEls[key] = subCountEl;
       btn.style.borderColor = r.color;
       if (activeRegions.has(key)) { btn.style.background = r.color; btn.style.color = "#fff"; }
@@ -4783,8 +4800,10 @@ function render(){
   add(LIFTS.length - liftsShown, "Lift", "Lifte");
   countEl.textContent = hidden.length ? `${hidden.join(" · ")} ausgeblendet` : "alles sichtbar";
 
-  Object.entries(regionSubCountEls).forEach(([key, el]) => { el.textContent = ` (${regionVisibleCounts[key] || 0})`; });
-  Object.entries(regionGroupCountEls).forEach(([key, el]) => { el.textContent = ` (${groupVisibleCounts[key] || 0})`; });
+  // The number only: the surrounding " (" and ")" are static text nodes next to these spans, so that the
+  // width reservation covers digits alone (see rebuildRegionChips for why that mattered).
+  Object.entries(regionSubCountEls).forEach(([key, el]) => { el.textContent = regionVisibleCounts[key] || 0; });
+  Object.entries(regionGroupCountEls).forEach(([key, el]) => { el.textContent = groupVisibleCounts[key] || 0; });
 
   reattachSelectedCard();   // every card above is a new element; whichever is selected has to be marked again
   applyNameLabels();
@@ -4993,7 +5012,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v53"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v54"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

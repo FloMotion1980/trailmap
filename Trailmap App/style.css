@@ -199,10 +199,14 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   width:30px; height:28px; padding:0; border-radius: 6px;
   background: transparent; font-size: 13px; font-weight: 700; color: var(--stone); }
 .region-group-close-btn:hover{ background: #f7e2df; color: var(--rot); }
-/* The 📍 hangs INTO the box below the border, so the chips need to keep clear of it horizontally -- they are a
-   wrapping flex row and cannot dodge it per line. 34px is the group's 30px plus its 6px overhang, minus the
-   2px the border eats. */
-.region-group-chips{ padding-right: 34px; }
+/* The 📍 hangs INTO the box below the border, so the first line of chips has to keep clear of it. That is a
+   FLOATED SPACER inside the row, not padding on the row: padding reserved the width on every line, which cost
+   Bike Kingdom's nine sub-regions their two-per-row layout (user, 2026-08-01). A float is reserved only on the
+   lines it actually occupies. Note the row therefore cannot be `display:flex` -- flex items ignore floats -- so
+   the chips are inline-block in a block row, and the 6px "gap" becomes a margin on the chips themselves. */
+.region-group-chips{ display:block; }
+.region-group-chips .chip{ display:inline-block; margin: 0 6px 6px 0; vertical-align:top; }
+.region-group-chip-spacer{ float:right; width:26px; height:24px; }
 .region-group-fly-btn{ border:none; cursor:pointer; line-height:1;
   display:flex; align-items:center; justify-content:center;
   width:30px; height:26px; padding:0; border-radius: 6px;

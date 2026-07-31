@@ -75,6 +75,24 @@ One behaviour worth knowing rather than fixing: **closing a region and re-adding
 bottom**, because `REGION_GROUPS` is keyed in activation order. The `regions` suite compares the active set,
 not the order, for exactly this reason.
 
+## Two chip-layout fixes worth not undoing (2026-08-01)
+
+**The 📍's clearance is a floated spacer, not padding on the chip row.** `padding-right: 34px` reserved that
+width on *every* wrapped line, not just the one the button occupies — which cost Bike Kingdom's nine
+sub-regions their two-per-row layout entirely: nine chips, nine lines. A `float: right` spacer as the row's
+first child is reserved only on the lines it actually overlaps. The knock-on is that the row **cannot be
+`display: flex`** (flex items ignore floats), so `.region-group-chips` is a block row with `inline-block`
+chips, and what was a flex `gap: 6px` is now a margin on the chips themselves. Nine chips went from 9 rows to
+5, about 100px back per region.
+
+**Only the DIGITS of a count are width-reserved.** The reservation exists so toggling a sub-region cannot
+change a chip's footprint and reflow its wrapped siblings (a real bug from 2026-07-23, "chips jumping"). But
+reserving `digits + 3` characters for `" (n)"` reserved three *digit* widths for a space and two parentheses,
+all far narrower in Arial — and since the box is left-aligned, the slack piled up at its end, i.e. as visible
+dead space on the chip's right edge. The user spotted it as "links weniger Platz als rechts". The parens are
+static text nodes beside the span now, the span reserves digits only, and the chip measures 12px of padding on
+both sides. ~9px saved per chip, which is often the difference between two chips fitting on a line and not.
+
 ## The region dialog: slots, search, country groups (2026-08-01)
 
 Sixteen regions in one flat, catalog-ordered list had stopped scaling, and the backlog is longer still. Three
