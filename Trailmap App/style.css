@@ -600,6 +600,37 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   line-height:1; color:var(--stone); cursor:pointer; padding:4px;
 }
 #regionDialog .rd-close:hover{ color:var(--rust); }
+/* The three places, as places. Replaces the red "Limit erreicht" note that only showed up once you had already
+   run into it -- a filled/empty row states the rule before you try, and each filled one carries its own ✕ so
+   the dialog is also where you make room. */
+#regionSlots{ display:flex; gap:6px; margin:2px 0 8px; }
+.rd-slot{ flex:1; min-width:0; display:flex; align-items:center; gap:4px;
+  border-radius:8px; padding:6px 8px; font-size:11px; font-family:Arial, sans-serif; }
+.rd-slot.filled{ background:#eef3ec; border:1.5px solid var(--forest); color:var(--forest-dark); font-weight:700; }
+.rd-slot.empty{ border:1.5px dashed #cdd5c6; color:var(--stone); justify-content:center;
+  text-transform:uppercase; letter-spacing:.5px; }
+.rd-slot-name{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.rd-slot-close{ margin-left:auto; flex-shrink:0; border:none; background:none; cursor:pointer;
+  font-size:11px; font-weight:700; line-height:1; color:var(--stone); padding:3px 2px; border-radius:4px; }
+.rd-slot-close:hover{ background:#f7e2df; color:var(--rot); }
+#regionDialogHint.is-full{ color:var(--rust); }
+/* type="search" for the native clear affordance on mobile keyboards; the rest is styled to look like the
+   app's own chips rather than a browser default. */
+#regionSearch{ width:100%; box-sizing:border-box; margin:0 0 10px;
+  border:1.5px solid #d3d9c9; border-radius:18px; padding:7px 13px;
+  font-family:Arial, sans-serif; font-size:12.5px; color:var(--ink); background:#fff; }
+#regionSearch:focus{ outline:none; border-color:var(--forest); }
+.region-dialog-empty{ display:none; font-size:12px; color:var(--stone); padding:12px 4px; }
+.region-dialog-empty.visible{ display:block; }
+/* Sticky so the country you are scrolling through stays named -- with 16 regions the list scrolls, and a
+   heading that scrolls away turns the grouping back into a flat list. */
+.rd-country{ position:sticky; top:0; z-index:1; background:#fff;
+  font-family:Arial, sans-serif; font-size:10.5px; font-weight:700; text-transform:uppercase;
+  letter-spacing:.6px; color:var(--forest-dark); padding:8px 4px 4px; border-bottom:1px solid #e3e6da; }
+.rd-country-count{ font-weight:400; opacity:.6; }
+.rd-flags{ font-size:11px; letter-spacing:1px; vertical-align:2px; }
+.rd-subs{ font-size:10.5px; color:#8a9186; margin-top:2px; overflow:hidden; text-overflow:ellipsis;
+  white-space:nowrap; }
 .region-dialog-row{
   display:flex; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid #eceee4;
 }

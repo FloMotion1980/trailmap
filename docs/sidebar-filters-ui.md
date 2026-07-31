@@ -75,6 +75,44 @@ One behaviour worth knowing rather than fixing: **closing a region and re-adding
 bottom**, because `REGION_GROUPS` is keyed in activation order. The `regions` suite compares the active set,
 not the order, for exactly this reason.
 
+## The region dialog: slots, search, country groups (2026-08-01)
+
+Sixteen regions in one flat, catalog-ordered list had stopped scaling, and the backlog is longer still. Three
+changes, all inside the existing dialog:
+
+**The three places, as places.** `#regionSlots` shows one slot per allowed region — filled ones carry the
+region's name and their own ✕, empty ones read "frei" — with a hint below counting them
+(`2 von 3 Plätzen belegt — noch 1 frei`). This replaces a red `Limit erreicht` note that only appeared *after*
+you had run into the wall. The limit is now legible before you try, and the dialog is also where you make room.
+The slot row publishes the limit as `data-max`, which is how the test suite reads
+`MAX_ACTIVE_REGION_GROUPS` (a `const` inside the app's `try{}` block, unreachable from a suite).
+
+**Grouped by country, and the ambiguity is the interesting part.** `countries: ["AT", "CH"]` is an **explicit**
+catalog field, never derived from `bounds`. Three of sixteen regions cross a border *in our own sub-region
+data*: Silvretta Bike Arena has "Ischgl/Samnaun" (CH) plus a trail ending in Ramosch (CH), 3-Länder has
+Schöneben and Haideralm on the Italian side of the Reschenpass, and Portes du Soleil has
+Champéry · Les Crosets · Morgins in Switzerland. A bounding-box centre would have silently picked one — absurd
+for a region called "3-Länder". The **first** country is the primary and decides the group, so every region
+appears exactly once; the others show as extra flags on the row, making the crossing visible rather than tidy.
+Countries sort by their German name and regions alphabetically inside each, both stable as the catalog grows,
+unlike catalog order or "most regions first". Headings are `position: sticky` — a heading that scrolls away
+turns grouping back into a flat list.
+
+**Search covers what grouping cannot.** `#regionSearch` matches the region label, **every sub-region label**,
+the country code and the country's German name, all diacritics- and punctuation-insensitive (`galtur` finds
+Galtür). Sub-regions are the important part: a rider knows "Samnaun" or "Morzine", not necessarily which of our
+region names covers it — and they are printed as a third line on each row, so the search is discoverable
+rather than hidden. It is also what keeps grouping-by-primary honest: typing "Schweiz" finds Silvretta Bike
+Arena even though it is filed under Austria. Place labels are deliberately *not* searchable — they live in the
+region file, which is not loaded until the region is activated. Escape clears the term before it closes the
+dialog, so a key aimed at the text field cannot cost you the whole dialog.
+
+Deliberately **not** built, and why: a per-region map preview (16 regions' worth of tiles for a decision you
+have not made yet), and a download size per row (it would need re-measuring on every region build, and a stale
+size is worse than none). A map *strip* inside the dialog was designed and dropped in favour of these three;
+the idea, its tile cost (4–6 tiles at zoom 5) and the option of precaching those into `APP_SHELL` are recorded
+here in case it comes back.
+
 ## Three list sections: Trails, Touren, Lifte (2026-07-31)
 
 Each object kind gets its own list, in that order, because each is chosen by a different question — which trail do I ride next, which whole day out do I pick, which cable gets me up. The **sub-region chip counts stay "everything visible in this region", Tours included**: a sub-region like Bike Kingdom's "Biketicket 2 Ride" holds nothing but Tours, and a chip reading `(0)` next to four visible Tours would be a lie. Only the per-list hub headings count their own list, which is why `render()` keeps `regionTrailCounts`/`regionTourCounts` alongside `regionVisibleCounts`.

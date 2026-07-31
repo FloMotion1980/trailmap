@@ -32,9 +32,10 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
   const inactiveRows = () => rows().filter((r) => !toggle(r).classList.contains("active"));
   const activeRows = () => rows().filter((r) => toggle(r).classList.contains("active"));
   const activeGroupCount = () => TM.$$("#regionChips .region-group-block").length;
-  // MAX_ACTIVE_REGION_GROUPS is a const inside the app's try{} block and therefore unreachable; the
-  // dialog publishes the same number in its own hint, so read it from there rather than hardcoding 3.
-  const MAX_GROUPS = +((TM.$("#regionLimitText") || {}).textContent || "3").replace(/\D/g, "") || 3;
+  // The dialog publishes the limit as a data attribute on its slot row (the old #regionLimitText span went
+  // when the red "Limit erreicht" note became a row of slots). MAX_ACTIVE_REGION_GROUPS itself is a const
+  // inside the app's try{} block and unreachable from here.
+  const MAX_GROUPS = +(TM.$("#regionSlots") || {}).dataset?.max || 3;
 
   // THIS SUITE IS THE ONE THAT CHANGES WHICH REGIONS ARE LOADED, so it is also the only one that has to put
   // them back itself: TM.baseline() deliberately does not touch the region set (loading a region is slow, and
@@ -193,11 +194,66 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     }
   }
 
+  T.test("the dialog groups by country and can be searched");
+  await openDialog();
+  {
+    const heads = TM.$$("#regionDialogList .rd-country");
+    T.ok("there are country headings", heads.length >= 2, heads.length, ">= 2");
+    T.ok("each names a country and counts its regions",
+         heads.every((h) => /\(\d+\)/.test(h.textContent) && h.textContent.trim().length > 4),
+         heads.map((h) => h.textContent.trim()).slice(0, 3), "flag + name + (n)");
+    // Sorted by the country's German name, and stable as the catalog grows -- catalog order or
+    // "most regions first" would reshuffle the list whenever a region is added.
+    const names = heads.map((h) => h.textContent.replace(/[^A-Za-zÄÖÜäöüß ]/g, "").trim());
+    T.eq("countries in alphabetical order", names, names.slice().sort((a, b) => a.localeCompare(b, "de")));
+    // Every region appears exactly once: grouping by the PRIMARY country, with the others shown as flags.
+    T.eq("no region is listed twice", rows().length, new Set(rows().map((r) => r.textContent)).size);
+    const crossBorder = rows().filter((r) => r.querySelector(".rd-flags"));
+    T.ok("the cross-border regions say so with extra flags", crossBorder.length >= 3,
+         crossBorder.map((r) => r.querySelector(".rd-label").textContent.trim()), ">= 3 of them");
+  }
+
+  T.test("search matches the name, a sub-region and a country");
+  {
+    const all = rows().length;
+    const type = async (v) => {
+      TM.$("#regionSearch").value = v;
+      TM.$("#regionSearch").dispatchEvent(new Event("input", { bubbles: true }));
+      await TM.wait(120);
+      return rows().map((r) => r.querySelector(".rd-label").textContent.trim());
+    };
+    T.ok("by region name", (await type("finale")).some((n) => /Finale/i.test(n)), await type("finale"), "Finale Ligure");
+    // The point of searching sub-regions: a rider knows the village, not our region name.
+    const bySub = await type("samnaun");
+    T.ok("by sub-region — Samnaun finds Silvretta Bike Arena", bySub.some((n) => /Silvretta/i.test(n)), bySub, "Silvretta");
+    const byCountry = await type("schweiz");
+    T.ok("by country name", byCountry.length >= 2, byCountry, ">= 2 Swiss regions");
+    // The one that makes grouping-by-primary honest: Silvretta is filed under Austria but reaches into CH.
+    T.ok("...including the cross-border ones filed elsewhere", byCountry.some((n) => /Silvretta/i.test(n)),
+         byCountry, "contains Silvretta");
+    T.ok("by country code", (await type("ch")).length >= 2, (await type("ch")).length, ">= 2");
+    // Diacritics: a phone keyboard will not produce "ü".
+    const noUmlaut = await type("galtur");
+    T.ok("umlauts are ignored — 'galtur' finds Galtür", noUmlaut.some((n) => /Silvretta/i.test(n)), noUmlaut, "Silvretta");
+    T.eq("a term nobody matches empties the list", (await type("zzzznope")).length, 0);
+    T.ok("and says so instead of showing nothing", TM.$("#regionDialogEmpty").classList.contains("visible"),
+         TM.$("#regionDialogEmpty").className, "visible");
+    await type("");
+    T.eq("clearing it brings every region back", rows().length, all);
+    T.ok("and the empty note is gone", !TM.$("#regionDialogEmpty").classList.contains("visible"), false, false);
+  }
+  await closeDialog();
+
   T.test("the dialog lists every catalogued region and marks the active ones");
   await openDialog();
   T.ok("more rows than are active", rows().length > activeGroupCount(), rows().length, "> " + activeGroupCount());
-  T.ok("the limit is stated", /\d/.test(TM.$("#regionLimitText").textContent), TM.$("#regionLimitText").textContent, "a number");
-  T.eq("the limit shown is the real one", TM.$("#regionLimitText").textContent.replace(/\D/g, ""), "3");
+  T.eq("there is one slot per allowed region", TM.$$("#regionSlots .rd-slot").length, MAX_GROUPS);
+  T.eq("filled slots match the active regions", TM.$$("#regionSlots .rd-slot.filled").length, activeGroupCount());
+  T.eq("the rest are empty", TM.$$("#regionSlots .rd-slot.empty").length, MAX_GROUPS - activeGroupCount());
+  T.ok("and the hint counts them", /\d von \d/.test(TM.$("#regionDialogHint").textContent) ||
+       /Alle \d/.test(TM.$("#regionDialogHint").textContent),
+       TM.$("#regionDialogHint").textContent.trim(), "N von M Plätzen");
+  T.eq("the limit it publishes is the real one", MAX_GROUPS, 3);
   await closeDialog();
 
   T.test("the header button names exactly the active regions, never a hardcoded list");
@@ -277,8 +333,10 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     T.ok("at the limit, every remaining row is disabled",
          still.length > 0 && still.every((r) => toggle(r).disabled),
          still.filter((r) => !toggle(r).disabled).length, 0);
-    T.ok("and the dialog says why", getComputedStyle(TM.$("#regionLimitNote")).display !== "none",
-         getComputedStyle(TM.$("#regionLimitNote")).display, "shown");
+    T.eq("every slot is filled", TM.$$("#regionSlots .rd-slot.filled").length, MAX_GROUPS);
+    T.eq("no empty slot is left", TM.$$("#regionSlots .rd-slot.empty").length, 0);
+    T.ok("and the hint says the dialog is full", /Alle/.test(TM.$("#regionDialogHint").textContent),
+         TM.$("#regionDialogHint").textContent.trim(), "Alle N Plätze belegt");
     T.ok("the already-active rows stay clickable, so you can still make room",
          activeRows().every((r) => !toggle(r).disabled), activeRows().filter((r) => toggle(r).disabled).length, 0);
     await closeDialog();

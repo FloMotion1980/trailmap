@@ -14,7 +14,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=52" />
+<link rel="stylesheet" href="style.css?v=53" />
 </head>
 <body>
 <div id="fatalError">
@@ -29,9 +29,18 @@
   <div class="box">
     <button class="rd-close" id="regionDialogClose" title="Schließen">&times;</button>
     <h2>Regionen wählen</h2>
-    <p class="region-dialog-hint">Wähle, welche Regionen gleichzeitig auf der Karte angezeigt werden sollen (max. <span id="regionLimitText"></span>).</p>
-    <div class="region-dialog-limit-note" id="regionLimitNote">Limit erreicht — zuerst eine aktive Region abwählen, um eine andere hinzuzufügen.</div>
+    <!-- The three slots, shown as slots (2026-08-01). The limit used to be a red note that only appeared once
+         you had already run into it; as a row of filled and empty places it is visible before you try, and the
+         filled ones double as a way out — each carries its own ✕, like the sidebar's region boxes. -->
+    <div id="regionSlots"></div>
+    <p class="region-dialog-hint" id="regionDialogHint"></p>
+    <!-- Search matches the region label, its sub-regions AND its countries, so looking under "Schweiz" finds
+         Silvretta Bike Arena even though that one is grouped under Austria. That is what makes grouping by a
+         single primary country honest: the cross-border regions stay findable from either side. -->
+    <input id="regionSearch" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Region, Ort oder Land suchen…" aria-label="Regionen durchsuchen">
     <div id="regionDialogList"></div>
+    <div class="region-dialog-empty" id="regionDialogEmpty">Keine Region gefunden.</div>
   </div>
 </div>
 <div class="app">
@@ -231,7 +240,7 @@ const REGION_CATALOG = {
     // "Schrofa Trail" added 2026-07-30 from the user's own GPX (Material/Paznaun), 180 m -- confirmed by the
     // user (visited that day) to be the trail's full length, not a truncated recording. No OSM/official
     // source exists for it; difficulty (rot) is the user's own on-site judgement.
-    label: "Silvretta Bike Arena", file: "regions/paznaun.json", trailCount: 26,
+    countries: ["AT", "CH"], label: "Silvretta Bike Arena", file: "regions/paznaun.json", trailCount: 26,
     bounds: [[46.8344, 10.14123], [47.07058, 10.4054]],
     subRegions: {
       ischgl:  { label: "Ischgl/Samnaun", color: "#3a7a4a" },
@@ -240,7 +249,7 @@ const REGION_CATALOG = {
     }
   },
   dreilaender: {
-    label: "3-Länder Enduro Trails", file: "regions/dreilaender.json", trailCount: 29,
+    countries: ["AT", "IT"], label: "3-Länder Enduro Trails", file: "regions/dreilaender.json", trailCount: 29,
     bounds: [[46.7593, 10.47113], [46.8925, 10.54674]],
     subRegions: {
       mutzkopf:   { label: "Mutzkopf",   color: "#4a6b3a" },
@@ -269,7 +278,7 @@ const REGION_CATALOG = {
   // docs/finale-ligure.md — read it before adding or moving any Finale trail, this comment only
   // keeps a short pointer from here on.
   finale: {
-    label: "Finale Ligure", file: "regions/finale.json", trailCount: 182,
+    countries: ["IT"], label: "Finale Ligure", file: "regions/finale.json", trailCount: 182,
     bounds: [[44.13673, 8.096665], [44.28989, 8.44941]],
     subRegions: {
       le_manie: { label: "Le Manie", color: "#7a2f6b" },
@@ -299,7 +308,7 @@ const REGION_CATALOG = {
   // smoothing short gaps) -- a one-off script, not yet a repo-tracked tool. Foundation for a future
   // "build your own Trailrunde" feature (not implemented yet, per the user 2026-07-22).
   donnersberg: {
-    label: "Donnersberg", file: "regions/donnersberg.json", trailCount: 27,
+    countries: ["DE"], label: "Donnersberg", file: "regions/donnersberg.json", trailCount: 27,
     bounds: [[49.53555, 7.85592], [49.63851, 7.97392]],
     subRegions: {
       donnersberger_land: { label: "MTB Donnersberger Land", color: "#8a6a2f" },
@@ -332,7 +341,7 @@ const REGION_CATALOG = {
   // "Technical Difficulty X/6" (1-2->blau, 3-4->rot, 5-6->schwarz) -- no manual per-trail review, per
   // the user -- "einige Fehler machen nix".
   pfaelzerwald: {
-    label: "Pfälzer Wald", file: "regions/pfaelzerwald.json", trailCount: 437,
+    countries: ["DE"], label: "Pfälzer Wald", file: "regions/pfaelzerwald.json", trailCount: 437,
     bounds: [[49.04013, 7.50087], [49.44465, 8.16781]],
     subRegions: {
       johanniskreuz: { label: "Rund um Johanniskreuz", color: "#5a7a3a" },
@@ -412,7 +421,7 @@ const REGION_CATALOG = {
   // small sub-regions rather than one each. ~30 remaining routes were plain S0-rated forest-road/
   // hiking tours with no real trail content and were deliberately left out entirely, per the user.
   odenwald: {
-    label: "Geo-Naturpark Odenwald", file: "regions/odenwald.json", trailCount: 66,
+    countries: ["DE"], label: "Geo-Naturpark Odenwald", file: "regions/odenwald.json", trailCount: 66,
     bounds: [[49.43588, 8.68312], [49.88447, 9.47363]],
     subRegions: {
       eberbach: { label: "Eberbach", color: "#6b8a3a" },
@@ -480,7 +489,7 @@ const REGION_CATALOG = {
     // that road via Overpass), and idx 59..89 is the road transfer up to the Rettenbach entry, not trail;
     // Rettenbach ends where the Gahe Line begins (idx 162 -- Gahe Line (6028)'s own first coordinate
     // sits 3m off the track there), not where Leiterberg starts. Both blau per the user.
-    label: "Bike Republic Sölden", file: "regions/soelden.json", trailCount: 38,
+    countries: ["AT"], label: "Bike Republic Sölden", file: "regions/soelden.json", trailCount: 38,
     bounds: [[46.92087, 10.94823], [47.00829, 11.04643]],
     subRegions: {
       shaped_lines: { label: "Shaped Lines", color: "#2f6b8a" },
@@ -545,7 +554,7 @@ const REGION_CATALOG = {
     //    same junction and the same convergence point). `len` stays the official 3.25 km (already didn't
     //    match the drawn line before this change either); `up`/`down` are recomputed from the new, shorter
     //    line's own real elevation, since the old figures described a materially different, longer line.
-    label: "Tiroler Zugspitz Arena", file: "regions/zugspitzarena.json", trailCount: 17,
+    countries: ["AT"], label: "Tiroler Zugspitz Arena", file: "regions/zugspitzarena.json", trailCount: 17,
     bounds: [[47.35496, 10.73881], [47.42707, 10.94872]],
     subRegions: {
       lermoos_biberwier: { label: "Lermoos / Biberwier", color: "#2f7fa8" },
@@ -565,7 +574,7 @@ const REGION_CATALOG = {
     // have branch fragments that are NOT part of the drawn line (ST-08 1.00 km, ST-10 0.83 km,
     // ST-04 0.58 km, ST-02 0.18 km) -- the ways there fork, so one polyline cannot hold them.
     // If the user can export these from an app, that replaces all of the above; see task #19.
-    label: "Brandnertal", file: "regions/brandnertal.json", trailCount: 12,
+    countries: ["AT"], label: "Brandnertal", file: "regions/brandnertal.json", trailCount: 12,
     bounds: [[47.11154, 9.71769], [47.14753, 9.76106]],
     subRegions: {
       tschengla: { label: "Tschengla (Parklines)", color: "#c2401c" },
@@ -600,7 +609,7 @@ const REGION_CATALOG = {
     // sharing one top and bottom station, recorded as one GPX riding all three back to back, which is why it
     // drew as a self-crossing loop. Split into three generically-numbered entries (which recorded segment is
     // really which named line isn't knowable from the data -- the user's call). See tools/build_schladming.py.
-    label: "Bikeland Schladming-Dachstein", file: "regions/schladming.json", trailCount: 29,
+    countries: ["AT"], label: "Bikeland Schladming-Dachstein", file: "regions/schladming.json", trailCount: 29,
     bounds: [[47.35919, 13.58599], [47.42899, 13.80129]],
     subRegions: {
       planai: { label: "Bikepark Schladming", color: "#1c9c8a" },
@@ -609,7 +618,7 @@ const REGION_CATALOG = {
     }
   },
   paganella: {
-    label: "Dolomiti Paganella", file: "regions/paganella.json", trailCount: 24,
+    countries: ["IT"], label: "Dolomiti Paganella", file: "regions/paganella.json", trailCount: 24,
     bounds: [[46.13632, 10.9538], [46.22536, 11.0866]],
     subRegions: {
       andalo: { label: "Andalo", color: "#1c8ac2" },
@@ -636,7 +645,7 @@ const REGION_CATALOG = {
   // KNOWN GAP: the Swiss side has only 3 runs here because OSM barely covers it -- bikepark.ch's own
   // Morgins/Champéry/Les Crosets runs are largely unmapped. Needs a GPX or a manual list to complete.
   portesdusoleil: {
-    label: "Portes du Soleil", file: "regions/portesdusoleil.json", trailCount: 52,
+    countries: ["FR", "CH"], label: "Portes du Soleil", file: "regions/portesdusoleil.json", trailCount: 52,
     bounds: [[46.13418, 6.65558], [46.23115, 6.84092]],
     subRegions: {
       lesgets: { label: "Les Gets", color: "#c2a01c" },
@@ -664,7 +673,7 @@ const REGION_CATALOG = {
   // singletrails use the GPX. `len` is the operator's published figure throughout, per the project's
   // "official numbers beat GPX-derived" rule; up/down are computed from the chosen geometry.
   serfaus: {
-    label: "Serfaus-Fiss-Ladis", file: "regions/serfaus.json", trailCount: 17,
+    countries: ["AT"], label: "Serfaus-Fiss-Ladis", file: "regions/serfaus.json", trailCount: 17,
     bounds: [[47.03392, 10.53756], [47.09037, 10.63242]],
     subRegions: {
       bikepark: { label: "Bikepark", color: "#c25b1c" },
@@ -699,7 +708,7 @@ const REGION_CATALOG = {
   //  - Fieberbrunn (3): Schweinestberg / Streuböden / Iglmoos, built from OSM (Overpass geometry +
   //    Open-Meteo elevation). OSM has Iglmoos as section 1 only; the "2. Sektion" is not separately mapped.
   bikecircus: {
-    label: "Saalfelden Leogang", file: "regions/bikecircus.json", trailCount: 51,
+    countries: ["AT"], label: "Saalfelden Leogang", file: "regions/bikecircus.json", trailCount: 51,
     bounds: [[47.3406, 12.51535], [47.46892, 12.74268]],
     subRegions: {
       saalbach: { label: "Saalbach Hinterglemm", color: "#8a6a2f" },
@@ -727,7 +736,7 @@ const REGION_CATALOG = {
     // the operator and OSM. The Vorab chain (Crap Masegn/Fuorcla/Vorab) is deliberately absent -- laax.com
     // mentions a "Vorab cable car" for bike access in prose, but no OSM way in that chain carries a bike tag,
     // and guessing which of four sections take bikes would be inventing operator policy.
-    label: "Flims Laax Falera", file: "regions/laax.json", trailCount: 12,
+    countries: ["CH"], label: "Flims Laax Falera", file: "regions/laax.json", trailCount: 12,
     bounds: [[46.81323, 9.17777], [46.88297, 9.28562]],
     subRegions: {
       flims: { label: "Flims (FlemXpress)", color: "#2f7d95" },
@@ -759,7 +768,7 @@ const REGION_CATALOG = {
     // ascent figures include the metres the mountain railways climb.
     // "Wasserfall Lenzerheide" (rot, from the user) came in on 2026-07-29 as trail 117: Outdooractive marks
     // it geschlossen, and it is in anyway with no closed flag, same rule as the lifts.
-    label: "Bike Kingdom", file: "regions/bikekingdom.json", trailCount: 121,
+    countries: ["CH"], label: "Bike Kingdom", file: "regions/bikekingdom.json", trailCount: 121,
     bounds: [[46.65044, 9.43341], [46.88292, 9.76421]],
     subRegions: {
       bk_park_lenzerheide: { label: "Park Lenzerheide", color: "#b03a2e" },
@@ -3988,8 +3997,40 @@ function deactivateRegionGroup(groupKey){
 // ---- "Regionen wählen" dialog: lists every catalog region group, lets the user (de)activate ----
 const regionDialogEl = document.getElementById("regionDialog");
 const regionDialogListEl = document.getElementById("regionDialogList");
-const regionLimitNoteEl = document.getElementById("regionLimitNote");
-document.getElementById("regionLimitText").textContent = MAX_ACTIVE_REGION_GROUPS;
+const regionSlotsEl = document.getElementById("regionSlots");
+const regionDialogHintEl = document.getElementById("regionDialogHint");
+const regionSearchEl = document.getElementById("regionSearch");
+const regionDialogEmptyEl = document.getElementById("regionDialogEmpty");
+regionSlotsEl.dataset.max = MAX_ACTIVE_REGION_GROUPS;   // read by tests; the app has the const itself
+
+// Countries are an EXPLICIT field per catalog entry, never derived from `bounds` (2026-08-01). Three of the
+// sixteen regions straddle a border *in our own sub-region data* -- Silvretta Bike Arena has "Ischgl/Samnaun"
+// (CH) and a trail ending in Ramosch (CH), 3-Länder has Schöneben and Haideralm on the Italian side of the
+// Reschenpass, and Portes du Soleil has Champéry/Les Crosets/Morgins in Switzerland. A bounding-box centre
+// would silently pick one of them, which for a region literally called "3-Länder" is absurd.
+// The FIRST entry is the primary and decides the group, so every region appears exactly once; the others are
+// shown as extra flags on the row, which makes the border crossing visible instead of tidying it away. The
+// search field covers the other direction: it matches countries too, so "Schweiz" finds Silvretta as well.
+const COUNTRY_NAME = { AT: "Österreich", CH: "Schweiz", IT: "Italien", DE: "Deutschland", FR: "Frankreich" };
+const COUNTRY_FLAG = { AT: "🇦🇹", CH: "🇨🇭", IT: "🇮🇹", DE: "🇩🇪", FR: "🇫🇷" };
+
+// Diacritics-insensitive, punctuation-insensitive matching: "galtur" has to find "Galtür" and "pfalzer" has to
+// find "Pfälzer Wald", or the search is useless on a phone keyboard.
+function rdNorm(s){
+  return (s || "").toString().toLowerCase()
+    .replace(/ä/g, "a").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ß/g, "ss")
+    .replace(/[àáâãå]/g, "a").replace(/[èéêë]/g, "e").replace(/[ìíîï]/g, "i")
+    .replace(/[òóôõ]/g, "o").replace(/[ùúû]/g, "u").replace(/ç/g, "c")
+    .replace(/[^a-z0-9]+/g, " ").trim();
+}
+// Everything a region can be found by. Sub-regions matter most in practice: a rider knows "Samnaun" or
+// "Morzine", not necessarily which of our region names covers it. Place labels are deliberately NOT in here --
+// they live in the region file, which is not loaded until the region is activated.
+function regionHaystack(groupKey, entry){
+  const subs = Object.values(entry.subRegions || {}).map(r => r.label);
+  const countries = (entry.countries || []).flatMap(c => [c, COUNTRY_NAME[c] || c]);
+  return rdNorm([groupKey, entry.label].concat(subs, countries).join(" "));
+}
 
 // groupKey -> error message from the last failed activation attempt. Kept outside
 // renderRegionDialog() (which fully rebuilds the list on every call, e.g. right after an
@@ -3997,18 +4038,99 @@ document.getElementById("regionLimitText").textContent = MAX_ACTIVE_REGION_GROUP
 // the instant it's shown.
 const regionActivationErrors = {};
 
+// The current search term. Kept outside renderRegionDialog because that function rebuilds everything on every
+// activation, and a filter that reset itself mid-search would be worse than no filter.
+let regionSearchTerm = "";
+
+function renderRegionSlots(){
+  regionSlotsEl.innerHTML = "";
+  const active = Object.keys(REGION_CATALOG).filter(k => activeRegionGroups.has(k));
+  for (let i = 0; i < MAX_ACTIVE_REGION_GROUPS; i++) {
+    const key = active[i];
+    const slot = document.createElement("div");
+    slot.className = "rd-slot" + (key ? " filled" : " empty");
+    if (!key) {
+      slot.textContent = "frei";
+      regionSlotsEl.appendChild(slot);
+      continue;
+    }
+    const name = document.createElement("span");
+    name.className = "rd-slot-name";
+    name.textContent = REGION_CATALOG[key].label;
+    slot.appendChild(name);
+    // Same job and same lack of a confirmation as the ✕ on the sidebar's region box -- this is the other place
+    // you now stand when you notice you are one region over the limit.
+    const drop = document.createElement("button");
+    drop.className = "rd-slot-close";
+    drop.textContent = "✕";
+    drop.title = "Diese Region schließen";
+    drop.setAttribute("aria-label", REGION_CATALOG[key].label + " schließen");
+    drop.addEventListener("click", () => { deactivateRegionGroup(key); renderRegionDialog(); });
+    slot.appendChild(drop);
+    regionSlotsEl.appendChild(slot);
+  }
+  const n = active.length;
+  const free = MAX_ACTIVE_REGION_GROUPS - n;
+  regionDialogHintEl.textContent = free > 0
+    ? `${n} von ${MAX_ACTIVE_REGION_GROUPS} Plätzen belegt — noch ${free} frei.`
+    : `Alle ${MAX_ACTIVE_REGION_GROUPS} Plätze belegt. Schließe eine Region, um eine andere zu laden.`;
+  regionDialogHintEl.classList.toggle("is-full", free === 0);
+}
+
 function renderRegionDialog(){
   regionDialogListEl.innerHTML = "";
   const atLimit = activeRegionGroups.size >= MAX_ACTIVE_REGION_GROUPS;
-  regionLimitNoteEl.classList.toggle("visible", atLimit);
+  renderRegionSlots();
 
-  Object.entries(REGION_CATALOG).forEach(([groupKey, entry]) => {
+  // Grouped by primary country, countries sorted by their German name and regions alphabetically inside each --
+  // both orderings are stable as the catalog grows, unlike "most regions first" or catalog order, which shuffle
+  // the list under the user whenever a region is added.
+  const term = rdNorm(regionSearchTerm);
+  const matching = Object.entries(REGION_CATALOG)
+    .filter(([groupKey, entry]) => !term || regionHaystack(groupKey, entry).indexOf(term) > -1);
+  const byCountry = {};
+  matching.forEach(([groupKey, entry]) => {
+    const primary = (entry.countries || ["??"])[0];
+    (byCountry[primary] = byCountry[primary] || []).push([groupKey, entry]);
+  });
+  const countryKeys = Object.keys(byCountry)
+    .sort((a, b) => (COUNTRY_NAME[a] || a).localeCompare(COUNTRY_NAME[b] || b, "de"));
+
+  regionDialogEmptyEl.classList.toggle("visible", matching.length === 0);
+
+  countryKeys.forEach(code => {
+    const head = document.createElement("div");
+    head.className = "rd-country";
+    head.textContent = `${COUNTRY_FLAG[code] || "🏳"} ${COUNTRY_NAME[code] || code}`;
+    const count = document.createElement("span");
+    count.className = "rd-country-count";
+    count.textContent = ` (${byCountry[code].length})`;
+    head.appendChild(count);
+    regionDialogListEl.appendChild(head);
+
+    byCountry[code].sort((a, b) => a[1].label.localeCompare(b[1].label, "de", { numeric: true }))
+                   .forEach(([groupKey, entry]) => buildRegionRow(groupKey, entry, atLimit));
+  });
+}
+
+function buildRegionRow(groupKey, entry, atLimit){
+  {
     const row = document.createElement("div");
     row.className = "region-dialog-row";
 
     const info = document.createElement("div");
     info.className = "rd-info";
-    info.innerHTML = `<div class="rd-label">${entry.label}</div><div class="rd-count">${entry.trailCount} Trails</div>`;
+    // Extra countries as flags after the name: the region is filed under its primary one, so this is where a
+    // cross-border region says so rather than the grouping hiding it.
+    const extraFlags = (entry.countries || []).slice(1).map(c => COUNTRY_FLAG[c] || "").join("");
+    const flagSpan = extraFlags ? ` <span class="rd-flags" title="Reicht über die Grenze: ${
+      (entry.countries || []).map(c => COUNTRY_NAME[c] || c).join(" · ")}">${extraFlags}</span>` : "";
+    // Sub-region names in the second line: they are what a rider actually searches for, so showing them makes
+    // the search discoverable ("ah, THAT is where Samnaun lives") instead of a hidden feature.
+    const subs = Object.values(entry.subRegions || {}).map(r => r.label).join(" · ");
+    info.innerHTML = `<div class="rd-label">${entry.label}${flagSpan}</div>` +
+                     `<div class="rd-count">${entry.trailCount} Trails</div>` +
+                     (subs ? `<div class="rd-subs">${subs}</div>` : "");
     if (regionActivationErrors[groupKey]) {
       const err = document.createElement("div");
       err.className = "rd-error";
@@ -4059,8 +4181,26 @@ function renderRegionDialog(){
     });
     row.appendChild(btn);
     regionDialogListEl.appendChild(row);
-  });
+  }
 }
+
+// Filtering re-renders the list but must NOT re-render the slots' focus away from the field, so it goes
+// through the same renderRegionDialog -- the input itself lives outside the rebuilt list, which is why it can.
+regionSearchEl.addEventListener("input", () => {
+  regionSearchTerm = regionSearchEl.value;
+  renderRegionDialog();
+});
+regionSearchEl.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+  // Escape clears the filter first and only closes the dialog on a second press -- losing a whole dialog to a
+  // key meant for the text field is the kind of thing that makes a search box feel dangerous.
+  if (regionSearchEl.value) {
+    e.stopPropagation();
+    regionSearchEl.value = "";
+    regionSearchTerm = "";
+    renderRegionDialog();
+  }
+});
 
 document.getElementById("regionsBtn").addEventListener("click", () => {
   renderRegionDialog();
@@ -4853,7 +4993,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v52"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v53"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
