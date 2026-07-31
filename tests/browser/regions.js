@@ -98,10 +98,26 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     T.skip("already at the limit or nothing left to activate — run with 2 active regions");
     await closeDialog();
   } else {
+    // Activate it with "Orte" OFF: activateRegionGroup ends in applyPlaceVisibility() precisely so a group
+    // loaded while the switch is off does not light its labels up. That guard is the reason the boot-order bug
+    // was invisible for so long -- it works for a LATER activation and only failed for boot's own, because
+    // the flag had not been restored yet. Both halves are pinned now: this case and the fresh-boot one below.
+    await closeDialog();
+    await TM.ui.setSwitch("showPlacesToggle", false);
+    await TM.until(() => TM.map.placeLabels() === 0, 3000);
+    const placesOffBefore = TM.map.placeLabels();
+    await openDialog();
     toggle(candidates[0]).click();
     // Region data is fetched, so wait for the group to actually appear rather than guessing.
     const grew = await TM.until(() => activeGroupCount() === startGroups + 1, 15000, 200);
     T.ok("the new group is active", grew, activeGroupCount(), startGroups + 1);
+    T.eq("its place labels stayed off, as the switch says", TM.map.placeLabels(), placesOffBefore);
+    await closeDialog();
+    await TM.ui.setSwitch("showPlacesToggle", true);
+    await TM.until(() => TM.map.placeLabels() > 0, 3000);
+    T.ok("turning Orte back on now includes the new region's places", TM.map.placeLabels() > 0,
+         TM.map.placeLabels(), "> 0");
+    await openDialog();
     T.ok("its trails joined the list", TM.ui.num(TM.ui.counts().trails) > startTrails,
          TM.ui.num(TM.ui.counts().trails), "> " + startTrails);
     T.ok("the header label grew with it", TM.$("#regionsBtn").textContent.split("·").length === startGroups + 1,
