@@ -754,6 +754,9 @@ html.landscape-compact .ele-chart{ height:40px; }
   border-radius:10px;
 }
 #builderSheetHandle:hover{ background:rgba(0,0,0,.04); }
+/* Only while open: collapsed, this would draw a line across the bottom of what is then just a pill. The
+   desktop column variant already had it; the corner panel let the title run straight into the first row. */
+#builderSheet:not(.collapsed) #builderSheetHandle{ border-bottom:1px solid #e3e6da; }
 #builderSheetOff{
   flex-shrink:0; border:none; background:none; cursor:pointer; color:var(--stone);
   font-size:17px; line-height:1; padding:3px 7px; border-radius:6px;
@@ -838,7 +841,7 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
 .builder-row.is-swiping::before{ opacity:1; }
 .builder-row.will-delete::before{ text-decoration:underline; }
 .bi-body{
-  border:1px solid rgba(0,0,0,.12); border-radius:7px; background:var(--card-bg); font-size:12px;
+  border:1px solid #e3e6da; border-radius:6px; background:var(--card-bg); font-size:12px;
   /* pan-y hands vertical drags to the sheet's own scrolling (we then get a pointercancel) while letting
      horizontal ones through as pointermove -- the axis split without any manual guessing. */
   touch-action: pan-y;
@@ -891,15 +894,15 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
    actually is. Negative margins pull it over both borders; z-index puts it above them. */
 .builder-connector{
   position:relative; z-index:2; align-self:flex-start;
-  margin:-8px 0 -8px 34px;
+  margin:-8px 0 -8px 27px;   /* 14px box edge + 27 = 41px, the sheet's content column */
   display:flex; align-items:center; gap:6px;
-  border:1px solid rgba(0,0,0,.18); border-radius:11px; background:var(--card-bg);
+  border:1px solid #d3d9c9; border-radius:11px; background:var(--card-bg);
   cursor:pointer; padding:2px 9px; font-family:inherit; font-size:10.5px; color:var(--ink);
 }
 /* The stub that makes it read as a bridge rather than a floating pill. */
 .builder-connector::before{
-  content:""; position:absolute; left:-13px; top:-3px; bottom:-3px; width:2px;
-  background:rgba(0,0,0,.2); border-radius:1px;
+  content:""; position:absolute; left:-19px; top:-3px; bottom:-3px; width:2px;   /* the 22px drag-handle column */
+  background:#cdd5c6; border-radius:1px;
 }
 .builder-connector:hover{ background:#fdf6e6; border-color:var(--highlight); }
 .builder-connector .bx-label{ font-weight:700; letter-spacing:.3px; opacity:.8; }
@@ -944,12 +947,23 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
 .builder-row.is-lift .bi-name{ font-style:italic; }
 /* No ↺ after the name any more: the ←/→ button now carries the direction, and saying it twice in one row
    just cost width the name needed. `.is-reversed` stays on the row as a hook. */
-#builderTotals{ margin-top:8px; font-size:12px; font-weight:600; }
+/* The sheet had no internal separators at all: the last row, the sum and the buttons ran together. One line
+   above the sum groups them, and it spans exactly the rows' own column -- the same rule the sidebar follows. */
+#builderTotals{ margin-top:10px; padding-top:8px; border-top:1px solid #e3e6da; font-size:12px; font-weight:600; }
 .builder-actions{ display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
 .builder-actions button{
   flex:1 1 auto; font-size:11.5px; padding:5px 8px; border-radius:6px;
-  border:1px solid rgba(0,0,0,.18); background:transparent; cursor:pointer;
+  border:1px solid #d3d9c9; background:transparent; cursor:pointer;
+  font-family: Arial, sans-serif; transition: all .15s ease;
 }
+/* The two used to be pixel-identical, though one exports and the other throws the whole tour away without a
+   confirmation (user, 2026-08-01: a design pass). Export is the primary action and reads as one; Leeren stays
+   quiet until you touch it and then turns red, exactly like every other destructive control in this app
+   (.region-group-close-btn, .rd-slot-close). */
+#builderExportBtn{ background: var(--forest); border-color: var(--forest); color:#fff; font-weight:600; }
+#builderExportBtn:hover{ background: var(--forest-dark); border-color: var(--forest-dark); }
+#builderClearBtn{ color: var(--stone); }
+#builderClearBtn:hover{ background:#f7e2df; border-color: var(--rot); color: var(--rot); }
 #builderExport{
   width:100%; margin-top:8px; font-family:ui-monospace,Menlo,Consolas,monospace;
   font-size:10.5px; line-height:1.35; border-radius:6px; display:none;

@@ -647,3 +647,28 @@ The obvious next steps, in rough order of value:
    stays an offline step or needs an elevation source added.
 3. **Drag to reorder** instead of the ↑/↓ buttons.
 4. **Name the tour** and write it straight into a region JSON.
+
+## Design pass (2026-08-01)
+
+Five things, after the same measured pass the sidebar got:
+
+- **The destructive button no longer looks like the harmless one.** "Als JSON ausgeben" and "Leeren" were
+  pixel-identical, though one exports and the other throws the whole tour away with no confirmation. Export is
+  the primary action now (filled `--forest`); Leeren stays quiet and turns red only on hover, the same language
+  every other destructive control in this app speaks (`.region-group-close-btn`, `.rd-slot-close`).
+- **Three columns, and everything sits on one of them.** `14px` for box edges (rows, totals, actions), `22px`
+  for the drag handle and the connector's bridge stub, `41px` for content (the handle's title, the row numbers,
+  and now the connector pill). The connector used to start at 48px — between the number column and the name
+  column, on neither.
+- **Two separators, one per boundary.** The sheet had none at all on the corner panel: the title ran into the
+  first row and the last row ran into the sum. There is now a line under the handle (only while open — collapsed
+  it would draw across the bottom of what is then just a pill) and one above the totals, both in the sidebar's
+  own `#e3e6da`.
+- **One palette.** The sheet borrowed translucent blacks at `.12`, `.18` and `.2` while the rest of the app uses
+  its own greys; rows are `#e3e6da` (like `.trail-card`), the connector and the buttons `#d3d9c9` (like the
+  region boxes), the bridge stub `#cdd5c6`.
+- **Row radius 7px → 6px**, matching `.trail-card` exactly. The sheet's own 10px already matched the region
+  boxes.
+
+Verified with the suite afterwards: 19 cases, 97 checks, still green — including the drag test, which measures
+real row heights and would have caught a radius or border change that altered them.
