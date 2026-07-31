@@ -183,25 +183,30 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    The two alignment requirements from the 📍's time here still apply and are why the box is 30x28 with a
    -6px offset: the GLYPH lines up with the section triangles at x=333, and it stays centred in its own box
    (which becomes visible on hover), so the slack is spent on the offset rather than on padding. */
+/* ONE group holds both buttons, stacked, ✕ on top and 📍 directly under it. The group carries the opaque
+   --card-bg, not the buttons: side by side on the border line the grey border showed through the 6px gap
+   between them and read as a seam (user, 2026-07-31: "die graue Linie ... sieht komisch aus"). One background
+   over both cuts one clean gap in the border, and the buttons touch, so there is nothing left to show through.
+   translateY(-14px) rather than -50%: it puts the ✕ centred on the border (its own half-height), which is what
+   keeps its glyph on the same vertical line as the section carets at x=333 — the group as a whole is 54px tall
+   and centring THAT would push the ✕ up by 13px. */
+.region-group-corner{ position: absolute; top: 0; right: -6px; transform: translateY(-14px);
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--card-bg); border-radius: 6px; overflow: hidden; }
 .region-group-close-btn{
   border:none; cursor:pointer; line-height:1;
   display:flex; align-items:center; justify-content:center;
   width:30px; height:28px; padding:0; border-radius: 6px;
-  position: absolute; top: 0; right: -6px; transform: translateY(-50%);
-  background: var(--card-bg); font-size: 13px; font-weight: 700; color: var(--stone); }
+  background: transparent; font-size: 13px; font-weight: 700; color: var(--stone); }
 .region-group-close-btn:hover{ background: #f7e2df; color: var(--rot); }
-/* 📍 sits on the SAME top border line, immediately left of the ✕ (user, 2026-07-31). Two rejected spots, so
-   nobody re-tries them: the BOTTOM border overlaps the next box's legend by ~8px -- and by an amount that
-   depends on whether a long region name wraps, so it comes and goes as regions are added -- and a footer row
-   in flow costs a whole line per region for one icon.
-   `right` leaves a 6px gap to the ✕ (its box starts at box.right-24; this one ends at box.right-30). That gap
-   is the whole mitigation for putting "jump there" next to "unload it": enough to feel as two targets, while
-   only the ✕ turns red on hover so the destructive one is the marked one. */
+/* The 📍 hangs INTO the box below the border, so the chips need to keep clear of it horizontally -- they are a
+   wrapping flex row and cannot dodge it per line. 34px is the group's 30px plus its 6px overhang, minus the
+   2px the border eats. */
+.region-group-chips{ padding-right: 34px; }
 .region-group-fly-btn{ border:none; cursor:pointer; line-height:1;
   display:flex; align-items:center; justify-content:center;
-  width:30px; height:28px; padding:0; border-radius: 6px;
-  position: absolute; top: 0; right: 30px; transform: translateY(-50%);
-  background: var(--card-bg); font-size: 14px; color: var(--stone); }
+  width:30px; height:26px; padding:0; border-radius: 6px;
+  background: transparent; font-size: 14px; color: var(--stone); }
 .region-group-fly-btn:hover{ background: #e4ece0; color: var(--forest-dark); }
 /* Keeps a long region name out from under the two corner buttons: the legend is absolutely positioned and
    would otherwise run straight under them ("Bikeland Schladming-Dachstein (29)" gets close on a 350px

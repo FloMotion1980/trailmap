@@ -46,18 +46,24 @@ was active. Now the section you look at is the section you act in:
   2026-07-28, and for the same reason that slot was chosen: it is the one position in the box that does not
   move with the length of the region's name. The 30×28 box and the `-6px` offset are inherited too, because
   they are what puts the *glyph* on the same vertical line as the section carets (x=333, verified).
-- **📍 on the same top border, immediately left of the ✕**, with a 6px gap between them. It took three
-  attempts, and the two rejected ones are worth knowing before moving it again:
+- **📍 stacked directly under the ✕**, both inside one `.region-group-corner` group that carries a single
+  opaque background. Four positions were tried on 2026-07-31; the three that lost are worth knowing before
+  moving it a fifth time:
   - the **bottom** border, mirroring the ✕, *collides by construction* — a 28px button centred on a border
     overhangs it by 14px, straight into the next box's legend, whose own height depends on whether a long
     region name wraps, so the overlap appears and disappears as regions are added;
-  - a **footer row in flow** is collision-proof but costs a whole line (~28px) per region for one icon, which
-    the user rightly called out as wasteful.
-  Adjacency is therefore back, and mitigated rather than ignored: the 6px gap keeps them two targets, and only
-  the ✕ turns red on hover, so the destructive one is the marked one. `.region-group-row` gained a
-  `max-width: calc(100% - 74px)` at the same time — the legend is absolutely positioned and a long region name
-  would otherwise run straight under both buttons. It wraps rather than truncating; a shortened region name is
-  worse than a taller legend.
+  - a **footer row in flow** is collision-proof but costs a whole line (~28px) per region for one icon;
+  - **side by side on the border line** put the grey border in the 6px gap between the two buttons, which
+    reads as a seam.
+  Stacked in one group solves all three at once: no extra line (the 📍 hangs into the box's own top padding),
+  no collision, and — because the *group* carries the `--card-bg`, not the individual buttons — one clean gap
+  in the border with the two buttons touching, so there is nothing left to show through. `translateY(-14px)`
+  rather than `-50%`, so the **✕** is the thing centred on the border and its glyph stays on the same vertical
+  line as the section carets; centring the 54px group would push it up by 13px.
+  Two knock-on rules: `.region-group-chips` gets `padding-right: 34px` (a wrapping flex row cannot dodge the
+  button per line), and `.region-group-row` a `max-width: calc(100% - 74px)` — the legend is absolutely
+  positioned and a long region name would otherwise run under the group. It wraps rather than truncating; a
+  shortened region name is worse than a taller legend.
 - **`#addRegionBtn` below the boxes**, dashed outline, full width. **Disabled rather than hidden** at
   `MAX_ACTIVE_REGION_GROUPS` — a button that vanishes at three teaches nothing, a greyed one whose label reads
   "＋ Maximal 3 Regionen" does. It opens the same dialog the header button opens; one dialog, two entry points.

@@ -104,18 +104,28 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
          Math.round((x.top + x.bottom) / 2 - box.top), "≈ 0 from the top edge");
     T.ok("✕ is at the right edge", Math.abs(x.right - box.right) < 10,
          Math.round(x.right - box.right), "≈ 0 from the right edge");
-    // Both live on the top border now, 📍 left of ✕. The two spots that were tried and rejected: the BOTTOM
-    // border (overlaps the next box's legend, by an amount that depends on whether a long region name wraps)
-    // and a footer row in flow (a whole line per region for one icon).
-    T.ok("📍 straddles the same TOP border", Math.abs((pin.top + pin.bottom) / 2 - box.top) < 4,
-         Math.round((pin.top + pin.bottom) / 2 - box.top), "≈ 0 from the top edge");
-    T.ok("📍 is left of the ✕", pin.right <= x.left, [Math.round(pin.right), Math.round(x.left)], "📍 then ✕");
-    // The gap is the entire mitigation for making "jump there" a neighbour of "unload it". If it ever goes to
-    // zero the two become one blurred tap target on a phone, and nothing else would notice.
-    T.ok("with a real gap between them", x.left - pin.right >= 4,
-         Math.round(x.left - pin.right), ">= 4px");
-    T.ok("neither reaches into the box's content", pin.bottom < box.top + 16,
-         Math.round(pin.bottom - box.top), "< 16px into the box");
+    // 📍 is STACKED directly under the ✕ inside one corner group. Three earlier positions lost, and the
+    // reasons are all still live: the bottom border collides with the next box's legend by construction; a
+    // footer row in flow costs a whole line per region; side by side on the border, the grey border showed
+    // through the gap between them and read as a seam.
+    T.eq("📍 sits directly under the ✕, with no gap", Math.round(pin.top - x.bottom), 0);
+    T.ok("and shares its horizontal position", Math.abs(pin.right - x.right) < 3,
+         Math.round(pin.right - x.right), "≈ 0");
+    const corner = boxes[0].querySelector(".region-group-corner");
+    const cRect = corner.getBoundingClientRect();
+    T.ok("both are in one corner group", !!corner && corner.contains(boxes[0].querySelector(".region-group-fly-btn")),
+         !!corner, true);
+    // The shared opaque background is what hides the border between them. If it ever becomes transparent, the
+    // seam is back and nothing else notices.
+    const bg = getComputedStyle(corner).backgroundColor;
+    T.ok("the group's background is opaque", !/rgba\(0, 0, 0, 0\)|transparent/.test(bg), bg, "an opaque colour");
+    T.ok("and it covers the border line", cRect.top <= box.top && cRect.bottom > box.top,
+         [Math.round(cRect.top - box.top), Math.round(cRect.bottom - box.top)], "spans the top edge");
+    // The 📍 hangs into the box, so the wrapping chip row has to stay clear of it horizontally.
+    const chips = TM.$$(".region-group-chips .chip", boxes[0]);
+    T.ok("the chips keep clear of it", Math.max(...chips.map((c) => c.getBoundingClientRect().right)) <= cRect.left,
+         [Math.round(Math.max(...chips.map((c) => c.getBoundingClientRect().right))), Math.round(cRect.left)],
+         "chips left of the group");
     if (boxes.length > 1) {
       const prev = boxes[0].getBoundingClientRect();
       T.ok("and nothing hangs into the box below", prev.bottom < boxes[1].getBoundingClientRect().top,
@@ -124,8 +134,8 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     // A long region name must not run under the buttons -- the legend is absolutely positioned, so only its
     // max-width keeps it off them.
     const legend = boxes[0].querySelector(".region-group-row").getBoundingClientRect();
-    T.ok("the legend stays clear of both buttons", legend.right <= pin.left + 1,
-         [Math.round(legend.right), Math.round(pin.left)], "legend ends before 📍");
+    T.ok("the legend stays clear of the corner group", legend.right <= cRect.left + 1,
+         [Math.round(legend.right), Math.round(cRect.left)], "legend ends before the group");
   }
 
   T.test("✕ closes that region straight away, with no confirmation");
