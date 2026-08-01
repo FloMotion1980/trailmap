@@ -219,6 +219,47 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   T.eq("and the bearing came through unchanged", Math.round(currentMapBearing()), 60);
   await northAgain();
 
+  T.test("while following, a container that changes in steps leaves the position centred");
+  // The landscape flip, as the user actually hit it: the terrain stayed put but the blue dot ended up off
+  // centre. iOS settles a flip in SEVERAL steps, so a single check at a guessed moment centres against a
+  // container that then changes again. Reproduced here by moving the container twice and letting Leaflet see
+  // only the first step -- which is exactly the state that used to leave the dot behind.
+  //
+  // Follow mode needs a live watchPosition, so it gets a stubbed one. Both stubs and the container's height are
+  // put back at the end; leaving either behind would poison every later suite.
+  const realWatch = navigator.geolocation.watchPosition;
+  const realClear = navigator.geolocation.clearWatch;
+  const fixed = { latitude: home.center.lat, longitude: home.center.lng, accuracy: 12, heading: null };
+  navigator.geolocation.watchPosition = (ok) => { setTimeout(() => ok({ coords: fixed }), 30); return 1; };
+  navigator.geolocation.clearWatch = () => {};
+  const mapEl = TM.$("#map");
+  const startHeight = mapEl.style.height;
+  try {
+    startFollowing();
+    await TM.until(() => TM.$("#locateBtn").classList.contains("active"), 3000);
+    map.setView(L.latLng(fixed.latitude, fixed.longitude), 15, { animate: false });
+    await TM.wait(250);
+    T.near("following starts with the position on the centre", dotScreen() ? Math.hypot(
+      dotScreen().x - mapCentreScreen().x, dotScreen().y - mapCentreScreen().y) : -1, 0, 2);
+    // step one, seen by Leaflet; step two, not seen -- then the event a real flip fires
+    mapEl.style.height = (mapEl.clientHeight - 60) + "px";
+    map.invalidateSize({ debounceMoveend: true });
+    mapEl.style.height = (mapEl.clientHeight - 40) + "px";
+    window.dispatchEvent(new Event("resize"));
+    await TM.wait(2000);                     // the settle burst runs to 1.5 s
+    T.eq("Leaflet ends up holding the container's real size",
+         JSON.stringify(map.getSize()), JSON.stringify(L.point(mapEl.clientWidth, mapEl.clientHeight)));
+    T.near("and the position is still on the centre afterwards", Math.hypot(
+      dotScreen().x - mapCentreScreen().x, dotScreen().y - mapCentreScreen().y), 0, 2);
+  } finally {
+    if (typeof stopFollowing === "function") stopFollowing();
+    mapEl.style.height = startHeight;
+    window.dispatchEvent(new Event("resize"));
+    navigator.geolocation.watchPosition = realWatch;
+    navigator.geolocation.clearWatch = realClear;
+    await TM.wait(1800);
+  }
+
   T.test("a padded bounds fit puts the target in the uncovered part of the map, at every bearing");
   const c = home.center;
   const bounds = L.latLngBounds([[c.lat - 0.015, c.lng - 0.045], [c.lat + 0.015, c.lng + 0.045]]);
@@ -335,7 +376,12 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   const viewBoxNow = () => TM.$(".leaflet-overlay-pane svg").getAttribute("viewBox");
   setHeadingUp(true);
   applyMapBearing(0, true);
-  await TM.wait(200);
+  // Settle the map first, and for two separate reasons -- both of which re-cut the box for honest reasons that
+  // would read here as the suppression having broken. An earlier case resizes the container on purpose, and the
+  // one before this flies to a trail, whose 0.6 s animation would still be moving the view mid-sweep.
+  map.stop();
+  ensureMapSizeCurrent();
+  await TM.wait(500);
   const seen = new Set();
   for (let a = 5; a <= 360; a += 5) { applyMapBearing(a, true); seen.add(viewBoxNow()); }
   T.eq("a full turn re-cuts the viewBox exactly once", seen.size, 1);
@@ -416,7 +462,9 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
        JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}").headingUp, true);
   btn.click();
   await TM.until(() => Math.round(currentMapBearing()) % 360 === 0, 2500);
-  T.eq("a second tap goes back to north", Math.round(currentMapBearing()), 0);
+  // % 360, because the tween can land a hair below zero and round to 360 -- the same angle, and the app is
+  // right to keep it in [0,360). Asserting a bare 0 failed on exactly that.
+  T.eq("a second tap goes back to north", Math.round(currentMapBearing()) % 360, 0);
   T.eq("the button is no longer marked", btn.classList.contains("active"), false);
   T.eq("and that is persisted too",
        JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}").headingUp, false);
