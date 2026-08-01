@@ -35,9 +35,16 @@ header .sub{ font-family: Arial, sans-serif; font-size: 12.5px; color: #b9c6b6; 
 /* A landscape phone has 320-375 px of height in total, and the header costs it twice over: once for itself and
    once because the map below it is what the follow mode is trying to show. Same elements, tighter (user,
    2026-08-02). Deliberately not hidden: the region and Tourenbuilder buttons live in it. */
-html.landscape-compact header{ padding: calc(5px + env(safe-area-inset-top, 0px)) 14px 4px; gap:10px;
-  border-bottom-width:2px; }
-html.landscape-compact header h1{ font-size:15px; letter-spacing:1px; }
+/* The horizontal padding MUST carry the safe-area insets here. Without them the title ran under the phone's
+   rounded corner in landscape and was only half readable (user, 2026-08-02) -- in portrait the same header gets
+   away with a flat 22px because the corners are far from the text. align-items:center rather than the baseline
+   the wide header uses: with everything this short, the title reads as vertically centred only if it is. */
+html.landscape-compact header{
+  padding: calc(5px + env(safe-area-inset-top, 0px)) calc(14px + env(safe-area-inset-right, 0px))
+           4px calc(14px + env(safe-area-inset-left, 0px));
+  gap:10px; border-bottom-width:2px; align-items:center;
+}
+html.landscape-compact header h1{ font-size:15px; letter-spacing:1px; line-height:1.1; }
 html.landscape-compact header .sub{ font-size:11px; }
 .layout{ flex:1; display:flex; min-height:0; }
 aside{ width: 350px; min-width: 300px; background: var(--card-bg); border-right: 1px solid #d8ddd0;
@@ -475,15 +482,16 @@ html.landscape-compact #bearingBtn{ grid-column:2; grid-row:1; align-self:center
   margin-top:0; margin-right:-11px; z-index:1; }
 html.landscape-compact #locateBtn{ grid-column:3; }
 html.landscape-compact #recenterBtn{ grid-column:3; justify-self:center; }
-/* Closer to the edge in landscape: the screen is 320-375 px tall there, so 16 px of inset on every side is
-   real map (user, 2026-08-02). Same for the drawer button on the other side. */
+/* Right out to the edge in landscape: the screen is 320-375 px tall there, so every inset is real map (user,
+   2026-08-02, twice -- 16px, then 7px, now 3px). The safe-area terms stay: they are what keeps these off the
+   rounded corner and away from the notch, and dropping them is exactly what clipped the header title. */
 html.landscape-compact #locateCluster{
-  top: calc(7px + env(safe-area-inset-top, 0px));
-  right: calc(7px + env(safe-area-inset-right, 0px));
+  top: calc(3px + env(safe-area-inset-top, 0px));
+  right: calc(3px + env(safe-area-inset-right, 0px));
 }
 html.landscape-compact #sidebarToggle{
-  top: calc(7px + env(safe-area-inset-top, 0px));
-  left: calc(7px + env(safe-area-inset-left, 0px));
+  top: calc(3px + env(safe-area-inset-top, 0px));
+  left: calc(3px + env(safe-area-inset-left, 0px));
   padding: 7px 11px; font-size:12.5px;
 }
 #locateBtn{
@@ -621,16 +629,15 @@ html.landscape-compact #sidebarToggle{
 }
 #layerWarning.visible{ display:block; }
 
-/* Bottom centre, not top right: at top right it sat ON the locate cluster with a higher z-index and covered
-   the buttons in both orientations (user, 2026-08-02). The bottom centre is the one strip nothing else claims
-   -- the attribution is bottom right, the layer warning bottom left, the info panel ends above it in portrait
-   and docks right in landscape. */
+/* Bottom RIGHT. It started top right, where it sat on the locate cluster with a higher z-index and covered the
+   buttons; bottom centre fixed that but read as too prominent for what it says (user, 2026-08-02). The corner
+   above the attribution is the quietest spot on the map that is still unmistakably visible. */
 #offlineBanner{
   display:none; position:absolute;
-  /* Above Leaflet's attribution strip, which spans the full width at the very bottom -- at 10px they overlapped
-     by 7px (measured). */
+  /* Clear of Leaflet's attribution strip, which spans the full width at the very bottom -- at 10px they
+     overlapped by 7px (measured). */
   bottom: calc(26px + env(safe-area-inset-bottom, 0px));
-  left:50%; transform: translateX(-50%);
+  right: calc(10px + env(safe-area-inset-right, 0px));
   z-index:1500;
   max-width: min(150px, 60vw);
   background: rgba(194,59,48,0.95); color:#fff; font-family: Arial, sans-serif; font-size:11.5px; font-weight:600;
