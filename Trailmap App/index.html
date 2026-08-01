@@ -10,11 +10,18 @@
 <title>Trailmap</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<!-- Map rotation (the "Blickrichtung oben" mode). Vendored locally, not from a CDN: this app runs offline,
+     and this file patches Leaflet's core, so a bad remote copy would take the whole map with it. Loaded
+     synchronously right after Leaflet because it needs L to exist, and it must be in place before L.map()
+     runs -- `rotate` only works when passed at construction time. Its own ?v= is mirrored by ROTATE_URL in
+     sw.js, for the same cache-first reason as the stylesheet below. Optional by design: if this file fails
+     to load, `canRotate` stays false and everything except the rotation mode still works. -->
+<script src="leaflet-rotate.js?v=1"></script>
 <!-- The ?v= must match STYLE_URL in sw.js. It is what makes a CSS change actually arrive: the stylesheet is
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=60" />
+<link rel="stylesheet" href="style.css?v=63" />
 </head>
 <body>
 <div id="fatalError">
@@ -153,6 +160,12 @@
         <!-- Slides DOWN out of the cluster, and only while following AND detached (you panned the map away).
              Re-attaching is its own control on purpose: the readout's job is to display, not to act. -->
         <button id="recenterBtn" title="Zurück zur Position">◎</button>
+        <!-- Switches between the two map orientations: north up (default) and heading up. Sits in this
+             cluster at the user's request ("ein Button dort wo auch der Zentrieren Button erscheint",
+             2026-08-01) -- it belongs to the same family as locate and re-centre, and the corner is the one
+             place reachable with a thumb without opening the drawer. Permanently visible, unlike the
+             re-centre button, since it is a mode and not a reaction. -->
+        <button id="bearingBtn" title="Karte: Norden oben — tippen für Blickrichtung oben" aria-pressed="false">🧭</button>
       </div>
       <!-- The one and only builder list, pinned to the map on every screen size so the map stays
            clickable while you assemble a tour. Collapsed it is just its handle. -->
@@ -1230,7 +1243,30 @@ function closeSidebarIfMobile(){
   if (isMobileLayout()) closeSidebar();
 }
 
-const map = L.map('map', { scrollWheelZoom:true, zoomControl:false }).setView([46.99, 10.29], 12);
+// Rotation is OPTIONAL: leaflet-rotate is a vendored third-party file that patches Leaflet's core, so the
+// app must survive it not being there at all (failed load, a cache that only holds an older ?v=). Every
+// rotation call site is guarded by this one flag instead of assuming the methods exist.
+const canRotate = typeof L.Map.prototype.setBearing === "function";
+// Every rotation-related option is passed EXPLICITLY, including the ones we don't want: leaflet-rotate
+// defaults `shiftKeyRotate` and `rotateControl` to TRUE, so merely loading it would have added a rotate
+// widget to the map and bound shift+wheel, on desktop too. `rotate` has to be set here and nowhere else --
+// it builds the pane structure at construction time and does not work if set later. `compassBearing` is the
+// plugin's own compass handler and stays off on purpose: it never asks for the iOS permission, reads the
+// deprecated window.orientation, and does no smoothing. Our handleOrientation does all three properly, and
+// one state with two owners is how they drift apart.
+const map = L.map('map', {
+  scrollWheelZoom:true, zoomControl:false,
+  rotate: canRotate, bearing: 0,
+  compassBearing: false, touchRotate: false, shiftKeyRotate: false, rotateControl: false
+}).setView([46.99, 10.29], 12);
+// leaflet-rotate rotates only tilePane + overlayPane, which it re-parents into its own "rotatePane"; the
+// marker/tooltip/popup panes go into "norotatePane" and are only re-positioned (which is exactly why the
+// name labels and builder numbers stay upright for free). It does NOT override createPane, so a pane of
+// ours would land in the UNROTATED _mapPane and stand still while the trails inside it turned away --
+// the lift bands and the builder glow would visibly detach from their own lines. Every createPane call in
+// this file therefore names this as its parent. getPane() is public and returns undefined when the plugin
+// is absent, and Leaflet's own `container || this._mapPane` fallback covers that, so it degrades cleanly.
+const ROTATING_PANE = () => map.getPane("rotatePane");
 
 // Shows which active region GROUP the map's current center falls into, in the "Region" heading row
 // (added 2026-07-23, per the user's request — first placed in "Trails"' own heading, moved here the
@@ -1354,14 +1390,36 @@ let smoothedCompassHeading = null; // normalized 0-360, used only for computing 
 let compassDisplayAngle = null;    // unbounded, ever-increasing/decreasing — this is what we actually render
 let orientationHandler = null;
 
+// The last GEOGRAPHIC heading handed to updateHeadingCone, so the cone can be redrawn when the map's own
+// bearing changes without a new sensor reading having arrived (switching the orientation mode does exactly
+// that). Null means nothing has ever been drawn.
+let lastConeHeading = null;
+
+// `headingDeg` is always a real-world heading (0 = north). What gets drawn is that MINUS the map's own
+// bearing, because the cone lives in the marker pane, which leaflet-rotate does not rotate: in "north up"
+// the bearing is 0 and this is unchanged, in "heading up" the two cancel out and the cone points straight
+// up the screen, which is the whole promise of that mode. Doing the subtraction here rather than at the call
+// sites means the GPS-course fallback below is right for free, and a future caller cannot get it wrong.
 function updateHeadingCone(headingDeg){
   if (!userLocationMarker) return;
   const el = userLocationMarker.getElement();
   if (!el) return;
   const wrap = el.querySelector(".geo-wrap");
   const cone = el.querySelector(".geo-cone");
+  lastConeHeading = headingDeg;
   cone.style.display = "block";
-  wrap.style.transform = `rotate(${headingDeg}deg)`;
+  wrap.style.transform = `rotate(${headingDeg - currentMapBearing()}deg)`;
+}
+
+// Redraw at the same heading after the map bearing moved. Deliberately refuses to make a HIDDEN cone
+// visible again: a cone is hidden because its readings went stale (see CONE_STALE_MS), and a mode switch is
+// not new information about where the rider is facing.
+function refreshHeadingCone(){
+  if (lastConeHeading === null || !userLocationMarker) return;
+  const el = userLocationMarker.getElement();
+  const cone = el && el.querySelector(".geo-cone");
+  if (!cone || cone.style.display === "none") return;
+  updateHeadingCone(lastConeHeading);
 }
 
 function hideHeadingCone(){
@@ -1375,6 +1433,73 @@ function getScreenAngle(){
   if (screen.orientation && typeof screen.orientation.angle === "number") return screen.orientation.angle;
   if (typeof window.orientation === "number") return window.orientation;
   return 0;
+}
+
+// ---- Map orientation: "Norden oben" vs. "Blickrichtung oben" (2026-08-01) -------------------------
+// Two explicit modes, as the user asked for them: mode 1 is north up, exactly as the app always was, and
+// mode 2 turns the whole map so the direction the phone is pointed is up the screen. Mode 2 is deliberately
+// NOT tied to following -- it is a way of reading the map (which way is that junction?), not a tracking
+// feature, so it stays on while you pan and browse.
+//
+// The bearing comes from handleOrientation's smoothed heading, which is already corrected by getScreenAngle()
+// and therefore already answers "where does the top edge of the screen point" -- exactly what a map bearing
+// is. That is what makes turning the phone into landscape correct itself with no extra code.
+//
+// When the compass falls silent (a steel gondola, see CONE_STALE_MS) the bearing simply FREEZES, because
+// nothing calls applyMapBearing any more. That is on purpose and better than the alternative: snapping a
+// whole rotated viewport back to north on every dropout would throw the map around exactly when the rider
+// can least afford it, and the pill's "!" already says the reading is stale.
+let headingUp = false;
+// What the map is actually turned to, in degrees. Kept separately from smoothedCompassHeading because it is
+// quantised by the throttle below: the cone has to be drawn against what the MAP did, not against the newest
+// reading, or it would visibly lag by one throttle interval instead of pointing up.
+let appliedBearing = 0;
+let lastBearingAt = 0;
+// setBearing recomputes the tile range and every vector renderer's bounds, so it must not run once per sensor
+// event -- those arrive at up to 60 Hz. leaflet-rotate's own compass handler throttles to 100 ms, which is
+// the right order of magnitude; the angle gate on top stops a phone lying still on a table from repainting
+// the map over sensor noise.
+const BEARING_MIN_INTERVAL_MS = 120;
+const BEARING_MIN_DELTA_DEG = 1.5;
+const DEG_TO_RAD = Math.PI / 180;
+
+function currentMapBearing(){
+  return (canRotate && headingUp) ? appliedBearing : 0;
+}
+
+// Every bearing change goes through here. A plain function declaration on purpose: the browser suites can
+// call it, while the `map` object itself is unreachable from a separately evaluated script (see tests/README).
+// `force` skips the throttle -- used when the mode is switched, where the user is waiting for the map to move.
+function applyMapBearing(deg, force){
+  if (!canRotate) return;
+  const now = Date.now();
+  const delta = Math.abs(((deg - appliedBearing + 540) % 360) - 180);
+  if (!force && (now - lastBearingAt < BEARING_MIN_INTERVAL_MS || delta < BEARING_MIN_DELTA_DEG)) return;
+  lastBearingAt = now;
+  appliedBearing = ((deg % 360) + 360) % 360;
+  map.setBearing(appliedBearing);
+  refreshHeadingCone();
+}
+
+function setHeadingUp(on){
+  headingUp = !!on && canRotate;
+  const btn = document.getElementById("bearingBtn");
+  if (btn) {
+    btn.classList.toggle("active", headingUp);
+    btn.title = headingUp ? "Karte: Blickrichtung oben — tippen für Norden oben"
+                          : "Karte: Norden oben — tippen für Blickrichtung oben";
+    btn.setAttribute("aria-pressed", headingUp ? "true" : "false");
+  }
+  if (!headingUp) {
+    if (appliedBearing !== 0) applyMapBearing(0, true);   // already north: don't re-project every layer for nothing
+  } else if (smoothedCompassHeading !== null) {
+    applyMapBearing(smoothedCompassHeading, true);
+  }
+  // Armed but no reading yet: the map stays north up until the first heading arrives. Nothing is announced
+  // here on purpose -- the pill's 🧭 field already distinguishes the four reasons (✕D refused, ✕R asked
+  // wrongly, ✕! no sensor, E7 events without a heading), and a second error surface would just disagree.
+  refreshHeadingCone();
+  updateLiveStatus();
 }
 
 function handleOrientation(event){
@@ -1412,6 +1537,9 @@ function handleOrientation(event){
   }
   compassActive = true;
   lastCompassAt = Date.now();   // read by updateLiveStatus -- a frozen cone is either no events or NaN
+  // Turn the map first, then draw the cone against it: updateHeadingCone subtracts the bearing, so doing it
+  // the other way round would draw one frame of cone against the previous bearing on every reading.
+  if (headingUp) applyMapBearing(smoothedCompassHeading, false);
   updateHeadingCone(compassDisplayAngle);
 }
 
@@ -1589,6 +1717,11 @@ function updateLiveStatus(){
                : "—";
     parts.push("🧭" + code);
   }
+  // Which way the MAP is turned, shown only in "Blickrichtung oben" -- in north-up mode it would always read
+  // 0° and the pill's width is already the binding constraint at 375px. Next to the 🧭 field it makes the one
+  // failure this mode can have silent readable: 🗺0° with a live 🧭247° means the compass is fine and the
+  // rotation is not, which is a different bug from 🧭✕D (no permission) leaving the map north-up correctly.
+  if (headingUp) parts.push("🗺" + Math.round(appliedBearing) + "°");
   parts.push(fixCount + "/" + panCount);   // fixes received / map pans issued
   // A cone that stopped tracking points somewhere you are NOT looking, which at a junction is worse than no
   // cone at all -- this is the "hängt total" half of the report. `compassActive` stays true on purpose: it
@@ -1736,6 +1869,20 @@ locateBtn.addEventListener("click", () => {
   else oneShotLocate();
 });
 
+// The orientation-mode switch. `click`, not `pointerdown`: this is the one call site where getting the
+// event wrong costs the whole feature, because Safari only grants the user activation that
+// DeviceOrientationEvent.requestPermission() needs on click/touchend -- asking from pointerdown makes the
+// request reject outright (which the pill reports as ✕R). Same guard as the locate button, so tapping either
+// one starts the listener and tapping both does not stack two of them.
+document.getElementById("bearingBtn").addEventListener("click", () => {
+  if (orientationHandler === null) requestOrientationPermission();
+  setHeadingUp(!headingUp);
+  persistActiveState();
+});
+// A control that cannot do anything is worse than no control. If leaflet-rotate failed to load, take the
+// button off the map instead of leaving a dead one there -- everything else keeps working (verified).
+if (!canRotate) document.getElementById("bearingBtn").style.display = "none";
+
 document.getElementById("recenterBtn").addEventListener("click", () => {
   followDetached = false;
   syncLocateChrome();
@@ -1871,7 +2018,8 @@ const LIFT_DOT_DASH = "1,13";
 // The band does need to sit below the TRAILS though, or it would tint every trail crossing it. Own
 // pane, z-index between tilePane (200) and overlayPane (400).
 const LIFT_BAND_PANE = "liftBandPane";
-map.createPane(LIFT_BAND_PANE).style.zIndex = 350;
+// Parent is the rotating pane (see ROTATING_PANE) -- the band has to turn with the trail lines it sits under.
+map.createPane(LIFT_BAND_PANE, ROTATING_PANE()).style.zIndex = 350;
 
 // Selection highlight for a lift (2026-07-26, per the user: a selected lift got no yellow outline).
 // Same idea and same colour as the trails' `selectionOutline` -- one shared polyline, moved to whichever
@@ -1911,7 +2059,8 @@ const BUILDER_GLOW = [
 // Own pane below the trails (and below the lift band at 350) so a wide highlight can never cover the very
 // lines it is pointing at.
 const BUILDER_PANE = "builderPane";
-map.createPane(BUILDER_PANE).style.zIndex = 345;
+// Parent is the rotating pane (see ROTATING_PANE) -- the glow marks specific lines and must not drift off them.
+map.createPane(BUILDER_PANE, ROTATING_PANE()).style.zIndex = 345;
 const builderHighlight = L.layerGroup([], { pane: BUILDER_PANE }).addTo(map);
 
 function builderCoordsOf(item){
@@ -3211,8 +3360,13 @@ function makeArrowIcon(angle){
   });
 }
 function buildDirectionArrowMarkers(coords){
+  // rotateWithView is leaflet-rotate's option and it is the ONE thing on the map that has to turn with the
+  // bearing: the arrow encodes a compass direction, but it is a divIcon in the marker pane, which the plugin
+  // deliberately does not rotate (that is what keeps the name labels and builder numbers upright). The glyph's
+  // own geographic angle stays an inline transform inside the icon, so the two compose -- and with the plugin
+  // absent, or the bearing at 0, the option is simply inert and this is exactly the old behaviour.
   return buildDirectionArrows(coords).map(({ pos, baseAngle }) => ({
-    marker: L.marker(pos, { icon: makeArrowIcon(baseAngle), interactive:false, keyboard:false }),
+    marker: L.marker(pos, { icon: makeArrowIcon(baseAngle), rotateWithView: true, interactive:false, keyboard:false }),
     baseAngle
   }));
 }
@@ -3873,7 +4027,8 @@ function persistActiveState(){
       showLifts,
       showPlaces,
       showDirectionArrows,
-      liveStatusOpen
+      liveStatusOpen,
+      headingUp
     }));
   } catch (e) { /* localStorage unavailable (private mode etc.) — filters just won't persist */ }
 }
@@ -3893,6 +4048,7 @@ function restoreActiveState(){
     if (typeof saved.showPlaces !== "boolean") saved.showPlaces = true;
     if (typeof saved.liveStatusOpen !== "boolean") saved.liveStatusOpen = true;
     if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = false;
+    if (typeof saved.headingUp !== "boolean") saved.headingUp = false;
     return saved;
   } catch (e) { return null; }
 }
@@ -4409,20 +4565,52 @@ function getFlyPadding(){
   return { paddingTopLeft: L.point(40, 80), paddingBottomRight: L.point(340, 40) };
 }
 
+// The UI-avoidance offset, as a vector in PROJECTED (CRS) pixels. getFlyPadding's numbers are screen-axis
+// pixels -- "keep 240px free at the bottom of the screen" -- but they get applied to a projected point, and
+// those two spaces are only the same thing while the map is north-up. In "Blickrichtung oben" the map pane is
+// turned by the bearing, so a raw screen vector applied in CRS space would push the target off along
+// map-north instead of down the screen, by up to the full padding. Rotating by -bearing is the conversion:
+// leaflet-rotate draws a layer point at rotate(+bearing) (see rotatedPointToMapPanePoint), so screen -> layer
+// is the inverse. At bearing 0 Point.rotate returns `this` untouched, i.e. byte-identical to before.
+function uiOffsetVector(){
+  const pad = getFlyPadding();
+  const v = L.point((pad.paddingBottomRight.x - pad.paddingTopLeft.x) / 2,
+                    (pad.paddingBottomRight.y - pad.paddingTopLeft.y) / 2);
+  const bearing = currentMapBearing();
+  return (bearing && v.rotate) ? v.rotate(-bearing * DEG_TO_RAD) : v;
+}
+
 // Adjust a target lat/lng so that, once centered in the map container, it visually lands
 // in the middle of the space that ISN'T covered by our floating UI (info panel etc.),
 // rather than the true geometric center of the whole container.
 function getOffsetCenter(latlng, zoom){
+  return map.unproject(map.project(latlng, zoom).subtract(uiOffsetVector()), zoom);
+}
+
+// Deliberately NOT map.flyToBounds with padding options: Leaflet's own _getBoundsCenterZoom applies the
+// padding as a plain projected-pixel offset, and leaflet-rotate leaves that method alone (its override is
+// commented out upstream), so a padded fit lands beside the free space as soon as the map is turned. The zoom
+// half IS rotation-aware in the plugin (getBoundsZoom goes through mapBoundsToContainerBounds), so only the
+// centre has to be redone here -- through the same uiOffsetVector every other pan already uses, which keeps
+// the bearing knowledge in one place instead of two.
+//
+// The centre is the midpoint of the PROJECTED corners, not bounds.getCenter(): Mercator's latitude scale is
+// non-linear, so averaging lat/lng and projecting that is not the same point, and for a region-sized bounds
+// the two differ by tens of pixels vertically. This mirrors Leaflet's own formula exactly, which is what
+// makes the north-up case unchanged.
+function paddedBoundsView(bounds){
   const pad = getFlyPadding();
-  const targetPoint = map.project(latlng, zoom);
-  const shiftX = (pad.paddingBottomRight.x - pad.paddingTopLeft.x) / 2;
-  const shiftY = (pad.paddingBottomRight.y - pad.paddingTopLeft.y) / 2;
-  return map.unproject(targetPoint.subtract([shiftX, shiftY]), zoom);
+  const zoom = map.getBoundsZoom(bounds, false, pad.paddingTopLeft.add(pad.paddingBottomRight));
+  const centerPoint = map.project(bounds.getSouthWest(), zoom)
+                         .add(map.project(bounds.getNorthEast(), zoom))
+                         .divideBy(2)
+                         .add(uiOffsetVector());
+  return { center: map.unproject(centerPoint, zoom), zoom };
 }
 
 function flyToTrailBounds(bounds){
-  const pad = getFlyPadding();
-  map.flyToBounds(bounds, { paddingTopLeft: pad.paddingTopLeft, paddingBottomRight: pad.paddingBottomRight, duration:0.6 });
+  const view = paddedBoundsView(bounds);
+  map.flyTo(view.center, view.zoom, { duration:0.6 });
 }
 
 // ---- Lifts: one place that decides visibility, one sidebar section --------------------------------
@@ -4854,6 +5042,7 @@ async function boot(){
     showPlaces = saved.showPlaces;
     liveStatusOpen = saved.liveStatusOpen;
     showDirectionArrows = saved.showDirectionArrows;
+    headingUp = saved.headingUp && canRotate;
   }
 
   await loadRegionVersions(); // fresh per-file versions before any region fetch (see versionedRegionUrl)
@@ -4876,6 +5065,10 @@ async function boot(){
     document.getElementById("showPlacesToggle").checked = showPlaces;
     applyLiveStatusOpen();
     document.getElementById("showDirectionArrowsToggle").checked = showDirectionArrows;
+    // Syncs the 🧭 button to the restored mode. The map itself still comes up north-up: no compass listener
+    // is attached until the user taps the locate or the 🧭 button, so there is no heading to turn to yet --
+    // which is also why the fit below needs no bearing correction.
+    setHeadingUp(headingUp);
   }
   // Builder STATE before render(), because render() hides Tours while builder mode is on -- restoring it
   // afterwards left a reloaded page in builder mode with the Tours still showing until something else
@@ -5023,7 +5216,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v60"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v63"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

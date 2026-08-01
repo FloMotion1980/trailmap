@@ -31,6 +31,11 @@ current; a stale count is worse than none, because it looks like evidence.
 | `lists` | sort `renderTourList` by difficulty instead of by name | the same case fails on "every hub's Tours are in name order" |
 | `regions` | rename the id back to `scrollTopBtn` in `syncBuilderModeChrome` | 2 cases / 5 checks: the fresh start comes up as the fatal panel with the title still "Trailmap" and its sheet closed. This mutation is also what proved a throw in the async half of `boot()` used to be **silent**, which is why `boot()` now has a `.catch` |
 | `regiondata` | (built in) the suite mutates a region file itself, confirms `validate_region.py` exits non-zero, and restores it | "validate_region still bites" |
+| `bearing` | drop the pane parent: `map.createPane(LIFT_BAND_PANE)` | "our own panes rotate with the trails" fails with `leaflet-map-pane`, want `leaflet-rotate-pane` — i.e. the lift bands would have stood still while their own lines turned away |
+| `bearing` | in `updateHeadingCone`, drop the correction: `rotate(${headingDeg}deg)` | "the cone points up the screen" fails with got 90, want 0 ±1 — the heading counted twice, cone spinning at double rate |
+| `bearing` | in `uiOffsetVector`, return `v` unrotated | 2 cases / 6 checks: the offset flips from (150, −20) to (20, 150) at bearing 90, i.e. the room reserved for the info panel is kept along map-north instead of down the screen |
+| `appshell` | set `ROTATE_URL` to a different `?v=` than index.html's `<script>` | "the rotation plugin's version is the same in both places" fails with got '1', want '2' |
+| `bearing` | remove `rotateWithView: true` from the direction-arrow markers | "direction arrows turn with the map" fails: the icon carries a bare `translate3d(...)` and no `rotate()`, so every arrow points the wrong way while turned |
 
 ## Not yet mutation-checked
 

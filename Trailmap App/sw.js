@@ -8,13 +8,17 @@
 // cannot answer. Bump CACHE_NAME only to force every cached asset to be re-fetched. v6-v15 were all
 // "style.css changed" bumps, back when the URL was constant -- and the last of those did not reach the
 // user's phone, which left the pinned builder sheet invisible there (2026-07-27).
-const CACHE_NAME = "trailmap-v60";
+const CACHE_NAME = "trailmap-v63";
 // Must stay identical to the href of the <link rel="stylesheet"> in index.html.
-const STYLE_URL = "./style.css?v=60";
+const STYLE_URL = "./style.css?v=63";
+// Same deal as STYLE_URL, for the vendored map-rotation plugin: cache-first with a version in the URL, and
+// precached below so it is there on a first-ever offline visit. Must match the <script> src in index.html.
+const ROTATE_URL = "./leaflet-rotate.js?v=1";
 const APP_SHELL = [
   "./",
   "./index.html",
   STYLE_URL,
+  ROTATE_URL,
   "./regions/paznaun.json" // default region on a first-ever visit — precached so it works offline
                             // immediately; other regions are cached opportunistically (cache-first
                             // fetch handler below) once the user activates them via the region dialog.

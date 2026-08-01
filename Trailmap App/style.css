@@ -442,12 +442,24 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
      DOWNWARDS (row 2). A flex row could not place the second one, and nesting a column would have made the
      readout centre on the whole stack instead of on the button. */
   grid-template-columns: auto auto;
-  grid-template-rows: 46px auto;
+  grid-template-rows: 46px auto auto;
   column-gap:8px;
 }
 #locateCluster > #liveStatus{ grid-column:1; grid-row:1; align-self:center; }
 #locateBtn{ grid-column:2; grid-row:1; }
 #recenterBtn{ grid-column:2; grid-row:2; justify-self:end; margin-top:8px; }
+/* Third row of the same stack: the north-up / heading-up switch. Row 2 keeps its space whether or not the
+   re-centre button is currently faded in (it is only made transparent, never removed from the flow), so this
+   sits at a stable position instead of jumping up and down as you pan. */
+#bearingBtn{ grid-column:2; grid-row:3; justify-self:end; margin-top:8px; }
+/* Landscape phone is the one layout where the stack cannot grow downwards: #infoPanel docks along the whole
+   right edge from y=125 (which is why #locateBtn is sized to end at 117), so a third row would put this
+   button INSIDE the panel -- measured, and the panel wins the paint because it comes later in the DOM with
+   the same z-index. So in this layout the cluster is one row: readout, switch, locate. */
+html.landscape-compact #locateCluster{ grid-template-columns: auto auto auto; }
+html.landscape-compact #bearingBtn{ grid-column:2; grid-row:1; align-self:center; margin-top:0; }
+html.landscape-compact #locateBtn{ grid-column:3; }
+html.landscape-compact #recenterBtn{ grid-column:3; }
 #locateBtn{
   width:46px; height:46px; border-radius:50%;
   background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
@@ -489,6 +501,21 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   transition: opacity .18s ease, transform .18s ease;
 }
 #locateCluster.is-detached #recenterBtn{ opacity:1; pointer-events:auto; transform:none; }
+/* Same 38px round shape as the re-centre button, but white-on-idle like #locateBtn, because this one is a
+   MODE and has to show its state at a glance: filled green = the map is turning with you. No pulse -- that
+   is the locate button's way of saying "actively following", and two pulsing things in one stack read as one
+   blinking thing. */
+#bearingBtn{
+  width:38px; height:38px; border-radius:50%;
+  background: rgba(255,255,255,0.97); border:1px solid #d8ddd0; color:var(--ink);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+  font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center;
+  cursor:pointer; -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
+}
+#bearingBtn.active{ background: var(--forest); border-color: var(--forest-dark); color:#f2f3ec; }
+#bearingBtn:hover{ background:#f5f7ef; }
+#bearingBtn.active:hover{ background: var(--forest-dark); }
 @media (prefers-reduced-motion: reduce){
   #locateBtn.holding, #locateBtn.active{ animation:none; }
   #recenterBtn{ transition:none; }

@@ -1,0 +1,276 @@
+// @suite   bearing
+// @area    Map orientation: "Norden oben" vs. "Blickrichtung oben"
+// @files   Trailmap App/index.html, Trailmap App/style.css, Trailmap App/leaflet-rotate.js
+// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, rotateWithView, canRotate, BEARING_MIN_DELTA_DEG
+// @needs   builder=off
+//
+// Rotation is the one feature here that is bolted on by a third-party file patching Leaflet's core, and its
+// failure modes are all silent-and-visual. Four of them are pinned below, each one a thing that WOULD have
+// shipped:
+//   * OUR OWN PANES. leaflet-rotate rotates tilePane and overlayPane by re-parenting them into its own
+//     "rotatePane" -- but it does not override createPane, so liftBandPane and builderPane would have stayed
+//     in the unrotated map pane and stood still while the trails inside them turned away. Case 2.
+//   * DOUBLE COUNTING THE HEADING. The cone lives in the marker pane, which is deliberately NOT rotated, so
+//     drawing it at the raw compass heading while the map is also turned by that heading makes it spin at
+//     twice the rate. Case 4 is the arithmetic, in both modes.
+//   * THE PADDING VECTORS. getFlyPadding's numbers are screen-axis pixels but get applied to projected
+//     points, which is the same thing only while the map is north-up. Cases 5 and 6 assert the invariant that
+//     matters -- the target lands on the SAME SCREEN POINT at every bearing -- rather than the arithmetic.
+//   * UPRIGHT TEXT. Labels and builder numbers must not turn; direction arrows must. Cases 3 and 7.
+//
+// The compass itself cannot be driven from here (tests/README: no DeviceOrientationEvent, no watchPosition),
+// so handleOrientation and updateUserLocation are called directly with synthetic readings. Both are plain
+// function declarations, so Annex B leaks them to global scope -- that is the whole reason this is testable.
+//
+// All four mutations above were applied, watched fail, and reverted -- see tests/MUTATIONS.md for the exact
+// failures. Two of this file's OWN first-draft bugs are worth knowing before editing it: coneAngle() returned
+// 0 instead of null when no cone existed (so "points straight up" passed while nothing was drawn), and the
+// cleanup used to remove the location marker from the map, which desynchronises the app's own
+// `userLocationMarker` reference and broke the suite's second run in a session.
+
+TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBearing === "function" &&
+                        TM.ui.trailCards().length > 0, async (T) => {
+
+  // The app's `map` is a const inside its top-level try{} and genuinely unreachable from a separately
+  // evaluated script. Borrow the instance by capturing `this` from a prototype method that one of the app's
+  // globally-reachable functions calls. Used only to read screen positions and to clean up afterwards --
+  // every assertion about behaviour goes through the app's own functions or the painted DOM.
+  const grabMap = () => {
+    let m = null;
+    const orig = L.Map.prototype.getCenter;
+    L.Map.prototype.getCenter = function () { m = this; return orig.apply(this, arguments); };
+    try { updateCurrentRegionLabel(); } finally { L.Map.prototype.getCenter = orig; }
+    return m;
+  };
+  const map = grabMap();
+  const home = map ? { center: map.getCenter(), zoom: map.getZoom() } : null;
+
+  // Rotation angle of an element, in degrees, read off the painted matrix. "none" counts as 0.
+  const angleOf = (sel) => {
+    const el = TM.$(sel);
+    if (!el) return null;
+    const m = /matrix\(([^)]+)\)/.exec(getComputedStyle(el).transform);
+    if (!m) return 0;
+    const n = m[1].split(",").map(Number);
+    return Math.round(((Math.atan2(n[1], n[0]) * 180 / Math.PI) + 360) % 360);
+  };
+  const parentClassOf = (sel) => { const el = TM.$(sel); return el && el.parentElement ? el.parentElement.className : "(missing)"; };
+  // Null on purpose when there is no cone at all, and every caller has to check: an earlier version returned
+  // 0 in that case, which sailed through "points straight up" while nothing was drawn.
+  const coneAngle = () => {
+    const wrap = TM.$(".geo-wrap");
+    if (!wrap) return null;
+    const m = /rotate\((-?[\d.]+)deg\)/.exec(wrap.style.transform || "");
+    return m ? ((+m[1] % 360) + 360) % 360 : null;
+  };
+  // Where does `latlng` end up on screen, measured from the centre of the map container? Any assertion about
+  // the padding maths has to be in screen space -- that is the space the numbers are written in.
+  const screenOffsetOf = (latlng, zoom, center) => {
+    map.setView(center, zoom, { animate: false });
+    const p = map.latLngToContainerPoint(latlng), s = map.getSize();
+    return { x: Math.round(p.x - s.x / 2), y: Math.round(p.y - s.y / 2) };
+  };
+
+  T.test("the rotation plugin is loaded and the map starts north-up");
+  T.ok("leaflet-rotate patched L.Map", typeof L.Map.prototype.setBearing === "function", typeof L.Map.prototype.setBearing, "function");
+  T.ok("it built its two wrapper panes", !!TM.$(".leaflet-rotate-pane") && !!TM.$(".leaflet-norotate-pane"), true, true);
+  T.eq("bearing is 0", currentMapBearing(), 0);
+  T.eq("so the rotating pane is not turned", angleOf(".leaflet-rotate-pane"), 0);
+  // rotateControl and shiftKeyRotate default to TRUE upstream: loading the file without passing them would
+  // have put a rotate widget on the map and bound shift+wheel, on desktop too.
+  T.eq("and no rotate widget was added to the map", TM.$$(".leaflet-control-rotate").length, 0);
+
+  T.test("our own panes rotate with the trails, the label panes do not");
+  T.eq("tiles rotate", parentClassOf(".leaflet-tile-pane"), "leaflet-pane leaflet-rotate-pane");
+  T.eq("trail lines rotate", parentClassOf(".leaflet-overlay-pane"), "leaflet-pane leaflet-rotate-pane");
+  T.eq("the lift band rotates with the lines it sits under", parentClassOf(".leaflet-liftBand-pane"), "leaflet-pane leaflet-rotate-pane");
+  T.eq("the builder glow rotates with the lines it marks", parentClassOf(".leaflet-builder-pane"), "leaflet-pane leaflet-rotate-pane");
+  T.eq("markers stay upright", parentClassOf(".leaflet-marker-pane"), "leaflet-pane leaflet-norotate-pane");
+  T.eq("labels stay upright", parentClassOf(".leaflet-tooltip-pane"), "leaflet-pane leaflet-norotate-pane");
+
+  T.test("heading up turns the map and leaves every label upright");
+  await TM.ui.setSwitch("showNamesToggle", true);
+  await TM.until(() => TM.map.trailLabels().length > 0, 3000);
+  setHeadingUp(true);
+  applyMapBearing(90, true);
+  await TM.wait(200);
+  T.eq("the app reports the bearing it was given", currentMapBearing(), 90);
+  T.eq("the rotating pane is turned by it", angleOf(".leaflet-rotate-pane"), 90);
+  T.eq("the unrotated wrapper is not", angleOf(".leaflet-norotate-pane"), 0);
+  const turnedLabels = TM.$$(".leaflet-tooltip").filter((e) => {
+    const m = /matrix\(([^)]+)\)/.exec(getComputedStyle(e).transform);
+    if (!m) return false;
+    const n = m[1].split(",").map(Number);
+    return Math.abs(n[1]) > 0.01 || Math.abs(n[0] - 1) > 0.01;      // any rotation or skew at all
+  });
+  T.ok("there are labels to check", TM.$$(".leaflet-tooltip").length > 0, TM.$$(".leaflet-tooltip").length, "> 0");
+  T.eq("not one of them is turned", turnedLabels.length, 0);
+
+  T.test("the cone points up the screen in heading-up, and at the real heading in north-up");
+  // A synthetic fix so the location marker (and therefore the cone) exists at all. isFirstFix false and
+  // follow mode off, so this moves the map by exactly nothing.
+  setHeadingUp(true);
+  updateUserLocation({ coords: { latitude: map.getCenter().lat, longitude: map.getCenter().lng, accuracy: 12, heading: null } }, false);
+  handleOrientation({ absolute: true, alpha: 270 });     // Android absolute: 360-270 => heading 90, due east
+  await TM.until(() => TM.$(".geo-cone"), 2000);
+  const cone = TM.$(".geo-cone");
+  T.ok("the synthetic fix produced a location marker carrying a cone", !!cone, !!cone, true);
+  if (!cone) {
+    T.skip("no cone element, nothing to measure");
+  } else {
+    T.eq("the map followed the heading", currentMapBearing(), 90);
+    T.eq("the cone is shown", cone.style.display, "block");
+    T.ok("and it points straight up", coneAngle() !== null && Math.abs(coneAngle()) <= 1, coneAngle(), "0 ±1");
+    setHeadingUp(false);
+    await TM.wait(120);
+    T.eq("back to north-up the map is straight", angleOf(".leaflet-rotate-pane"), 0);
+    T.ok("and the same cone now points east instead", coneAngle() !== null && Math.abs(coneAngle() - 90) <= 1,
+         coneAngle(), "90 ±1");
+  }
+
+  T.test("the UI-avoidance offset lands on the same screen point at every bearing");
+  // getOffsetCenter mixes screen-axis padding into projected pixels; the invariant that survives rotation is
+  // the SCREEN position of the target, so that is what is asserted -- deliberately not the sign of the
+  // offset, which is the app's own long-standing choice and not this feature's business.
+  const target = L.latLng(home.center.lat, home.center.lng);
+  const offsetAt = (deg) => {
+    setHeadingUp(deg !== 0);
+    applyMapBearing(deg, true);
+    return screenOffsetOf(target, home.zoom, getOffsetCenter(target, home.zoom));
+  };
+  const north = offsetAt(0), east = offsetAt(90), back = offsetAt(225);
+  T.near("bearing 90 lands where bearing 0 did (x)", east.x, north.x, 2);
+  T.near("bearing 90 lands where bearing 0 did (y)", east.y, north.y, 2);
+  T.near("bearing 225 too (x)", back.x, north.x, 2);
+  T.near("bearing 225 too (y)", back.y, north.y, 2);
+  T.ok("and the offset is not simply zero, i.e. something was applied",
+       Math.abs(north.x) + Math.abs(north.y) > 10, north, "away from the container centre");
+
+  T.test("a padded bounds fit puts the target in the uncovered part of the map, at every bearing");
+  const c = home.center;
+  const bounds = L.latLngBounds([[c.lat - 0.015, c.lng - 0.045], [c.lat + 0.015, c.lng + 0.045]]);
+  const fitAt = (deg) => {
+    setHeadingUp(deg !== 0);
+    applyMapBearing(deg, true);
+    const v = paddedBoundsView(bounds);
+    return { zoom: v.zoom, off: screenOffsetOf(bounds.getCenter(), v.zoom, v.center) };
+  };
+  const fitN = fitAt(0), fitE = fitAt(90);
+  T.eq("the zoom is bearing-independent", fitE.zoom, fitN.zoom);
+  T.near("and so is the screen position (x)", fitE.off.x, fitN.off.x, 2);
+  T.near("and so is the screen position (y)", fitE.off.y, fitN.off.y, 2);
+  // Leaflet's own padding convention: the target is pushed AWAY from whichever side reserves more room. Per
+  // AXIS, not summed -- on desktop the info panel reserves 340px on the right (so the fit moves left) while
+  // the header reserves 80px against the bottom bar's 40 (so it moves DOWN). Asserting one combined
+  // direction was this test's own first bug, and the app was right.
+  const pad = getFlyPadding();
+  const wantSign = (tl, br) => Math.sign(tl - br);       // more reserved bottom/right => negative => up/left
+  T.eq("x moves away from the side that reserves more", Math.sign(fitN.off.x || 0),
+       wantSign(pad.paddingTopLeft.x, pad.paddingBottomRight.x));
+  T.eq("y moves away from the side that reserves more", Math.sign(fitN.off.y || 0),
+       wantSign(pad.paddingTopLeft.y, pad.paddingBottomRight.y));
+
+  T.test("direction arrows turn with the map, the name labels do not");
+  map.setView(home.center, 14, { animate: false });      // arrows only exist above START_DOT_MIN_ZOOM (13)
+  await TM.ui.setSwitch("showDirectionArrowsToggle", true);
+  await TM.until(() => TM.$$(".direction-arrow-icon").length > 0, 3000);
+  setHeadingUp(false);
+  await TM.wait(150);
+  const iconNorth = TM.$(".direction-arrow-icon").style.transform;
+  const glyphNorth = TM.$(".direction-arrow-icon .direction-arrow").style.transform;
+  setHeadingUp(true);
+  applyMapBearing(45, true);
+  await TM.wait(150);
+  const iconEast = TM.$(".direction-arrow-icon").style.transform;
+  const glyphEast = TM.$(".direction-arrow-icon .direction-arrow").style.transform;
+  T.ok("north-up: the icon carries no rotation at all", !/rotate/.test(iconNorth), iconNorth, "translate only");
+  T.ok("rotated: the icon picks up the bearing", /rotate\(([\d.]+)rad\)/.test(iconEast), iconEast, "with a rotate()");
+  const rad = /rotate\(([\d.]+)rad\)/.exec(iconEast);
+  T.near("and it is exactly the bearing", rad ? +rad[1] * 180 / Math.PI : -1, 45, 1);
+  T.eq("while the glyph keeps its own geographic angle", glyphEast, glyphNorth);
+  T.eq("and the labels are still upright", angleOf(".leaflet-norotate-pane"), 0);
+  await TM.ui.setSwitch("showDirectionArrowsToggle", false);
+
+  T.test("a trail can still be picked by the browser while the map is turned");
+  // Hit-testing is what a rotation layer breaks quietest, and firing events at layer OBJECTS would pass for
+  // the wrong reason -- that is exactly how the Trailrunde hit-line bug got through once. So: take points
+  // that provably lie ON a trail line (SVG user units through the live screen matrix) and ask the browser
+  // itself what is painted there. Several points per line, and only points that land inside the map's own
+  // rectangle, because a midpoint can fall off-screen or behind the sidebar, and a label or a crossing
+  // trail's hit line may legitimately be on top. Names off for the same reason: a label is SUPPOSED to cover
+  // its line.
+  await TM.ui.setSwitch("showNamesToggle", false);
+  const probeHit = () => {
+    const box = TM.$("#map").getBoundingClientRect();
+    for (const line of TM.map.overlay().filter((p) => p.getAttribute("stroke-width") === "3.5")) {
+      const len = line.getTotalLength();
+      if (!len) continue;
+      const ctm = line.getScreenCTM();
+      if (!ctm) continue;
+      for (const frac of [0.5, 0.25, 0.75, 0.1, 0.9]) {
+        const pt = line.getPointAtLength(len * frac);
+        const cx = Math.round(ctm.a * pt.x + ctm.c * pt.y + ctm.e);
+        const cy = Math.round(ctm.b * pt.x + ctm.d * pt.y + ctm.f);
+        if (cx < box.left + 2 || cx > box.right - 2 || cy < box.top + 2 || cy > box.bottom - 2) continue;
+        const hit = document.elementFromPoint(cx, cy);
+        const same = !!hit && hit.getAttribute && hit.getAttribute("d") === line.getAttribute("d");
+        if (same) return { ok: true, at: [cx, cy], width: +hit.getAttribute("stroke-width") };
+      }
+    }
+    return { ok: false };
+  };
+  setHeadingUp(false);
+  await TM.wait(200);
+  const hitNorth = probeHit();
+  setHeadingUp(true);
+  applyMapBearing(90, true);
+  await TM.wait(250);
+  const hitEast = probeHit();
+  T.ok("north-up: a point on a trail line resolves to that trail", hitNorth.ok, hitNorth, "resolved");
+  T.ok("turned 90°: it still does", hitEast.ok, hitEast, "resolved");
+  T.ok("and what answers is the wide invisible hit line, not the thin visible one",
+       hitEast.ok && hitEast.width > 3.5, hitEast.width, "> 3.5");
+
+  T.test("the 🧭 button switches the mode and persists it");
+  setHeadingUp(false);
+  const btn = TM.$("#bearingBtn");
+  T.ok("the button exists on this layout or is display:none on desktop", !!btn, !!btn, true);
+  btn.click();
+  await TM.wait(120);
+  T.ok("one tap arms heading-up", btn.classList.contains("active"), btn.className, "active");
+  T.eq("and says so to assistive tech", btn.getAttribute("aria-pressed"), "true");
+  T.eq("and it is written to the saved state",
+       JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}").headingUp, true);
+  btn.click();
+  await TM.wait(120);
+  T.eq("a second tap goes back to north", currentMapBearing(), 0);
+  T.eq("the button is no longer marked", btn.classList.contains("active"), false);
+  T.eq("and that is persisted too",
+       JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}").headingUp, false);
+
+  T.test("a fresh boot with heading-up saved comes up armed, but north-up");
+  // Nothing attaches the orientation listener until the user taps, so a restored mode has no heading to turn
+  // to yet. Coming up rotated to a stale angle would be worse than coming up straight.
+  const f = await TM.bootFresh(({ state, put }) => {
+    put("state", Object.assign({}, state || {}, { headingUp: true }));
+  });
+  const fBtn = f.doc.getElementById("bearingBtn");
+  const fPane = f.doc.querySelector(".leaflet-rotate-pane");
+  T.ok("it booted", f.shows("#trailList .trail-card") > 0, f.shows("#trailList .trail-card"), "> 0");
+  T.ok("the button comes up marked", fBtn && fBtn.classList.contains("active"), fBtn && fBtn.className, "active");
+  T.ok("but the map is not turned", !fPane || !/matrix\(-?[\d.]+, [^0]/.test(f.win.getComputedStyle(fPane).transform),
+       fPane && f.win.getComputedStyle(fPane).transform, "no rotation");
+  f.done();
+
+  // ---- put the map back the way we found it -------------------------------------------------------
+  setHeadingUp(false);
+  // The synthetic fix's marker and accuracy ring are left ON the map on purpose. Removing the layer was
+  // tried and is a trap: the app keeps its own `userLocationMarker` reference, so a removed layer makes the
+  // next updateUserLocation take the "already exists" branch and never re-add it -- after which the marker
+  // has no element, the cone silently cannot be drawn, and this suite fails on its second run in the same
+  // session for a reason that has nothing to do with the app. What a real GPS fix leaves behind is exactly
+  // this, and no TM.map probe counts it (they all filter by stroke colour and pane). Only the cone is put
+  // away, which is the app's own way of saying "no trustworthy heading".
+  if (typeof hideHeadingCone === "function") hideHeadingCone();
+  if (map) map.setView(home.center, home.zoom, { animate: false });
+});

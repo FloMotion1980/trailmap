@@ -16,9 +16,9 @@ throttled to roughly one tick per minute, and every wait in the harness is a tim
 takes **~25 seconds** in a visible window and does not finish at all in a hidden one. A run that seems to
 hang part-way through is almost always this, not a failure.
 
-Current state, all green: **12 suites, 114 cases, 464 checks** — 88 cases / 394 checks in the browser
-(filters 10, geometry 15, infopanel 10, labels 9, lifts 8, lists 13, regions 13, solo 10) and 26 cases /
-70 checks in Python.
+Current state, all green: **13 suites, 124 cases, 514 checks** — 98 cases / 444 checks in the browser
+(bearing 10, filters 10, geometry 15, infopanel 10, labels 9, lifts 8, lists 13, regions 13, solo 10) and
+26 cases / 70 checks in Python.
 
 ## Serve the repo root, not the app folder
 
@@ -78,6 +78,7 @@ Two properties this buys, both deliberate:
 | `pipeline` | `tools/trailmap_pipeline.py`: GPX parsing tolerance, dedupe, simplify, profiles | ends with a **golden** rebuild of all 12 Laax trails, byte-identical against the committed region |
 | `regiondata` | every `regions/*.json`, the catalog, `version.json` | `@always`; runs `validate_region.py` per region **and** proves it still bites |
 | `appshell` | the three-way stylesheet version sync, `APP_SHELL`, `waitUntil`, `boot().catch` | `@always`; a stale `style.css` makes new elements vanish rather than look unstyled |
+| `bearing` | the two map orientations: pane parenting, upright labels, the cone, the padding vectors, hit-testing | drives `handleOrientation` with synthetic readings; the compass itself is not drivable |
 | `geometry` | every pure helper: distance, interpolation, profiles, arrows, chart SVG | no DOM state, fastest suite |
 | `filters` | `trailPassesFilters` / `liftPassesFilters` / `liftHiddenBySolo` and all four counts | the categories are mutually exclusive on purpose |
 | `lists` | the three list sections: grouping, sorting, cards, selection | found two real bugs on its first run |
@@ -135,6 +136,9 @@ evidence that anything was ever wrong.
   Chip wrapping, scrollbar-driven reflow and the drawer geometry need a real device or a resized browser.
 - **GPS, compass, wake lock.** `watchPosition`, `DeviceOrientationEvent` and the permission prompts cannot be
   driven from here. This is why `#liveStatus` exists: it makes those failures readable in the field instead.
+  What *is* covered is everything downstream of a reading: `bearing` calls `handleOrientation` and
+  `updateUserLocation` directly with synthetic values, so the smoothing, the map bearing and the cone are
+  tested even though the sensors are not.
 - **Service-worker caching across app restarts.** Whether an iOS home-screen PWA picks up a new worker is a
   platform behaviour; the version line in Kartenoptionen is the answer to that, not a test.
 - **Tile servers and any network source.** No suite makes an outbound request; the pipeline's golden case runs

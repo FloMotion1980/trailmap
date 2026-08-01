@@ -149,6 +149,9 @@
     if (typeof closeInfoPanelAndDeselect === "function") closeInfoPanelAndDeselect();
     if (typeof clearSolo === "function") clearSolo();
     if (typeof hideEleHover === "function") hideEleHover();
+    // Back to north up. Any suite that reads pixels would otherwise inherit a rotated map from whoever ran
+    // before it -- and "bearing" sorts first in the bundle, so that is not hypothetical.
+    if (typeof setHeadingUp === "function") setHeadingUp(false);
     await TM.ui.builderMode(false);
     for (const d of ["gruen", "blau", "rot", "schwarz"]) await TM.ui.setDiff(d, true);
     await TM.ui.setSwitch("showDownhillToggle", true);

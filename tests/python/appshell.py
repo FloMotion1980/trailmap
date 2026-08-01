@@ -4,7 +4,7 @@
 @area    Service worker, cache versions, app-shell integrity
 @always
 @files   Trailmap App/index.html, Trailmap App/sw.js, Trailmap App/style.css
-@touches CACHE_NAME, PRELOAD_CACHE_NAME, STYLE_URL, APP_SHELL, style.css
+@touches CACHE_NAME, PRELOAD_CACHE_NAME, STYLE_URL, ROTATE_URL, APP_SHELL, style.css, leaflet-rotate.js
 
 The three-way version sync is the reason this suite runs on every change. If a new index.html is paired with
 an old style.css, a newly added element has NO rules at all -- therefore no position:absolute -- and paints
@@ -49,6 +49,22 @@ def run(t):
         # Not required by the browser, but keeping them equal is what makes "which version is this?" answerable
         # from a single number -- and the version indicator in Kartenoptionen reads the cache name.
         t.eq("the cache generation matches the stylesheet version", cache_name.group(1), link.group(1))
+
+    t.case("the rotation plugin's version is the same in both places and it is precached")
+    # Same failure mode as the stylesheet, one step worse: leaflet-rotate is cache-first with a version in its
+    # URL, so index.html and sw.js disagreeing means the file either never updates or (offline, with only the
+    # other ?v= cached) does not load at all. The app survives that -- canRotate goes false and only the
+    # orientation mode is gone -- which is exactly why nothing would shout about it.
+    rot_tag = re.search(r'<script src="leaflet-rotate\.js\?v=(\d+)"', html)
+    rot_url = re.search(r'ROTATE_URL\s*=\s*"\./leaflet-rotate\.js\?v=(\d+)"', sw)
+    t.ok("index.html loads a versioned leaflet-rotate", bool(rot_tag), rot_tag and rot_tag.group(0), 'leaflet-rotate.js?v=N')
+    t.ok("sw.js has ROTATE_URL", bool(rot_url), rot_url and rot_url.group(0), 'ROTATE_URL = "./leaflet-rotate.js?v=N"')
+    if rot_tag and rot_url:
+        t.eq("both request the same file", rot_tag.group(1), rot_url.group(1))
+    t.ok("the file is on disk", os.path.exists(os.path.join(APP, "leaflet-rotate.js")), True, True)
+    shell_src = re.search(r"APP_SHELL\s*=\s*\[([\s\S]*?)\]", sw)
+    t.ok("and it is in APP_SHELL, so a first-ever offline visit has it",
+         bool(shell_src) and "ROTATE_URL" in shell_src.group(1), True, True)
 
     t.case("every APP_SHELL entry exists on disk")
     shell = re.search(r"APP_SHELL\s*=\s*\[([\s\S]*?)\]", sw)
