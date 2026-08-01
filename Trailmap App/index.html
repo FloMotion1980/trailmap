@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=70" />
+<link rel="stylesheet" href="style.css?v=72" />
 </head>
 <body>
 <div id="fatalError">
@@ -56,19 +56,29 @@
          2026-07-27). It no longer scrolls the sidebar to the top (user, 2026-07-29 — that job belongs to
          #sidebarTopBtn now), but it MUST keep an id: syncBuilderModeChrome() writes this text, and dropping
          the id along with the handler crashed the app outright for anyone who had builder mode on. -->
-    <!-- The drawer handle lives IN the header, next to the title (user, 2026-08-02: "kannst du die drei Striche
-         in den Header verfrachten, wo Trailmap steht? Dann sparen wir uns ein Element"). It used to float over
-         the map at the top left, which cost map space in the one layout that has least of it and carried the
-         label "Trails" -- true when the drawer held only that list, misleading now that it also holds Region,
-         Filter, Kartenoptionen, Touren and Lifte. Icon only: the title beside it says what app this is, and the
-         hamburger says there is something to open. Touch layouts only, like before -- on desktop the sidebar is
-         permanently in flow and a handle for it would open nothing. -->
-    <button id="sidebarToggle" title="Listen und Filter öffnen" aria-label="Menü öffnen">☰</button>
-    <h1 id="appTitle">Trailmap</h1>
+    <!-- The bars and the wordmark are ONE control that opens the drawer (user, 2026-08-02) -- and it has no
+         border, because a box around the app's own name reads as a button that happens to contain the title
+         rather than as the title being the way in.
+         A div with role=button, not a <button>: an <h1> is flow content and invalid inside a button, and the
+         heading has to stay, both for the document outline and because syncBuilderModeChrome() writes this
+         text ("Trailbuilder" while that mode is on). Same pattern as #builderSheetHandle. The keydown handler
+         is what a real button would have given us for free.
+         It used to float over the map at the top left, which cost map space in the layout that has least of it,
+         and it read "Trails" -- true when the drawer held only that list, misleading once it also held Region,
+         Filter, Kartenoptionen, Touren and Lifte. Touch layouts only: on desktop the sidebar is permanently in
+         flow and a handle for it would open nothing. -->
+    <div id="sidebarToggle" role="button" tabindex="0" title="Listen und Filter öffnen" aria-label="Menü öffnen">
+      <span class="st-bars" aria-hidden="true">☰</span>
+      <h1 id="appTitle">Trailmap</h1>
+    </div>
     <button id="regionsBtn">🌍 Regionen wählen</button>
     <!-- The one and only mode switch. It lives here because the header is the only element that looks the
          same in both layouts, is reachable without opening the drawer, and covers no map. -->
-    <button id="builderModeBtn" title="Tourenbuilder ein/aus"><span class="bm-icon">🧭</span><span class="bm-label">Tourenbuilder</span></button>
+    <!-- 🧩, not the 🧭 it used to be: on touch layouts this button's label is hidden, which left a bare compass
+         rose in the header meaning "Tourenbuilder" while the map's own 🧭 means "turn with my heading" -- the
+         same glyph for two unrelated things on one screen. The compass belongs to the map orientation; a puzzle
+         piece is what this mode does, chaining trails and lifts into one route. -->
+    <button id="builderModeBtn" title="Tourenbuilder ein/aus"><span class="bm-icon">🧩</span><span class="bm-label">Tourenbuilder</span></button>
   </header>
   <div class="layout">
     <aside>
@@ -1196,6 +1206,13 @@ function closeSidebar(){
 }
 sidebarToggleBtn.addEventListener('click', () => {
   if (asideEl.classList.contains('open')) closeSidebar(); else openSidebar();
+});
+// The handle is a div carrying role="button" (an <h1> cannot live inside a real <button>), so the keyboard
+// behaviour a button would have given us for free has to be spelled out. Space is prevented from scrolling.
+sidebarToggleBtn.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  e.preventDefault();
+  sidebarToggleBtn.click();
 });
 sidebarBackdrop.addEventListener('click', closeSidebar);
 
@@ -5526,7 +5543,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v70"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v72"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

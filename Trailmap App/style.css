@@ -65,18 +65,27 @@ aside{ width: 350px; min-width: 300px; background: var(--card-bg); border-right:
    depends on whether a scrollbar happens to be needed at that moment. */
 aside::-webkit-scrollbar{ display:none; width:0; height:0; }
 
-/* In the header now, not floating over the map -- see the markup for why. Sized and bordered like
-   #builderModeBtn so the header reads as one row of controls rather than three unrelated styles, and given a
-   fixed square so the glyph sits centred in it. Still touch-only: on desktop the sidebar is permanently in
-   flow, so this would open nothing. */
+/* The bars and the wordmark are one control, and deliberately UNBORDERED: a box drawn around the app's own name
+   turns the title into button content, when the point is the other way round -- the title IS the way into the
+   drawer. What signals that it is touchable is the bars sitting with it, plus the press feedback below. Its own
+   negative margin keeps the wordmark on the same x it had before the bars joined it, so the header's left edge
+   does not visibly shift when this appears (it is touch-only, exactly as the floating button was). */
 #sidebarToggle{
-  display:none; align-self:center;
-  width:30px; height:30px; align-items:center; justify-content:center;
-  background:transparent; color:#f2f3ec; border:1px solid rgba(242,243,236,.45); border-radius:9px;
-  font-family: Arial, sans-serif; font-size:16px; line-height:1; cursor:pointer;
-  -webkit-tap-highlight-color: transparent;
+  display:none; align-items:center; gap:9px; align-self:center;
+  /* 14px, the same radius #regionsBtn and #builderModeBtn use -- the press tint should read as the same family
+     of control as the rest of the row, even though this one has no resting box. */
+  margin:-6px -8px; padding:6px 8px; border-radius:14px;
+  background:transparent; border:none; cursor:pointer;
+  -webkit-tap-highlight-color: transparent; -webkit-user-select:none; user-select:none;
 }
-#sidebarToggle:hover{ background:rgba(242,243,236,.12); }
+/* Quieter than the wordmark on purpose: the bars are the affordance, the name is the brand. */
+#sidebarToggle .st-bars{ font-family: Arial, sans-serif; font-size:17px; line-height:1; color:rgba(242,243,236,.8); }
+#sidebarToggle:active{ background:rgba(242,243,236,.14); }
+#sidebarToggle:focus-visible{ outline:2px solid rgba(242,243,236,.6); outline-offset:2px; }
+@media (hover: hover){
+  #sidebarToggle:hover{ background:rgba(242,243,236,.10); }
+  #sidebarToggle:hover .st-bars{ color:#f2f3ec; }
+}
 #sidebarBackdrop{ display:none; position:fixed; inset:0; background:rgba(15,20,16,0.45); z-index:2400; }
 #sidebarBackdrop.visible{ display:block; }
 
@@ -498,7 +507,10 @@ html.landscape-compact #locateCluster{
   top: calc(3px + env(safe-area-inset-top, 0px));
   right: calc(3px + env(safe-area-inset-right, 0px));
 }
-html.landscape-compact #sidebarToggle{ width:26px; height:26px; font-size:14px; }
+/* Tighter with the wordmark in landscape, where the title itself is 15px. No width/height: this is a row of
+   two things now, not a square. */
+html.landscape-compact #sidebarToggle{ gap:7px; margin:-5px -7px; padding:5px 7px; }
+html.landscape-compact #sidebarToggle .st-bars{ font-size:15px; }
 #locateBtn{
   width:46px; height:46px; border-radius:50%;
   background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
