@@ -1808,19 +1808,21 @@ function ensureMapSizeCurrent(){
   const el = map.getContainer();
   const s = map.getSize();
   if (Math.abs(s.x - el.clientWidth) <= 1 && Math.abs(s.y - el.clientHeight) <= 1) return false;
-  // Capture what the user is actually looking at BEFORE re-measuring, from the real element rather than from
-  // Leaflet's belief about it (a container point maps to a lat/lng through the pane offset, which is right
-  // even while the cached size is wrong). Then restore it afterwards.
+  // `pan` (Leaflet's default, true) is the RIGHT mode here, and getting that backwards is what left the dot
+  // under the bottom edge after a flip. It shifts the view by half the difference between the cached and the
+  // real size -- and the cached size is, by construction, the one the current view was positioned with, since
+  // that is what Leaflet uses it for. So the shift is exactly the correction needed when the container changed
+  // underneath us.
   //
-  // Neither of invalidateSize's own modes can do this. Its `pan` option means "shift by half the difference
-  // between the old and the new size": correct when the old size was real, a 294 px jump when it never was
-  // (measured, both ways). And iOS produces exactly the awkward middle case -- the layout settles in steps, so
-  // Leaflet compensates for the part it saw and the rest is left over. Restoring the point that was visible
-  // covers all three, which is what "der Mittelpunkt bleibt gleich, wenn man die Orientierung wechselt" asks
-  // for (user, 2026-08-02, after a version that only got it right when nothing had been left over).
-  const visibleCentre = map.containerPointToLatLng([el.clientWidth / 2, el.clientHeight / 2]);
-  map.invalidateSize({ debounceMoveend: true, pan: false });
-  map.setView(visibleCentre, map.getZoom(), { animate: false });
+  // Reproduced from the user's own three steps (2026-08-02): portrait, position centred, compass on, flip. The
+  // container becomes 768x338 while Leaflet still holds 375x757 and never got to pan, so the position sits at
+  // dx -197 / dy +210 -- below the bottom edge. invalidateSize's compensation puts it back at dx -1 / dy 0.
+  //
+  // An earlier version captured the point visible at the real element's centre and restored it afterwards. That
+  // preserves the WRONG point: by then the resize has already displaced everything, so it keeps whatever the
+  // displacement happened to move into the middle. It only looked right against a fabricated state -- writing
+  // to map._size while the view is correctly laid out, which nothing but a test can do.
+  map.invalidateSize({ debounceMoveend: true });
   staleSizeFixes++;
   updateLiveStatus();   // the readout is the only way this is visible in the field; don't wait a second for it
   return true;

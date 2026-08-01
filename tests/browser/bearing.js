@@ -202,21 +202,32 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   T.ok("the pill can report that it happened", /⇲/.test(TM.$("#liveStatusText").textContent),
        TM.$("#liveStatusText").textContent, "contains ⇲");
 
-  // Healing must not MOVE the map: whatever was in the middle stays in the middle, and a bearing survives.
-  // That is "der Mittelpunkt bleibt gleich, wenn man die Orientierung wechselt", and it is not free -- letting
-  // invalidateSize compensate instead (its pan:true) moves the view by 220-294 px, measured.
-  setHeadingUp(true);
-  applyMapBearing(60, true);
-  await TM.wait(150);
+  // And the same thing from the user's own three steps, with a REAL container change rather than a fabricated
+  // cached size: position centred, compass on, container flipped to landscape shape while Leaflet still holds
+  // the portrait one and never got to pan. That is the state that put the position at dy +210, below the bottom
+  // edge. Note this asserts the position, not "whatever was in the middle": an earlier version of this case
+  // wrote to map._size while the view was correctly laid out, which nothing but a test can produce, and it
+  // happily passed the implementation that shipped the bug.
   const el = TM.$("#map");
-  const watched = map.containerPointToLatLng([el.clientWidth / 2, el.clientHeight / 2]);
-  map._size = L.point(realSize.x, Math.round(realSize.y / 2));
+  const startBox = { w: el.style.width, h: el.style.height };
+  setHeadingUp(true);
+  applyMapBearing(45, true);
+  map.setView(L.latLng(home.center.lat, home.center.lng), 15, { animate: false });
+  await TM.wait(250);
+  T.near("centred before the flip", Math.hypot(dotScreen().x - mapCentreScreen().x,
+         dotScreen().y - mapCentreScreen().y), 0, 2);
+  el.style.width = Math.round(realSize.y * 0.9) + "px";      // landscape-shaped, and Leaflet is told nothing
+  el.style.height = Math.round(realSize.x * 0.9) + "px";
+  const displaced = Math.hypot(dotScreen().x - mapCentreScreen().x, dotScreen().y - mapCentreScreen().y);
+  T.ok("the bare flip does displace it, so there is something to fix", displaced > 20, Math.round(displaced), "> 20 px");
+  ensureMapSizeCurrent();
+  await TM.wait(250);
+  T.near("and after the heal the position is back on the centre", Math.hypot(
+         dotScreen().x - mapCentreScreen().x, dotScreen().y - mapCentreScreen().y), 0, 3);
+  T.eq("with the bearing unchanged", Math.round(currentMapBearing()) % 360, 45);
+  el.style.width = startBox.w; el.style.height = startBox.h;
   ensureMapSizeCurrent();
   await TM.wait(200);
-  const p = map.latLngToContainerPoint(watched);
-  T.near("the point that was in the middle is still in the middle",
-         Math.hypot(p.x - el.clientWidth / 2, p.y - el.clientHeight / 2), 0, 2);
-  T.eq("and the bearing came through unchanged", Math.round(currentMapBearing()), 60);
   await northAgain();
 
   T.test("while following, a container that changes in steps leaves the position centred");
