@@ -132,23 +132,47 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
          coneAngle(), "90 ±1");
   }
 
-  T.test("the UI-avoidance offset lands on the same screen point at every bearing");
-  // getOffsetCenter mixes screen-axis padding into projected pixels; the invariant that survives rotation is
-  // the SCREEN position of the target, so that is what is asserted -- deliberately not the sign of the
-  // offset, which is the app's own long-standing choice and not this feature's business.
-  const target = L.latLng(home.center.lat, home.center.lng);
-  const offsetAt = (deg) => {
-    setHeadingUp(deg !== 0);
-    applyMapBearing(deg, true);
-    return screenOffsetOf(target, home.zoom, getOffsetCenter(target, home.zoom));
+  T.test("the followed position sits on the rotation pivot and stays put through a turn");
+  // The user reported this twice, from opposite ends: the blue dot ORBITED the middle of the screen as the map
+  // turned, and it jumped ~110 px the moment the mode was switched. Both were one cause -- the pans to the
+  // position used to offset it by the UI-avoidance padding, while leaflet-rotate pivots around the container
+  // centre, so the dot sat on a radius-84 circle around the pivot. Same point, no orbit; this case is the
+  // requirement itself, in screen pixels, which is the only space it can be stated in.
+  const dotScreen = () => {
+    const el = TM.$(".geo-wrap");
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
   };
-  const north = offsetAt(0), east = offsetAt(90), back = offsetAt(225);
-  T.near("bearing 90 lands where bearing 0 did (x)", east.x, north.x, 2);
-  T.near("bearing 90 lands where bearing 0 did (y)", east.y, north.y, 2);
-  T.near("bearing 225 too (x)", back.x, north.x, 2);
-  T.near("bearing 225 too (y)", back.y, north.y, 2);
-  T.ok("and the offset is not simply zero, i.e. something was applied",
-       Math.abs(north.x) + Math.abs(north.y) > 10, north, "away from the container centre");
+  const mapCentreScreen = () => {
+    const b = TM.$("#map").getBoundingClientRect();
+    return { x: Math.round(b.left + b.width / 2), y: Math.round(b.top + b.height / 2) };
+  };
+  setHeadingUp(false);
+  updateUserLocation({ coords: { latitude: home.center.lat, longitude: home.center.lng, accuracy: 12, heading: null } }, false);
+  // Centre through the app's OWN path rather than a hand-written panTo: the re-centre button is what a rider
+  // taps, and its handler is the code under test. Its CSS makes it click-through only while detached, but the
+  // listener does not care.
+  TM.$("#recenterBtn").click();
+  await TM.settle(dotScreen, 3000);
+  const atNorth = dotScreen(), centre = mapCentreScreen();
+  T.ok("there is a dot to measure", !!atNorth, atNorth, "a position");
+  T.near("it is on the container centre, x", atNorth.x, centre.x, 2);
+  T.near("it is on the container centre, y", atNorth.y, centre.y, 2);
+  setHeadingUp(true);
+  const wander = [];
+  for (const deg of [45, 90, 180, 270, 315]) {
+    applyMapBearing(deg, true);
+    await TM.wait(120);
+    const d = dotScreen();
+    wander.push(Math.round(Math.hypot(d.x - atNorth.x, d.y - atNorth.y)));
+  }
+  T.eq("turning the map does not move it off that point", wander.filter((px) => px > 2), []);
+  setHeadingUp(false);
+  await TM.wait(150);
+  const back = dotScreen();
+  T.near("and switching back to north-up does not move it either",
+         Math.hypot(back.x - atNorth.x, back.y - atNorth.y), 0, 2);
 
   T.test("a padded bounds fit puts the target in the uncovered part of the map, at every bearing");
   const c = home.center;
@@ -168,11 +192,16 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   // the header reserves 80px against the bottom bar's 40 (so it moves DOWN). Asserting one combined
   // direction was this test's own first bug, and the app was right.
   const pad = getFlyPadding();
-  const wantSign = (tl, br) => Math.sign(tl - br);       // more reserved bottom/right => negative => up/left
-  T.eq("x moves away from the side that reserves more", Math.sign(fitN.off.x || 0),
-       wantSign(pad.paddingTopLeft.x, pad.paddingBottomRight.x));
-  T.eq("y moves away from the side that reserves more", Math.sign(fitN.off.y || 0),
-       wantSign(pad.paddingTopLeft.y, pad.paddingBottomRight.y));
+  // Per axis, and with a tolerance on the "no difference" case: when a layout reserves the same room on both
+  // sides the offset is zero and lands within a pixel of the centre, so demanding an exact sign of 0 fails on
+  // rounding alone. That is how this assertion first broke -- on a rounding artefact, not on the app.
+  const axis = (name, off, tl, br) => {
+    if (tl === br) T.near("the " + name + " offset is zero when both sides reserve the same", off, 0, 2);
+    else T.eq("the " + name + " offset moves away from the side that reserves more",
+              Math.sign(off), Math.sign(tl - br));
+  };
+  axis("x", fitN.off.x, pad.paddingTopLeft.x, pad.paddingBottomRight.x);
+  axis("y", fitN.off.y, pad.paddingTopLeft.y, pad.paddingBottomRight.y);
 
   T.test("direction arrows turn with the map, the name labels do not");
   map.setView(home.center, 14, { animate: false });      // arrows only exist above START_DOT_MIN_ZOOM (13)

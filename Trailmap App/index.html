@@ -1717,8 +1717,16 @@ function updateUserLocation(pos, isFirstFix){
       hideHeadingCone();
     }
   }
-  if (isFirstFix) { map.flyTo(getOffsetCenter(L.latLng(latlng), 15), 15, { duration: 0.8 }); panCount++; }
-  else if (followMode && !followDetached) { map.panTo(getOffsetCenter(L.latLng(latlng), map.getZoom()), { animate: true, duration: 0.5 }); panCount++; }
+  // The position goes on the container's CENTRE, not beside it. It used to be offset by getFlyPadding's
+  // UI-avoidance vector, and that offset is exactly what the user reported twice (2026-08-01): leaflet-rotate
+  // pivots around the container centre, so a dot sitting 84 px off it ORBITED that centre as the map turned,
+  // and jumped ~110 px across the screen the moment the orientation mode was switched. In landscape the same
+  // offset pushed it TOWARDS the reserved side and parked it behind the info panel -- measured, dot at
+  // (730,190) under a panel spanning x 576..806. Centre and pivot being the same point makes both go away by
+  // construction. Trail fits keep their padding (see paddedBoundsView): fitting a whole trail into the free
+  // space is a different job, with no pivot involved.
+  if (isFirstFix) { map.flyTo(L.latLng(latlng), 15, { duration: 0.8 }); panCount++; }
+  else if (followMode && !followDetached) { map.panTo(L.latLng(latlng), { animate: true, duration: 0.5 }); panCount++; }
   updateLiveStatus();
 }
 
@@ -1982,8 +1990,8 @@ if (!canRotate) document.getElementById("bearingBtn").style.display = "none";
 document.getElementById("recenterBtn").addEventListener("click", () => {
   followDetached = false;
   syncLocateChrome();
-  if (userLocationMarker) map.panTo(getOffsetCenter(userLocationMarker.getLatLng(), map.getZoom()),
-                                   { animate: true, duration: 0.4 });
+  // Dead centre, same as every other pan to the position -- see the note in updateUserLocation.
+  if (userLocationMarker) map.panTo(userLocationMarker.getLatLng(), { animate: true, duration: 0.4 });
 });
 
 // Panning by hand drops out of chasing without ending the tracking -- the fix for "ich kann die Karte nicht
@@ -4676,12 +4684,11 @@ function uiOffsetVector(){
   return (bearing && v.rotate) ? v.rotate(-bearing * DEG_TO_RAD) : v;
 }
 
-// Adjust a target lat/lng so that, once centered in the map container, it visually lands
-// in the middle of the space that ISN'T covered by our floating UI (info panel etc.),
-// rather than the true geometric center of the whole container.
-function getOffsetCenter(latlng, zoom){
-  return map.unproject(map.project(latlng, zoom).subtract(uiOffsetVector()), zoom);
-}
+// There is deliberately no getOffsetCenter() any more. It shifted a pan target sideways so the point would
+// land in the middle of the space not covered by our floating UI, and it was used for the three pans to the
+// user's own position -- which is precisely where an offset must NOT be, because leaflet-rotate pivots around
+// the container centre (see the note in updateUserLocation). Its remaining half, the padding vector, lives on
+// in uiOffsetVector() for bounds fitting, where the target is a whole trail and nothing rotates around it.
 
 // Deliberately NOT map.flyToBounds with padding options: Leaflet's own _getBoundsCenterZoom applies the
 // padding as a plain projected-pixel offset, and leaflet-rotate leaves that method alone (its override is
