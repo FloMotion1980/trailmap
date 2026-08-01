@@ -174,6 +174,25 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   T.near("and switching back to north-up does not move it either",
          Math.hypot(back.x - atNorth.x, back.y - atNorth.y), 0, 2);
 
+  T.test("centring survives a container whose size Leaflet has not noticed yet");
+  // The landscape half of the same report: after a portrait/landscape flip iOS settles the layout later than
+  // Leaflet's own debounced resize handler runs, so map.getSize() can still hold the previous orientation.
+  // Reproduced exactly here by putting a stale size back: with 375x757 cached against a real 768x320 container,
+  // panTo placed the position 58 px BELOW the bottom edge of the screen. The iOS timing is not reproducible;
+  // the stale size is, and it is the actual cause.
+  const realSize = L.point(TM.$("#map").clientWidth, TM.$("#map").clientHeight);
+  map._size = L.point(Math.round(realSize.y / 2), Math.round(realSize.x * 1.5));   // plausibly "the other orientation"
+  T.ok("the map is now holding a size that is not its container's",
+       map.getSize().y !== realSize.y, JSON.stringify(map.getSize()), "different from " + JSON.stringify(realSize));
+  TM.$("#recenterBtn").click();
+  await TM.settle(dotScreen, 3000);
+  const healed = dotScreen(), c2 = mapCentreScreen();
+  T.near("the position still lands on the container centre, x", healed.x, c2.x, 2);
+  T.near("the position still lands on the container centre, y", healed.y, c2.y, 2);
+  T.eq("and Leaflet is holding the real size again", JSON.stringify(map.getSize()), JSON.stringify(realSize));
+  T.ok("the pill can report that it happened", /⇲/.test(TM.$("#liveStatusText").textContent),
+       TM.$("#liveStatusText").textContent, "contains ⇲");
+
   T.test("a padded bounds fit puts the target in the uncovered part of the map, at every bearing");
   const c = home.center;
   const bounds = L.latLngBounds([[c.lat - 0.015, c.lng - 0.045], [c.lat + 0.015, c.lng + 0.045]]);
@@ -184,7 +203,11 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     return { zoom: v.zoom, off: screenOffsetOf(bounds.getCenter(), v.zoom, v.center) };
   };
   const fitN = fitAt(0), fitE = fitAt(90);
-  T.eq("the zoom is bearing-independent", fitE.zoom, fitN.zoom);
+  // The zoom is allowed to differ, and must: a wide, short bounds turned 90° lies across the container's short
+  // axis and genuinely needs a step less. Demanding equality was this case's own bug -- it passed only while
+  // the container happened to be tall. What must NOT change is the screen position, below.
+  T.ok("the zoom differs by at most one step", Math.abs(fitE.zoom - fitN.zoom) <= 1,
+       [fitN.zoom, fitE.zoom], "within one step");
   T.near("and so is the screen position (x)", fitE.off.x, fitN.off.x, 2);
   T.near("and so is the screen position (y)", fitE.off.y, fitN.off.y, 2);
   // Leaflet's own padding convention: the target is pushed AWAY from whichever side reserves more room. Per
@@ -233,11 +256,13 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   // trail's hit line may legitimately be on top. Names off for the same reason: a label is SUPPOSED to cover
   // its line.
   await TM.ui.setSwitch("showNamesToggle", false);
-  // Pin the view first. Inheriting whatever the previous case left is what made this flaky: at zoom 14 only a
-  // handful of points on any line are inside the container at all, and a probe with a sample of four either
-  // passes or reports a failure that has nothing to do with rotation.
-  map.setView(home.center, 12, { animate: false });
-  await TM.wait(400);
+  // Put a trail on screen through the app's own "fly to this card" path rather than picking a view by hand.
+  // Both earlier attempts at this were flaky for the same reason: a hand-picked centre and zoom may leave few
+  // or no points of any line inside the container -- and Leaflet empties a fully clipped polyline's `d`, so
+  // "no candidates" looks exactly like "no trail lines exist".
+  TM.ui.trailCards()[0].click();
+  await TM.settle(() => TM.map.overlay().filter((p) => p.getAttribute("stroke-width") === "3.5").length, 4000);
+  await TM.wait(300);
   const probeHit = () => {
     const box = TM.$("#map").getBoundingClientRect();
     let probed = 0;

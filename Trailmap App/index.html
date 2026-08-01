@@ -1684,7 +1684,35 @@ function detachOrientationListener(){
   compassEvents = 0;
 }
 
+// Leaflet caches the container's size and re-measures it from its own debounced window "resize" handler, one
+// animation frame after the event. iOS settles a portrait/landscape flip later than that -- `100dvh` alone can
+// take another frame or two -- so map.getSize() can still hold the PREVIOUS orientation's dimensions. Every
+// centring then works against a container that no longer exists: with the portrait size (375x757) cached and a
+// real container of 768x320, panTo put the position at y=433, i.e. 58 px BELOW the bottom edge of the screen.
+// That is the "im Querformat liegt die Position gar nicht auf dem Bildschirm, sondern darunter" report
+// (2026-08-01), and it is invisible from the code because nothing errors -- the map just centres on the wrong
+// point. So: check before centring, and heal it if it is wrong. The counter feeds the status pill, so a
+// repeat of the report can be told apart from a different cause.
+let staleSizeFixes = 0;
+function ensureMapSizeCurrent(){
+  const el = map.getContainer();
+  const s = map.getSize();
+  if (Math.abs(s.x - el.clientWidth) <= 1 && Math.abs(s.y - el.clientHeight) <= 1) return false;
+  map.invalidateSize({ debounceMoveend: true, pan: false });
+  staleSizeFixes++;
+  updateLiveStatus();   // the readout is the only way this is visible in the field; don't wait a second for it
+  return true;
+}
+
+// The same repair for the whole map rather than only the next centring: a stale size also misplaces the
+// rotation pivot, the pinch-zoom anchor and every bounds fit. Deliberately on a timer AFTER Leaflet's own
+// handler has run, which is the one that is too early on iOS.
+["orientationchange", "resize"].forEach(ev => window.addEventListener(ev, () => {
+  setTimeout(ensureMapSizeCurrent, 300);
+}));
+
 function updateUserLocation(pos, isFirstFix){
+  ensureMapSizeCurrent();
   const { latitude, longitude, accuracy, heading } = pos.coords;
   const latlng = [latitude, longitude];
   lastFixAt = Date.now(); lastAccuracy = accuracy; fixCount++;   // read by updateLiveStatus
@@ -1826,6 +1854,10 @@ function updateLiveStatus(){
   // failure this mode can have silent readable: 🗺0° with a live 🧭247° means the compass is fine and the
   // rotation is not, which is a different bug from 🧭✕D (no permission) leaving the map north-up correctly.
   if (headingUp) parts.push("🗺" + Math.round(appliedBearing) + "°");
+  // Only ever shown once it has happened: how often a centring found Leaflet holding the wrong container size
+  // and had to re-measure (see ensureMapSizeCurrent). Zero of these plus a position off the screen means the
+  // cause is something else, which is the whole point of having the number.
+  if (staleSizeFixes > 0) parts.push("⇲" + staleSizeFixes);
   parts.push(fixCount + "/" + panCount);   // fixes received / map pans issued
   // A cone that stopped tracking points somewhere you are NOT looking, which at a junction is worse than no
   // cone at all -- this is the "hängt total" half of the report. `compassActive` stays true on purpose: it
@@ -1990,7 +2022,9 @@ if (!canRotate) document.getElementById("bearingBtn").style.display = "none";
 document.getElementById("recenterBtn").addEventListener("click", () => {
   followDetached = false;
   syncLocateChrome();
-  // Dead centre, same as every other pan to the position -- see the note in updateUserLocation.
+  // Dead centre, same as every other pan to the position -- see the note in updateUserLocation. And the same
+  // size check: this button is exactly what a rider taps right after turning the phone.
+  ensureMapSizeCurrent();
   if (userLocationMarker) map.panTo(userLocationMarker.getLatLng(), { animate: true, duration: 0.4 });
 });
 
