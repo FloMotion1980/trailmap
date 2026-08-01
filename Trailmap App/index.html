@@ -1268,6 +1268,39 @@ const map = L.map('map', {
 // is absent, and Leaflet's own `container || this._mapPane` fallback covers that, so it degrades cleanly.
 const ROTATING_PANE = () => map.getPane("rotatePane");
 
+// Why rotating used to stutter badly on a phone, and what this does about it (2026-08-01, measured):
+// leaflet-rotate makes every vector renderer listen to "rotate" and re-run _update, which re-cuts the SVG's
+// viewBox, size and position from the rotated viewport's bounding box. Those bounds change with EVERY degree,
+// so six 3° steps produced six different viewBoxes growing from 496x930 to 708x1002 -- i.e. a full
+// re-rasterisation of a ~700x1000 px SVG holding 110 paths, per step. The JS was never the problem (1.8 ms a
+// step); the repaint was.
+//
+// During a sweep that work is skipped whenever the SVG ALREADY covers what the new angle needs -- the
+// ancestor pane's transform then moves the existing raster, which is compositor work and free. The moment the
+// bearing settles, endBearingSweep() fires "rotate" once and everything catches up exactly as before. The
+// containment check is what keeps this honest: if a new angle genuinely exposes area the SVG does not cover,
+// it repaints rather than clipping the lines.
+//
+// The flag lives here, next to its only reader, rather than with the rest of the orientation state further
+// down: a `let` is in its temporal dead zone until its declaration runs, and this patch is installed before
+// that point -- reading it early would throw into the fatal-error panel rather than fail quietly.
+let bearingSweeping = false;
+// What the guard asks is deliberately NOT "does the box still equal what the plugin would compute" -- that
+// slides with every degree even when its size is constant, which is why a first attempt still repainted 63
+// times in a 360° sweep. The honest question is whether anything VISIBLE would be clipped: map the four
+// container corners into the renderer's own coordinate space and skip only while all four are inside the box
+// that is already painted.
+function visibleLayerBounds(){
+  const s = map.getSize();
+  return L.bounds([[0, 0], [s.x, 0], [0, s.y], [s.x, s.y]].map(p => map.containerPointToLayerPoint(p)));
+}
+const rendererUpdate = L.Renderer.prototype._update;
+L.Renderer.prototype._update = function(){
+  if (bearingSweeping && this._map && this._map._rotate && this._bounds &&
+      this._bounds.contains(visibleLayerBounds())) return;
+  return rendererUpdate.apply(this, arguments);
+};
+
 // Shows which active region GROUP the map's current center falls into, in the "Region" heading row
 // (added 2026-07-23, per the user's request — first placed in "Trails"' own heading, moved here the
 // same day once the user said they preferred it next to "Region" after all). Only group-level
@@ -1455,13 +1488,25 @@ let headingUp = false;
 // reading, or it would visibly lag by one throttle interval instead of pointing up.
 let appliedBearing = 0;
 let lastBearingAt = 0;
-// setBearing recomputes the tile range and every vector renderer's bounds, so it must not run once per sensor
-// event -- those arrive at up to 60 Hz. leaflet-rotate's own compass handler throttles to 100 ms, which is
-// the right order of magnitude; the angle gate on top stops a phone lying still on a table from repainting
-// the map over sensor noise.
-const BEARING_MIN_INTERVAL_MS = 120;
-const BEARING_MIN_DELTA_DEG = 1.5;
+// Sensor readings arrive at up to 60 Hz, and each applied bearing costs real paint work (see the sweep
+// suppression below), so updates are coalesced into ANIMATION FRAMES: the newest reading wins and at most one
+// bearing lands per frame. A fixed 120 ms timer was the first cut and was itself part of the stutter the user
+// reported -- 8 updates a second in 1.5° steps reads as stepping even when every step is cheap. The angle gate
+// stays, small, so a phone lying still on a table does not repaint the map over sensor noise.
+const BEARING_MIN_DELTA_DEG = 0.6;
+// How long after the last bearing change the map is considered "settled" and gets its one full update.
+const BEARING_SETTLE_MS = 220;
+// Renderer padding while "Blickrichtung oben" is on. The skip-if-covered guard alone is not enough: the
+// rotated viewport's bounding box GROWS from 0° to 45° and only shrinks after, so the first 45 degrees of any
+// sweep miss the cache and repaint anyway (measured: 61 repaints in a 90-step sweep). Padding the box out to
+// cover the whole rotation circle -- a square of the viewport's diagonal -- makes every angle a cache hit, at
+// the price of one bigger paint when the mode is switched. 0.7 was picked by measuring: it is the smallest of
+// the values tried that produces exactly ONE viewBox for a full 360° turn.
+const BEARING_RENDERER_PADDING = 0.7;
 const DEG_TO_RAD = Math.PI / 180;
+let bearingTarget = null;      // newest heading waiting for a frame
+let bearingFrame = null;       // pending requestAnimationFrame handle
+let bearingSettleTimer = null;  // `bearingSweeping` is declared next to the L.Renderer patch, see there
 
 function currentMapBearing(){
   return (canRotate && headingUp) ? appliedBearing : 0;
@@ -1469,20 +1514,71 @@ function currentMapBearing(){
 
 // Every bearing change goes through here. A plain function declaration on purpose: the browser suites can
 // call it, while the `map` object itself is unreachable from a separately evaluated script (see tests/README).
-// `force` skips the throttle -- used when the mode is switched, where the user is waiting for the map to move.
+// `force` applies immediately and skips both the frame coalescing and the angle gate -- used when the mode is
+// switched, where the user is waiting for the map to move, and by the tests, which cannot rely on animation
+// frames at all (a hidden page never runs them).
 function applyMapBearing(deg, force){
   if (!canRotate) return;
-  const now = Date.now();
-  const delta = Math.abs(((deg - appliedBearing + 540) % 360) - 180);
-  if (!force && (now - lastBearingAt < BEARING_MIN_INTERVAL_MS || delta < BEARING_MIN_DELTA_DEG)) return;
-  lastBearingAt = now;
-  appliedBearing = ((deg % 360) + 360) % 360;
+  bearingTarget = deg;
+  if (force) {
+    if (bearingFrame !== null) { cancelAnimationFrame(bearingFrame); bearingFrame = null; }
+    commitBearing(true);
+    return;
+  }
+  if (bearingFrame !== null) return;          // a frame is already pending; it will pick up the newest value
+  bearingFrame = requestAnimationFrame(() => { bearingFrame = null; commitBearing(false); });
+}
+
+function commitBearing(force){
+  if (bearingTarget === null) return;
+  const delta = Math.abs(((bearingTarget - appliedBearing + 540) % 360) - 180);
+  if (!force && delta < BEARING_MIN_DELTA_DEG) return;
+  lastBearingAt = Date.now();
+  appliedBearing = ((bearingTarget % 360) + 360) % 360;
+  bearingSweeping = true;
   map.setBearing(appliedBearing);
   refreshHeadingCone();
+  clearTimeout(bearingSettleTimer);
+  bearingSettleTimer = setTimeout(endBearingSweep, BEARING_SETTLE_MS);
+}
+
+// The map stopped turning: do now, once, the work that was skipped during the sweep. "rotate" is what the
+// vector renderers listen to, "moveend" is what makes the tile layers fill in whatever the new angle exposed
+// (on mobile Leaflet defaults updateWhenIdle to true, so a bearing change alone never reaches them).
+function endBearingSweep(){
+  bearingSettleTimer = null;
+  if (!bearingSweeping) return;
+  bearingSweeping = false;
+  map.fire("rotate");
+  map.fire("moveend");
+}
+
+// Every vector renderer in play, reached through the public map.getRenderer(). Leaflet keeps one renderer per
+// pane, so a throwaway layer per pane resolves to exactly the same cached instances the real layers draw into
+// -- which beats reaching into map._renderer / map._paneRenderers.
+function eachVectorRenderer(fn){
+  [{}, { pane: LIFT_BAND_PANE }, { pane: BUILDER_PANE }].forEach(opts => {
+    const r = map.getRenderer(L.polyline([], opts));
+    if (r) fn(r);
+  });
+}
+
+let baseRendererPadding = null;   // Leaflet's own default, captured before we touch it
+
+function setRendererPadding(p){
+  let changed = false;
+  eachVectorRenderer(r => {
+    if (baseRendererPadding === null) baseRendererPadding = r.options.padding;
+    const want = p === null ? baseRendererPadding : p;
+    if (r.options.padding !== want) { r.options.padding = want; changed = true; }
+  });
+  // A padding change only takes effect on the next _update, and the sweep guard would swallow that one.
+  if (changed) { bearingSweeping = false; map.fire("rotate"); }
 }
 
 function setHeadingUp(on){
   headingUp = !!on && canRotate;
+  if (canRotate) setRendererPadding(headingUp ? BEARING_RENDERER_PADDING : null);
   const btn = document.getElementById("bearingBtn");
   if (btn) {
     btn.classList.toggle("active", headingUp);

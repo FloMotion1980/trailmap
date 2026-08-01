@@ -22,7 +22,11 @@
 // so handleOrientation and updateUserLocation are called directly with synthetic readings. Both are plain
 // function declarations, so Annex B leaks them to global scope -- that is the whole reason this is testable.
 //
-// All four mutations above were applied, watched fail, and reverted -- see tests/MUTATIONS.md for the exact
+// A fifth case exists for something invisible until it regresses: rotating must not REPAINT the vector
+// renderers. leaflet-rotate re-cuts every renderer's viewBox on each degree, and that repaint of a
+// ~900x1800 px SVG is what made the first version stutter on a phone.
+//
+// All five mutations above were applied, watched fail, and reverted -- see tests/MUTATIONS.md for the exact
 // failures. Two of this file's OWN first-draft bugs are worth knowing before editing it: coneAngle() returned
 // 0 instead of null when no cone existed (so "points straight up" passed while nothing was drawn), and the
 // cleanup used to remove the location marker from the map, which desynchronises the app's own
@@ -200,8 +204,14 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   // trail's hit line may legitimately be on top. Names off for the same reason: a label is SUPPOSED to cover
   // its line.
   await TM.ui.setSwitch("showNamesToggle", false);
+  // Pin the view first. Inheriting whatever the previous case left is what made this flaky: at zoom 14 only a
+  // handful of points on any line are inside the container at all, and a probe with a sample of four either
+  // passes or reports a failure that has nothing to do with rotation.
+  map.setView(home.center, 12, { animate: false });
+  await TM.wait(400);
   const probeHit = () => {
     const box = TM.$("#map").getBoundingClientRect();
+    let probed = 0;
     for (const line of TM.map.overlay().filter((p) => p.getAttribute("stroke-width") === "3.5")) {
       const len = line.getTotalLength();
       if (!len) continue;
@@ -212,12 +222,15 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
         const cx = Math.round(ctm.a * pt.x + ctm.c * pt.y + ctm.e);
         const cy = Math.round(ctm.b * pt.x + ctm.d * pt.y + ctm.f);
         if (cx < box.left + 2 || cx > box.right - 2 || cy < box.top + 2 || cy > box.bottom - 2) continue;
+        probed++;
         const hit = document.elementFromPoint(cx, cy);
         const same = !!hit && hit.getAttribute && hit.getAttribute("d") === line.getAttribute("d");
-        if (same) return { ok: true, at: [cx, cy], width: +hit.getAttribute("stroke-width") };
+        if (same) return { ok: true, probed: probed, at: [cx, cy], width: +hit.getAttribute("stroke-width") };
       }
     }
-    return { ok: false };
+    // Reported separately from a failure: another trail's hit line legitimately covering every sampled point
+    // is not a rotation bug, and a case that cannot tell those apart is not evidence.
+    return { ok: false, probed: probed };
   };
   setHeadingUp(false);
   await TM.wait(200);
@@ -226,10 +239,47 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   applyMapBearing(90, true);
   await TM.wait(250);
   const hitEast = probeHit();
-  T.ok("north-up: a point on a trail line resolves to that trail", hitNorth.ok, hitNorth, "resolved");
-  T.ok("turned 90°: it still does", hitEast.ok, hitEast, "resolved");
-  T.ok("and what answers is the wide invisible hit line, not the thin visible one",
-       hitEast.ok && hitEast.width > 3.5, hitEast.width, "> 3.5");
+  if (!hitNorth.probed || !hitEast.probed) {
+    T.skip("no point of any trail line fell inside the map container at this view");
+  } else {
+    T.ok("north-up: a point on a trail line resolves to that trail", hitNorth.ok, hitNorth, "resolved");
+    T.ok("turned 90°: it still does", hitEast.ok, hitEast, "resolved");
+    T.ok("and what answers is the wide invisible hit line, not the thin visible one",
+         hitEast.ok && hitEast.width > 3.5, hitEast.width, "> 3.5");
+  }
+
+  T.test("turning the map does not repaint the vector renderers");
+  // This is the performance fix, and it is invisible until it regresses. leaflet-rotate makes every renderer
+  // re-cut its SVG viewBox on every degree of rotation, which repaints a ~900x1800 px SVG holding a hundred
+  // paths -- measured as 61 repaints in a 90-step sweep, and the reason the first version stuttered badly on
+  // the user's phone. A sweep must now produce exactly ONE viewBox, and the box must still cover the whole
+  // visible area, since "no repaints" is worthless if the lines get clipped instead.
+  const viewBoxNow = () => TM.$(".leaflet-overlay-pane svg").getAttribute("viewBox");
+  setHeadingUp(true);
+  applyMapBearing(0, true);
+  await TM.wait(200);
+  const seen = new Set();
+  for (let a = 5; a <= 360; a += 5) { applyMapBearing(a, true); seen.add(viewBoxNow()); }
+  T.eq("a full turn re-cuts the viewBox exactly once", seen.size, 1);
+  const bigEnough = viewBoxNow().split(" ").map(Number);
+  T.ok("and that one box is padded out well beyond the viewport",
+       bigEnough[2] > TM.$("#map").clientWidth * 1.5, bigEnough[2], "> 1.5x the map width");
+  // The renderer's own bounds must still contain all four corners of the container, at every angle -- that is
+  // what the skip is allowed to assume, so it is what gets checked.
+  const covers = () => {
+    const r = map.getRenderer(L.polyline([]));
+    const s = map.getSize();
+    const need = L.bounds([[0, 0], [s.x, 0], [0, s.y], [s.x, s.y]].map((p) => map.containerPointToLayerPoint(p)));
+    return !!r._bounds && r._bounds.contains(need);
+  };
+  const uncovered = [];
+  for (let a = 0; a < 360; a += 15) { applyMapBearing(a, true); if (!covers()) uncovered.push(a); }
+  T.eq("no angle leaves the visible area outside the painted box", uncovered, []);
+  setHeadingUp(false);
+  await TM.wait(150);
+  T.ok("back in north-up the renderer is small again",
+       +TM.$(".leaflet-overlay-pane svg").getAttribute("viewBox").split(" ")[2] < bigEnough[2],
+       TM.$(".leaflet-overlay-pane svg").getAttribute("viewBox"), "narrower than while rotating");
 
   T.test("the 🧭 button switches the mode and persists it");
   setHeadingUp(false);

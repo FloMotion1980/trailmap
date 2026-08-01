@@ -16,9 +16,9 @@ throttled to roughly one tick per minute, and every wait in the harness is a tim
 takes **~25 seconds** in a visible window and does not finish at all in a hidden one. A run that seems to
 hang part-way through is almost always this, not a failure.
 
-Current state, all green: **13 suites, 124 cases, 514 checks** — 98 cases / 444 checks in the browser
-(bearing 10, filters 10, geometry 15, infopanel 10, labels 9, lifts 8, lists 13, regions 13, solo 10) and
-26 cases / 70 checks in Python.
+Current state, all green: **13 suites, 125 cases, 523 checks** — 99 cases / 448 checks in the browser
+(bearing 11, filters 10, geometry 15, infopanel 10, labels 9, lifts 8, lists 13, regions 13, solo 10) and
+26 cases / 75 checks in Python.
 
 ## Serve the repo root, not the app folder
 
