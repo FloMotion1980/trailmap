@@ -202,6 +202,23 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   T.ok("the pill can report that it happened", /⇲/.test(TM.$("#liveStatusText").textContent),
        TM.$("#liveStatusText").textContent, "contains ⇲");
 
+  // Healing must not MOVE the map: whatever was in the middle stays in the middle, and a bearing survives.
+  // That is "der Mittelpunkt bleibt gleich, wenn man die Orientierung wechselt", and it is not free -- letting
+  // invalidateSize compensate instead (its pan:true) moves the view by 220-294 px, measured.
+  setHeadingUp(true);
+  applyMapBearing(60, true);
+  await TM.wait(150);
+  const el = TM.$("#map");
+  const watched = map.containerPointToLatLng([el.clientWidth / 2, el.clientHeight / 2]);
+  map._size = L.point(realSize.x, Math.round(realSize.y / 2));
+  ensureMapSizeCurrent();
+  await TM.wait(200);
+  const p = map.latLngToContainerPoint(watched);
+  T.near("the point that was in the middle is still in the middle",
+         Math.hypot(p.x - el.clientWidth / 2, p.y - el.clientHeight / 2), 0, 2);
+  T.eq("and the bearing came through unchanged", Math.round(currentMapBearing()), 60);
+  await northAgain();
+
   T.test("a padded bounds fit puts the target in the uncovered part of the map, at every bearing");
   const c = home.center;
   const bounds = L.latLngBounds([[c.lat - 0.015, c.lng - 0.045], [c.lat + 0.015, c.lng + 0.045]]);
@@ -351,6 +368,18 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   // it demanded the map arrive at 180° while the pipeline was still saying 108°, and the app was right.
   for (let i = 0; i < 30; i++) handleOrientation({ absolute: true, alpha: 180 });
   await TM.until(() => Math.round(currentMapBearing()) % 360 === 0, 1500);
+  // An animation can only be observed if the page is being painted, and this harness sometimes runs in a
+  // window that is not (animation frames stop entirely then). Skipping beats failing: a case that cannot see
+  // frames has nothing to say about the easing. The safety timer in startBearingTransition is what makes the
+  // app itself survive that state -- and the last two checks below still hold either way.
+  let frames = 0;
+  await new Promise((done) => {
+    const t0 = performance.now();
+    const tick = () => { frames++; if (performance.now() - t0 < 250) requestAnimationFrame(tick); else done(); };
+    requestAnimationFrame(tick);
+    setTimeout(done, 1200);
+  });
+  const canSeeFrames = frames >= 5;
   const seenAngles = new Set();
   let sampling = true;
   const sampler = () => { seenAngles.add(angleOf(".leaflet-rotate-pane")); if (sampling) requestAnimationFrame(sampler); };
@@ -363,9 +392,14 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   await TM.until(() => Math.round(currentMapBearing()) === aim, 2500);
   sampling = false;
   const between = [...seenAngles].filter((a) => a !== 0 && a !== 360 && a !== aim);
-  T.ok("the map was painted at many angles on the way", seenAngles.size >= 5, seenAngles.size, ">= 5 distinct");
-  T.ok("including angles that are neither the start nor the target", between.length >= 3,
-       between.length, ">= 3 intermediate angles");
+  if (!canSeeFrames) {
+    T.skip("this window is not being painted (" + frames + " animation frames in 250 ms), so the easing itself " +
+           "cannot be observed here; the arrival checks below still ran");
+  } else {
+    T.ok("the map was painted at many angles on the way", seenAngles.size >= 5, seenAngles.size, ">= 5 distinct");
+    T.ok("including angles that are neither the start nor the target", between.length >= 3,
+         between.length, ">= 3 intermediate angles");
+  }
   T.eq("and it arrives exactly where the heading pipeline points", Math.round(currentMapBearing()), aim);
   await northAgain();
   T.eq("switching off eases back to exactly north", angleOf(".leaflet-rotate-pane"), 0);

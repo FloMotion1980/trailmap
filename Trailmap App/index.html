@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=63" />
+<link rel="stylesheet" href="style.css?v=66" />
 </head>
 <body>
 <div id="fatalError">
@@ -1508,6 +1508,7 @@ const BEARING_RENDERER_PADDING = 0.7;
 // already gradual, because the heading it follows is EMA-smoothed.
 const BEARING_TRANSITION_MS = 500;
 let bearingTween = null;       // rAF handle while the mode transition is running
+let bearingTweenSafety = null; // timer that finishes the transition if the frames stop coming
 const DEG_TO_RAD = Math.PI / 180;
 let bearingTarget = null;      // newest heading waiting for a frame
 let bearingFrame = null;       // pending requestAnimationFrame handle
@@ -1518,6 +1519,20 @@ let bearingSettleTimer = null;  // `bearingSweeping` is declared next to the L.R
 // heading cone subtract 0° for that half second and point the wrong way while the map caught up.
 function currentMapBearing(){
   return canRotate ? appliedBearing : 0;
+}
+
+// appliedBearing is treated as the truth by the heading cone and by uiOffsetVector, so it must never be able to
+// disagree with the map. Everything we do goes through commitBearing, but leaflet-rotate ships gesture and
+// control handlers of its own -- all off at construction, verified in the vendored file (TouchGestures reads
+// `this.rotate = !!options.touchRotate`, false here, so its _rotating stays false; the two-finger rotation the
+// user thought they saw was the compass turning the map during a pinch). This keeps one truth regardless, so
+// that a future option or an upstream change cannot silently leave the cone pointing the wrong way. Registered
+// here, below the state it reads, because a listener above it would sit in that state's temporal dead zone.
+if (canRotate) {
+  map.on("rotate", () => {
+    const real = map.getBearing();
+    if (Math.abs(real - appliedBearing) > 0.01) { appliedBearing = real; refreshHeadingCone(); }
+  });
 }
 
 // Every bearing change goes through here. A plain function declaration on purpose: the browser suites can
@@ -1558,6 +1573,7 @@ function targetBearing(){
 
 function cancelBearingTween(){
   if (bearingTween !== null) { cancelAnimationFrame(bearingTween); bearingTween = null; }
+  if (bearingTweenSafety !== null) { clearTimeout(bearingTweenSafety); bearingTweenSafety = null; }
 }
 
 // Eases the map from wherever it is turned to whatever the mode now asks for. The aim is re-read on every
@@ -1570,7 +1586,9 @@ function stepBearingTween(from, startedAt){
   const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;   // ease-in-out, no library needed
   const delta = ((targetBearing() - from + 540) % 360) - 180;
   commitBearingNow(from + delta * eased);
-  bearingTween = p < 1 ? requestAnimationFrame(() => stepBearingTween(from, startedAt)) : null;
+  if (p < 1) { bearingTween = requestAnimationFrame(() => stepBearingTween(from, startedAt)); return; }
+  bearingTween = null;
+  if (bearingTweenSafety !== null) { clearTimeout(bearingTweenSafety); bearingTweenSafety = null; }
 }
 
 function startBearingTransition(){
@@ -1584,6 +1602,14 @@ function startBearingTransition(){
     return;
   }
   stepBearingTween(from, performance.now());
+  // Animation frames stop entirely while a page is backgrounded, and a transition frozen half way would not
+  // just look wrong -- it would BLOCK EVERY SENSOR UPDATE, because applyMapBearing bows out while a tween is
+  // pending. Switch apps during the half second and the map would never follow the compass again. So a timer
+  // lands on the target if the frames do not come back; it is cancelled by the last frame when they do.
+  bearingTweenSafety = setTimeout(() => {
+    bearingTweenSafety = null;
+    applyMapBearing(targetBearing(), true);   // force: cancels the stalled tween and applies at once
+  }, BEARING_TRANSITION_MS + 150);
 }
 
 function commitBearing(force){
@@ -1631,6 +1657,26 @@ function setRendererPadding(p){
   });
   // A padding change only takes effect on the next _update, and the sweep guard would swallow that one.
   if (changed) { bearingSweeping = false; map.fire("rotate"); }
+}
+
+// Restoring the mode on a cold start cannot ask for the compass permission on the spot: iOS only grants the
+// user activation DeviceOrientationEvent.requestPermission() needs inside a real gesture, and a page load is
+// not one. Without this the mode came up armed but silent, and the only way to get the prompt was to switch it
+// off and on again (user, 2026-08-02). So: attach right away where no permission exists, and otherwise wait
+// for the first tap ANYWHERE and use that one. Capture phase, so it still counts if the tap lands on a control
+// that stops propagation, and self-removing so it asks exactly once.
+function armCompassPermission(){
+  if (orientationHandler !== null) return;
+  const needsGesture = typeof DeviceOrientationEvent !== "undefined" &&
+                       typeof DeviceOrientationEvent.requestPermission === "function";
+  if (!needsGesture) { requestOrientationPermission(); return; }
+  const askOnce = () => {
+    document.removeEventListener("click", askOnce, true);
+    document.removeEventListener("touchend", askOnce, true);
+    if (orientationHandler === null) requestOrientationPermission();
+  };
+  document.addEventListener("click", askOnce, true);
+  document.addEventListener("touchend", askOnce, true);
 }
 
 function setHeadingUp(on){
@@ -1753,7 +1799,19 @@ function ensureMapSizeCurrent(){
   const el = map.getContainer();
   const s = map.getSize();
   if (Math.abs(s.x - el.clientWidth) <= 1 && Math.abs(s.y - el.clientHeight) <= 1) return false;
+  // Capture what the user is actually looking at BEFORE re-measuring, from the real element rather than from
+  // Leaflet's belief about it (a container point maps to a lat/lng through the pane offset, which is right
+  // even while the cached size is wrong). Then restore it afterwards.
+  //
+  // Neither of invalidateSize's own modes can do this. Its `pan` option means "shift by half the difference
+  // between the old and the new size": correct when the old size was real, a 294 px jump when it never was
+  // (measured, both ways). And iOS produces exactly the awkward middle case -- the layout settles in steps, so
+  // Leaflet compensates for the part it saw and the rest is left over. Restoring the point that was visible
+  // covers all three, which is what "der Mittelpunkt bleibt gleich, wenn man die Orientierung wechselt" asks
+  // for (user, 2026-08-02, after a version that only got it right when nothing had been left over).
+  const visibleCentre = map.containerPointToLatLng([el.clientWidth / 2, el.clientHeight / 2]);
   map.invalidateSize({ debounceMoveend: true, pan: false });
+  map.setView(visibleCentre, map.getZoom(), { animate: false });
   staleSizeFixes++;
   updateLiveStatus();   // the readout is the only way this is visible in the field; don't wait a second for it
   return true;
@@ -5269,10 +5327,11 @@ async function boot(){
     document.getElementById("showPlacesToggle").checked = showPlaces;
     applyLiveStatusOpen();
     document.getElementById("showDirectionArrowsToggle").checked = showDirectionArrows;
-    // Syncs the 🧭 button to the restored mode. The map itself still comes up north-up: no compass listener
-    // is attached until the user taps the locate or the 🧭 button, so there is no heading to turn to yet --
-    // which is also why the fit below needs no bearing correction.
+    // Syncs the 🧭 button to the restored mode, and gets the compass going for it -- see
+    // armCompassPermission for why that cannot simply happen here on iOS. The map still comes up north-up:
+    // no heading has arrived yet, which is also why the fit below needs no bearing correction.
     setHeadingUp(headingUp);
+    if (headingUp) armCompassPermission();
   }
   // Builder STATE before render(), because render() hides Tours while builder mode is on -- restoring it
   // afterwards left a reloaded page in builder mode with the Tours still showing until something else
@@ -5420,7 +5479,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v63"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v66"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

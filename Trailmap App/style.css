@@ -32,6 +32,13 @@ header{ padding: calc(14px + env(safe-area-inset-top, 0px)) 22px 12px; backgroun
    longer performs. */
 header h1{ font-family: 'Copperplate','Trebuchet MS',sans-serif; letter-spacing: 1.5px; font-size: 20px; margin:0; text-transform: uppercase; }
 header .sub{ font-family: Arial, sans-serif; font-size: 12.5px; color: #b9c6b6; }
+/* A landscape phone has 320-375 px of height in total, and the header costs it twice over: once for itself and
+   once because the map below it is what the follow mode is trying to show. Same elements, tighter (user,
+   2026-08-02). Deliberately not hidden: the region and Tourenbuilder buttons live in it. */
+html.landscape-compact header{ padding: calc(5px + env(safe-area-inset-top, 0px)) 14px 4px; gap:10px;
+  border-bottom-width:2px; }
+html.landscape-compact header h1{ font-size:15px; letter-spacing:1px; }
+html.landscape-compact header .sub{ font-size:11px; }
 .layout{ flex:1; display:flex; min-height:0; }
 aside{ width: 350px; min-width: 300px; background: var(--card-bg); border-right: 1px solid #d8ddd0;
   display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; transition: transform .25s ease;
@@ -443,23 +450,42 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
      readout centre on the whole stack instead of on the button. */
   grid-template-columns: auto auto;
   grid-template-rows: 46px auto auto;
-  column-gap:8px;
+  /* No gaps anywhere in this grid on purpose. Everything here belongs to the locate button and should look
+     like it GREW OUT of it (user, 2026-08-02: "es soll so aussehen, als kommt das aus dem Locator-Feld
+     raus"), so the readout tucks under its left edge and the buttons under its bottom edge, each overlapped
+     by the round button in front of it. The gaps that used to separate them made three unrelated controls. */
+  column-gap:0;
 }
-#locateCluster > #liveStatus{ grid-column:1; grid-row:1; align-self:center; }
-#locateBtn{ grid-column:2; grid-row:1; }
-#recenterBtn{ grid-column:2; grid-row:2; justify-self:end; margin-top:8px; }
+#locateCluster > #liveStatus{ grid-column:1; grid-row:1; align-self:center; position:relative; z-index:1; margin-right:-14px; }
+/* In front of everything it spawns, so the overlaps read as "from underneath". */
+#locateBtn{ grid-column:2; grid-row:1; position:relative; z-index:3; }
+/* Centred under the locate button rather than right-aligned: growing out of its middle, not out of its edge. */
+#recenterBtn{ grid-column:2; grid-row:2; justify-self:center; margin-top:-9px; position:relative; z-index:2; }
 /* Third row of the same stack: the north-up / heading-up switch. Row 2 keeps its space whether or not the
    re-centre button is currently faded in (it is only made transparent, never removed from the flow), so this
    sits at a stable position instead of jumping up and down as you pan. */
-#bearingBtn{ grid-column:2; grid-row:3; justify-self:end; margin-top:8px; }
+#bearingBtn{ grid-column:2; grid-row:3; justify-self:center; margin-top:-9px; position:relative; z-index:1; }
 /* Landscape phone is the one layout where the stack cannot grow downwards: #infoPanel docks along the whole
    right edge from y=125 (which is why #locateBtn is sized to end at 117), so a third row would put this
    button INSIDE the panel -- measured, and the panel wins the paint because it comes later in the DOM with
-   the same z-index. So in this layout the cluster is one row: readout, switch, locate. */
+   the same z-index. So in this layout the cluster is one row: readout, switch, locate -- and the switch tucks
+   under the locate button's left edge for the same "grew out of it" reason as everything else here. */
 html.landscape-compact #locateCluster{ grid-template-columns: auto auto auto; }
-html.landscape-compact #bearingBtn{ grid-column:2; grid-row:1; align-self:center; margin-top:0; }
+html.landscape-compact #bearingBtn{ grid-column:2; grid-row:1; align-self:center; justify-self:end;
+  margin-top:0; margin-right:-11px; z-index:1; }
 html.landscape-compact #locateBtn{ grid-column:3; }
-html.landscape-compact #recenterBtn{ grid-column:3; }
+html.landscape-compact #recenterBtn{ grid-column:3; justify-self:center; }
+/* Closer to the edge in landscape: the screen is 320-375 px tall there, so 16 px of inset on every side is
+   real map (user, 2026-08-02). Same for the drawer button on the other side. */
+html.landscape-compact #locateCluster{
+  top: calc(7px + env(safe-area-inset-top, 0px));
+  right: calc(7px + env(safe-area-inset-right, 0px));
+}
+html.landscape-compact #sidebarToggle{
+  top: calc(7px + env(safe-area-inset-top, 0px));
+  left: calc(7px + env(safe-area-inset-left, 0px));
+  padding: 7px 11px; font-size:12.5px;
+}
 #locateBtn{
   width:46px; height:46px; border-radius:50%;
   background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
@@ -595,12 +621,18 @@ html.landscape-compact #recenterBtn{ grid-column:3; }
 }
 #layerWarning.visible{ display:block; }
 
+/* Bottom centre, not top right: at top right it sat ON the locate cluster with a higher z-index and covered
+   the buttons in both orientations (user, 2026-08-02). The bottom centre is the one strip nothing else claims
+   -- the attribution is bottom right, the layer warning bottom left, the info panel ends above it in portrait
+   and docks right in landscape. */
 #offlineBanner{
   display:none; position:absolute;
-  top: calc(16px + env(safe-area-inset-top, 0px));
-  right: calc(16px + env(safe-area-inset-right, 0px));
+  /* Above Leaflet's attribution strip, which spans the full width at the very bottom -- at 10px they overlapped
+     by 7px (measured). */
+  bottom: calc(26px + env(safe-area-inset-bottom, 0px));
+  left:50%; transform: translateX(-50%);
   z-index:1500;
-  max-width: 150px;
+  max-width: min(150px, 60vw);
   background: rgba(194,59,48,0.95); color:#fff; font-family: Arial, sans-serif; font-size:11.5px; font-weight:600;
   padding:6px 10px; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.25); line-height:1.35;
 }
