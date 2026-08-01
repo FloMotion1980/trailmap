@@ -25,8 +25,15 @@ body{
   background-size: 420px 420px, 520px 520px;
 }
 .app{ display:flex; flex-direction:column; height:100vh; height:100dvh; }
-header{ padding: calc(14px + env(safe-area-inset-top, 0px)) 22px 12px; background: var(--forest-dark); color: #f2f3ec;
-  display:flex; align-items:baseline; gap:14px; flex-wrap:wrap; border-bottom: 3px solid var(--rust); }
+/* align-items:center, not the baseline it used to be: the row now starts with a square ☰ button, and a square
+   has no text baseline to align to -- it came out 5px off the title's optical centre (measured). Centring the
+   whole row is also what the user asked for when the title looked off in landscape, and it is the same request
+   either way. */
+/* 16px/12px rather than the 22px/14px it had: the ☰ moved in on 2026-08-02 and took ~38px out of the row, which
+   pushed the active-region name into an ellipsis at 375px. Trimming the padding and the gaps buys most of that
+   back without touching any of the elements themselves. */
+header{ padding: calc(14px + env(safe-area-inset-top, 0px)) 16px 12px; background: var(--forest-dark); color: #f2f3ec;
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap; border-bottom: 3px solid var(--rust); }
 /* No cursor:pointer and no hover colour: the title stopped being the scroll-to-top trigger on 2026-07-30
    (that is #sidebarTopBtn's job), and a heading that still looks clickable would promise an action it no
    longer performs. */
@@ -37,8 +44,7 @@ header .sub{ font-family: Arial, sans-serif; font-size: 12.5px; color: #b9c6b6; 
    2026-08-02). Deliberately not hidden: the region and Tourenbuilder buttons live in it. */
 /* The horizontal padding MUST carry the safe-area insets here. Without them the title ran under the phone's
    rounded corner in landscape and was only half readable (user, 2026-08-02) -- in portrait the same header gets
-   away with a flat 22px because the corners are far from the text. align-items:center rather than the baseline
-   the wide header uses: with everything this short, the title reads as vertically centred only if it is. */
+   away with a flat 22px because the corners are far from the text. */
 html.landscape-compact header{
   padding: calc(5px + env(safe-area-inset-top, 0px)) calc(14px + env(safe-area-inset-right, 0px))
            4px calc(14px + env(safe-area-inset-left, 0px));
@@ -59,15 +65,18 @@ aside{ width: 350px; min-width: 300px; background: var(--card-bg); border-right:
    depends on whether a scrollbar happens to be needed at that moment. */
 aside::-webkit-scrollbar{ display:none; width:0; height:0; }
 
+/* In the header now, not floating over the map -- see the markup for why. Sized and bordered like
+   #builderModeBtn so the header reads as one row of controls rather than three unrelated styles, and given a
+   fixed square so the glyph sits centred in it. Still touch-only: on desktop the sidebar is permanently in
+   flow, so this would open nothing. */
 #sidebarToggle{
-  display:none; position:absolute;
-  top: calc(16px + env(safe-area-inset-top, 0px));
-  left: calc(16px + env(safe-area-inset-left, 0px));
-  z-index:1900;
-  background: var(--forest-dark); color:#f2f3ec; border:none; border-radius:8px;
-  padding: 9px 14px; font-family: Arial, sans-serif; font-size:13px; font-weight:600;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.25); cursor:pointer; align-items:center; gap:6px;
+  display:none; align-self:center;
+  width:30px; height:30px; align-items:center; justify-content:center;
+  background:transparent; color:#f2f3ec; border:1px solid rgba(242,243,236,.45); border-radius:9px;
+  font-family: Arial, sans-serif; font-size:16px; line-height:1; cursor:pointer;
+  -webkit-tap-highlight-color: transparent;
 }
+#sidebarToggle:hover{ background:rgba(242,243,236,.12); }
 #sidebarBackdrop{ display:none; position:fixed; inset:0; background:rgba(15,20,16,0.45); z-index:2400; }
 #sidebarBackdrop.visible{ display:block; }
 
@@ -489,11 +498,7 @@ html.landscape-compact #locateCluster{
   top: calc(3px + env(safe-area-inset-top, 0px));
   right: calc(3px + env(safe-area-inset-right, 0px));
 }
-html.landscape-compact #sidebarToggle{
-  top: calc(3px + env(safe-area-inset-top, 0px));
-  left: calc(3px + env(safe-area-inset-left, 0px));
-  padding: 7px 11px; font-size:12.5px;
-}
+html.landscape-compact #sidebarToggle{ width:26px; height:26px; font-size:14px; }
 #locateBtn{
   width:46px; height:46px; border-radius:50%;
   background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
@@ -593,12 +598,12 @@ html.landscape-compact #sidebarToggle{
 #liveStatusPanel{
   display:flex; align-items:center; gap:6px;
   overflow:hidden; white-space:nowrap;
-  /* Capped so the cluster can never reach the Trails button on the left, whatever the readout says: the
-     reserved 176px are that button plus both gaps plus the locate button plus the margins. Without it a wide
-     reading (3-digit accuracy, "10 min", 3-digit counters) grew back into it -- expanded it already sat 5px
-     away at 375px. The tail is what gets cut, which is why the counters are last: accuracy and fix age are
-     the parts worth reading first. */
-  max-width: min(320px, calc(100vw - 196px)); padding:6px 4px 6px 14px;
+  /* Capped so a wide reading (3-digit accuracy, "10 min", 3-digit counters) can never run off the left edge.
+     The reserve used to be 196px, because the drawer handle floated over the map at the top left and the pill
+     grew into it; that handle moved into the header on 2026-08-02, so what has to be kept free now is only the
+     locate cluster's own width plus its margins. The tail is what gets cut, which is why the counters are last:
+     accuracy and fix age are the parts worth reading first. */
+  max-width: min(320px, calc(100vw - 76px)); padding:6px 4px 6px 14px;
   transition: max-width .22s ease, padding .22s ease, opacity .18s ease;
 }
 #liveStatus.collapsed #liveStatusPanel{ max-width:0; padding-left:0; padding-right:0; opacity:0; }
