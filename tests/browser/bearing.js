@@ -59,6 +59,14 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     return Math.round(((Math.atan2(n[1], n[0]) * 180 / Math.PI) + 360) % 360);
   };
   const parentClassOf = (sel) => { const el = TM.$(sel); return el && el.parentElement ? el.parentElement.className : "(missing)"; };
+  // Switching the mode EASES the map round over BEARING_TRANSITION_MS, so "off" is not instantly north any
+  // more. Every case that switches off and then measures has to wait for the value, not for a guessed delay --
+  // a fixed sleep here would either be flaky or hide a transition that got slower.
+  const northAgain = async () => {
+    setHeadingUp(false);
+    await TM.until(() => Math.round(currentMapBearing()) % 360 === 0, 2500);
+    await TM.wait(80);
+  };
   // Null on purpose when there is no cone at all, and every caller has to check: an earlier version returned
   // 0 in that case, which sailed through "points straight up" while nothing was drawn.
   const coneAngle = () => {
@@ -117,6 +125,9 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   updateUserLocation({ coords: { latitude: map.getCenter().lat, longitude: map.getCenter().lng, accuracy: 12, heading: null } }, false);
   handleOrientation({ absolute: true, alpha: 270 });     // Android absolute: 360-270 => heading 90, due east
   await TM.until(() => TM.$(".geo-cone"), 2000);
+  // Switching the mode EASES the map round over half a second now, so the bearing arrives a few frames after
+  // the reading does. Waiting for the value is the point; a fixed sleep would only hide a slow transition.
+  await TM.until(() => currentMapBearing() === 90, 2500);
   const cone = TM.$(".geo-cone");
   T.ok("the synthetic fix produced a location marker carrying a cone", !!cone, !!cone, true);
   if (!cone) {
@@ -125,8 +136,7 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     T.eq("the map followed the heading", currentMapBearing(), 90);
     T.eq("the cone is shown", cone.style.display, "block");
     T.ok("and it points straight up", coneAngle() !== null && Math.abs(coneAngle()) <= 1, coneAngle(), "0 ±1");
-    setHeadingUp(false);
-    await TM.wait(120);
+    await northAgain();
     T.eq("back to north-up the map is straight", angleOf(".leaflet-rotate-pane"), 0);
     T.ok("and the same cone now points east instead", coneAngle() !== null && Math.abs(coneAngle() - 90) <= 1,
          coneAngle(), "90 ±1");
@@ -168,8 +178,7 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     wander.push(Math.round(Math.hypot(d.x - atNorth.x, d.y - atNorth.y)));
   }
   T.eq("turning the map does not move it off that point", wander.filter((px) => px > 2), []);
-  setHeadingUp(false);
-  await TM.wait(150);
+  await northAgain();
   const back = dotScreen();
   T.near("and switching back to north-up does not move it either",
          Math.hypot(back.x - atNorth.x, back.y - atNorth.y), 0, 2);
@@ -230,8 +239,7 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   map.setView(home.center, 14, { animate: false });      // arrows only exist above START_DOT_MIN_ZOOM (13)
   await TM.ui.setSwitch("showDirectionArrowsToggle", true);
   await TM.until(() => TM.$$(".direction-arrow-icon").length > 0, 3000);
-  setHeadingUp(false);
-  await TM.wait(150);
+  await northAgain();
   const iconNorth = TM.$(".direction-arrow-icon").style.transform;
   const glyphNorth = TM.$(".direction-arrow-icon .direction-arrow").style.transform;
   setHeadingUp(true);
@@ -286,8 +294,7 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     // is not a rotation bug, and a case that cannot tell those apart is not evidence.
     return { ok: false, probed: probed };
   };
-  setHeadingUp(false);
-  await TM.wait(200);
+  await northAgain();
   const hitNorth = probeHit();
   setHeadingUp(true);
   applyMapBearing(90, true);
@@ -329,11 +336,39 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   const uncovered = [];
   for (let a = 0; a < 360; a += 15) { applyMapBearing(a, true); if (!covers()) uncovered.push(a); }
   T.eq("no angle leaves the visible area outside the painted box", uncovered, []);
-  setHeadingUp(false);
-  await TM.wait(150);
+  await northAgain();
   T.ok("back in north-up the renderer is small again",
        +TM.$(".leaflet-overlay-pane svg").getAttribute("viewBox").split(" ")[2] < bigEnough[2],
        TM.$(".leaflet-overlay-pane svg").getAttribute("viewBox"), "narrower than while rotating");
+
+  T.test("switching the mode eases the map round instead of snapping it");
+  // The user asked for this after riding with the first version: a mode switch is a jump of up to 180°, and
+  // done in one frame it is jarring. Sampled per animation frame, so it fails both if the animation is gone
+  // (one angle) and if it never finishes (never reaches the target).
+  await northAgain();
+  // Fed repeatedly on purpose: handleOrientation runs an EMA with factor 0.2, so ONE reading of 180° only
+  // moves the smoothed heading a fifth of the way there. Assuming otherwise was this case's own first bug --
+  // it demanded the map arrive at 180° while the pipeline was still saying 108°, and the app was right.
+  for (let i = 0; i < 30; i++) handleOrientation({ absolute: true, alpha: 180 });
+  await TM.until(() => Math.round(currentMapBearing()) % 360 === 0, 1500);
+  const seenAngles = new Set();
+  let sampling = true;
+  const sampler = () => { seenAngles.add(angleOf(".leaflet-rotate-pane")); if (sampling) requestAnimationFrame(sampler); };
+  requestAnimationFrame(sampler);
+  setHeadingUp(true);
+  // targetBearing() is mode-dependent by design -- it answers "north" while the mode is off -- so it can only
+  // be read once the mode is on. Reading it a line earlier made this case demand a turn to 0°.
+  const aim = Math.round(targetBearing());
+  T.ok("the heading pipeline is pointing somewhere worth turning to", Math.abs(aim - 180) <= 2, aim, "180 ±2");
+  await TM.until(() => Math.round(currentMapBearing()) === aim, 2500);
+  sampling = false;
+  const between = [...seenAngles].filter((a) => a !== 0 && a !== 360 && a !== aim);
+  T.ok("the map was painted at many angles on the way", seenAngles.size >= 5, seenAngles.size, ">= 5 distinct");
+  T.ok("including angles that are neither the start nor the target", between.length >= 3,
+       between.length, ">= 3 intermediate angles");
+  T.eq("and it arrives exactly where the heading pipeline points", Math.round(currentMapBearing()), aim);
+  await northAgain();
+  T.eq("switching off eases back to exactly north", angleOf(".leaflet-rotate-pane"), 0);
 
   T.test("the 🧭 button switches the mode and persists it");
   setHeadingUp(false);
@@ -346,8 +381,8 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   T.eq("and it is written to the saved state",
        JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}").headingUp, true);
   btn.click();
-  await TM.wait(120);
-  T.eq("a second tap goes back to north", currentMapBearing(), 0);
+  await TM.until(() => Math.round(currentMapBearing()) % 360 === 0, 2500);
+  T.eq("a second tap goes back to north", Math.round(currentMapBearing()), 0);
   T.eq("the button is no longer marked", btn.classList.contains("active"), false);
   T.eq("and that is persisted too",
        JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}").headingUp, false);

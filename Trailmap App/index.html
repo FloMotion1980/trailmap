@@ -1503,13 +1503,21 @@ const BEARING_SETTLE_MS = 220;
 // the price of one bigger paint when the mode is switched. 0.7 was picked by measuring: it is the smallest of
 // the values tried that produces exactly ONE viewBox for a full 360° turn.
 const BEARING_RENDERER_PADDING = 0.7;
+// Switching the mode is the one bearing change that is a JUMP rather than a follow: up to 180° at once, which
+// the user described as too abrupt. So it is eased instead, over half a second. Every other bearing change is
+// already gradual, because the heading it follows is EMA-smoothed.
+const BEARING_TRANSITION_MS = 500;
+let bearingTween = null;       // rAF handle while the mode transition is running
 const DEG_TO_RAD = Math.PI / 180;
 let bearingTarget = null;      // newest heading waiting for a frame
 let bearingFrame = null;       // pending requestAnimationFrame handle
 let bearingSettleTimer = null;  // `bearingSweeping` is declared next to the L.Renderer patch, see there
 
+// What the map is ACTUALLY turned to, which is not the same as "is the mode on": during the eased switch back
+// to north the mode is already off while the map is still part-way round. Keying this on `headingUp` made the
+// heading cone subtract 0° for that half second and point the wrong way while the map caught up.
 function currentMapBearing(){
-  return (canRotate && headingUp) ? appliedBearing : 0;
+  return canRotate ? appliedBearing : 0;
 }
 
 // Every bearing change goes through here. A plain function declaration on purpose: the browser suites can
@@ -1521,12 +1529,61 @@ function applyMapBearing(deg, force){
   if (!canRotate) return;
   bearingTarget = deg;
   if (force) {
-    if (bearingFrame !== null) { cancelAnimationFrame(bearingFrame); bearingFrame = null; }
-    commitBearing(true);
+    // force means "this value, now", so it also wins over a running mode transition.
+    cancelBearingTween();
+    commitBearingNow(deg);
     return;
   }
+  // A mode transition is running: it re-reads the newest heading itself every frame (see stepBearingTween), so
+  // letting sensor readings through here as well would have the two fighting over the same value.
+  if (bearingTween !== null) return;
   if (bearingFrame !== null) return;          // a frame is already pending; it will pick up the newest value
   bearingFrame = requestAnimationFrame(() => { bearingFrame = null; commitBearing(false); });
+}
+
+// Apply a bearing immediately, skipping both the frame coalescing and the angle gate. The one path the mode
+// transition uses, and the one `force` uses -- separated so that a forced call can cancel the transition
+// without the transition cancelling itself on every frame.
+function commitBearingNow(deg){
+  if (bearingFrame !== null) { cancelAnimationFrame(bearingFrame); bearingFrame = null; }
+  bearingTarget = deg;
+  commitBearing(true);
+}
+
+// Where the bearing wants to be right now: north in mode 1, the newest smoothed heading in mode 2.
+function targetBearing(){
+  if (!headingUp) return 0;
+  return smoothedCompassHeading === null ? appliedBearing : smoothedCompassHeading;
+}
+
+function cancelBearingTween(){
+  if (bearingTween !== null) { cancelAnimationFrame(bearingTween); bearingTween = null; }
+}
+
+// Eases the map from wherever it is turned to whatever the mode now asks for. The aim is re-read on every
+// frame rather than captured once, so a rider who keeps turning while the animation runs is followed instead
+// of being overshot and then corrected. The shortest way round is taken each frame, so 350° -> 10° turns 20°
+// forwards and not 340° backwards.
+function stepBearingTween(from, startedAt){
+  const now = performance.now();
+  const p = Math.min(1, (now - startedAt) / BEARING_TRANSITION_MS);
+  const eased = p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2;   // ease-in-out, no library needed
+  const delta = ((targetBearing() - from + 540) % 360) - 180;
+  commitBearingNow(from + delta * eased);
+  bearingTween = p < 1 ? requestAnimationFrame(() => stepBearingTween(from, startedAt)) : null;
+}
+
+function startBearingTransition(){
+  if (!canRotate) return;
+  cancelBearingTween();
+  const from = appliedBearing;
+  const delta = Math.abs(((targetBearing() - from + 540) % 360) - 180);
+  // Nothing worth animating, or the platform says no animations: land on it directly.
+  if (delta < 1 || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    applyMapBearing(targetBearing(), true);
+    return;
+  }
+  stepBearingTween(from, performance.now());
 }
 
 function commitBearing(force){
@@ -1586,11 +1643,9 @@ function setHeadingUp(on){
                           : "Karte: Norden oben — tippen für Blickrichtung oben";
     btn.setAttribute("aria-pressed", headingUp ? "true" : "false");
   }
-  if (!headingUp) {
-    if (appliedBearing !== 0) applyMapBearing(0, true);   // already north: don't re-project every layer for nothing
-  } else if (smoothedCompassHeading !== null) {
-    applyMapBearing(smoothedCompassHeading, true);
-  }
+  // Eased rather than snapped, both ways -- switching the mode is a jump of up to 180° and the abrupt version
+  // was jarring (user, 2026-08-02). Nothing to do when the map is already north and stays north.
+  if (headingUp || appliedBearing !== 0) startBearingTransition();
   // Armed but no reading yet: the map stays north up until the first heading arrives. Nothing is announced
   // here on purpose -- the pill's 🧭 field already distinguishes the four reasons (✕D refused, ✕R asked
   // wrongly, ✕! no sensor, E7 events without a heading), and a second error surface would just disagree.
@@ -1707,8 +1762,20 @@ function ensureMapSizeCurrent(){
 // The same repair for the whole map rather than only the next centring: a stale size also misplaces the
 // rotation pivot, the pinch-zoom anchor and every bounds fit. Deliberately on a timer AFTER Leaflet's own
 // handler has run, which is the one that is too early on iOS.
+//
+// And then put the tracked position back under the rotation centre. Leaflet does preserve the map's centre
+// across a resize -- measured, a portrait/landscape flip keeps it to within ~3 m -- but only when the size it
+// compensates with was the real one, and on iOS the layout settles in steps (this very listener reports ⇲ in
+// the pill on a plain desktop resize, so the stale intermediate is not hypothetical). While following, "keep
+// me centred" is what the mode promises, so it is stated here rather than left to the next fix a second later.
+// Not while detached: the user panned away on purpose.
 ["orientationchange", "resize"].forEach(ev => window.addEventListener(ev, () => {
-  setTimeout(ensureMapSizeCurrent, 300);
+  setTimeout(() => {
+    ensureMapSizeCurrent();
+    if (followMode && !followDetached && userLocationMarker) {
+      map.panTo(userLocationMarker.getLatLng(), { animate: false });
+    }
+  }, 300);
 }));
 
 function updateUserLocation(pos, isFirstFix){
