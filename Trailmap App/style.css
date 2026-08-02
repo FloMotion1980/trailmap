@@ -141,10 +141,10 @@ details.filter-section:last-of-type{ border-bottom: none; padding-bottom: 0; }
    same length. */
 #secMapOptions{ border-bottom: 1px solid #e3e6da; padding-bottom: 8px; }
 /* margin lives on summary (like the old .filters h2 it replaced), not as a blanket margin-top on
-   every child — a blanket rule here previously fought with .region-groups-container's own, larger
-   margin-top (needed so the first region-group-block's legend, which overlaps its box's top border
-   via a negative translateY, has room to sit without covering this "Region" heading — regression
-   found by the user 2026-07-23, fixed by going back to per-child margins instead of a generic one). */
+   every child — a blanket rule here previously fought with .region-groups-container's own margin-top
+   (regression found by the user 2026-07-23, fixed by going back to per-child margins instead of a
+   generic one). The container's margin no longer has to clear an overhanging legend, but the reason
+   for keeping the margins per-child stands. */
 details.filter-section summary{ font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--stone);
   font-weight:700; cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between;
   margin: 0 0 8px; -webkit-tap-highlight-color: transparent; }
@@ -212,77 +212,48 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    button is inside this container now, so it stacked with the section's own 8px padding-bottom and made the
    Region/Filter boundary 31px where every other section boundary is 17px. margin-top STAYS 18px -- the first
    box's legend is lifted onto its top border and needs the room, see the note above. */
-.region-groups-container{ display:flex; flex-direction:column; gap: 18px; margin-top: 18px; }
-.region-group-block{ position: relative; border: 1.5px solid #d3d9c9; border-radius: 10px;
-  padding: 14px 10px 10px; }
-.region-group-row{ position: absolute; top: 0; left: 8px; transform: translateY(-50%);
-  display:flex; align-items:center; gap: 4px; background: var(--card-bg); padding: 0 4px; }
-.region-group-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+/* margin-top is back to a normal 10px: the 18px existed to give the old absolutely-positioned legend room to
+   hang above its box without covering the "Regionen" heading. Nothing hangs any more. */
+.region-groups-container{ display:flex; flex-direction:column; gap: 18px; margin-top: 10px; }
+/* NO TOP BORDER (user, 2026-08-02) -- and that is what makes the rest of this simple. The legend used to sit
+   across that line, which is why it needed absolute positioning, a negative translateY and an opaque
+   background to cut a gap in it. Left, right and bottom read as a container just as well, and the row can
+   just be a row. */
+.region-group-block{ position: relative; border: 1.5px solid #d3d9c9; border-top: none;
+  border-radius: 0 0 10px 10px; padding: 0 10px 10px; }
+/* In flow at the top of the box. The left padding is deliberately 0 against the box's own 10px, so the name
+   button sits as far left as the box allows: the user asked for that specifically, as the emphasis that shows
+   where a region's block begins. */
+.region-group-row{ display:flex; align-items:center; gap: 6px; margin: 0 0 9px -10px; padding-left: 10px; }
 .region-group-label{ font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px;
   color: var(--forest); font-weight: 700; font-family: Arial, sans-serif;
   cursor: pointer; padding: 6px 13px; border: 1.5px solid var(--forest); border-radius: 20px;
   background: transparent; transition: all .15s ease; }
 .region-group-label:hover{ background: var(--forest); color: #fff; }
 .region-group-label.all-active{ background: var(--forest); color: #fff; }
-/* Pinned to the box's own top-right corner (user, 2026-07-28: "ganz rechts oben ins Eck des Vierecks der
-   Region"). Sitting in the legend row meant sharing a flex line with a label whose width depends on the
-   region's name and trail count, so it never had a predictable position. Lifted by the same translateY(-50%)
-   as the legend so both straddle the border line, and it cuts its own gap in that border via the background,
-   exactly like the legend does. */
-/* Two requirements that pull against each other, so both are handled explicitly:
-   1. The PIN (not the button box) lines up with the section triangles at x=333. Aligning the box was the
-      first attempt and the user still saw it off, because 6px of padding left the pin 7px short.
-   2. The pin is CENTRED in the box, which becomes visible on hover/touch. The fix for (1) was all-left
-      padding, which parked the pin against the box's right edge -- visible as soon as the background showed.
-   So: a fixed-size flex-centred box, shifted right by half its slack so the centred pin still lands on 333.
-   The box therefore overhangs the region box's border by ~6px, into the sidebar's own padding where there is
-   nothing to collide with. Size stays 30x28 -- the same tap target as before, not shrunk. */
-/* ✕ took the top-right slot on 2026-07-31 (user's request) -- the spot the 📍 had held since 2026-07-28, and
-   for the same reason: it is the one position in the box that does not move with the region's name length.
-   Straddles the top border like the legend, with the --card-bg background cutting its own gap in it.
-   The two alignment requirements from the 📍's time here still apply and are why the box is 30x28 with a
-   -6px offset: the GLYPH lines up with the section triangles at x=333, and it stays centred in its own box
-   (which becomes visible on hover), so the slack is spent on the offset rather than on padding. */
-/* ONE group holds both buttons, stacked, ✕ on top and 📍 directly under it. The group carries the opaque
-   --card-bg, not the buttons: side by side on the border line the grey border showed through the 6px gap
-   between them and read as a seam (user, 2026-07-31: "die graue Linie ... sieht komisch aus"). One background
-   over both cuts one clean gap in the border, and the buttons touch, so there is nothing left to show through.
-   translateY(-14px) rather than -50%: it puts the ✕ centred on the border (its own half-height), which is what
-   keeps its glyph on the same vertical line as the section carets — the group as a whole is 54px tall and
-   centring THAT would push the ✕ up by 13px.
-   `right: -15px` = half the group's own 30px width, so the box's RIGHT BORDER runs through the middle of both
-   glyphs (user, 2026-08-01: all three elements centred on the line that frames the regions). It used to sit
-   just inside at -6px, which aligned it with the section carets but left both of them 10px shy of the line.
-   The 10px this frees inside the box is what let the legend and the chips grow below. */
-.region-group-corner{ position: absolute; top: 0; right: -15px; transform: translateY(-14px);
-  display: flex; flex-direction: column; align-items: center;
-  background: var(--card-bg); border-radius: 6px; overflow: hidden; }
-.region-group-close-btn{
-  border:none; cursor:pointer; line-height:1;
+/* Both of these now live in the legend row, in flow, so all the geometry that used to pin them onto the box's
+   top border is gone: the fixed 30x28 boxes, the -15px offset that put the border line through their glyphs,
+   the shared opaque background that stopped the grey line showing through the gap between them, the
+   translateY(-14px). Every one of those existed to make a button readable while it straddled a line that is no
+   longer drawn -- see the note on .region-group-block. What is left is what they always needed: a big enough
+   tap target and a sensible place in the row. */
+.region-group-fly-btn, .region-group-close-btn{
+  border:none; background:transparent; cursor:pointer; line-height:1;
   display:flex; align-items:center; justify-content:center;
-  width:30px; height:28px; padding:0; border-radius: 6px;
-  background: transparent; font-size: 13px; font-weight: 700; color: var(--stone); }
+  width:28px; height:26px; padding:0; border-radius:7px; flex:0 0 auto;
+}
+.region-group-fly-btn{ font-size:13px; }
+.region-group-fly-btn:hover{ background:#eef1e8; }
+/* Pushed to the far end of the row: closing a region is the one destructive thing in this box, and it should
+   not sit next to the two buttons you press all the time. */
+.region-group-close-btn{ margin-left:auto; font-size:13px; font-weight:700; color: var(--stone); }
 .region-group-close-btn:hover{ background: #f7e2df; color: var(--rot); }
-/* The 📍 hangs INTO the box below the border, so the first line of chips has to keep clear of it. That is a
-   FLOATED SPACER inside the row, not padding on the row: padding reserved the width on every line, which cost
-   Bike Kingdom's nine sub-regions their two-per-row layout (user, 2026-08-01). A float is reserved only on the
-   lines it actually occupies. Note the row therefore cannot be `display:flex` -- flex items ignore floats -- so
-   the chips are inline-block in a block row, and the 6px "gap" becomes a margin on the chips themselves. */
+/* Plain block row of inline-block chips. It used to need a floated spacer so the first line could flow around
+   the 📍 hanging into the box's top-right corner; the 📍 is in the legend row now, so the chips get the full
+   width on every line. Kept as inline-block rather than flex only because that is what already works with the
+   count-width reservation on each chip. */
 .region-group-chips{ display:block; }
 .region-group-chips .chip{ display:inline-block; margin: 0 6px 6px 0; vertical-align:top; }
-.region-group-chip-spacer{ float:right; width:18px; height:24px; }
-.region-group-fly-btn{ border:none; cursor:pointer; line-height:1;
-  display:flex; align-items:center; justify-content:center;
-  width:30px; height:26px; padding:0; border-radius: 6px;
-  background: transparent; font-size: 14px; color: var(--stone); }
-.region-group-fly-btn:hover{ background: #e4ece0; color: var(--forest-dark); }
-/* Keeps a long region name out from under the two corner buttons: the legend is absolutely positioned and
-   would otherwise run straight under them ("Bikeland Schladming-Dachstein (29)" gets close on a 350px
-   sidebar). It wraps instead of being truncated -- a shortened region name is worse than a taller legend. */
-/* Was 74px while the corner group sat inside the box. With the group centred ON the border it only reaches
-   15px in, so the legend gets that room back -- which is what stops "Bikeland Schladming-Dachstein (29)"
-   from wrapping to two lines. */
-.region-group-row{ max-width: calc(100% - 34px); }
 .region-group-label{ white-space: normal; text-align: left; }
 /* Under the boxes, full width, so "what have I got" and "add one more" read as one list. Disabled rather than
    hidden at the cap -- a button that disappears at three explains nothing. */
@@ -355,19 +326,23 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 #infoPanel .ip-close:hover{ color: var(--rust); }
 #infoPanel h3{
   font-family:'Copperplate','Trebuchet MS',sans-serif; font-size:14px; text-transform:uppercase;
-  letter-spacing:.5px; color:var(--forest-dark); margin:0 22px 8px 0; border-bottom:1px solid #ddd; padding-bottom:6px;
+  letter-spacing:.5px; color:var(--forest-dark); margin:0 0 8px; border-bottom:1px solid #ddd;
+  /* Padding, not margin, for the ✕'s clearance: as a margin it shortened the rule under the name by those
+     22px, which read as a line that does not reach the edge (user, 2026-08-02). Padding keeps the text clear
+     of the button while the border still spans the panel. */
+  padding:0 22px 6px 0;
 }
 #infoPanel .ip-trail{ font-size:12.5px; margin-bottom:10px; line-height:1.5; }
 .ele-chart{ display:block; width:100%; height:46px; margin:4px 0 0; }
 .ele-chart .ele-label{ font-size:7px; fill:#4c574d; font-family:Arial, sans-serif; }
 .ele-chart .ele-hover-dot{ fill:var(--blau); stroke:#fff; stroke-width:1.2; }
-#infoPanel .ip-actions{ margin-top:2px; line-height:1; }
+/* .ip-actions is gone (2026-08-02): its one button moved up onto the stats line, where there was already room,
+   and a container that exists to hold a single inline button is a line of layout for nothing. */
 #infoPanel .ip-segment-info{ margin-top:8px; padding:4px 0 4px 8px; font-size:11.5px; line-height:1.4; }
 #infoPanel .ip-segment-info b{ font-size:12.5px; }
 /* Base -> top station and height gained, in a lift's own (much sparser) info panel. */
 #infoPanel .ip-lift-stats{ margin-top:6px; font-size:13px; }
-#infoPanel .ip-actions .ip-link,
-#infoPanel .ip-actions .gpx-download-btn{ vertical-align:middle; }
+#infoPanel .ip-trail .gpx-download-btn{ vertical-align:middle; }
 #infoPanel .ip-trail .dot-start{ color:#3fbf5e; font-size:19px; vertical-align:middle; }
 #infoPanel .ip-trail .dot-end{ color:#e0392b; font-size:19px; vertical-align:middle; }
 #infoPanel .ip-trail b{ font-size:13.5px; }
@@ -376,8 +351,12 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   font-size:11.5px; padding:4px 10px; border-radius:14px;
 }
 #infoPanel .ip-trail .ip-link:hover{ background: var(--rust-light); }
+/* margin-top:0 and a little tighter than .ip-link's shared padding: on this line it needs to fit AFTER the two
+   round buttons, and in portrait it was four pixels short of doing so (measured: 43px free, 47px needed). The
+   padding is what those four pixels came from. */
 #infoPanel .ip-trail .gpx-download-btn{
-  background: var(--forest); font-size:10.5px; padding:3px 8px; border:none; cursor:pointer; font-family:Arial, sans-serif;
+  background: var(--forest); font-size:10.5px; padding:3px 6px; margin-top:0; border:none; cursor:pointer;
+  font-family:Arial, sans-serif;
 }
 #infoPanel .ip-trail .gpx-download-btn:hover{ background: var(--forest-dark); }
 #infoPanel .ip-trail .solo-btn{

@@ -39,11 +39,14 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   // evaluated script. Borrow the instance by capturing `this` from a prototype method that one of the app's
   // globally-reachable functions calls. Used only to read screen positions and to clean up afterwards --
   // every assertion about behaviour goes through the app's own functions or the painted DOM.
+  // Any app function that calls a map method will do; updateStartDotVisibility is the smallest one that reads
+  // getZoom() and changes nothing. (It used to borrow updateCurrentRegionLabel, which was removed on
+  // 2026-08-02 along with the label it wrote.)
   const grabMap = () => {
     let m = null;
-    const orig = L.Map.prototype.getCenter;
-    L.Map.prototype.getCenter = function () { m = this; return orig.apply(this, arguments); };
-    try { updateCurrentRegionLabel(); } finally { L.Map.prototype.getCenter = orig; }
+    const orig = L.Map.prototype.getZoom;
+    L.Map.prototype.getZoom = function () { m = this; return orig.apply(this, arguments); };
+    try { updateStartDotVisibility(); } finally { L.Map.prototype.getZoom = orig; }
     return m;
   };
   const map = grabMap();

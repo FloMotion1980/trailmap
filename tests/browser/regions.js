@@ -83,69 +83,63 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
   }
 
   async function regionCases(T) {
-  T.test("every active region has its own box with a ✕ and a 📍, diagonally opposite");
-  // The section became the place where regions are managed (2026-07-31): ✕ closes the region, the 📍 flies to
-  // it, and they sit in opposite corners so a mis-tap on a phone cannot turn "show me this" into "unload it".
+  T.test("every active region has its own box, with the row that names it at the top");
+  // Redesigned on 2026-08-02, at the user's request, and the old geometry is worth knowing about because these
+  // checks used to assert it: the ✕ and the 📍 were absolutely positioned onto the box's TOP border, stacked in
+  // one opaque group that cut a gap in that line. Everything that construction needed -- the negative
+  // translateY, the shared background, a floated spacer so the first chip line could dodge the pin -- existed
+  // only because the row straddled a border. The top border is gone now, so the row is simply the first thing
+  // in the box: the name, the 📍 beside it, the ✕ pushed to the far end.
   const boxes = TM.$$("#regionChips .region-group-block");
   T.eq("one box per active region", boxes.length, activeGroupCount());
   T.ok("each has a close button", boxes.every((b) => !!b.querySelector(".region-group-close-btn")), true, true);
   T.ok("each has a fly button", boxes.every((b) => !!b.querySelector(".region-group-fly-btn")), true, true);
+  T.eq("the box draws no top border", getComputedStyle(boxes[0]).borderTopWidth, "0px");
+  T.ok("but keeps the other three", ["borderLeftWidth", "borderRightWidth", "borderBottomWidth"]
+       .every((p) => parseFloat(getComputedStyle(boxes[0])[p]) > 0), true, true);
   // Geometry only means something once the sidebar is really laid out. It is 1px wide when the browser pane is
-  // not compositing, and every position then reads as nonsense -- better an honest skip than four checks that
-  // pass or fail at random.
+  // not compositing, and every position then reads as nonsense -- better an honest skip than checks that pass
+  // or fail at random.
   const laidOut = TM.$("aside").getBoundingClientRect().width > 120;
   if (!laidOut) {
     T.skip("sidebar not laid out (width " + Math.round(TM.$("aside").getBoundingClientRect().width) +
            "px) — open the drawer or use a wider viewport for the geometry checks");
   } else {
     const box = boxes[0].getBoundingClientRect();
-    const x = boxes[0].querySelector(".region-group-close-btn").getBoundingClientRect();
+    const label = boxes[0].querySelector(".region-group-label").getBoundingClientRect();
     const pin = boxes[0].querySelector(".region-group-fly-btn").getBoundingClientRect();
-    T.ok("✕ straddles the TOP border", Math.abs((x.top + x.bottom) / 2 - box.top) < 4,
-         Math.round((x.top + x.bottom) / 2 - box.top), "≈ 0 from the top edge");
-    // All three of the section caret, the ✕ and the 📍 are centred ON the box's right border (user,
-    // 2026-08-01). Checked as the glyph CENTRE against that border, not as "near the right edge" -- the group
-    // deliberately overhangs it by half its width now, so an edge-based check would read as broken.
-    T.ok("✕ is centred on the right border", Math.abs((x.left + x.right) / 2 - box.right) < 3,
-         Math.round((x.left + x.right) / 2 - box.right), "≈ 0 from the border");
-    const caretAfter = getComputedStyle(TM.$("#secRegion > summary"), "::after");
-    const caretMid = TM.$("#secRegion > summary").getBoundingClientRect().right +
-                     parseFloat(caretAfter.marginRight) + parseFloat(caretAfter.width) / 2;
-    T.ok("and so is the section caret above it", Math.abs(caretMid - box.right) < 3,
-         Math.round(caretMid - box.right), "≈ 0 from the same border");
-    // 📍 is STACKED directly under the ✕ inside one corner group. Three earlier positions lost, and the
-    // reasons are all still live: the bottom border collides with the next box's legend by construction; a
-    // footer row in flow costs a whole line per region; side by side on the border, the grey border showed
-    // through the gap between them and read as a seam.
-    T.eq("📍 sits directly under the ✕, with no gap", Math.round(pin.top - x.bottom), 0);
-    T.ok("and shares its vertical centre line", Math.abs((pin.left + pin.right) / 2 - (x.left + x.right) / 2) < 2,
-         Math.round((pin.left + pin.right) / 2 - (x.left + x.right) / 2), "≈ 0");
-    const corner = boxes[0].querySelector(".region-group-corner");
-    const cRect = corner.getBoundingClientRect();
-    T.ok("both are in one corner group", !!corner && corner.contains(boxes[0].querySelector(".region-group-fly-btn")),
-         !!corner, true);
-    // The shared opaque background is what hides the border between them. If it ever becomes transparent, the
-    // seam is back and nothing else notices.
-    const bg = getComputedStyle(corner).backgroundColor;
-    T.ok("the group's background is opaque", !/rgba\(0, 0, 0, 0\)|transparent/.test(bg), bg, "an opaque colour");
-    T.ok("and it covers the border line", cRect.top <= box.top && cRect.bottom > box.top,
-         [Math.round(cRect.top - box.top), Math.round(cRect.bottom - box.top)], "spans the top edge");
-    // The 📍 hangs into the box, so the wrapping chip row has to stay clear of it horizontally.
+    const x = boxes[0].querySelector(".region-group-close-btn").getBoundingClientRect();
+    const chip = boxes[0].querySelector(".region-group-chips .chip").getBoundingClientRect();
+    T.ok("the name sits at the box's left edge", label.left - box.left < 16,
+         Math.round(label.left - box.left), "< 16px in");
+    T.ok("the 📍 is beside the name, not under it", pin.left >= label.right - 1 &&
+         Math.abs((pin.top + pin.bottom) / 2 - (label.top + label.bottom) / 2) < 4,
+         [Math.round(pin.left - label.right), Math.round((pin.top + pin.bottom) / 2 - (label.top + label.bottom) / 2)],
+         "to the right, same centre line");
+    T.ok("the ✕ is at the far end of that row", box.right - x.right < 16 && x.left > pin.right,
+         [Math.round(box.right - x.right), Math.round(x.left - pin.right)], "at the right, after the pin");
+    // The reason this row exists as a row: the label used to overlap the first line of chips (user, 2026-08-02,
+    // "die Buttons liegen fast übereinander"). Nothing may overlap now.
+    T.ok("and the chips start below it, clear of the row", chip.top >= label.bottom - 1,
+         Math.round(chip.top - label.bottom), ">= 0");
+    T.ok("the chips get the box's full width, with no reserved corner",
+         !boxes[0].querySelector(".region-group-chip-spacer"), true, true);
+    // The chip rows now use the full width of the box, on every line -- the floated spacer that used to keep the
+    // first line clear of the pin is gone with the pin's old corner. Bike Kingdom's nine sub-regions are the
+    // case that made this matter: reserving that width on every line cost them their two-per-row layout.
     const chips = TM.$$(".region-group-chips .chip", boxes[0]);
-    // The group hangs half outside the box, so "clear of it" means clear of the part that is inside.
-    T.ok("the chips keep clear of it", Math.max(...chips.map((c) => c.getBoundingClientRect().right)) <= cRect.left + 1,
-         [Math.round(Math.max(...chips.map((c) => c.getBoundingClientRect().right))), Math.round(cRect.left)],
-         "chips left of the group");
+    T.ok("the chips run to the box's inner right edge when there are enough of them",
+         chips.length < 3 || Math.max(...chips.map((c) => c.getBoundingClientRect().right)) > box.right - 60,
+         [chips.length, Math.round(Math.max(...chips.map((c) => c.getBoundingClientRect().right))), Math.round(box.right)],
+         "not held back by a reserved corner");
     if (boxes.length > 1) {
-      const prev = boxes[0].getBoundingClientRect();
-      T.ok("and nothing hangs into the box below", prev.bottom < boxes[1].getBoundingClientRect().top,
-           [Math.round(prev.bottom), Math.round(boxes[1].getBoundingClientRect().top)], "boxes clear");
+      T.ok("and nothing hangs into the box below", box.bottom <= boxes[1].getBoundingClientRect().top,
+           [Math.round(box.bottom), Math.round(boxes[1].getBoundingClientRect().top)], "boxes clear");
     }
-    // A long region name must not run under the buttons -- the legend is absolutely positioned, so only its
-    // max-width keeps it off them.
+    // A long region name shares its row with the two buttons, so the row must not overflow the box.
     const legend = boxes[0].querySelector(".region-group-row").getBoundingClientRect();
-    T.ok("the legend stays clear of the corner group", legend.right <= cRect.left + 1,
-         [Math.round(legend.right), Math.round(cRect.left)], "legend ends before the group");
+    T.ok("the row fits inside the box", legend.right <= box.right + 1,
+         [Math.round(legend.right), Math.round(box.right)], "row ends inside");
   }
 
   T.test("✕ closes that region straight away, with no confirmation");

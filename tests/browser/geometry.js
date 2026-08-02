@@ -1,7 +1,7 @@
 // @suite   geometry
 // @area    Pure geometry, distance and elevation-profile helpers
 // @files   Trailmap App/index.html
-// @touches haversineM, cumulativeDistanceKm, latLngAtDistance, bearingDeg, elevationAtDistance, profileSlice, reverseElevationProfile, hexToRgba, round3, buildDirectionArrows, buildElevationSvg, profileKmToGeometryKm, buildProfileToGeometryAxis, liftClimb, trailLabelHtml, formatAge, distToBounds
+// @touches haversineM, cumulativeDistanceKm, latLngAtDistance, bearingDeg, elevationAtDistance, profileSlice, reverseElevationProfile, hexToRgba, round3, buildDirectionArrows, buildElevationSvg, profileKmToGeometryKm, buildProfileToGeometryAxis, liftClimb, trailLabelHtml, formatAge
 // @needs   any region active
 //
 // The cheapest coverage in the app: these are pure functions with no DOM and no app state, they are what the
@@ -178,9 +178,4 @@ TM.add("geometry", () => typeof haversineM === "function", async (T) => {
   T.ok("a trail label carries its difficulty dot", /tl-diff/.test(label), label, "contains tl-diff");
   T.ok("and its name", /Test Trail/.test(label), true, true);
 
-  T.test("distToBounds is 0 inside and grows outside");
-  const box = L.latLngBounds([[47, 10], [48, 11]]);
-  T.eq("a point inside", distToBounds(L.latLng(47.5, 10.5), box), 0);
-  T.ok("a point outside is positive", distToBounds(L.latLng(50, 10.5), box) > 0, true, true);
-  T.ok("further away is further", distToBounds(L.latLng(52, 10.5), box) > distToBounds(L.latLng(50, 10.5), box), true, true);
 });
