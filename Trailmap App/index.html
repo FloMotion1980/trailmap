@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=137" />
+<link rel="stylesheet" href="style.css?v=138" />
 </head>
 <body>
 <div id="fatalError">
@@ -134,7 +134,7 @@
           <div class="toggle-row-group">
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showNamesToggle"><span class="slider"></span></span>Namen</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showPlacesToggle" checked><span class="slider"></span></span>Orte</label>
-            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDirectionArrowsToggle"><span class="slider"></span></span>Richtungspfeile</label>
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDirectionArrowsToggle" checked><span class="slider"></span></span>Richtungspfeile</label>
           </div>
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
           <!-- Which build is actually running. Added 2026-07-29 after several rounds of "is this fixed or am I
@@ -878,7 +878,7 @@ let showPlaces = true;
 // nicht" (not happy with how they look yet) -- kept in the app as a Kartenoptionen toggle rather than
 // removed outright, in case the look gets refined later. Persisted like the other Kartenoptionen/
 // filter toggles.
-let showDirectionArrows = false;
+let showDirectionArrows = true;
 
 const regionChipRow = document.getElementById("regionChips");
 const regionsBtnEl = document.getElementById("regionsBtn");
@@ -4637,7 +4637,7 @@ function restoreActiveState(){
     if (typeof saved.showLifts !== "boolean") saved.showLifts = true;
     if (typeof saved.showPlaces !== "boolean") saved.showPlaces = true;
     if (typeof saved.liveStatusOpen !== "boolean") saved.liveStatusOpen = true;
-    if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = false;
+    if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = true;
     return saved;
   } catch (e) { return null; }
 }
@@ -5820,7 +5820,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v137"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v138"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
