@@ -556,41 +556,46 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    right, so its own position is unchanged.
    Only ever visible on touch layouts -- #locateBtn used to carry that display toggle itself, now the cluster
    does, or an empty cluster would still reserve space on desktop. */
+/* A flex column: the segmented control container, then the readout chip under it, right-aligned, with a real
+   gap. It was a 2x3 grid of separately-positioned round buttons that deliberately OVERLAPPED each other by 9px
+   so the group would look like it grew out of the locate button (user, 2026-08-02). That reading came at a
+   price the user reported on 2026-08-03 -- "die Buttons hängen übereinander", and the overlap buried the
+   readout's fold handle under #locateBtn, which sat in front of it by z-index. The group now reads as one
+   thing because it IS one thing: one container, one width, hairlines instead of overlaps. */
 #locateCluster{
   display:none; position:absolute; z-index:1000;
   top: calc(16px + env(safe-area-inset-top, 0px));
   right: calc(16px + env(safe-area-inset-right, 0px));
-  /* A 2x2 grid rather than a flex row, because two things grow out of the button in two directions: the
-     readout to the LEFT (row 1, vertically centred on the button by align-self) and the re-centre button
-     DOWNWARDS (row 2). A flex row could not place the second one, and nesting a column would have made the
-     readout centre on the whole stack instead of on the button. */
-  grid-template-columns: auto auto;
-  grid-template-rows: 46px auto auto;
-  /* No gaps anywhere in this grid on purpose. Everything here belongs to the locate button and should look
-     like it GREW OUT of it (user, 2026-08-02: "es soll so aussehen, als kommt das aus dem Locator-Feld
-     raus"), so the readout tucks under its left edge and the buttons under its bottom edge, each overlapped
-     by the round button in front of it. The gaps that used to separate them made three unrelated controls. */
-  column-gap:0;
+  flex-direction:column; align-items:flex-end; gap:8px;
 }
-#locateCluster > #liveStatus{ grid-column:1; grid-row:1; align-self:center; position:relative; z-index:1; margin-right:-14px; }
-/* In front of everything it spawns, so the overlaps read as "from underneath". */
-#locateBtn{ grid-column:2; grid-row:1; position:relative; z-index:3; }
-/* Centred under the locate button rather than right-aligned: growing out of its middle, not out of its edge. */
-#recenterBtn{ grid-column:2; grid-row:2; justify-self:center; margin-top:-9px; position:relative; z-index:2; }
-/* Third row of the same stack: the north-up / heading-up switch. Row 2 keeps its space whether or not the
-   re-centre button is currently faded in (it is only made transparent, never removed from the flow), so this
-   sits at a stable position instead of jumping up and down as you pan. */
-#bearingBtn{ grid-column:2; grid-row:3; justify-self:center; margin-top:-9px; position:relative; z-index:1; }
-/* Landscape phone is the one layout where the stack cannot grow downwards: #infoPanel docks along the whole
-   right edge from y=125 (which is why #locateBtn is sized to end at 117), so a third row would put this
-   button INSIDE the panel -- measured, and the panel wins the paint because it comes later in the DOM with
-   the same z-index. So in this layout the cluster is one row: readout, switch, locate -- and the switch tucks
-   under the locate button's left edge for the same "grew out of it" reason as everything else here. */
-html.landscape-compact #locateCluster{ grid-template-columns: auto auto auto; }
-html.landscape-compact #bearingBtn{ grid-column:2; grid-row:1; align-self:center; justify-self:end;
-  margin-top:0; margin-right:-11px; z-index:1; }
-html.landscape-compact #locateBtn{ grid-column:3; }
-html.landscape-compact #recenterBtn{ grid-column:3; justify-self:center; }
+/* One rounded box, one border, one shadow, and the cells inside it carry none of their own. overflow:hidden is
+   what lets a filled cell (following, or heading-up) reach the container's rounded corners without a square
+   corner poking out -- which is also why the hold feedback below is an inset fill rather than the ring it used
+   to be: a ring drawn outside a cell would be clipped away by exactly this. */
+#mapControls{
+  display:flex; flex-direction:column; overflow:hidden;
+  background: rgba(255,255,255,0.97); border:1px solid #d8ddd0; border-radius:14px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+}
+#mapControls > button{
+  position:relative; width:44px; height:44px; padding:0; margin:0;
+  border:none; background:transparent; color:var(--ink);
+  font-size:20px; line-height:1; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition: background .15s ease;
+  /* A long press is one of the locate cell's two gestures, so the platform must not answer it with its own
+     callout, a text selection, or by handing the half-second hold to the map underneath as a pan. */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
+  touch-action: none;
+}
+/* The divider, and the reason it is `+` and not a border on every cell: the selector matches by DOM order, so
+   hiding a cell (no rotation plugin, or the re-centre cell while attached) never leaves a stray line or a
+   doubled one -- whichever cell is visually first simply has no rule matching it. */
+#mapControls > button + button{ border-top:1px solid #e4e8dd; }
+html.landscape-compact #locateCluster{ flex-direction:row-reverse; align-items:center; gap:6px; }
+html.landscape-compact #mapControls{ flex-direction:row; }
+html.landscape-compact #mapControls > button + button{ border-top:none; border-left:1px solid #e4e8dd; }
 /* Right out to the edge in landscape: the screen is 320-375 px tall there, so every inset is real map (user,
    2026-08-02, twice -- 16px, then 7px, now 3px). The safe-area terms stay: they are what keeps these off the
    rounded corner and away from the notch, and dropping them is exactly what clipped the header title. */
@@ -604,68 +609,39 @@ html.landscape-compact #sidebarToggle{ gap:7px; margin:-5px -7px; padding:5px 7p
 html.landscape-compact #sidebarToggle .st-bars{
   width:16px; box-shadow: 0 -5px 0 rgba(242,243,236,.8), 0 5px 0 rgba(242,243,236,.8);
 }
-#locateBtn{
-  width:46px; height:46px; border-radius:50%;
-  background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-  font-size:22px; display:flex; align-items:center; justify-content:center;
-  cursor:pointer;
-  /* A long press is one of this button's two gestures, so the platform must not answer it with its own
-     callout/context menu or a text selection. */
-  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
-  -webkit-tap-highlight-color: transparent;
-  /* The half-second hold must not be handed to the map underneath as a pan gesture. */
-  touch-action: none;
+/* Feedback WHILE holding: a fill climbs the cell over the hold duration, so you can tell the gesture registered
+   without staring at the map -- without it a long press is indistinguishable from a slow tap. It used to be a
+   box-shadow ring growing OUTSIDE the button, which the segmented container's overflow:hidden would clip; an
+   inset overlay says the same thing inside the cell. */
+#locateBtn.holding::after{
+  content:""; position:absolute; inset:0; background: rgba(47,74,58,0.45);
+  transform: scaleY(0); transform-origin: bottom;
+  animation: locateHoldFill .5s linear forwards;
 }
-/* Feedback WHILE holding: the ring fills over the hold duration, so you can tell the gesture registered
-   without staring at the map. Without it a long press is indistinguishable from a slow tap. */
-#locateBtn.holding{ box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 0 var(--forest); animation: locateHold .5s linear forwards; }
-@keyframes locateHold{
-  from{ box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 0 rgba(47,74,58,0.55); }
-  to  { box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 9px rgba(47,74,58,0.55); }
-}
-/* Following: the button pulses. Deliberately ONLY in follow mode -- a shown-once position and an active
-   follow must not look the same, since the whole difference is whether the map runs after you. */
-#locateBtn.active{ animation: locatePulse 1.9s ease-out infinite; }
-@keyframes locatePulse{
-  0%  { box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 0 rgba(47,74,58,0.45); }
-  70% { box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 13px rgba(47,74,58,0); }
-  100%{ box-shadow: 0 3px 10px rgba(0,0,0,0.2), 0 0 0 0 rgba(47,74,58,0); }
-}
+@keyframes locateHoldFill{ from{ transform: scaleY(0); } to{ transform: scaleY(1); } }
+/* Following, and heading-up: a filled cell. The locate cell used to PULSE for this, which the segmented
+   container cannot carry (the pulse was a ring outside the button) -- and it no longer has to: the readout chip
+   below carries a blinking dot whenever tracking is live, so the "is it actually following" signal is still
+   there and is only in one place instead of two. */
+#locateBtn.active, #bearingBtn.active{ background: var(--forest); color:#f2f3ec; }
 /* Waiting for the one-shot fix. getCurrentPosition can take seconds under trees, and without this the tap
    looks like it did nothing at all. */
-#locateBtn.busy{ opacity:.65; }
-#recenterBtn{
-  width:38px; height:38px; border-radius:50%;
-  background: var(--forest); border:1px solid var(--forest-dark); color:#f2f3ec;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.25);
-  font-size:19px; line-height:1; display:flex; align-items:center; justify-content:center;
-  cursor:pointer; -webkit-tap-highlight-color: transparent;
-  opacity:0; pointer-events:none; transform: translateY(-10px) scale(.85);
-  transition: opacity .18s ease, transform .18s ease;
+#locateBtn.busy{ opacity:.55; }
+/* The re-centre cell exists only while following AND detached. display rather than opacity, so it takes no room
+   in the container when it is not there -- it is the LAST cell precisely so that appearing cannot displace a
+   cell you were aiming at. */
+/* Both selectors have to name the container: `#mapControls > button` sets `display:flex` on every cell and an
+   id alone loses to it on specificity, so a plain `#recenterBtn{ display:none }` never hid anything (measured --
+   the cell was visible while attached). */
+#mapControls > #recenterBtn{ display:none; background: var(--forest); color:#f2f3ec; }
+#locateCluster.is-detached #mapControls > #recenterBtn{ display:flex; }
+@media (hover: hover){
+  #mapControls > button:hover{ background:#eff2e9; }
+  #locateBtn.active:hover, #bearingBtn.active:hover, #recenterBtn:hover{ background: var(--forest-dark); }
 }
-#locateCluster.is-detached #recenterBtn{ opacity:1; pointer-events:auto; transform:none; }
-/* Same 38px round shape as the re-centre button, but white-on-idle like #locateBtn, because this one is a
-   MODE and has to show its state at a glance: filled green = the map is turning with you. No pulse -- that
-   is the locate button's way of saying "actively following", and two pulsing things in one stack read as one
-   blinking thing. */
-#bearingBtn{
-  width:38px; height:38px; border-radius:50%;
-  background: rgba(255,255,255,0.97); border:1px solid #d8ddd0; color:var(--ink);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-  font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center;
-  cursor:pointer; -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
-}
-#bearingBtn.active{ background: var(--forest); border-color: var(--forest-dark); color:#f2f3ec; }
-#bearingBtn:hover{ background:#f5f7ef; }
-#bearingBtn.active:hover{ background: var(--forest-dark); }
 @media (prefers-reduced-motion: reduce){
-  #locateBtn.holding, #locateBtn.active{ animation:none; }
-  #recenterBtn{ transition:none; }
+  #locateBtn.holding::after{ animation:none; transform: scaleY(1); }
 }
-#locateBtn:hover{ background:#f5f7ef; }
-#locateBtn.active{ background: var(--forest); }   /* plus the pulse defined above */
 .geo-wrap{ position:relative; width:40px; height:40px; }
 .geo-cone{
   position:absolute; left:50%; top:50%;
@@ -695,9 +671,9 @@ html.landscape-compact #sidebarToggle .st-bars{
    squash the text. `overflow:hidden` + `white-space:nowrap` is what makes the text disappear INTO the button
    rather than wrapping while it shrinks. */
 #liveStatus{
-  display:none; align-items:center;
+  display:none; align-items:center; flex-shrink:0;
   background: rgba(28,38,32,0.92); color:#f2f3ec; font-family: Arial, sans-serif; font-size:12.5px; font-weight:600;
-  border-radius:16px; box-shadow:0 3px 10px rgba(0,0,0,0.25);
+  border-radius:17px; box-shadow:0 3px 10px rgba(0,0,0,0.25);
 }
 #liveStatus.visible{ display:flex; }
 #liveStatusPanel{
@@ -708,19 +684,24 @@ html.landscape-compact #sidebarToggle .st-bars{
      grew into it; that handle moved into the header on 2026-08-02, so what has to be kept free now is only the
      locate cluster's own width plus its margins. The tail is what gets cut, which is why the counters are last:
      accuracy and fix age are the parts worth reading first. */
-  max-width: min(320px, calc(100vw - 76px)); padding:6px 4px 6px 14px;
+  max-width: min(320px, calc(100vw - 76px)); padding:8px 2px 8px 14px;
   transition: max-width .22s ease, padding .22s ease, opacity .18s ease;
 }
 #liveStatus.collapsed #liveStatusPanel{ max-width:0; padding-left:0; padding-right:0; opacity:0; }
-/* The fold handle stays put when everything else folds away, so there is always something to tap to get the
-   readout back -- the reason this is a handle and not "tap the readout to hide it". */
-#liveStatusToggle{
-  flex-shrink:0; border:none; background:none; cursor:pointer;
-  color:#f2f3ec; font-size:15px; line-height:1; font-family:inherit;
-  padding:8px 10px; border-radius:16px;
-  transition: transform .22s ease;
+/* The chip IS the fold handle, and it is the whole reason the handle can no longer be covered: it is the last
+   thing in the pill, at the cluster's own right edge, with nothing in front of it. Its own field (the accuracy)
+   stays readable folded, so tapping to get the details back is not a tap into nothing. 34px tall: smaller than a
+   control cell on purpose, since it is a readout first and a button second, but still a real target. */
+#liveStatusChip{
+  flex-shrink:0; display:flex; align-items:center; gap:5px;
+  border:none; background:none; cursor:pointer;
+  color:#f2f3ec; font-family:inherit; font-size:12.5px; font-weight:600; line-height:1;
+  padding:0 12px; height:34px; border-radius:17px;
+  font-variant-numeric: tabular-nums;
+  -webkit-tap-highlight-color: transparent;
 }
-#liveStatus.collapsed #liveStatusToggle{ transform: rotate(180deg); }
+#liveStatusChip .ls-caret{ font-size:15px; opacity:.75; transition: transform .22s ease; }
+#liveStatus.collapsed #liveStatusChip .ls-caret{ transform: rotate(180deg); }
 /* Fixes have stopped arriving (see STALE_FIX_MS). Worth its own colour rather than just a climbing number:
    the whole point is to notice it without reading, while riding. */
 #liveStatus.stale{ background: rgba(181,80,31,0.94); }
@@ -908,7 +889,10 @@ html.landscape-compact #sidebarToggle .st-bars{
     width:min(92vw, 360px);
     max-height:min(38vh, 300px);
   }
-  #locateCluster{ display:grid; }   /* touch-only; grid layout is defined in the base rule */
+  /* Touch-only; the layout itself is in the base rule. It has to name the same display type as that rule --
+     as `grid` it silently overrode a flex column and stretched the control container to the width of the
+     widest sibling: 232px instead of 44px, measured. */
+  #locateCluster{ display:flex; }
 }
 html.is-standalone #infoPanel{
   bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;

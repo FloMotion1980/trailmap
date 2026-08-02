@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=103" />
+<link rel="stylesheet" href="style.css?v=109" />
 </head>
 <body>
 <div id="fatalError">
@@ -181,20 +181,35 @@
              last fix is, whether the compass is delivering, and fixes-vs-pans. Added 2026-07-29 because two
              field reports could not be diagnosed from the code alone -- the map not following while the dot
              moved, and the heading cone freezing during a lift ride. See updateLiveStatus(). -->
-        <div id="liveStatus">
-          <div id="liveStatusPanel"><span class="rec-dot"></span><span id="liveStatusText">Live-Tracking</span></div>
-          <button id="liveStatusToggle" title="Anzeige ein-/ausklappen">‹</button>
+        <!-- ONE segmented container for all three map controls, in one size, with hairlines between them
+             (2026-08-03). They used to be three separately-positioned round buttons of three different
+             diameters (46 / 32 / 38 px) overlapping each other by 9px, which is what the user meant by "die
+             Buttons hängen übereinander" -- and the overlap is also what buried this readout's own fold
+             handle: 14 of its 25px sat under #locateBtn, which carried the higher z-index, so
+             elementFromPoint at the handle's centre returned the locate button.
+             Order matters: the re-centre cell is LAST because it is the only conditional one, so its
+             appearing cannot move a cell you were aiming at. -->
+        <div id="mapControls">
+          <button id="locateBtn" title="Tippen: Position zeigen – Halten: Folgen starten">📍</button>
+          <!-- The north-up / heading-up switch. In this cluster at the user's request ("ein Button dort wo
+               auch der Zentrieren Button erscheint", 2026-08-01), and permanently visible unlike the
+               re-centre cell, since it is a mode and not a reaction to anything. -->
+          <button id="bearingBtn" title="Karte: Norden oben — tippen für Blickrichtung oben" aria-pressed="false">🧭</button>
+          <!-- Only while following AND detached (you panned the map away). Re-attaching is its own control on
+               purpose: the readout's job is to display, not to act. -->
+          <button id="recenterBtn" title="Zurück zur Position">◎</button>
         </div>
-        <button id="locateBtn" title="Tippen: Position zeigen – Halten: Folgen starten">📍</button>
-        <!-- Slides DOWN out of the cluster, and only while following AND detached (you panned the map away).
-             Re-attaching is its own control on purpose: the readout's job is to display, not to act. -->
-        <button id="recenterBtn" title="Zurück zur Position">◎</button>
-        <!-- Switches between the two map orientations: north up (default) and heading up. Sits in this
-             cluster at the user's request ("ein Button dort wo auch der Zentrieren Button erscheint",
-             2026-08-01) -- it belongs to the same family as locate and re-centre, and the corner is the one
-             place reachable with a thumb without opening the drawer. Permanently visible, unlike the
-             re-centre button, since it is a mode and not a reaction. -->
-        <button id="bearingBtn" title="Karte: Norden oben — tippen für Blickrichtung oben" aria-pressed="false">🧭</button>
+        <!-- Reads out the live state of the tracking rather than just saying it is on. Since 2026-08-03 the
+             CHIP is what is always shown -- the accuracy alone, which is the one field that is information
+             rather than diagnosis -- and the chip itself is the fold handle, so it can never be covered the
+             way a separate handle tucked under the locate button was. Tapping it slides the full line
+             (fix age, compass state, map bearing, the counters) out to the left. -->
+        <div id="liveStatus">
+          <div id="liveStatusPanel"><span id="liveStatusText">Live-Tracking</span></div>
+          <button id="liveStatusChip" title="Anzeige ein-/ausklappen">
+            <span class="rec-dot"></span><span id="liveStatusShort">—</span><span class="ls-caret" aria-hidden="true">‹</span>
+          </button>
+        </div>
       </div>
       <!-- The one and only builder list, pinned to the map on every screen size so the map stays
            clickable while you assemble a tour. Collapsed it is just its handle. -->
@@ -1926,18 +1941,24 @@ document.addEventListener("visibilitychange", () => {
 
 const liveStatusEl = document.getElementById("liveStatus");
 const liveStatusTextEl = document.getElementById("liveStatusText");
+// The chip's own field: accuracy only. It is the one number here that is information rather than diagnosis --
+// worth reading while riding, when the dot sits 30 m off the trail in the woods -- so it is what stays visible
+// when the rest is folded away.
+const liveStatusShortEl = document.getElementById("liveStatusShort");
 
-// The readout folds into the locate button and back out to the left (user, 2026-07-29). Its own handle does
-// the folding rather than "tap the readout to hide it", because once folded there would be nothing left to
-// tap. Persisted with the other UI toggles: someone who rides with it folded away wants it to stay that way.
+// The full line folds away to the left and the CHIP is what stays (user, 2026-07-29 for the folding, 2026-08-03
+// for the chip). The chip is the handle, which is the fix for the handle being unreachable: as a separate 25px
+// button tucked under the locate button's left edge, 14px of it sat under a control with a higher z-index.
+// Folding into something that is itself always fully exposed cannot have that failure. Persisted with the other
+// UI toggles: someone who rides with it folded away wants it to stay that way.
 let liveStatusOpen = true;
 function applyLiveStatusOpen(){
   liveStatusEl.classList.toggle("collapsed", !liveStatusOpen);
-  const btn = document.getElementById("liveStatusToggle");
-  btn.title = liveStatusOpen ? "Anzeige einklappen" : "Anzeige ausklappen";
+  const btn = document.getElementById("liveStatusChip");
+  btn.title = liveStatusOpen ? "Details einklappen" : "Details ausklappen";
   btn.setAttribute("aria-expanded", liveStatusOpen ? "true" : "false");
 }
-document.getElementById("liveStatusToggle").addEventListener("click", () => {
+document.getElementById("liveStatusChip").addEventListener("click", () => {
   liveStatusOpen = !liveStatusOpen;
   applyLiveStatusOpen();
   persistActiveState();
@@ -1968,10 +1989,18 @@ function formatAge(ms){
 function updateLiveStatus(){
   if (!liveStatusTextEl) return;
   const now = Date.now();
-  // Compact on purpose: the whole cluster has to fit between the Trails button and the screen edge at 375px,
-  // and the units already separate the fields, so "14m 3s" needs no "±" and no " · ".
+  // Compact on purpose: the units already separate the fields, so "3s 🧭247°" needs no separators of its own.
+  // The width constraint that shaped this is gone -- the line no longer has to fit beside a button, it slides
+  // out under the control column and is capped by #liveStatusPanel's own max-width -- but short fields are still
+  // what makes it readable at a glance while riding.
   const parts = [];
-  parts.push(lastAccuracy !== null ? Math.round(lastAccuracy) + "m" : "kein Fix");
+  // The accuracy lives in the CHIP and nowhere else: the chip is always on screen, so repeating it in the line
+  // that slides out beside it just read as a stutter -- "±12 m 3s 🧭247° 41/38   ±12 m", measured on screen.
+  // Expanded, the two are adjacent and read as one sentence, with the field that matters while riding at the
+  // end nearest the thumb.
+  if (liveStatusShortEl) {
+    liveStatusShortEl.textContent = lastAccuracy !== null ? "±" + Math.round(lastAccuracy) + " m" : "kein Fix";
+  }
   if (lastFixAt !== null) parts.push(formatAge(now - lastFixAt));
   // Compass: the heading, or a dash when nothing has ever arrived. A "!" means readings HAVE arrived but
   // stopped -- the gondola case. Deliberately a marker and not the age in seconds: at 375px the pill sits
@@ -5498,7 +5527,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v103"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v109"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
