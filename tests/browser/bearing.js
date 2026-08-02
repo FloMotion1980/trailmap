@@ -1,7 +1,7 @@
 // @suite   bearing
 // @area    Map orientation: "Norden oben" vs. "Blickrichtung oben"
 // @files   Trailmap App/index.html, Trailmap App/style.css, Trailmap App/leaflet-rotate.js
-// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, targetBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, buildDirectionArrowLayer, ARROW_MIN_ZOOM, canRotate, BEARING_MIN_DELTA_DEG, compassStillNeeded, stopFollowing, detachOrientationListener, bearingFrameSafety
+// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, targetBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, buildDirectionArrowLayer, rescaleDirectionArrows, metresPerPixel, ARROW_MIN_ZOOM, canRotate, BEARING_MIN_DELTA_DEG, compassStillNeeded, stopFollowing, detachOrientationListener, bearingFrameSafety
 // @needs   builder=off
 //
 // Rotation is the one feature here that is bolted on by a third-party file patching Leaflet's core, and its
@@ -414,11 +414,18 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   await TM.settle(() => TM.map.overlay().filter((p) => p.getAttribute("stroke-width") === "3.5").length, 4000);
   map.setZoom(17, { animate: false });
   await TM.wait(200);
-  // #22301f is ALSO startDot's own border colour (a circleMarker, rendered as an SVG arc), so stroke alone is
-  // ambiguous -- caught by this very case reporting an arc's "d" ("M...a5,5 0 1,0...") as if it were a chevron.
-  // A chevron's `d` is pure "M x y L x y L x y" (three points, two line segments); an arc always contains "a"/"A".
+  // Arrows are coloured per the trail's own difficulty since 2026-08-05, so stroke colour can no longer pick
+  // them out (and #22301f, the old fixed colour, is ALSO startDot's own border colour -- a circleMarker,
+  // rendered as an SVG arc -- which is why this used to need the colour check at all). Two things narrow it
+  // down instead: `stroke-width` is 1.6 for every arrow layer and nothing else on the map (trail lines are
+  // 3.5, connectors 2.2, hit-lines much wider), and the shape itself must be FULLY anchored, not just a prefix
+  // match -- a chevron's `d` is EXACTLY "M x yL x yL x y" (three points, two line segments, nothing after). A
+  // bare prefix match (no trailing `$`) also matches the START of any ordinary trail line's own `d` ("M x yL x
+  // yL x yL x y..." with many more points) -- and a short REAL trail simplified down to exactly 3 points would
+  // satisfy even the fully-anchored shape check on its own, which is why both conditions are needed together.
   const arrowPath = () => TM.$$("#map .leaflet-overlay-pane path")
-    .find((p) => p.getAttribute("stroke") === "#22301f" && /^M[\d.,\- ]+L[\d.,\- ]+L/.test(p.getAttribute("d") || ""));
+    .find((p) => p.getAttribute("stroke-width") === "1.6" &&
+                 /^M-?[\d.]+ -?[\d.]+L-?[\d.]+ -?[\d.]+L-?[\d.]+ -?[\d.]+$/.test(p.getAttribute("d") || ""));
   const gotArrow = await TM.until(() => !!arrowPath(), 3000);
   if (!gotArrow) {
     T.skip("no arrow rendered near this trail at zoom 17 -- nothing to measure");
@@ -435,6 +442,38 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     T.eq("and the labels are still upright", angleOf(".leaflet-norotate-pane"), 0);
     await northAgain();
   }
+
+  T.test("direction arrow chevrons keep a constant on-screen size across zoom");
+  // The user's own report: the old real-metre-sized chevrons visibly grew/shrank while zooming, unlike the
+  // trail line's own constant-pixel `weight`. rescaleDirectionArrows() re-derives each chevron's real-world
+  // size from the CURRENT zoom's metresPerPixel on every real "zoomend" (fired by map.setZoom below, no manual
+  // call needed), so its SVG bounding box -- drawn in screen/container pixels by Leaflet's SVG renderer, not
+  // real-world units -- should measure about the same at two very different zoom levels.
+  map.setZoom(15, { animate: false });
+  await TM.wait(200);
+  const gotArrow15 = await TM.until(() => !!arrowPath(), 3000);
+  if (!gotArrow15) {
+    T.skip("no arrow rendered at zoom 15 -- nothing to measure");
+  } else {
+    const bbox15 = arrowPath().getBBox();
+    map.setZoom(18, { animate: false });
+    await TM.wait(250);
+    const gotArrow18 = await TM.until(() => !!arrowPath(), 3000);
+    if (!gotArrow18) {
+      T.skip("no arrow rendered at zoom 18 -- nothing to measure");
+    } else {
+      const bbox18 = arrowPath().getBBox();
+      const size15 = Math.max(bbox15.width, bbox15.height), size18 = Math.max(bbox18.width, bbox18.height);
+      // A real-metre chevron would roughly OCTUPLE in screen size over these 3 zoom levels (2^3); constant
+      // screen-pixel sizing keeps it within a generous 60% band instead -- wide enough for rounding/projection
+      // noise, nowhere near wide enough for the old bug to slip through unnoticed.
+      T.ok("chevron size (screen px) stays roughly constant across a 3-level zoom change, not scaling with it",
+           size15 > 0 && size18 > 0 && Math.abs(size18 - size15) < size15 * 0.6,
+           [size15, size18], "within 60% of each other");
+    }
+  }
+  map.setZoom(17, { animate: false });
+  await TM.wait(200);
   await TM.ui.setSwitch("showDirectionArrowsToggle", false);
 
   T.test("a trail can still be picked by the browser while the map is turned");

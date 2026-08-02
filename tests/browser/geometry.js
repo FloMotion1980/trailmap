@@ -1,7 +1,7 @@
 // @suite   geometry
 // @area    Pure geometry, distance and elevation-profile helpers
 // @files   Trailmap App/index.html
-// @touches haversineM, cumulativeDistanceKm, latLngAtDistance, bearingDeg, destinationPoint, buildChevron, elevationAtDistance, profileSlice, reverseElevationProfile, hexToRgba, round3, buildDirectionArrowShapes, buildElevationSvg, profileKmToGeometryKm, buildProfileToGeometryAxis, liftClimb, trailLabelHtml, formatAge
+// @touches haversineM, cumulativeDistanceKm, latLngAtDistance, bearingDeg, destinationPoint, metresPerPixel, buildChevron, elevationAtDistance, profileSlice, reverseElevationProfile, hexToRgba, round3, buildDirectionArrowShapes, buildElevationSvg, profileKmToGeometryKm, buildProfileToGeometryAxis, liftClimb, trailLabelHtml, formatAge
 // @needs   any region active
 //
 // The cheapest coverage in the app: these are pure functions with no DOM and no app state, they are what the
@@ -109,23 +109,37 @@ TM.add("geometry", () => typeof haversineM === "function", async (T) => {
          haversineM(destinationPoint(destinationPoint(47, 10, 30, 500)[0], destinationPoint(47, 10, 30, 500)[1], 210, 500), [47, 10]),
          0, 1);
 
-  T.test("buildChevron draws a V shape offset to the side, tip forward");
-  const chevron = buildChevron([47, 10], 90, 1);   // pointing due east
+  T.test("metresPerPixel halves per zoom level and shrinks toward the poles");
+  T.near("one zoom level in halves the metres a pixel covers",
+         metresPerPixel(47, 15) / metresPerPixel(47, 16), 2, 0.001);
+  T.ok("higher latitude (more compressed east-west) covers fewer metres per pixel than the equator",
+       metresPerPixel(60, 15) < metresPerPixel(0, 15), metresPerPixel(60, 15), "< " + metresPerPixel(0, 15));
+
+  T.test("buildChevron draws a V shape offset to the side, tip forward, sized from mpp");
+  const mpp17 = metresPerPixel(47, 17);
+  const chevron = buildChevron([47, 10], 90, 1, mpp17);   // pointing due east
   T.eq("three points: back-left, tip, back-right", chevron.length, 3);
   const [backLeft, tip, backRight] = chevron;
   // Offset to the side: none of the three points sits exactly on the centreline's own latitude/longitude.
   T.ok("the whole shape is offset away from the anchor, not drawn on top of it",
-       chevron.every((p) => haversineM(p, [47, 10]) > 3), chevron.map((p) => Math.round(haversineM(p, [47, 10]))), "> 3m each");
+       chevron.every((p) => haversineM(p, [47, 10]) > 3 * mpp17), chevron.map((p) => Math.round(haversineM(p, [47, 10]))), "> " + Math.round(3 * mpp17) + "m each");
   T.ok("the tip is further EAST than the back of the chevron (it points the way it is told to)",
        tip[1] > (backLeft[1] + backRight[1]) / 2, tip[1], "> " + (backLeft[1] + backRight[1]) / 2);
   T.ok("back-left and back-right straddle the tip's own latitude, roughly symmetrically",
        Math.abs((backLeft[0] - tip[0]) - -(backRight[0] - tip[0])) < 0.0001,
        [backLeft[0] - tip[0], backRight[0] - tip[0]], "roughly equal and opposite");
+  // The whole point of sizing from mpp: the same chevron built at a HIGHER zoom (fewer metres per pixel) must
+  // be a SMALLER real-world shape, so its on-screen size stays constant -- unlike the old fixed-metre version,
+  // which is exactly what the user reported growing/shrinking as they zoomed.
+  const chevronZoomedIn = buildChevron([47, 10], 90, 1, metresPerPixel(47, 19));
+  T.ok("built at a higher zoom, the chevron's real-world size shrinks (constant on-screen size)",
+       haversineM(chevronZoomedIn[1], [47, 10]) < haversineM(tip, [47, 10]),
+       haversineM(chevronZoomedIn[1], [47, 10]), "< " + haversineM(tip, [47, 10]));
 
   T.test("buildDirectionArrowShapes spaces arrows by distance and stays within its cap");
   const short = [[47, 10], [47.001, 10]];                       // ~111 m
   const long = Array.from({ length: 400 }, (_, i) => [47 + i * 0.0005, 10]);   // ~22 km
-  const few = buildDirectionArrowShapes(short, false), many = buildDirectionArrowShapes(long, false);
+  const few = buildDirectionArrowShapes(short, false, 17), many = buildDirectionArrowShapes(long, false, 17);
   // The cap is written out rather than read from ARROW_MAX_COUNT: that is a `const` inside the app's try{}
   // block, so it is genuinely unreachable from here (only function declarations leak out). Referencing it
   // throws a ReferenceError -- and if the tests are served from a different origin than the app, the browser
@@ -141,12 +155,12 @@ TM.add("geometry", () => typeof haversineM === "function", async (T) => {
        JSON.stringify(many[0]), "[p,p,p]");
   T.ok("arrows sit inside the trail, not on its endpoints",
        many[0][1][0] > long[0][0] && many[many.length - 1][1][0] < long[long.length - 1][0], true, true);
-  T.eq("a zero-length track gets no arrows", buildDirectionArrowShapes([[47, 10], [47, 10]], false).length, 0);
+  T.eq("a zero-length track gets no arrows", buildDirectionArrowShapes([[47, 10], [47, 10]], false, 17).length, 0);
   // `reversed` has to flip which way the chevrons point, the same way latLngAtDistance already reads a
   // reversed trail from its other end -- checked by comparing the tip direction of the FIRST arrow forward
   // against the tip direction of the LAST arrow reversed: on a straight due-north line they should point
   // opposite ways (south vs. north), i.e. their tips move away from their own anchors in opposite latitudes.
-  const fwdArrows = buildDirectionArrowShapes(long, false), revArrows = buildDirectionArrowShapes(long, true);
+  const fwdArrows = buildDirectionArrowShapes(long, false, 17), revArrows = buildDirectionArrowShapes(long, true, 17);
   const tipDeltaLat = (shape) => shape[1][0] - (shape[0][0] + shape[2][0]) / 2;
   T.ok("reversed arrows point the opposite way along the trail",
        Math.sign(tipDeltaLat(fwdArrows[0])) !== Math.sign(tipDeltaLat(revArrows[revArrows.length - 1])),

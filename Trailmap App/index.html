@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=136" />
+<link rel="stylesheet" href="style.css?v=137" />
 </head>
 <body>
 <div id="fatalError">
@@ -3469,6 +3469,7 @@ function updateStartDotVisibility(){
   // dozens of tiny chevrons would be exactly as much clutter as the old triangles were -- that is what the user
   // meant by "nur wenn ziemlich nah rangezoomt ist". Plus its own dedicated on/off toggle on top of that.
   const arrowZoomOk = map.getZoom() >= ARROW_MIN_ZOOM;
+  if (arrowZoomOk) rescaleDirectionArrows();
   Object.values(lineLayers).forEach(layer => {
     if (!layer.startDot) return;
     const filterVisible = map.hasLayer(layer.line);
@@ -3812,14 +3813,25 @@ function bearingDeg(a, b){
 // same way the trail's own line already does. `rotateWithView` had exactly one user in this app and this was
 // it; there is nothing left that needs it.
 const ARROW_SPACING_KM = 0.3, ARROW_MAX_COUNT = 40;
-// How far to the side of the centreline an arrow sits, and how big one chevron is -- all in real metres, not
-// screen pixels, so the offset holds up consistently across the (narrow) zoom band these are ever shown in.
-// 8m clears a trail's own rendered width with room to spare even at the closest zoom; 5m long / 3m half-width
-// reads as a fine arrow rather than a fat triangle, which was the other half of the complaint.
-const ARROW_OFFSET_M = 8, ARROW_LEN_M = 5, ARROW_HALF_WIDTH_M = 3;
+// How big one chevron reads on SCREEN -- in pixels, not metres, so it stays the same size at any zoom, exactly
+// like the trail line's own `weight` already does (a Leaflet stroke width is always a fixed screen-pixel value,
+// never a real-world one). The old real-metre version (8m offset, 5m long, 3m half-width) visibly grew and
+// shrank as the user zoomed, which is the bug this fixes -- picked to read about the same as that old version
+// did at ARROW_MIN_ZOOM, its most common viewing zoom.
+const ARROW_OFFSET_PX = 9, ARROW_LEN_PX = 6, ARROW_HALF_WIDTH_PX = 3.5;
 // Higher than START_DOT_MIN_ZOOM (13): the user wanted these appearing only once quite close in, not at the
 // zoom where the Start/Ziel dot already earns its keep.
 const ARROW_MIN_ZOOM = 15;
+
+// Metres per screen pixel at a given latitude/zoom, standard Web Mercator (the projection Leaflet's default CRS
+// and this app's tile grid both use) -- equatorial circumference / 256, scaled by zoom and by cos(lat) for the
+// projection's east-west compression away from the equator. This is what lets a chevron's geometry (built from
+// real lat/lng offsets, since it has to sit beside a real trail) be sized in constant SCREEN pixels: convert the
+// desired pixel size to metres AT THE CURRENT ZOOM before calling destinationPoint, and recompute whenever the
+// zoom changes (see rescaleDirectionArrows).
+function metresPerPixel(latDeg, zoom){
+  return 156543.03392 * Math.cos(latDeg * Math.PI / 180) / Math.pow(2, zoom);
+}
 
 // The one geometry primitive this app did not already have: the point `distanceM` from [lat,lon] along
 // `bearingDeg`, i.e. bearingDeg()'s own inverse ("which way" vs. "how far that way"). Standard spherical
@@ -3834,22 +3846,26 @@ function destinationPoint(lat, lon, bearingDegVal, distanceM){
                                   Math.cos(d) - Math.sin(lat1) * Math.sin(lat2));
   return [toDeg(lat2), toDeg(lon2)];
 }
-// One chevron ("V", tip forward) as three real lat/lng points: back-left, tip, back-right. Anchored
-// ARROW_OFFSET_M to one side of `pos` (always the same side, `sideSign` +1, so a trail's arrows never wander
-// from one side of the line to the other) and pointing along `angleDeg`.
-function buildChevron(pos, angleDeg, sideSign){
-  const anchor = destinationPoint(pos[0], pos[1], angleDeg + 90 * sideSign, ARROW_OFFSET_M);
-  const tip = destinationPoint(anchor[0], anchor[1], angleDeg, ARROW_LEN_M / 2);
-  const back = destinationPoint(anchor[0], anchor[1], angleDeg + 180, ARROW_LEN_M / 2);
-  const backLeft = destinationPoint(back[0], back[1], angleDeg - 90, ARROW_HALF_WIDTH_M);
-  const backRight = destinationPoint(back[0], back[1], angleDeg + 90, ARROW_HALF_WIDTH_M);
+// One chevron ("V", tip forward) as three real lat/lng points: back-left, tip, back-right. Anchored to one side
+// of `pos` (always the same side, `sideSign` +1, so a trail's arrows never wander from one side of the line to
+// the other) and pointing along `angleDeg`. `mpp` (metres-per-pixel at `pos`'s latitude and the current zoom)
+// converts the fixed on-screen PX sizes to the real-world metres destinationPoint needs -- that conversion,
+// redone at whatever zoom is current, is what keeps the shape a constant size on screen.
+function buildChevron(pos, angleDeg, sideSign, mpp){
+  const offsetM = ARROW_OFFSET_PX * mpp, lenM = ARROW_LEN_PX * mpp, halfWidthM = ARROW_HALF_WIDTH_PX * mpp;
+  const anchor = destinationPoint(pos[0], pos[1], angleDeg + 90 * sideSign, offsetM);
+  const tip = destinationPoint(anchor[0], anchor[1], angleDeg, lenM / 2);
+  const back = destinationPoint(anchor[0], anchor[1], angleDeg + 180, lenM / 2);
+  const backLeft = destinationPoint(back[0], back[1], angleDeg - 90, halfWidthM);
+  const backRight = destinationPoint(back[0], back[1], angleDeg + 90, halfWidthM);
   return [backLeft, tip, backRight];
 }
 // Same sampling as the original design: one arrow every ~300m by distance (capped at 40 for very long loops,
 // floored at 1 so even a short trail gets one), each angled to the local bearing sampled slightly ahead/behind
 // its own position for a smoothed angle rather than a single noisy segment. `reversed` flips the direction the
 // SAME way applyReversedEndpoints already reads coords backwards elsewhere -- see buildDirectionArrowLayer.
-function buildDirectionArrowShapes(coords, reversed){
+// `zoom` feeds metresPerPixel so the resulting shapes are sized for THAT zoom's screen-pixel scale.
+function buildDirectionArrowShapes(coords, reversed, zoom){
   const cumDist = cumulativeDistanceKm(coords);
   const totalKm = cumDist[cumDist.length - 1];
   if (totalKm <= 0) return [];
@@ -3860,16 +3876,35 @@ function buildDirectionArrowShapes(coords, reversed){
     const pos = latLngAtDistance(coords, cumDist, targetKm, reversed);
     const behind = latLngAtDistance(coords, cumDist, Math.max(0, targetKm - 0.02), reversed);
     const ahead = latLngAtDistance(coords, cumDist, Math.min(totalKm, targetKm + 0.02), reversed);
-    shapes.push(buildChevron(pos, bearingDeg(behind, ahead), 1));
+    const mpp = metresPerPixel(pos[0], zoom);
+    shapes.push(buildChevron(pos, bearingDeg(behind, ahead), 1, mpp));
   }
   return shapes;
 }
 // The coords array is never reordered (see applyReversedEndpoints) -- reversing rebuilds this layer from
 // scratch with `reversed` flipped rather than storing a second permanent copy for every trail, the same
 // "recompute on demand" rule reverseElevationProfile already follows a few lines away.
-function buildDirectionArrowLayer(coords, reversed){
-  return L.polyline(buildDirectionArrowShapes(coords, reversed),
-    { color: "#22301f", weight: 1.6, opacity: 0.85, interactive: false, bubblingMouseEvents: false });
+function buildDirectionArrowLayer(coords, reversed, color, zoom){
+  // Coloured per the trail's own difficulty (user, 2026-08-05) -- the same cue the label's own tl-diff dot and
+  // the elevation chart's line already use, so an arrow reads as belonging to ITS trail rather than being one
+  // neutral, anonymous mark shared by every line on the map. `color` defaults to the dark neutral the arrows
+  // used before this, purely so a caller that forgets to pass one (there should be none) degrades safely rather
+  // than drawing nothing.
+  return L.polyline(buildDirectionArrowShapes(coords, reversed, zoom),
+    { color: color || "#22301f", weight: 1.6, opacity: 0.85, interactive: false, bubblingMouseEvents: false });
+}
+// Rebuilds every visible trail's arrow geometry for the CURRENT zoom -- called on zoomend (see
+// updateStartDotVisibility) so the on-screen size stays constant as the user zooms, the same guarantee the
+// trail line's own `weight` gets for free from Leaflet but a real lat/lng shape does not. setLatLngs() updates
+// the existing polyline in place (no removeLayer/addLayer, no new DOM node) -- cheap enough to run on every
+// trail's arrow layer, not just the ones currently painted, since a hidden one may become visible on the very
+// next zoomend and must already be correctly sized when it does.
+function rescaleDirectionArrows(){
+  const zoom = map.getZoom();
+  Object.entries(lineLayers).forEach(([id, layer]) => {
+    if (!layer.directionArrowLayer) return;
+    layer.directionArrowLayer.setLatLngs(buildDirectionArrowShapes(layer.coords, reversedId === id, zoom));
+  });
 }
 
 // Small marker that tracks the mouse while hovering a trail's elevation chart, showing where that
@@ -4061,8 +4096,9 @@ function applyReversedEndpoints(id){
   if (layer.directionArrowLayer) {
     const wasShown = map.hasLayer(layer.directionArrowLayer);
     const wasOpacity = layer.directionArrowLayer.options.opacity;
+    const wasColor = layer.directionArrowLayer.options.color;   // the trail's own difficulty colour
     map.removeLayer(layer.directionArrowLayer);
-    layer.directionArrowLayer = buildDirectionArrowLayer(coords, isReversed);
+    layer.directionArrowLayer = buildDirectionArrowLayer(coords, isReversed, wasColor, map.getZoom());
     layer.directionArrowLayer.setStyle({ opacity: wasOpacity });
     if (wasShown) layer.directionArrowLayer.addTo(map);
   }
@@ -4482,7 +4518,7 @@ function buildTrailLayer(t){
   const startDot = L.circleMarker(coords[0], { radius:5, color:"#22301f", weight:1.5, fillColor:"#fff", fillOpacity:1, bubblingMouseEvents:false }).addTo(map);
   const startMarker = L.circleMarker(coords[0], { radius:5, color:"#0d3d1a", weight:1.5, fillColor:"#3fbf5e", fillOpacity:1, bubblingMouseEvents:false });
   const endMarker = L.circleMarker(coords[coords.length - 1], { radius:5, color:"#5c0f0a", weight:1.5, fillColor:"#e0392b", fillOpacity:1, bubblingMouseEvents:false });
-  const directionArrowLayer = buildDirectionArrowLayer(coords, false);
+  const directionArrowLayer = buildDirectionArrowLayer(coords, false, diffColor[t.diff], map.getZoom());
   if (showDirectionArrows && map.getZoom() >= ARROW_MIN_ZOOM) {
     directionArrowLayer.addTo(map);
   }
@@ -5784,7 +5820,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v136"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v137"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
