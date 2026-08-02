@@ -51,6 +51,8 @@ current; a stale count is worse than none, because it looks like evidence.
 
 | `bearing` | put the inverted bearing sign back (`targetBearing` returns `smoothedCompassHeading`, cone subtracts instead of adds) | "the direction the rider faces is the direction at the top of the screen" fails with *"facing east, the map reports east at the top → 270"* and *"north has moved to the left → 90"* (i.e. north on the right, the map mirrored). Note what still PASSES: the cone's own "points straight up" check. That combination is the bug the user reported from outdoors — cone correct, map turning the wrong way — and it is why the suite needed a case that measures a geographic direction on screen rather than only the cone |
 
+| `bearing` | put the unconditional `detachOrientationListener()` back in `stopFollowing()` | "the compass outlives the follow mode" fails on *"a reading that arrives afterwards still turns the map → 88, want 270 ±3"* — the map sits at the heading it had when the follow ended. Worth knowing: the FIRST version of this case called `handleOrientation()` directly and passed against the broken code, because a direct call bypasses the very thing that breaks (the listener being off the window). It dispatches real events now |
+
 ## Not yet mutation-checked
 
 `geometry`, `infopanel`, `lifts` and `builder`'s newer cases have not had a mutation applied. They pass, and

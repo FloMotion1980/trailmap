@@ -124,10 +124,17 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
   chip.click();
   await TM.wait(400);
   const shutWidth = box($("#liveStatus")).width;
-  T.ok("folding makes the pill narrower", shutWidth < openWidth - 20,
+  T.ok("folding makes the readout narrower", shutWidth < openWidth - 20,
        [Math.round(shutWidth), Math.round(openWidth)], "narrower");
-  T.ok("what is left is the chip itself", Math.abs(shutWidth - box(chip).width) < 2,
-       [Math.round(shutWidth), Math.round(box(chip).width)], "equal");
+  // Folded, the readout is exactly as wide as the control column above it -- that is what makes the stack one
+  // silhouette rather than a column with a pill hanging off it. Compared against the column and not against the
+  // chip's own box: the segment carries a 1px border the chip does not, so "equal to the chip" was off by 2.
+  T.ok("and it is exactly as wide as the control column", Math.abs(shutWidth - box($("#mapControls")).width) <= 1,
+       [Math.round(shutWidth), Math.round(box($("#mapControls")).width)], "same width");
+  T.ok("with no seam between them", Math.abs(box($("#liveStatus")).top - box($("#mapControls")).bottom) <= 1,
+       Math.round(box($("#liveStatus")).top - box($("#mapControls")).bottom), "0px");
+  T.ok("and their edges flush", Math.abs(box($("#liveStatus")).right - box($("#mapControls")).right) <= 1,
+       [Math.round(box($("#liveStatus")).right), Math.round(box($("#mapControls")).right)], "flush");
   T.ok("the accuracy is still on screen", $("#liveStatusShort").textContent.trim().length > 0 &&
        box($("#liveStatusShort")).width > 10, $("#liveStatusShort").textContent, "still shown");
   T.ok("and the chip is still hittable while folded", hitTest(chip) === true, hitTest(chip), true);
@@ -144,8 +151,12 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
   await TM.wait(200);
   const line = $("#liveStatusText").textContent;
   const short = $("#liveStatusShort").textContent;
-  T.ok("the chip carries an accuracy field", /±\s*\d+\s*m|kein Fix/.test(short), short, "±N m or kein Fix");
-  T.ok("and the detail line does not repeat it", !/±/.test(line), line, "no ± in the line");
+  // The compact form, because that segment is one control cell wide: "12m", or "–" when there is no fix. The long
+  // words ("±12 m", "kein Fix") would need 48px and would widen the stack's silhouette.
+  T.ok("the readout segment carries an accuracy field", /^\d+m$|^–$/.test(short.trim()), short, "Nm or –");
+  T.ok("and the detail line does not repeat it", !/±|\d+m\b/.test(line), line, "no accuracy in the line");
+  T.ok("the compact form fits the cell without widening it",
+       $("#liveStatusShort").scrollWidth <= 44, $("#liveStatusShort").scrollWidth, "<= 44px");
 
   await restore();
 });

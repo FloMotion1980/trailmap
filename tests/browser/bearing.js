@@ -1,7 +1,7 @@
 // @suite   bearing
 // @area    Map orientation: "Norden oben" vs. "Blickrichtung oben"
 // @files   Trailmap App/index.html, Trailmap App/style.css, Trailmap App/leaflet-rotate.js
-// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, rotateWithView, canRotate, BEARING_MIN_DELTA_DEG
+// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, targetBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, rotateWithView, canRotate, BEARING_MIN_DELTA_DEG, compassStillNeeded, stopFollowing, detachOrientationListener, bearingFrameSafety
 // @needs   builder=off
 //
 // Rotation is the one feature here that is bolted on by a third-party file patching Leaflet's core, and its
@@ -180,6 +180,54 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     T.ok("the cone still points up, as it must in this mode", coneAngle() !== null && off(coneAngle(), 0) <= 2,
          coneAngle(), "0 ±2");
     await northAgain();
+  }
+
+  T.test("the compass outlives the follow mode, in both map orientations");
+  // Reported 2026-08-04: ending the follow killed the rotation and the turning cone in BOTH modes, and took the
+  // readout with them. stopFollowing() detached the orientation listener unconditionally, which also reset the
+  // smoothed heading -- so "Blickrichtung oben", documented from the start as independent of following, was in
+  // fact tied to it. The sensor is released only when neither consumer (this mode, or a position on the map)
+  // is left.
+  {
+    const off = (got, want) => Math.abs(((got - want + 540) % 360) - 180);
+    const topOfScreen = () => (360 - currentMapBearing()) % 360;
+    // REAL events on the window, not a direct handleOrientation() call. That distinction is the whole test: the
+    // bug was that the listener had been removed from the window, and a direct call bypasses exactly that -- the
+    // first version of this case called the handler and passed happily against the broken code. Dispatching both
+    // event names covers either branch of attachOrientationListener.
+    const fire = (heading) => {
+      for (const type of ["deviceorientationabsolute", "deviceorientation"]) {
+        const ev = new Event(type);
+        ev.absolute = true;
+        ev.alpha = (360 - heading) % 360;       // the app converts Android's counter-clockwise alpha back
+        window.dispatchEvent(ev);
+      }
+    };
+    attachOrientationListener();               // the app's own attach path; no permission gate on this platform
+    setHeadingUp(true);
+    for (let i = 0; i < 40; i++) fire(90);     // facing east
+    await TM.until(() => off(topOfScreen(), 90) < 3, 3000);
+    T.ok("with the mode on and no follow, the map already turns", off(topOfScreen(), 90) < 3,
+         Math.round(topOfScreen()), "90 ±3");
+    TM.$("#liveStatus").classList.add("visible", "live");
+    stopFollowing();
+    await TM.wait(400);
+    T.ok("the compass is still wanted after the follow ends", compassStillNeeded(), compassStillNeeded(), true);
+    T.ok("the readout stays on screen for its compass fields",
+         TM.$("#liveStatus").classList.contains("visible"), TM.$("#liveStatus").className, "visible");
+    T.ok("but its dot stops blinking, because no fixes arrive any more",
+         !TM.$("#liveStatus").classList.contains("live"), TM.$("#liveStatus").className, "not live");
+    // The half that was actually broken: a real reading arriving AFTER the follow ended still has to turn the map,
+    // which it only can if the window listener is still there.
+    for (let i = 0; i < 40; i++) fire(270);    // facing west now
+    await TM.until(() => off(topOfScreen(), 270) < 3, 3000);
+    T.ok("and a reading that arrives afterwards still turns the map", off(topOfScreen(), 270) < 3,
+         Math.round(topOfScreen()), "270 ±3");
+    await northAgain();
+    detachOrientationListener();               // leave the sensor as the baseline expects it
+    T.ok("with the mode off and nothing else using it, the sensor is not wanted",
+         !compassStillNeeded() || !!TM.$(".geo-wrap"),
+         [compassStillNeeded(), !!TM.$(".geo-wrap")], "released, or a position marker still wants it");
   }
 
   T.test("the followed position sits on the rotation pivot and stays put through a turn");

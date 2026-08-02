@@ -562,11 +562,17 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    price the user reported on 2026-08-03 -- "die Buttons hängen übereinander", and the overlap buried the
    readout's fold handle under #locateBtn, which sat in front of it by z-index. The group now reads as one
    thing because it IS one thing: one container, one width, hairlines instead of overlaps. */
+/* gap:0 -- the readout is the bottom SEGMENT of this stack, not a separate pill under it (user, 2026-08-04:
+   "können wir den Chip auch als ausfahrbares Element in die Gruppe der Knöpfe machen"). It stays a sibling of
+   #mapControls rather than a child, and that is load-bearing: as a child, expanding it would widen the flex
+   container to the readout's full width and leave the 44px buttons right-aligned in a 240px box. As a sibling it
+   can grow leftwards without the control column knowing anything about it; the join is made with corners and a
+   shared border colour instead. */
 #locateCluster{
   display:none; position:absolute; z-index:1000;
   top: calc(16px + env(safe-area-inset-top, 0px));
   right: calc(16px + env(safe-area-inset-right, 0px));
-  flex-direction:column; align-items:flex-end; gap:8px;
+  flex-direction:column; align-items:flex-end; gap:0;
 }
 /* One rounded box, one border, one shadow, and the cells inside it carry none of their own. overflow:hidden is
    what lets a filled cell (following, or heading-up) reach the container's rounded corners without a square
@@ -574,9 +580,13 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    to be: a ring drawn outside a cell would be clipped away by exactly this. */
 #mapControls{
   display:flex; flex-direction:column; overflow:hidden;
-  background: rgba(255,255,255,0.97); border:1px solid #d8ddd0; border-radius:14px;
+  background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
+  /* Only the TOP corners are round: the readout segment underneath carries the bottom pair, so the two together
+     read as one rounded box. In landscape the pair to square off is the left one instead -- see below. */
+  border-radius:14px 14px 0 0;
   box-shadow: 0 3px 10px rgba(0,0,0,0.2);
 }
+html.landscape-compact #mapControls{ border-radius:0 14px 14px 0; }
 #mapControls > button{
   position:relative; width:44px; height:44px; padding:0; margin:0;
   border:none; background:transparent; color:var(--ink);
@@ -593,7 +603,7 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    hiding a cell (no rotation plugin, or the re-centre cell while attached) never leaves a stray line or a
    doubled one -- whichever cell is visually first simply has no rule matching it. */
 #mapControls > button + button{ border-top:1px solid #e4e8dd; }
-html.landscape-compact #locateCluster{ flex-direction:row-reverse; align-items:center; gap:6px; }
+html.landscape-compact #locateCluster{ flex-direction:row-reverse; align-items:center; gap:0; }
 html.landscape-compact #mapControls{ flex-direction:row; }
 html.landscape-compact #mapControls > button + button{ border-top:none; border-left:1px solid #e4e8dd; }
 /* Right out to the edge in landscape: the screen is 320-375 px tall there, so every inset is real map (user,
@@ -670,10 +680,20 @@ html.landscape-compact #sidebarToggle .st-bars{
    The collapse animates `max-width` rather than `width`: `width:auto` is not animatable, and scaleX would
    squash the text. `overflow:hidden` + `white-space:nowrap` is what makes the text disappear INTO the button
    rather than wrapping while it shrinks. */
+/* The bottom segment of the control stack: same surface, same border, same shadow, and the bottom corners the
+   column above gave up. It was a dark free-floating pill; belonging to the group means looking like the group
+   (user, 2026-08-04). border-top:none is what keeps the seam a single hairline instead of two borders meeting.
+   Collapsed it is exactly as wide as a control cell, so the stack has one straight silhouette; expanded it grows
+   LEFT, which is the only direction with room. */
 #liveStatus{
   display:none; align-items:center; flex-shrink:0;
-  background: rgba(28,38,32,0.92); color:#f2f3ec; font-family: Arial, sans-serif; font-size:12.5px; font-weight:600;
-  border-radius:17px; box-shadow:0 3px 10px rgba(0,0,0,0.25);
+  background: rgba(255,255,255,0.97); color: var(--ink);
+  font-family: Arial, sans-serif; font-size:12px; font-weight:700;
+  border:1px solid #d8ddd0; border-top:none; border-radius:0 0 14px 14px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.2);
+}
+html.landscape-compact #liveStatus{
+  border:1px solid #d8ddd0; border-right:none; border-radius:14px 0 0 14px;
 }
 #liveStatus.visible{ display:flex; }
 #liveStatusPanel{
@@ -684,30 +704,42 @@ html.landscape-compact #sidebarToggle .st-bars{
      grew into it; that handle moved into the header on 2026-08-02, so what has to be kept free now is only the
      locate cluster's own width plus its margins. The tail is what gets cut, which is why the counters are last:
      accuracy and fix age are the parts worth reading first. */
-  max-width: min(320px, calc(100vw - 76px)); padding:8px 2px 8px 14px;
+  max-width: min(320px, calc(100vw - 76px)); padding:8px 0 8px 12px;
   transition: max-width .22s ease, padding .22s ease, opacity .18s ease;
 }
 #liveStatus.collapsed #liveStatusPanel{ max-width:0; padding-left:0; padding-right:0; opacity:0; }
-/* The chip IS the fold handle, and it is the whole reason the handle can no longer be covered: it is the last
-   thing in the pill, at the cluster's own right edge, with nothing in front of it. Its own field (the accuracy)
-   stays readable folded, so tapping to get the details back is not a tap into nothing. 34px tall: smaller than a
-   control cell on purpose, since it is a readout first and a button second, but still a real target. */
+/* The readout segment IS the fold handle, and that is why the handle can no longer be covered: it is the last
+   thing in the stack, at the cluster's own edge, with nothing in front of it. Its own field (the accuracy) stays
+   readable folded, so tapping to get the details back is never a tap into nothing. */
+/* Exactly one control cell wide (44px), so collapsed the stack is a single column with no step in its outline.
+   That width is why the readout's own field is short -- "12m" and not "±12 m"; see updateLiveStatus. */
 #liveStatusChip{
-  flex-shrink:0; display:flex; align-items:center; gap:5px;
+  flex-shrink:0; display:flex; align-items:center; justify-content:center; gap:4px;
   border:none; background:none; cursor:pointer;
-  color:#f2f3ec; font-family:inherit; font-size:12.5px; font-weight:600; line-height:1;
-  padding:0 12px; height:34px; border-radius:17px;
+  color:inherit; font-family:inherit; font-size:12px; font-weight:700; line-height:1;
+  width:44px; padding:0; height:32px; border-radius:0 0 13px 13px;
   font-variant-numeric: tabular-nums;
   -webkit-tap-highlight-color: transparent;
 }
-#liveStatusChip .ls-caret{ font-size:15px; opacity:.75; transition: transform .22s ease; }
+html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
+/* No caret: at 44px there is no room for a glyph beside the number, and the segment's own behaviour is easy
+   enough to find by tapping it once. The rec-dot stays -- it is the "tracking is live" signal that replaced the
+   locate button's pulse. */
+#liveStatus .ls-caret{ display:none; }
 #liveStatus.collapsed #liveStatusChip .ls-caret{ transform: rotate(180deg); }
 /* Fixes have stopped arriving (see STALE_FIX_MS). Worth its own colour rather than just a climbing number:
    the whole point is to notice it without reading, while riding. */
-#liveStatus.stale{ background: rgba(181,80,31,0.94); }
+/* Fixes have stopped arriving: the segment goes rust and its text light, which is legible against it. The whole
+   point is to notice without reading, while riding. */
+#liveStatus.stale{ background: rgba(181,80,31,0.94); color:#f7ece6; border-color: rgba(140,60,22,0.9); }
 #liveStatus #liveStatusText{ font-variant-numeric: tabular-nums; white-space: nowrap; }
-#liveStatus .rec-dot{
-  width:8px; height:8px; border-radius:50%; background:#e0392b; animation: recBlink 1.2s ease-in-out infinite;
+/* Only while fixes are actually arriving -- see the `live` class. The readout stays on screen after the follow
+   ends (the compass may still be turning the map), and a blinking "recording" dot over a position that is no
+   longer being updated would be the one dishonest thing in this readout. */
+#liveStatus .rec-dot{ display:none; }
+#liveStatus.live .rec-dot{
+  display:block; width:7px; height:7px; border-radius:50%; background:#e0392b; flex:0 0 auto;
+  animation: recBlink 1.2s ease-in-out infinite;
 }
 @keyframes recBlink{ 0%,100%{ opacity:1; } 50%{ opacity:0.25; } }
 #layerWarning{

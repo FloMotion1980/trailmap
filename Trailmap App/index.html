@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=112" />
+<link rel="stylesheet" href="style.css?v=116" />
 </head>
 <body>
 <div id="fatalError">
@@ -1743,6 +1743,12 @@ function setHeadingUp(on){
   // here on purpose -- the pill's 🧭 field already distinguishes the four reasons (✕D refused, ✕R asked
   // wrongly, ✕! no sensor, E7 events without a heading), and a second error surface would just disagree.
   refreshHeadingCone();
+  // Turning the mode OFF is the other half of compassStillNeeded(): if nothing else is using the sensor, release
+  // it here rather than keeping it running for a map that no longer turns.
+  if (!headingUp && !followMode && !compassStillNeeded()) detachOrientationListener();
+  // Turning it ON does NOT attach here: #bearingBtn's own click handler calls requestOrientationPermission()
+  // first, and that has to happen inside the gesture (iOS grants the activation on click, not from a timer) --
+  // this function is also called from boot and from a test, neither of which is a gesture.
   updateLiveStatus();
 }
 
@@ -2040,8 +2046,11 @@ function updateLiveStatus(){
   // that slides out beside it just read as a stutter -- "±12 m 3s 🧭247° 41/38   ±12 m", measured on screen.
   // Expanded, the two are adjacent and read as one sentence, with the field that matters while riding at the
   // end nearest the thumb.
+  // Short form, because that segment is exactly one control cell wide (44px): "12m", not "±12 m", and a dash
+  // rather than "kein Fix" -- which needs 48px and would either wrap or widen the stack's silhouette. The full
+  // words are one tap away in the line that slides out.
   if (liveStatusShortEl) {
-    liveStatusShortEl.textContent = lastAccuracy !== null ? "±" + Math.round(lastAccuracy) + " m" : "kein Fix";
+    liveStatusShortEl.textContent = lastAccuracy !== null ? Math.round(lastAccuracy) + "m" : "–";
   }
   if (lastFixAt !== null) parts.push(formatAge(now - lastFixAt));
   // Compass: the heading, or a dash when nothing has ever arrived. A "!" means readings HAVE arrived but
@@ -2106,6 +2115,9 @@ function startFollowing(){
   followDetached = false;
   syncLocateChrome();
   liveStatusEl.classList.add("visible");
+  // `live` is what makes the readout's dot blink: it means "fixes are arriving", so it belongs to the watch and
+  // not to the readout being on screen -- which it now also is after the follow ends, for the compass fields.
+  liveStatusEl.classList.add("live");
   lastFixAt = null; lastAccuracy = null; fixCount = 0; panCount = 0;
   updateLiveStatus();
   // Ticks so the fix age keeps counting up on its own -- that is what makes a stalled GPS visible.
@@ -2127,19 +2139,35 @@ function startFollowing(){
   );
 }
 
+// Who still wants the compass once the follow mode ends. Two independent consumers: the heading cone, which
+// belongs to the position on the map and outlives the follow (a one-shot tap keeps its cone, by the user's own
+// request -- "where am I and which way am I facing" is the question at a junction), and "Blickrichtung oben",
+// which is deliberately NOT tied to following at all. stopFollowing used to detach regardless, which took the
+// rotation and the turning cone away in both map modes and hid the readout with them (user, 2026-08-04). The
+// sensor is released only when neither consumer is left.
+function compassStillNeeded(){
+  return headingUp || !!userLocationMarker;
+}
+
 function stopFollowing(){
   followMode = false;
   followDetached = false;
   syncLocateChrome();
-  liveStatusEl.classList.remove("visible");
   liveStatusEl.classList.remove("stale");
-  if (liveStatusTimer !== null) { clearInterval(liveStatusTimer); liveStatusTimer = null; }
+  // The blinking dot means "fixes are arriving", which they are not any more -- but the rest of the readout still
+  // describes something real: the accuracy of the dot on the map, how old that fix now is, and the live compass.
+  liveStatusEl.classList.remove("live");
+  if (!compassStillNeeded()) {
+    liveStatusEl.classList.remove("visible");
+    if (liveStatusTimer !== null) { clearInterval(liveStatusTimer); liveStatusTimer = null; }
+  }
   if (userLocationMarker) {
     const el = userLocationMarker.getElement();
     if (el) { const wrap = el.querySelector(".geo-wrap"); if (wrap) wrap.classList.remove("live"); }
   }
   if (geoWatchId !== null) { navigator.geolocation.clearWatch(geoWatchId); geoWatchId = null; }
-  detachOrientationListener();
+  if (!compassStillNeeded()) detachOrientationListener();
+  updateLiveStatus();
   releaseWakeLock();
 }
 
@@ -5588,7 +5616,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v112"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v116"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
