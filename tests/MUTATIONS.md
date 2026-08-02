@@ -49,6 +49,8 @@ current; a stale count is worse than none, because it looks like evidence.
 
 | `controls` | make the control column overlap the readout again (`margin-bottom:-20px; position:relative; z-index:3` on `#mapControls`) | 2 cases / 3 checks: "every control in the cluster can actually be tapped" reports `liveStatusChip → "recenterBtn at 70/25%"` plus the chip/column geometry check, and "the chip is still hittable while folded" reports `"bearingBtn at 70/25%"`. This mutation is also what proved the hit test had to sample **five** points: with the centre alone, a 20px overlap on a 34px chip left the centre exposed and only the geometry check bit, i.e. the version of the test that would have missed the real bug's smaller cousins |
 
+| `bearing` | put the inverted bearing sign back (`targetBearing` returns `smoothedCompassHeading`, cone subtracts instead of adds) | "the direction the rider faces is the direction at the top of the screen" fails with *"facing east, the map reports east at the top → 270"* and *"north has moved to the left → 90"* (i.e. north on the right, the map mirrored). Note what still PASSES: the cone's own "points straight up" check. That combination is the bug the user reported from outdoors — cone correct, map turning the wrong way — and it is why the suite needed a case that measures a geographic direction on screen rather than only the cone |
+
 ## Not yet mutation-checked
 
 `geometry`, `infopanel`, `lifts` and `builder`'s newer cases have not had a mutation applied. They pass, and

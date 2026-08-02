@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=109" />
+<link rel="stylesheet" href="style.css?v=112" />
 </head>
 <body>
 <div id="fatalError">
@@ -1438,7 +1438,11 @@ function updateHeadingCone(headingDeg){
   const cone = el.querySelector(".geo-cone");
   lastConeHeading = headingDeg;
   cone.style.display = "block";
-  wrap.style.transform = `rotate(${headingDeg - currentMapBearing()}deg)`;
+  // PLUS the bearing, not minus. The cone lives in the unrotated marker pane and has to be drawn where the map
+  // now shows that geographic direction, and the map shows direction d at screen angle d + bearing (measured --
+  // see targetBearing). At bearing 0 both signs agree, which is why the wrong one survived: it only shows in
+  // "Blickrichtung oben", and there it cancelled the map's own (also wrong) sign into a cone that looked right.
+  wrap.style.transform = `rotate(${headingDeg + currentMapBearing()}deg)`;
 }
 
 // Redraw at the same heading after the map bearing moved. Deliberately refuses to make a HIDDEN cone
@@ -1518,6 +1522,11 @@ let bearingTweenSafety = null; // timer that finishes the transition if the fram
 const DEG_TO_RAD = Math.PI / 180;
 let bearingTarget = null;      // newest heading waiting for a frame
 let bearingFrame = null;       // pending requestAnimationFrame handle
+// Fires only if that frame never arrives -- see applyMapBearing. Longer than a frame by a wide margin, so a
+// healthy device never reaches it, and short enough that a repaired rotation is back within a blink.
+const BEARING_FRAME_SAFETY_MS = 400;
+let bearingFrameSafety = null;
+let staleFrameFixes = 0;       // how often that net has had to catch one; shown in the pill as ⧗n
 let bearingSettleTimer = null;  // `bearingSweeping` is declared next to the L.Renderer patch, see there
 
 // What the map is ACTUALLY turned to, which is not the same as "is the mode on": during the eased switch back
@@ -1559,7 +1568,28 @@ function applyMapBearing(deg, force){
   // letting sensor readings through here as well would have the two fighting over the same value.
   if (bearingTween !== null) return;
   if (bearingFrame !== null) return;          // a frame is already pending; it will pick up the newest value
-  bearingFrame = requestAnimationFrame(() => { bearingFrame = null; commitBearing(false); });
+  bearingFrame = requestAnimationFrame(() => {
+    bearingFrame = null;
+    if (bearingFrameSafety !== null) { clearTimeout(bearingFrameSafety); bearingFrameSafety = null; }
+    commitBearing(false);
+  });
+  // The same safety net the eased transition has, for the same reason, and this path had been left without one:
+  // animation frames do not run while a page is not being painted, and a pending frame that never arrives leaves
+  // `bearingFrame` set -- after which the guard above drops EVERY later reading and the map never turns again
+  // until something calls with `force` (a mode toggle). Pocketing the phone mid-ride is enough to produce that,
+  // and it matches the user's report of the rotation hanging intermittently outdoors. A timer still fires when
+  // frames do not, so this lands the value the frame would have applied.
+  if (bearingFrameSafety === null) {
+    bearingFrameSafety = setTimeout(() => {
+      bearingFrameSafety = null;
+      if (bearingFrame === null) return;      // the frame did arrive; nothing to repair
+      cancelAnimationFrame(bearingFrame);
+      bearingFrame = null;
+      staleFrameFixes++;
+      commitBearing(false);
+      updateLiveStatus();
+    }, BEARING_FRAME_SAFETY_MS);
+  }
 }
 
 // Apply a bearing immediately, skipping both the frame coalescing and the angle gate. The one path the mode
@@ -1571,10 +1601,21 @@ function commitBearingNow(deg){
   commitBearing(true);
 }
 
-// Where the bearing wants to be right now: north in mode 1, the newest smoothed heading in mode 2.
+// Where the bearing wants to be right now: north in mode 1, and in mode 2 whatever puts the rider's heading at
+// the TOP of the screen -- which is the NEGATIVE of that heading, not the heading itself.
+//
+// Measured rather than reasoned about, because this was wrong for two days and the cone hid it: with
+// setBearing(90) the on-screen vector between two place labels turns from 150.5° to 240.5°, i.e. a positive
+// bearing rotates the map's content CLOCKWISE (the plugin sets `rotate(+deg)` on its rotatePane). So a
+// geographic direction d appears at screen angle d + bearing, and asking for d = heading at screen 0 gives
+// bearing = -heading. Feeding +heading turned the map the wrong way by twice the heading -- facing east put
+// west at the top -- while updateHeadingCone, which subtracts the very same value, still drew the cone
+// straight up and therefore looked right. That is exactly what the user reported: cone correct, map turning
+// the wrong way. This function is the ONE place that knows the sign; every caller asks it.
 function targetBearing(){
   if (!headingUp) return 0;
-  return smoothedCompassHeading === null ? appliedBearing : smoothedCompassHeading;
+  if (smoothedCompassHeading === null) return appliedBearing;
+  return (360 - (smoothedCompassHeading % 360)) % 360;
 }
 
 function cancelBearingTween(){
@@ -1740,9 +1781,10 @@ function handleOrientation(event){
   }
   compassActive = true;
   lastCompassAt = Date.now();   // read by updateLiveStatus -- a frozen cone is either no events or NaN
-  // Turn the map first, then draw the cone against it: updateHeadingCone subtracts the bearing, so doing it
-  // the other way round would draw one frame of cone against the previous bearing on every reading.
-  if (headingUp) applyMapBearing(smoothedCompassHeading, false);
+  // Turn the map first, then draw the cone against it: updateHeadingCone reads the bearing, so doing it the
+  // other way round would draw one frame of cone against the previous bearing on every reading. The value comes
+  // from targetBearing() rather than from the heading directly -- that function owns the sign.
+  if (headingUp) applyMapBearing(targetBearing(), false);
   updateHeadingCone(compassDisplayAngle);
 }
 
@@ -2029,11 +2071,19 @@ function updateLiveStatus(){
   // 0° and the pill's width is already the binding constraint at 375px. Next to the 🧭 field it makes the one
   // failure this mode can have silent readable: 🗺0° with a live 🧭247° means the compass is fine and the
   // rotation is not, which is a different bug from 🧭✕D (no permission) leaving the map north-up correctly.
-  if (headingUp) parts.push("🗺" + Math.round(appliedBearing) + "°");
+  // Which direction is currently at the TOP of the screen -- deliberately not the raw map bearing, which is the
+  // negative of it. Stated this way the field is directly comparable to the 🧭 beside it: equal numbers mean the
+  // rotation is following the compass, and "🧭247° 🗺13°" says in one glance that the compass is fine and the
+  // rotation is stuck, which is the field report this whole readout exists for.
+  if (headingUp) parts.push("🗺" + Math.round((360 - appliedBearing) % 360) + "°");
   // Only ever shown once it has happened: how often a centring found Leaflet holding the wrong container size
   // and had to re-measure (see ensureMapSizeCurrent). Zero of these plus a position off the screen means the
   // cause is something else, which is the whole point of having the number.
   if (staleSizeFixes > 0) parts.push("⇲" + staleSizeFixes);
+  // Same rule as ⇲: only ever shown once it has happened. A climbing ⧗ says the rotation is being repaired by its
+  // safety net rather than by animation frames, which is a different cause from a stale compass (🧭…!) and from
+  // a rotation that is simply not following (🧭 and 🗺 disagreeing).
+  if (staleFrameFixes > 0) parts.push("⧗" + staleFrameFixes);
   parts.push(fixCount + "/" + panCount);   // fixes received / map pans issued
   // A cone that stopped tracking points somewhere you are NOT looking, which at a junction is worse than no
   // cone at all -- this is the "hängt total" half of the report. `compassActive` stays true on purpose: it
@@ -2194,6 +2244,17 @@ document.getElementById("bearingBtn").addEventListener("click", () => {
 // A control that cannot do anything is worse than no control. If leaflet-rotate failed to load, take the
 // button off the map instead of leaving a dead one there -- everything else keeps working (verified).
 if (!canRotate) document.getElementById("bearingBtn").style.display = "none";
+
+// Coming back from a page that was not being painted -- the phone went in a pocket, the screen locked, another
+// app was in front. Animation frames do not run in that state, so whatever the rotation had in flight is stale
+// by the time it returns, and `force` is what cancels a half-finished transition and a pending frame in one go.
+// The safety net in applyMapBearing already prevents a permanent stall; this makes the recovery immediate rather
+// than "on the next reading after the timer noticed".
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState !== "visible") return;
+  if (canRotate) applyMapBearing(targetBearing(), true);
+  updateLiveStatus();
+});
 
 document.getElementById("recenterBtn").addEventListener("click", () => {
   followDetached = false;
@@ -5527,7 +5588,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v109"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v112"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

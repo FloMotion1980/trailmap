@@ -130,19 +130,56 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   await TM.until(() => TM.$(".geo-cone"), 2000);
   // Switching the mode EASES the map round over half a second now, so the bearing arrives a few frames after
   // the reading does. Waiting for the value is the point; a fixed sleep would only hide a slow transition.
-  await TM.until(() => currentMapBearing() === 90, 2500);
+  // 270, not 90: the map bearing that puts a heading of 90° at the top of the screen is -90 (see targetBearing).
+  // This case asserted 90 until 2026-08-04 and passed the whole time the map was turning the wrong way, because
+  // the only other thing it checked was the cone -- which subtracts the bearing and so cancelled the error out.
+  // The case below ("the direction the rider faces...") is the one that pins the sign to something observable.
+  await TM.until(() => Math.round(currentMapBearing()) === 270, 2500);
   const cone = TM.$(".geo-cone");
   T.ok("the synthetic fix produced a location marker carrying a cone", !!cone, !!cone, true);
   if (!cone) {
     T.skip("no cone element, nothing to measure");
   } else {
-    T.eq("the map followed the heading", currentMapBearing(), 90);
+    T.eq("the map turned to put that heading up", Math.round(currentMapBearing()), 270);
     T.eq("the cone is shown", cone.style.display, "block");
     T.ok("and it points straight up", coneAngle() !== null && Math.abs(coneAngle()) <= 1, coneAngle(), "0 ±1");
     await northAgain();
     T.eq("back to north-up the map is straight", angleOf(".leaflet-rotate-pane"), 0);
     T.ok("and the same cone now points east instead", coneAngle() !== null && Math.abs(coneAngle() - 90) <= 1,
          coneAngle(), "90 ±1");
+  }
+
+  T.test("the direction the rider faces is the direction at the top of the screen");
+  // The sign of the bearing, stated as the property that actually matters and measured where the user sees it.
+  // It was inverted for two days: the map was turned by +heading instead of -heading, so facing east put WEST at
+  // the top, while the cone -- which subtracts the same value -- still pointed up and looked perfectly right.
+  // That combination is why no existing case caught it and why the user found it outdoors instead.
+  // The probe is a point due north of the centre: whatever heading is being followed, north has to appear at
+  // minus that heading. latLngToContainerPoint is rotation-aware (the plugin patches the layer->container step),
+  // so this is the same mapping that decides where the trails are drawn.
+  {
+    const northOf = L.latLng(map.getCenter().lat + 0.02, map.getCenter().lng);
+    const screenAngleOfNorth = () => {
+      const c = map.latLngToContainerPoint(map.getCenter());
+      const p = map.latLngToContainerPoint(northOf);
+      return ((Math.atan2(p.x - c.x, -(p.y - c.y)) * 180 / Math.PI) + 360) % 360;
+    };
+    const off = (got, want) => Math.abs(((got - want + 540) % 360) - 180);
+    await northAgain();
+    T.ok("north-up: north is at the top", off(screenAngleOfNorth(), 0) <= 1,
+         Math.round(screenAngleOfNorth()), "0 ±1");
+    setHeadingUp(true);
+    // Fed repeatedly: handleOrientation runs an EMA with factor 0.2, so one reading only moves a fifth of the way.
+    for (let i = 0; i < 60; i++) handleOrientation({ absolute: true, alpha: 270 });   // 360-270 => heading 90, east
+    await TM.until(() => off(360 - currentMapBearing(), 90) < 3, 3000);
+    T.ok("facing east, the map reports east at the top", off(360 - currentMapBearing(), 90) < 3,
+         Math.round(360 - currentMapBearing()), "90 ±3");
+    // ...and the map really is turned that way, which is the half the old case could not see.
+    T.ok("and north has moved to the left of the screen", off(screenAngleOfNorth(), 270) <= 3,
+         Math.round(screenAngleOfNorth()), "270 ±3 (i.e. north on the LEFT, not the right)");
+    T.ok("the cone still points up, as it must in this mode", coneAngle() !== null && off(coneAngle(), 0) <= 2,
+         coneAngle(), "0 ±2");
+    await northAgain();
   }
 
   T.test("the followed position sits on the rotation pivot and stays put through a turn");
@@ -197,6 +234,12 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   T.ok("the map is now holding a size that is not its container's",
        map.getSize().y !== realSize.y, JSON.stringify(map.getSize()), "different from " + JSON.stringify(realSize));
   TM.$("#recenterBtn").click();
+  // Wait out the settle BURST before measuring, not just for the pixels to stop moving. onViewportSettled is
+  // deliberately re-run at 150/400/900/1500 ms after a size change (iOS settles a flip in steps), so a reading
+  // taken between two of those checks can catch the view mid-repair — which is exactly what happened when this
+  // case was measured 96 px low in a combined run while passing on its own. The property under test is where the
+  // position ends up, so the measurement has to be after the last scheduled check.
+  await TM.wait(1700);
   await TM.settle(dotScreen, 3000);
   const healed = dotScreen(), c2 = mapCentreScreen();
   T.near("the position still lands on the container centre, x", healed.x, c2.x, 2);
