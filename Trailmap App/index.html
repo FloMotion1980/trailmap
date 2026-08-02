@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=119" />
+<link rel="stylesheet" href="style.css?v=121" />
 </head>
 <body>
 <div id="fatalError">
@@ -206,9 +206,9 @@
              (fix age, compass state, map bearing, the counters) out to the left. -->
         <!-- Teaches the hold gesture at the moment it is relevant: right after a TAP, which is the cheap half of
              the same button. A short partial fill runs up the locate cell at the same time, so the sentence and
-             the gesture it describes are shown together. Three times at most, and never again once the follow
-             mode has been used -- see showFollowHint(). aria-hidden because it is a transient duplicate of the
-             button's own title, which a screen reader already reads out. -->
+             the gesture it describes are shown together. On every tap -- see showFollowHint() for why there is no
+             budget. aria-hidden because it is a transient duplicate of the button's own title, which a screen
+             reader already reads out. -->
         <div id="followHint" aria-hidden="true">Halten für Folgen-Modus</div>
         <div id="liveStatus">
           <div id="liveStatusPanel"><span id="liveStatusText">Live-Tracking</span></div>
@@ -2182,10 +2182,13 @@ let holdTimer = null, holdFired = false;
 // touch screen. So the hint fires after a TAP -- the moment the user has just asked "where am I", which is
 // exactly when "and you can keep following" is worth knowing -- and it shows the same partial fill the hold
 // itself draws, so the sentence and the gesture are learnt together rather than the words alone.
-// Three times at most, and dropped to zero the first time the follow mode is actually used: someone who found
-// it does not need telling, and a hint that keeps coming back after that is nagging, not teaching.
+//
+// EVERY tap, with no budget and nothing persisted (user, 2026-08-04: "würde ich nicht machen, dass der Text
+// nach 3x nicht mehr kommt"). It briefly showed three times and then never again; a label this small, on a
+// gesture you may go weeks without using, is a reminder rather than an onboarding step. Not showing it while
+// already following is the one exception, and not a cap: there a tap means "stop", so the sentence would be
+// describing something else.
 const FOLLOW_HINT_MS = 3800;
-let followHintsLeft = 3;
 let followHintTimer = null;
 const followHintEl = document.getElementById("followHint");
 function hideFollowHint(){
@@ -2194,19 +2197,11 @@ function hideFollowHint(){
   locateBtn.classList.remove("hinting");
 }
 function showFollowHint(){
-  if (followHintsLeft <= 0 || followMode) return;
-  followHintsLeft--;
-  persistActiveState();
+  if (followMode) return;
   hideFollowHint();                     // restart cleanly if one is still on screen
   followHintEl.classList.add("visible");
   locateBtn.classList.add("hinting");
   followHintTimer = setTimeout(() => { followHintTimer = null; hideFollowHint(); }, FOLLOW_HINT_MS);
-}
-function markFollowLearned(){
-  hideFollowHint();
-  if (followHintsLeft === 0) return;
-  followHintsLeft = 0;
-  persistActiveState();
 }
 
 // A one-shot position brings the heading cone with it -- the user was explicit, because "where am I and which
@@ -2254,7 +2249,7 @@ locateBtn.addEventListener("pointerdown", () => {
     holdTimer = null;
     holdFired = true;
     locateBtn.classList.remove("holding");
-    markFollowLearned();     // found it -- stop offering
+    hideFollowHint();        // the gesture is happening; the label above the finger has nothing left to say
     startFollowing();
   }, HOLD_MS);
 });
@@ -3610,6 +3605,7 @@ ipContent.addEventListener("click", handleInfoPanelClick);
 // already went in for just the highlight before this fuller one).
 function closeInfoPanelAndDeselect(){
   infoPanel.classList.remove("visible");
+  hideEleHover();          // the profile's dot belongs to the open trail, on the chart AND on the map
   openTrailId = null;
   openLiftId = null;
   selectedSegmentId = null;
@@ -3926,12 +3922,28 @@ function handleEleChartHover(e){
   if (!map.hasLayer(eleHoverMapMarker)) eleHoverMapMarker.addTo(map);
   eleHoverMapMarker.bringToFront();
 }
+// True once this device has been touched at all -- see the mouseleave listener below for why that matters.
+let eleHoverTouched = false;
 ipContent.addEventListener("mousemove", handleEleChartHover);
-ipContent.addEventListener("touchstart", handleEleChartHover, { passive: false });
-ipContent.addEventListener("touchmove", handleEleChartHover, { passive: false });
-ipContent.addEventListener("mouseleave", hideEleHover);
-ipContent.addEventListener("touchend", hideEleHover);
-ipContent.addEventListener("touchcancel", hideEleHover);
+ipContent.addEventListener("touchstart", (e) => { eleHoverTouched = true; handleEleChartHover(e); }, { passive: false });
+ipContent.addEventListener("touchmove", (e) => { eleHoverTouched = true; handleEleChartHover(e); }, { passive: false });
+// NO touchend/touchcancel handler any more, and that is the feature: the dot STAYS where you left it, on the
+// chart and on the trail (user, 2026-08-04). While the finger is down it covers the very spot you are trying to
+// read, so the reading only becomes usable once the finger is gone. It also means a single TAP leaves a dot
+// behind, because touchstart already sets one -- no extra code for that case.
+//
+// mouseleave still clears, but only on a device that has never been touched. Browsers synthesise mouse events
+// after a tap, so trusting it on a phone would hand the dot straight back to the behaviour just removed -- and
+// which synthetic event arrives when differs between iOS and Android, which is not something to rely on.
+ipContent.addEventListener("mouseleave", () => { if (!eleHoverTouched) hideEleHover(); });
+// "Tap somewhere else and it goes away", the other half of the request. Capture phase and tested against the
+// event's own target, so a tap ON a chart is exempt: otherwise the tap that sets a dot would clear it in the
+// same gesture. This covers the map, the sidebar, the header and the rest of the panel in one rule.
+document.addEventListener("pointerdown", (e) => {
+  const t = e.target;
+  if (t && t.closest && t.closest(".ele-chart")) return;
+  hideEleHover();
+}, true);
 
 let reversedId = null; // trail id currently shown in "reversed direction" view, or null
 
@@ -4082,6 +4094,9 @@ function showLiftInfo(l){
 function showTrailInfo(t, opts){
   openLiftId = null;      // opening a trail closes any lift that was showing
   hideAllLiftEndpoints();
+  // The profile dot is anchored to one trail's geometry. Re-rendering the panel drops the chart's own dot with
+  // the SVG anyway; without this the MAP dot would stay behind, marking a spot on a trail nobody is looking at.
+  hideEleHover();
   // `keepSegment` is set by the per-segment click handlers of a Trailrunde: they have just chosen which
   // segment is selected and must not have it wiped by the reset below. They used to achieve that by setting
   // `openTrailId = t.id` themselves before calling in, which also made `isNewSelection` false — and that
@@ -4454,7 +4469,6 @@ function persistActiveState(){
       showPlaces,
       showDirectionArrows,
       liveStatusOpen,
-      followHintsLeft,
     }));
   } catch (e) { /* localStorage unavailable (private mode etc.) — filters just won't persist */ }
 }
@@ -4473,7 +4487,6 @@ function restoreActiveState(){
     if (typeof saved.showLifts !== "boolean") saved.showLifts = true;
     if (typeof saved.showPlaces !== "boolean") saved.showPlaces = true;
     if (typeof saved.liveStatusOpen !== "boolean") saved.liveStatusOpen = true;
-    if (typeof saved.followHintsLeft !== "number") saved.followHintsLeft = 3;
     if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = false;
     return saved;
   } catch (e) { return null; }
@@ -5466,7 +5479,6 @@ async function boot(){
     showLifts = saved.showLifts;
     showPlaces = saved.showPlaces;
     liveStatusOpen = saved.liveStatusOpen;
-    followHintsLeft = Math.max(0, Math.min(3, saved.followHintsLeft));
     showDirectionArrows = saved.showDirectionArrows;
   }
 
@@ -5644,7 +5656,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v119"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v121"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

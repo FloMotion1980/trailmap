@@ -1,7 +1,7 @@
 // @suite   controls
 // @area    The map control cluster: the segmented column, the readout chip, and what covers what
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches locateCluster, mapControls, liveStatusChip, liveStatusShort, applyLiveStatusOpen, liveStatusOpen, updateLiveStatus, is-detached
+// @touches locateCluster, mapControls, liveStatusChip, liveStatusShort, applyLiveStatusOpen, liveStatusOpen, updateLiveStatus, is-detached, showFollowHint, hideFollowHint, followHint, FOLLOW_HINT_MS
 // @needs   region=bikekingdom, builder=off
 //
 // This suite exists because of a bug that every other kind of check would have missed: the readout's fold handle
@@ -30,7 +30,7 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
     forced.textContent = "#locateCluster{ display:flex !important; }";
     document.head.appendChild(forced);
     $("#liveStatus").classList.add("visible");
-    $("#liveStatusShort").textContent = "±12 m";
+    $("#liveStatusShort").textContent = "12m";     // the compact form the segment really renders
     $("#liveStatusText").textContent = "3s 🧭247° 41/38";
     await TM.wait(300);
   };
@@ -157,6 +157,44 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
   T.ok("and the detail line does not repeat it", !/±|\d+m\b/.test(line), line, "no accuracy in the line");
   T.ok("the compact form fits the cell without widening it",
        $("#liveStatusShort").scrollWidth <= 44, $("#liveStatusShort").scrollWidth, "<= 44px");
+
+  T.test("the hold hint comes with every tap, and never gets in the way");
+  // It teaches the one gesture that has no visible control of its own. The rule is deliberately unconditional --
+  // an earlier version showed it three times and then never again, which the user rejected: on a gesture you may
+  // go weeks without using, this is a reminder, not an onboarding step. So the check is that repetition does NOT
+  // wear off, which is the property that regressed once already.
+  {
+    const hint = $("#followHint");
+    const opacity = () => getComputedStyle(hint).opacity;
+    hideFollowHint();
+    await TM.wait(300);
+    T.eq("it is not on screen to begin with", opacity(), "0");
+    const shownTimes = [];
+    for (let i = 0; i < 4; i++) {
+      hideFollowHint();
+      await TM.wait(280);
+      showFollowHint();
+      await TM.wait(280);
+      shownTimes.push(opacity());
+    }
+    T.ok("four taps in a row all show it", shownTimes.every((o) => o === "1"), shownTimes, "all 1");
+    T.ok("it says what the gesture does", /[Hh]alten/.test(hint.textContent), hint.textContent.trim(), "mentions Halten");
+    T.ok("the locate cell shows the matching fill", $("#locateBtn").classList.contains("hinting"),
+         $("#locateBtn").className, "hinting");
+    // It sits over the map, so it must not be able to swallow anything -- neither a tap for the map nor one for
+    // the button it is pointing at.
+    T.eq("it cannot take a tap", getComputedStyle(hint).pointerEvents, "none");
+    const r = box(hint);
+    const under = document.elementFromPoint(Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2));
+    T.ok("so a tap on it reaches what is underneath", under !== hint && !hint.contains(under),
+         under ? (under.id || under.className || under.tagName) : "nothing", "not the hint");
+    T.ok("it clears the control column", r.right <= box($("#mapControls")).left + 1,
+         [Math.round(r.right), Math.round(box($("#mapControls")).left)], "left of the column");
+    T.ok("and it fits on one line", r.height < 36, Math.round(r.height), "< 36px");
+    hideFollowHint();
+    await TM.wait(300);
+    T.eq("hiding it works", opacity(), "0");
+  }
 
   await restore();
 });

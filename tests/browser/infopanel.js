@@ -1,7 +1,7 @@
 // @suite   infopanel
 // @area    Info panel: trail, lift, Tour segments, reverse, GPX, elevation chart
 // @files   Trailmap App/index.html
-// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL
+// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL
 // @needs   region=bikekingdom, builder=off
 //
 // The panel is a custom div rather than a Leaflet popup so nothing covers the trail, which means every piece
@@ -155,6 +155,37 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   content().dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
   await TM.wait(350);
   T.eq("both go away when the mouse leaves the panel", dots(), before2);
+
+  T.test("a tap on the chart LEAVES a dot behind, and a tap elsewhere clears it");
+  // On a phone the finger covers the very spot you are trying to read, so the reading is only usable once the
+  // finger is gone (user, 2026-08-04). There is no touchend handler for that reason -- which also makes a plain
+  // tap set a dot, since touchstart already places one. Driven with real Touch/TouchEvent objects rather than the
+  // handler, because "no handler on touchend" is exactly the kind of thing a direct call cannot check.
+  const chartDot = () => { const d = chart.querySelector(".ele-hover-dot"); return d && d.style.display !== "none"; };
+  const tapChart = (frac) => {
+    const r = chart.getBoundingClientRect();
+    const t = new Touch({ identifier: 1, target: chart,
+                          clientX: Math.round(r.left + r.width * frac), clientY: Math.round(r.top + r.height / 2) });
+    chart.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, cancelable: true, touches: [t], targetTouches: [t], changedTouches: [t] }));
+    chart.dispatchEvent(new TouchEvent("touchend", { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [t] }));
+  };
+  tapChart(0.4);
+  await TM.wait(300);
+  const setX = chart.querySelector(".ele-hover-dot").getAttribute("cx");
+  T.ok("the tap set a dot on the chart", chartDot(), chartDot(), true);
+  T.ok("and one on the map", dots() > before2, dots(), "> " + before2);
+  await TM.wait(700);
+  T.ok("both are still there after the finger is long gone", chartDot() && dots() > before2,
+       [chartDot(), dots()], "[true, > " + before2 + "]");
+  tapChart(0.75);
+  await TM.wait(300);
+  T.ok("a second tap moves it rather than adding another",
+       chart.querySelector(".ele-hover-dot").getAttribute("cx") !== setX && dots() === before2 + 1,
+       [chart.querySelector(".ele-hover-dot").getAttribute("cx"), setX, dots()], "moved, still one");
+  TM.$("#map").dispatchEvent(new PointerEvent("pointerdown", { bubbles: true }));
+  await TM.wait(300);
+  T.ok("tapping somewhere else clears both", !chartDot() && dots() === before2,
+       [chartDot(), dots()], "[false, " + before2 + "]");
 
   T.test("the GPX export offers the app's own geometry");
   // Deliberately not clicking it (that downloads a file); the point is that the exporter finds the trail.
