@@ -191,6 +191,71 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
     worst.classList.remove("selected");
   }
 
+  T.test("no card's name wraps while its line still has room");
+  // The user's own observation, and the counterpart to the case above: reserving the solo button's width on the
+  // NAME kept the card's size stable but made two of 117 names wrap with room to spare -- on a phone, "Marienthal
+  // - Donnersberg Uphill" needed 254px of the 275 it should have had and broke at 249. The reserve lives on the
+  // meta row now, which has 100px+ of slack on its tightest card. A name genuinely wider than the line is fine
+  // and expected; a name that FITS and wrapped anyway is the bug, so that is what this measures.
+  {
+    const probe = document.createElement("div");
+    probe.className = "trail-name";
+    probe.textContent = "X";
+    const host = TM.ui.trailCards()[0];
+    host.appendChild(probe);
+    const oneLine = probe.getBoundingClientRect().height;
+    probe.remove();
+    // How wide the name would be if it were NOT allowed to break: an off-screen clone of the real element, in the
+    // real card, with white-space:nowrap. Measuring the rendered rects instead cannot work and is worth spelling
+    // out, because the first version of this case did exactly that and reported two false positives: once the text
+    // has wrapped, the widest of its line rects is by definition no wider than the line, so every genuine wrap
+    // looks like it "fitted".
+    const unbrokenWidth = (n, card) => {
+      const clone = n.cloneNode(true);
+      clone.querySelectorAll(".card-solo-btn").forEach((b) => b.remove());
+      clone.style.cssText = "position:absolute; visibility:hidden; white-space:nowrap; display:inline-block;" +
+                            " width:auto; max-width:none; left:0; top:0; padding-right:0;";
+      card.appendChild(clone);
+      const w = clone.getBoundingClientRect().width;
+      clone.remove();
+      return w;
+    };
+    let earlyWraps = [], metaWraps = 0, tightestMetaSpare = Infinity;
+    for (const c of TM.ui.trailCards().concat(TM.ui.liftCards())) {
+      const n = c.querySelector(".trail-name"), m = c.querySelector(".trail-meta");
+      const lines = Math.max(1, Math.round(n.getBoundingClientRect().height / oneLine));
+      if (lines > 1) {
+        // Compared against the FULL width, not the width left after the padding: the question this case asks is
+        // whether the wrap was caused by a reserved slot rather than by a name that is genuinely too long, so a
+        // name that would have fitted without the reserve counts as an early wrap even though the layout, given
+        // its reserve, broke it correctly.
+        const needs = unbrokenWidth(n, c);
+        const full = n.clientWidth;
+        const forText = full - parseFloat(getComputedStyle(n).paddingRight);
+        if (needs <= full + 0.5) {
+          earlyWraps.push(n.textContent.trim() + " (needed " + Math.round(needs) + ", had " + Math.round(forText) +
+                          " of the row's " + Math.round(full) + ")");
+        }
+      }
+      if (m) {
+        const kids = [...m.children].map((k) => k.getBoundingClientRect());
+        if (new Set(kids.map((k) => Math.round(k.top))).size > 1) metaWraps++;
+        if (kids.length) {
+          const spare = m.getBoundingClientRect().right - parseFloat(getComputedStyle(m).paddingRight) -
+                        Math.max.apply(null, kids.map((k) => k.right));
+          tightestMetaSpare = Math.min(tightestMetaSpare, spare);
+        }
+      }
+    }
+    T.ok("the probe measured a real line height", oneLine > 10, Math.round(oneLine), "> 10px");
+    T.ok("no name wrapped with room left on its line", earlyWraps.length === 0, earlyWraps.slice(0, 3), "none");
+    T.eq("and no meta row wrapped either", metaWraps, 0);
+    // The reserve is only free while this stays comfortable. If a future region's meta row gets long enough to
+    // eat it, the button needs a new home rather than a smaller slot.
+    T.ok("the meta row still has slack for the button's slot", tightestMetaSpare > 20,
+         Math.round(tightestMetaSpare), "> 20px spare");
+  }
+
   T.test("selecting a lift drops the trail selection, and vice versa");
   const liftCard = TM.ui.liftCards()[0];
   liftCard.click();

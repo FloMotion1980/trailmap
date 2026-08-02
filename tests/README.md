@@ -16,8 +16,8 @@ throttled to roughly one tick per minute, and every wait in the harness is a tim
 takes **~25 seconds** in a visible window and does not finish at all in a hidden one. A run that seems to
 hang part-way through is almost always this, not a failure.
 
-Current state, all green (measured 2026-08-02): **13 suites, 153 cases, 681 checks** — 107 cases / 509 checks
-in the browser bundle (bearing 14, filters 10, geometry 14, infopanel 12, labels 9, lifts 8, lists 15,
+Current state, all green (measured 2026-08-02): **13 suites, 154 cases, 685 checks** — 108 cases / 513 checks
+in the browser bundle (bearing 14, filters 10, geometry 14, infopanel 12, labels 9, lifts 8, lists 16,
 regions 15, solo 10), 27 cases / 75 checks in Python, and `builder` on its own with 19 cases / 97 checks.
 
 ## Serve the repo root, not the app folder
@@ -92,8 +92,9 @@ Two properties this buys, both deliberate:
 ## Conventions that exist for a reason
 
 **Every suite starts from `TM.baseline()`.** Order-dependence is the most expensive kind of false failure
-here. One case failed because the previous one left a lift selected — and closing a panel with the × keeps the
-map selection *by design*, so the app was right and the test was wrong. The baseline clears solo, selection,
+here. One case failed because the previous one left a lift selected — the panel's × kept the map selection *by
+design*, so the app was right and the test was wrong. (That × was removed on 2026-08-02 and closing now always
+deselects, but the lesson is the reason this baseline exists.) The baseline clears solo, selection,
 the builder and every filter before each suite runs.
 
 **A suite that changes which regions are loaded must put them back itself.** `TM.baseline()` deliberately does

@@ -346,11 +346,15 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    2026-08-02). The ring is the same weight as before; it just comes from the box-shadow, which paints outside
    the border box and costs no layout. The other 2px of that twitch was the solo button -- see its own rule. */
 .trail-card.selected{ background:#fffbe6; border-color: var(--select-yellow); box-shadow: 0 0 0 2px var(--select-yellow); }
-/* The right padding is ALWAYS there, selected or not, and that is the point: it is the solo button's slot, so
-   the name wraps at exactly the same word whether the button is showing or not. Reserving the width is what
-   makes reserving no height possible -- see .card-solo-btn. */
-.trail-name{ font-size: 14.5px; font-weight: 600; margin: 0 0 3px; padding-right: 26px; }
-.trail-meta{ font-family: Arial, sans-serif; font-size: 11.5px; color: #4c574d; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+/* NO reserve on the name -- it gets the card's full width. It had 26px for the solo button for a few hours, and
+   the button moved to the meta row below instead precisely because of what that cost: measured over 117 cards,
+   the reserve was the sole cause of a wrap in two of them ("Aufstieg Mittelstation Weisshorn", "Connection Pedra
+   Grossa - Tgantieni"), i.e. a name breaking with room still on the line, which the user spotted. The meta row
+   carries the reserve now: its tightest card has 121.9px of slack, so 26px there costs nothing at all. */
+.trail-name{ font-size: 14.5px; font-weight: 600; margin: 0 0 3px; }
+/* padding-right is the solo button's slot -- see .card-solo-btn and .trail-name. Always present, so this row's
+   own wrapping never changes either; it has 121.9px of slack on its tightest card, measured. */
+.trail-meta{ font-family: Arial, sans-serif; font-size: 11.5px; color: #4c574d; display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding-right: 26px; }
 .badge{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; vertical-align:middle; }
 .badge.gruen{ background:var(--gruen); }
 .badge.blau{ background:var(--blau); }
@@ -429,7 +433,10 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 /* Yellow means "this toggle is on" and has to beat the group's own green fill above. */
 #infoPanel h3 .ip-btns .solo-btn.active,
 #infoPanel h3 .ip-btns .reverse-btn.active{ background: var(--select-yellow); color: var(--ink); }
-#infoPanel .ip-trail{ font-size:12.5px; margin-bottom:10px; line-height:1.5; }
+/* No bottom margin: it separated this block from .ip-actions, the row that used to hold the GPX button, and both
+   are gone -- so it was 10px of empty panel under the elevation chart, on top of the panel's own 10px of padding
+   (user, 2026-08-02: "die InfoBox hat jetzt unten recht viel Whitespace"). */
+#infoPanel .ip-trail{ font-size:12.5px; margin-bottom:0; line-height:1.5; }
 /* The separator on the stats line is now just space (user, 2026-08-02: the · and the / "sollte als optischer
    Trenner genügen" without a glyph). An empty inline-block rather than spaces or NBSPs: a run of ordinary spaces
    collapses to one, NBSPs would refuse to break the line if the row ever got long enough to need it, and this
@@ -458,12 +465,14 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    Out of the text flow entirely, which is the only way selecting a trail can leave its card exactly the size it
    was (user, 2026-08-02). Inline, it changed the card's height two ways: a 20px box in a 19px line grew every
    card by 4px, and on a name long enough to fill the line -- every lift card, measured at 19px -- it pushed a
-   word onto a second line. Absolute costs no layout at all, and .trail-name reserves its 26px of width on every
-   card so the name wraps identically whether the button is there or not. Top 8px is the card's own padding, so
-   it lands on the name's first line. */
+   word onto a second line. Absolute costs no layout at all.
+   It sits on the META row, not beside the name, and that is the second half of the fix: SOMETHING has to reserve
+   its width permanently, or the row it shares would re-wrap the moment the button appears. On the name that
+   reserve cost two of 117 cards a wrap with room to spare; the meta row has 121.9px of slack on its tightest
+   card, so there it is free. bottom 6px against the card's 8px of padding centres it on that row. */
 .trail-card .card-solo-btn{
   display:none; align-items:center; justify-content:center;
-  position:absolute; top:8px; right:8px; margin:0;
+  position:absolute; bottom:6px; right:8px; margin:0;
   width:20px; height:20px; flex-shrink:0;
   border:none; border-radius:50%; cursor:pointer; font-size:11px; line-height:1;
   background: var(--forest); color:#fff; padding:0;
@@ -499,9 +508,17 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    box still keeps its WIDTH (3px of border against 3px less horizontal padding) for the reason it always did --
    labels sit close together and a widening box shoves its neighbours around. It does grow 2px taller, which is
    the one dimension where nothing sits directly against it. */
+/* The label is marked the way the LINE is: its own difficulty colour, wrapped in a thin yellow ring -- the same
+   two-layer reading as a selected trail on the map, where the yellow highlight polyline sits behind the coloured
+   line (user, 2026-08-02: "erst ein Rahmen mit der Farbe des Trails und dann nochmal ein dünner gelber Rahmen").
+   The ring is a box-shadow rather than a second border, because an element has only one border and because a
+   shadow paints OUTSIDE the border box -- so the label's own size does not change, which is the constraint this
+   rule has always been under. Two shadows in one declaration, ring first: earlier shadows paint over later ones.
+   The border colour itself still comes inline from setLabelHovered; --rust here is only the fallback for a label
+   whose trail cannot be resolved. */
 .trail-label-tooltip.tl-hover{
   background: #fff; border-color: var(--rust); border-width: 3px; padding: 0 3px;
-  box-shadow: 0 2px 8px rgba(0,0,0,.40); z-index: 700;
+  box-shadow: 0 0 0 1.5px var(--select-yellow), 0 2px 8px rgba(0,0,0,.40); z-index: 700;
 }
 /* The difficulty as a dot in front of the name, mirroring the 🚡 that starts a lift's label (user's own
    analogy, 2026-07-28). The thin dark ring keeps the black "schwarz" dot readable against the light tooltip
@@ -829,9 +846,15 @@ html.landscape-compact #sidebarToggle .st-bars{
 #regionDialogHint.is-full{ color:var(--rust); }
 /* type="search" for the native clear affordance on mobile keyboards; the rest is styled to look like the
    app's own chips rather than a browser default. */
+/* font-size 16px is NOT a design choice, it is the fix for a trap (user, 2026-08-02: tapping this field on an
+   iPhone zoomed the page in and it never zoomed back out). iOS Safari auto-zooms any focused field whose text is
+   under 16px so it is legible, and it has no counterpart that undoes it -- you are left in a zoomed page with no
+   obvious way back. At 16px there is nothing to zoom for. It was 12.5px.
+   The other way out, `maximum-scale=1, user-scalable=no` on the viewport meta, is deliberately NOT taken: it
+   costs the whole page its pinch-zoom, which on a map app is also the accessibility zoom. */
 #regionSearch{ width:100%; box-sizing:border-box; margin:0 0 10px;
   border:1.5px solid #d3d9c9; border-radius:18px; padding:7px 13px;
-  font-family:Arial, sans-serif; font-size:12.5px; color:var(--ink); background:#fff; }
+  font-family:Arial, sans-serif; font-size:16px; color:var(--ink); background:#fff; }
 #regionSearch:focus{ outline:none; border-color:var(--forest); }
 .region-dialog-empty{ display:none; font-size:12px; color:var(--stone); padding:12px 4px; }
 .region-dialog-empty.visible{ display:block; }
@@ -1176,9 +1199,12 @@ header{ position:relative; z-index:1; }
 #builderExportBtn:hover{ background: var(--forest-dark); border-color: var(--forest-dark); }
 #builderClearBtn{ color: var(--stone); }
 #builderClearBtn:hover{ background:#f7e2df; border-color: var(--rot); color: var(--rot); }
+/* 16px for the same reason as #regionSearch: readonly or not, tapping it to select the export focuses it, and
+   under 16px iOS zooms the page in for good. This box is a copy target rather than something to read, so the
+   larger monospace costs little; it was 10.5px. */
 #builderExport{
   width:100%; margin-top:8px; font-family:ui-monospace,Menlo,Consolas,monospace;
-  font-size:10.5px; line-height:1.35; border-radius:6px; display:none;
+  font-size:16px; line-height:1.35; border-radius:6px; display:none;
   border:1px solid rgba(0,0,0,.18); padding:6px; resize:vertical;
 }
 #builderExport.visible{ display:block; }
