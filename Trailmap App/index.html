@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=75" />
+<link rel="stylesheet" href="style.css?v=77" />
 </head>
 <body>
 <div id="fatalError">
@@ -76,7 +76,10 @@
       <span class="st-bars" aria-hidden="true"></span>
       <h1 id="appTitle">Trailmap</h1>
     </div>
-    <button id="regionsBtn">🌍 Regionen wählen</button>
+    <!-- The label is its own span so the button itself can stay unclipped: the ellipsis needs overflow:hidden,
+         and overflow:hidden would also cut off the invisible hit area the button carries (see ::after in the
+         stylesheet). -->
+    <button id="regionsBtn"><span id="regionsLabel">🌍 Regionen wählen</span></button>
     <!-- The one and only mode switch. It lives here because the header is the only element that looks the
          same in both layouts, is reachable without opening the drawer, and covers no map. -->
     <!-- 🧩, not the 🧭 it used to be: on touch layouts this button's label is hidden, which left a bare compass
@@ -845,6 +848,7 @@ let showDirectionArrows = false;
 
 const regionChipRow = document.getElementById("regionChips");
 const regionsBtnEl = document.getElementById("regionsBtn");
+const regionsLabelEl = document.getElementById("regionsLabel");
 
 // Populated fresh by rebuildRegionChips() (whenever the chip DOM itself is rebuilt) and read/updated
 // by render() (on every filter change) to keep each region-group/sub-region chip's "(n sichtbar)"
@@ -857,7 +861,7 @@ let regionSubCountEls = {};
 // many regions the catalog eventually grows to.
 function updateHeaderRegionsLabel(){
   const labels = Object.values(REGION_GROUPS).map(g => g.label);
-  regionsBtnEl.textContent = "🌍 " + (labels.length ? labels.join(" · ") : "Regionen wählen");
+  regionsLabelEl.textContent = "🌍 " + (labels.length ? labels.join(" · ") : "Regionen wählen");
   regionsBtnEl.title = labels.length ? "Aktive Regionen: " + labels.join(", ") + " — klicken zum Ändern" : "Regionen wählen";
 }
 
@@ -5548,7 +5552,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v75"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v77"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

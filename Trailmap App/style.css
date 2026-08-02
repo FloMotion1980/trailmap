@@ -704,11 +704,14 @@ html.landscape-compact #sidebarToggle .st-bars{
    row is one family; what tells them apart is their content (🌍 vs 🧩) and the fact that only the builder ever
    fills, and only while its mode is on. */
 #regionsBtn{
+  display:flex; align-items:center;
   background: transparent; color:#f2f3ec; border:1px solid rgba(242,243,236,.45); border-radius:14px;
   padding:4px 12px; font-family: Arial, sans-serif; font-size:12.5px; font-weight:600;
-  cursor:pointer; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  align-self:center;
+  cursor:pointer; max-width:100%; align-self:center;
 }
+/* The clipping lives on the label, not the button: the button needs to stay unclipped so its invisible hit
+   area (::after below) is not cut off with it. */
+#regionsLabel{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
 #regionsBtn:hover{ background:rgba(242,243,236,.12); }
 #regionDialog{
   position:fixed; inset:0; z-index:4000; background: rgba(15,20,16,0.5);
@@ -936,6 +939,23 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
    it shrank to 23 while the region chip stayed at 26. Same padding and border alone were not enough for any of
    the three. */
 #regionsBtn, #builderModeBtn{ line-height:16px; min-height:26px; box-sizing:border-box; }
+
+/* HIT AREAS, not looks. In landscape the header row is 26px tall and sits right at the top edge -- which is
+   also where iOS watches for its own swipe-down -- so a tap that drifts a couple of pixels gets taken for that
+   gesture and the button never fires (user, 2026-08-02: "oft wird ein Tippen auf eine Schaltfläche mit dem
+   Runterziehen verwechselt"). Each control keeps its 26px pill and gains an invisible box around it, which is
+   the one way to make the target bigger without spending map height on it. `touch-action:manipulation` drops
+   the double-tap-zoom delay on top.
+   The header needs its own stacking context for this: it is a static element, #map is absolutely positioned,
+   so without it the part of the hit area that hangs below the header would be painted over by the map and the
+   taps would land there instead. */
+header{ position:relative; z-index:1; }
+#sidebarToggle, #regionsBtn, #builderModeBtn{ position:relative; touch-action:manipulation; }
+/* Biased DOWNWARDS on purpose: growing the box upwards would push it to y=0, further into the very edge strip
+   the system gesture owns, which is the opposite of the fix. Two pixels up, sixteen down. */
+#sidebarToggle::after, #regionsBtn::after, #builderModeBtn::after{
+  content:""; position:absolute; inset:-2px -5px -16px;
+}
 
 /* Icon only where the line is genuinely too short for the label, which is a question of WIDTH -- it used to be
    keyed on `pointer: coarse` as well, so a landscape phone with 812px to spare hid the word anyway (user,
