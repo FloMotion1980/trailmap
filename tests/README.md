@@ -16,9 +16,9 @@ throttled to roughly one tick per minute, and every wait in the harness is a tim
 takes **~25 seconds** in a visible window and does not finish at all in a hidden one. A run that seems to
 hang part-way through is almost always this, not a failure.
 
-Current state, all green (measured 2026-08-02): **13 suites, 154 cases, 685 checks** — 108 cases / 513 checks
+Current state, all green (measured 2026-08-03): **14 suites, 160 cases, 701 checks** — 108 cases / 513 checks
 in the browser bundle (bearing 14, filters 10, geometry 14, infopanel 12, labels 9, lifts 8, lists 16,
-regions 15, solo 10), 27 cases / 75 checks in Python, and `builder` on its own with 19 cases / 97 checks.
+regions 15, solo 10), 33 cases / 91 checks in Python, and `builder` on its own with 19 cases / 97 checks.
 
 ## Serve the repo root, not the app folder
 
@@ -87,6 +87,7 @@ Two properties this buys, both deliberate:
 | `infopanel` | panel contents, reverse, Tour segments, elevation chart + hover sync | reverse is checked on the **map** too, not only in the numbers |
 | `lifts` | lift drawing, stations, Tour routing, builder-from-list | the mask/symbol split is load-bearing, not cosmetic |
 | `regions` | activate/deactivate, the limit, persistence, four fresh boots | slowest suite; it really loads data |
+| `runner` | `run.py` itself: which suites `--changed` selects, and the GAP report | `@always`; a suite that never runs looks exactly like one that passes |
 | `builder` | Tourenbuilder junctions, direction, clipping, drag/swipe | `@standalone`, needs `bikecircus` + builder ON + a phone viewport |
 
 ## Conventions that exist for a reason

@@ -23,9 +23,11 @@ WHY THE SELECTION MAP LIVES IN THE TEST FILES. Each suite declares what it watch
     @needs   region=bikekingdom, builder=off
 
 `--changed` selects a suite when one of its @files changed AND (it declares no @touches, or one of them
-appears in the diff). Declaring this next to the tests is the point: a mapping kept in a doc rots silently,
-whereas this one is read by the runner every time, and a changed file that no suite claims is reported as a
-GAP rather than passing quietly. `@always` marks the cheap data checks that run whatever changed.
+appears in the diff, or the changed file is one no @touches symbol could live in -- a stylesheet, a region's
+JSON, a vendored library; see SYMBOL_HOMES). Declaring this next to the tests is the point: a mapping kept in a
+doc rots silently, whereas this one is read by the runner every time, and a changed file that no suite claims
+is reported as a GAP rather than passing quietly. `@always` marks the cheap data checks that run whatever
+changed.
 """
 import argparse
 import fnmatch
@@ -110,6 +112,19 @@ def changed_files_and_lines(base):
     return files, "\n".join(diff)
 
 
+# The @touches gate is a search for the app's OWN identifiers, so it can only speak for the files those
+# identifiers live in. A stylesheet has none; neither does a region's JSON, nor the vendored leaflet-rotate.js,
+# whose contents are somebody else's names. A change to one of those therefore selects the suite on its own.
+# Without this a CSS-only edit selected NOTHING but the two @always Python suites -- three suites claim
+# style.css, all three sat it out, and the colour change on 2026-08-02 went in unwatched. That is the wrong way
+# round: a stylesheet is the change class that can make an element vanish outright (see appshell's own note).
+SYMBOL_HOMES = ("Trailmap App/index.html", "Trailmap App/sw.js")
+
+
+def _symbol_searchable(path):
+    return path in SYMBOL_HOMES or path.startswith("tools/")
+
+
 def select(suites, changed, diff):
     chosen, reasons, claimed = [], {}, set()
     for s in suites:
@@ -124,6 +139,11 @@ def select(suites, changed, diff):
         if not s["touches"]:
             chosen.append(s)
             reasons[s["suite"]] = "%s changed" % hits[0]
+            continue
+        opaque = [f for f in hits if not _symbol_searchable(f)]
+        if opaque:
+            chosen.append(s)
+            reasons[s["suite"]] = "%s changed (no @touches symbol can live there)" % opaque[0]
             continue
         syms = [sym for sym in s["touches"] if re.search(r"\b%s\b" % re.escape(sym), diff)]
         if syms:
