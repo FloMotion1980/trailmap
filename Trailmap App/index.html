@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=129" />
+<link rel="stylesheet" href="style.css?v=132" />
 </head>
 <body>
 <div id="fatalError">
@@ -3626,41 +3626,43 @@ function closeInfoPanelAndDeselect(){
 }
 map.on("click", closeInfoPanelAndDeselect);
 
-// ---- Retarget a tap to where the finger actually landed (2026-08-04) -------------------------------
-// Browsers hit-test a touch's native synthetic `click` at the TOUCHEND position, not the touchstart one, and a
-// normal tap's finger settles a few pixels between down and up -- completely ordinary human behaviour. On a
-// densely packed map (many trails' invisible 18-22px hit-lines close together, worst at a low zoom where a
-// whole region compresses into a small screen area) that few-pixel drift is often enough to move the click off
-// the intended trail entirely, onto a neighbour's start/end dot or onto empty map. Measured on Donnersberg's own
-// boot zoom: sampling the map, a realistic 4px settle put the touchend position on a DIFFERENT element than the
-// touchstart position at 134 of 400 sampled points. That reproduces the report exactly -- a trail visibly reacts
-// to the touch (mouseover thickens its line at touchstart) and then nothing opens, because the click that was
-// meant to select it landed elsewhere and fell through to the map's own background click, which only deselects.
+// ---- Drive a tap on a trail/lift ourselves, never through the platform's own click (2026-08-04) ---
+// First cut (same day) only retargeted when the touchend position hit tested to something different than the
+// touchstart position -- a real, measured cause (a normal tap's finger settles a few pixels, and on a densely
+// packed map that is enough to move the browser's native click off the intended hit-line entirely). Kept, but
+// it did not fully explain the report: the user could still reproduce it identically after that fix shipped,
+// on a phone, only at a low zoom. That points at a second, independent cause with the same symptom -- iOS
+// Safari's well-known "first tap on a hover-reactive element only applies :hover/mouseover, the click itself
+// is suppressed and needs a second tap" quirk. Our hit-lines qualify (`mouseover` visibly thickens them via
+// setHover), and this has NOTHING to do with where the finger landed, so a position-mismatch check can never
+// catch it -- down can equal up and the native click can still just not happen.
 //
-// Fixed once, generically, rather than in every one of the ~10 places a trail/lift/marker binds "click": track
-// where a touch STARTED, and if the browser's native click is about to fire somewhere else, fire our own click
-// on the touchSTART element instead and suppress the native one. That is where the finger actually first came
-// down, which is the tap's real target. A dispatched "click" DOM event on that element is indistinguishable to
-// Leaflet from a real one, since Leaflet listens for exactly that event on the layer's own <path>.
+// The fix that closes both causes at once: stop trusting the platform's click for a tap that started on one of
+// our own interactive paths, unconditionally. `setHover(true)` already lives INSIDE each layer's own click
+// handler (not in a separate mouseover binding), so dispatching one synthetic "click" on the touchSTART element
+// reproduces the complete intended behaviour -- the bold line and the info panel -- in one action, with no
+// dependency on whatever the browser or iOS decides to do with the real gesture. A tap that starts on empty
+// map, a button, or a card is left completely alone: only a touchstart landing on a Leaflet interactive vector
+// path triggers this at all, so background taps, buttons and double-tap-zoom on the open map are unaffected.
 let mapTouchStart = null;
 map.getContainer().addEventListener("touchstart", (e) => {
   if (e.touches.length !== 1) { mapTouchStart = null; return; }   // a pinch/rotate gesture, not a tap
   const t = e.touches[0];
-  mapTouchStart = { x: t.clientX, y: t.clientY, target: document.elementFromPoint(t.clientX, t.clientY), time: Date.now() };
+  const target = document.elementFromPoint(t.clientX, t.clientY);
+  // Decided HERE, not at touchend: only a path we would otherwise have to hit-test for is worth intercepting.
+  const owns = !!target && target.tagName === "path" && target.classList.contains("leaflet-interactive");
+  mapTouchStart = { x: t.clientX, y: t.clientY, target: owns ? target : null, time: Date.now() };
 }, { passive: true });
 map.getContainer().addEventListener("touchend", (e) => {
   const start = mapTouchStart;
   mapTouchStart = null;
-  if (!start || e.touches.length !== 0 || e.changedTouches.length !== 1) return;   // mid-multi-touch, ignore
+  if (!start || !start.target || e.touches.length !== 0 || e.changedTouches.length !== 1) return;
   const t = e.changedTouches[0];
   // Only for something that reads as a TAP -- a real drag/pan must sail through untouched. Leaflet's own
-  // dragging already decides what a genuine pan does; this only ever adjusts where a plain tap's click lands.
+  // dragging already decides what a genuine pan does; this never has to reason about that, since a drag
+  // starting on a path still ends up here needing to NOT fire a click.
   if (Math.hypot(t.clientX - start.x, t.clientY - start.y) > 14 || Date.now() - start.time > 500) return;
-  if (!start.target || start.target === document.elementFromPoint(t.clientX, t.clientY)) return;   // no mismatch
-  // Only retarget onto one of Leaflet's own interactive vector paths -- never hijack a button, a card, or
-  // anything outside the map that a mismatched hit-test could theoretically also return.
-  if (start.target.tagName !== "path" || !start.target.classList.contains("leaflet-interactive")) return;
-  e.preventDefault();   // stop the browser's own (wrongly-aimed) click from also firing
+  e.preventDefault();   // never let the platform's own (mismatched, or ghost-tap-suppressed) click also fire
   start.target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, clientX: t.clientX, clientY: t.clientY }));
 }, { passive: false });
 
@@ -5744,7 +5746,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v129"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v132"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

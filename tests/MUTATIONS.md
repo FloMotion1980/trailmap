@@ -55,6 +55,8 @@ current; a stale count is worse than none, because it looks like evidence.
 
 | `regions` | put the old default back (`(saved && saved.activeRegionGroups.length) ? saved.activeRegionGroups : ["paznaun"]`) | "a first-ever visit asks which regions, with NOTHING preselected" fails all three checks: 24 trails loaded (want 0), one dialog row already marked Aktiv (want 0), and the header reads "🌍 Silvretta Bike Arena" instead of mentioning "wählen" — Paznaun's own catalog label, which is exactly what the user spotted and is why the report did not look like it was about Paznaun at all |
 
+| `infopanel` | put the mismatch-only gate back on the touchend handler (`if (start.target === document.elementFromPoint(...)) return;`) | "tapping a trail opens it even when the platform's own click would not have fired" fails both checks -- an IDENTICAL down/up position no longer gets a click at all, which is exactly the regression this second pass fixed: a scripted touch dispatch never produces the browser's own synthetic click, so this is the only way that failure mode is even reachable in a test |
+
 ## Not yet mutation-checked
 
 `geometry`, `infopanel`, `lifts` and `builder`'s newer cases have not had a mutation applied. They pass, and

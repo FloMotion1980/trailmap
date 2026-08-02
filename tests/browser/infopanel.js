@@ -190,20 +190,66 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   T.ok("tapping somewhere else clears both", !chartDot() && dots() === before2,
        [chartDot(), dots()], "[false, " + before2 + "]");
 
-  T.test("a tap that settles a few pixels away still opens the trail it started on");
-  // Browsers hit-test a touch's native `click` at the TOUCHEND position, not the touchstart one, and a normal
-  // tap's finger settles a few pixels between down and up -- ordinary human behaviour, not a drag. On a densely
-  // packed map that drift is often enough to move off the intended trail's hit-line entirely, onto a neighbour's
-  // start/end dot or onto empty map: measured on Donnersberg's own boot zoom, a realistic 4px settle mismatched
-  // 134 of 400 sampled points (user, 2026-08-04 -- "ich schaffe es ... einen Trail zu aktivieren ohne dass die
-  // Info Box aufgeht", reported at a low zoom where many short trails compress into a small screen area). The
-  // fix retargets onto wherever the touch STARTED when the native click would land somewhere else; this
-  // reproduces exactly that mismatch with real Touch/TouchEvent objects; a scripted click on the down element
-  // alone would prove the DOM works but not that the map's own touchstart/touchend listeners actually catch it.
+  T.test("tapping a trail opens it even when the platform's own click would not have fired");
+  // Reported again by the user AFTER the first fix (a positional mismatch retarget) shipped: "ich schaffe es
+  // immer noch genauso, nur auf dem Handy wenn weit rausgezoomt". That is the signature of a SECOND, independent
+  // cause with the same symptom -- iOS Safari's documented "first tap on a hover-reactive element only applies
+  // :hover, the click needs a second tap" quirk. Our hit-lines qualify (mouseover visibly thickens them), and
+  // this has nothing to do with WHERE the finger landed, so a mismatch-only check can never catch it: down can
+  // equal up and the native click can still just not happen. This case is exactly that -- identical down and up
+  // position, which the first version of this fix would have left completely alone (no mismatch, defer to the
+  // platform) and could not even measure, since a scripted touch dispatch never produces the browser's own
+  // synthetic click at all. It can only pass now because the app stopped depending on that synthesis entirely:
+  // setHover(true) already lives INSIDE each layer's own click handler, so one dispatched click reproduces the
+  // whole intended effect regardless of what the platform would or would not have done.
   // The sidebar drawer sits on top of the map on a touch layout, so it must be closed first -- the app is not
   // guaranteed to start in that state here (bootFresh cases elsewhere in a run may leave the toggle either way).
   const aside = TM.$("aside");
   if (aside && aside.classList.contains("open")) { TM.$("#sidebarToggle").click(); await TM.wait(400); }
+  {
+    // Not "the first wide hit-line in the DOM" and not a path's own bounding-box centre either: a bent/zigzag
+    // trail's rectangular bbox centre routinely sits in the empty space BETWEEN two arms of the line, off the
+    // path entirely (measured -- a candidate with a perfectly real 242x336 box still resolved to something else
+    // at its own centre). The only trustworthy way to find a usable point is the same one the mismatch case
+    // below already uses: ask the DOM itself, at a grid of real screen points, which element is actually there.
+    const mapBoxForPick = TM.$("#map").getBoundingClientRect();
+    let cx = null, cy = null, hitEl = null;
+    outerPick:
+    for (let y = Math.round(mapBoxForPick.top) + 20; y < mapBoxForPick.bottom - 20; y += 6) {
+      for (let x = Math.round(mapBoxForPick.left) + 8; x < mapBoxForPick.right - 8; x += 6) {
+        const el = document.elementFromPoint(x, y);
+        if (el && el.tagName === "path" && el.classList.contains("leaflet-interactive") &&
+            parseFloat(el.getAttribute("stroke-width") || 0) >= 14) {
+          cx = x; cy = y; hitEl = el;
+          break outerPick;
+        }
+      }
+    }
+    if (!hitEl) {
+      T.skip("no wide hit-line found by scanning the map to probe");
+    } else {
+      panel().classList.remove("visible");
+      const mapEl = TM.$("#map");
+      const t1 = new Touch({ identifier: 30, target: hitEl, clientX: cx, clientY: cy });
+      mapEl.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, cancelable: true, touches: [t1], targetTouches: [t1], changedTouches: [t1] }));
+      await TM.wait(30);
+      const t2 = new Touch({ identifier: 30, target: hitEl, clientX: cx, clientY: cy });   // SAME point, on purpose
+      const ev2 = new TouchEvent("touchend", { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [t2] });
+      mapEl.dispatchEvent(ev2);
+      await TM.wait(400);
+      T.ok("the platform's own click is suppressed unconditionally", ev2.defaultPrevented, ev2.defaultPrevented, true);
+      T.ok("the trail's panel opens anyway", panel().classList.contains("visible"), panel().classList.contains("visible"), true);
+    }
+  }
+
+  T.test("a tap that settles a few pixels away still opens the trail it started on");
+  // The first, narrower cause: browsers hit-test a touch's native click at the TOUCHEND position, not the
+  // touchstart one, and a normal tap's finger settles a few pixels in between -- ordinary human behaviour, not a
+  // drag. On a densely packed map that drift is often enough to move off the intended trail's hit-line entirely,
+  // onto a neighbour's start/end dot or onto empty map: measured on Donnersberg's own boot zoom, a realistic 4px
+  // settle mismatched 134 of 400 sampled points. Kept as its own case because it is a DIFFERENT reproduction
+  // (deliberately mismatched down/up) than the one above (deliberately identical down/up) -- between them they
+  // cover both causes the user's report turned out to have.
   // Rather than trusting one hit-line's own bounding-box centre (a curved/angled path's actual drawn pixels are
   // not reliably under that point, and it is exactly as likely to sit over open sidebar space as over the map),
   // scan the map for a point where a real 4px settle genuinely lands on a DIFFERENT element -- the same method
