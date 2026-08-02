@@ -232,7 +232,11 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    two-chip line has 12px more to work with, which is enough for that pair and for the next one that lands close.
    Tuning to the exact 7px would not have been enough: this has to survive iOS rendering the same names slightly
    wider than Chrome does. */
-.region-group-block{ position: relative; border: 1.5px solid var(--forest); border-radius: 10px;
+/* The line is #e3e6da, the sidebar's OWN light grey (user, 2026-08-02: --forest "wirkt etwas hart"). Not a new
+   value: it is what every trail card's border, every filter-section separator and every rule in the builder
+   already use, so the frame belongs to the same family as the rest of this column instead of shouting over it.
+   The dashed "+ Region hinzufügen" button matches it, as it has always been meant to. */
+.region-group-block{ position: relative; border: 1.5px solid #e3e6da; border-radius: 10px;
   padding: 20px 8px 10px; }
 /* Hard against the frame's own left line, and with no padding on that side, so the name button's left edge IS
    that line: the region reads as the thing the box hangs off, which is the optical emphasis the user asked for
@@ -285,10 +289,11 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 .region-group-close-btn{
   position: absolute; top: 0; right: -15px; transform: translateY(-14px);
   width: 30px; height: 28px; border-radius: 6px;
-  /* --forest, the frame's own colour (user, 2026-08-02): it sits ON that line, so it should belong to it rather
-     than be a grey glyph parked there. The rust hover stays as the "this deletes something" signal, and only
-     where a real pointer exists -- see the media query below. */
-  font-size:13px; font-weight:700; color: var(--forest); background: var(--card-bg);
+  /* Grey rather than --forest, with the frame (user, 2026-08-02) -- but --stone, not the frame's own #e3e6da:
+     that value is a LINE colour and as a glyph on white it comes out at 1.2:1, i.e. invisible. --stone is the
+     app's existing muted glyph grey (the builder's clear button, the dialog's own quiet text) and measures
+     3.6:1, which a 13px bold ✕ on a 30x28 target carries. */
+  font-size:13px; font-weight:700; color: var(--stone); background: var(--card-bg);
 }
 /* ONE tint for both, and it is the one the app already uses for a forest-coloured control under the cursor
    (#e4ece0, as on the region dialog's own locate button). They had two -- pale green for the 📍, pale red for
@@ -327,7 +332,10 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 .region-add-btn{ width: 100%; margin-top: -9px;padding: 9px 12px; border-radius: 10px; cursor: pointer;
   font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
   font-weight: 700; color: var(--forest); background: transparent;
-  border: 1.5px dashed var(--forest); transition: all .15s ease; }
+  /* Same grey as the region boxes' frame -- see the note there. The LABEL stays --forest: it is the text of an
+     action, and grey text on white would read as disabled, which this button also genuinely is at the region
+     limit (see :disabled below). */
+  border: 1.5px dashed #e3e6da; transition: all .15s ease; }
 .region-add-btn:hover:not(:disabled){ background: var(--forest); color: #fff; border-style: solid; }
 .region-add-btn:disabled{ cursor: not-allowed; opacity: .45; border-color: var(--stone); color: var(--stone); }
 /* No bottom border: the next hub announces itself with its own coloured uppercase title, and before a new
