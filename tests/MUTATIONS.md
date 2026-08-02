@@ -53,6 +53,8 @@ current; a stale count is worse than none, because it looks like evidence.
 
 | `bearing` | put the unconditional `detachOrientationListener()` back in `stopFollowing()` | "the compass outlives the follow mode" fails on *"a reading that arrives afterwards still turns the map → 88, want 270 ±3"* — the map sits at the heading it had when the follow ended. Worth knowing: the FIRST version of this case called `handleOrientation()` directly and passed against the broken code, because a direct call bypasses the very thing that breaks (the listener being off the window). It dispatches real events now |
 
+| `regions` | put the old default back (`(saved && saved.activeRegionGroups.length) ? saved.activeRegionGroups : ["paznaun"]`) | "a first-ever visit asks which regions, with NOTHING preselected" fails all three checks: 24 trails loaded (want 0), one dialog row already marked Aktiv (want 0), and the header reads "🌍 Silvretta Bike Arena" instead of mentioning "wählen" — Paznaun's own catalog label, which is exactly what the user spotted and is why the report did not look like it was about Paznaun at all |
+
 ## Not yet mutation-checked
 
 `geometry`, `infopanel`, `lifts` and `builder`'s newer cases have not had a mutation applied. They pass, and

@@ -21,15 +21,21 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=121" />
+<link rel="stylesheet" href="style.css?v=129" />
 </head>
 <body>
 <div id="fatalError">
   <div class="box">
     <h2>Karte konnte nicht geladen werden</h2>
     <p id="fatalErrorMsg">Unbekannter Fehler.</p>
-    <p>Häufigste Ursache: Diese Seite lädt eine externe Kartenbibliothek nach; das scheitert manchmal, wenn eine Datei nur als reine Vorschau geöffnet wird (ohne JavaScript), statt richtig im Browser.</p>
-    <p><b>iPhone-Tipp:</b> Datei in der Dateien-App gedrückt halten → „Teilen" → <b>„In Safari öffnen"</b> wählen, statt sie nur anzutippen.</p>
+    <!-- Both paragraphs that used to stand here were from the era when this was a file you opened out of the
+         Files app: "the most common cause is a preview-opened file" plus an iPhone tip about "In Safari öffnen".
+         Neither is true of an installed PWA served over HTTPS, and the user rightly called the tip out
+         (2026-08-04). The one case they were written for -- a file:// load -- writes its own, specific message
+         into #fatalErrorMsg from boot(), so nothing general is needed for it either. What is left is the two
+         things that actually help, in the order to try them. -->
+    <p>Neu laden hilft meistens. Kommt die Meldung wieder, wurde im Hintergrund eine neue Version
+       installiert: App vollständig schließen und neu öffnen.</p>
   </div>
 </div>
 <div id="regionDialog">
@@ -2379,7 +2385,12 @@ const HOVER_WEIGHT = 6.5;
 // A Trailrunde's connector stretches (fireroad/access, no component trail) are drawn a little thinner than a
 // real trail — user, 2026-07-28: "einen Tick schmaler". They are the least important part of a loop and were
 // competing visually with the trails at the same 3.5. Same size of step as the lift dots' 4.5 -> 3.8.
-const CONNECTOR_WEIGHT = 2.8;
+const CONNECTOR_WEIGHT = 2.2;
+// How much a connector gains on hover/selection, against a trail's own HOVER_WEIGHT - BASE_WEIGHT of 3. At the
+// full delta a marked Trailrunde's connectors reached 5.8px, and a 6,6 dash pattern at that width reads as a
+// solid grey line -- the gaps all but disappear (user, 2026-08-04). +0.8 keeps them legible as dashes while the
+// stretch still visibly reacts to being marked.
+const CONNECTOR_HOVER_DELTA = 0.8;
 // Map labels for a trail carry its difficulty as a coloured dot in front of the name, the same way lift
 // labels start with 🚡 — the user's own analogy (2026-07-28). Worth it because the labels are the one place
 // the map named a trail without saying anything about how hard it is, and the line's own colour is often
@@ -3615,6 +3626,44 @@ function closeInfoPanelAndDeselect(){
 }
 map.on("click", closeInfoPanelAndDeselect);
 
+// ---- Retarget a tap to where the finger actually landed (2026-08-04) -------------------------------
+// Browsers hit-test a touch's native synthetic `click` at the TOUCHEND position, not the touchstart one, and a
+// normal tap's finger settles a few pixels between down and up -- completely ordinary human behaviour. On a
+// densely packed map (many trails' invisible 18-22px hit-lines close together, worst at a low zoom where a
+// whole region compresses into a small screen area) that few-pixel drift is often enough to move the click off
+// the intended trail entirely, onto a neighbour's start/end dot or onto empty map. Measured on Donnersberg's own
+// boot zoom: sampling the map, a realistic 4px settle put the touchend position on a DIFFERENT element than the
+// touchstart position at 134 of 400 sampled points. That reproduces the report exactly -- a trail visibly reacts
+// to the touch (mouseover thickens its line at touchstart) and then nothing opens, because the click that was
+// meant to select it landed elsewhere and fell through to the map's own background click, which only deselects.
+//
+// Fixed once, generically, rather than in every one of the ~10 places a trail/lift/marker binds "click": track
+// where a touch STARTED, and if the browser's native click is about to fire somewhere else, fire our own click
+// on the touchSTART element instead and suppress the native one. That is where the finger actually first came
+// down, which is the tap's real target. A dispatched "click" DOM event on that element is indistinguishable to
+// Leaflet from a real one, since Leaflet listens for exactly that event on the layer's own <path>.
+let mapTouchStart = null;
+map.getContainer().addEventListener("touchstart", (e) => {
+  if (e.touches.length !== 1) { mapTouchStart = null; return; }   // a pinch/rotate gesture, not a tap
+  const t = e.touches[0];
+  mapTouchStart = { x: t.clientX, y: t.clientY, target: document.elementFromPoint(t.clientX, t.clientY), time: Date.now() };
+}, { passive: true });
+map.getContainer().addEventListener("touchend", (e) => {
+  const start = mapTouchStart;
+  mapTouchStart = null;
+  if (!start || e.touches.length !== 0 || e.changedTouches.length !== 1) return;   // mid-multi-touch, ignore
+  const t = e.changedTouches[0];
+  // Only for something that reads as a TAP -- a real drag/pan must sail through untouched. Leaflet's own
+  // dragging already decides what a genuine pan does; this only ever adjusts where a plain tap's click lands.
+  if (Math.hypot(t.clientX - start.x, t.clientY - start.y) > 14 || Date.now() - start.time > 500) return;
+  if (!start.target || start.target === document.elementFromPoint(t.clientX, t.clientY)) return;   // no mismatch
+  // Only retarget onto one of Leaflet's own interactive vector paths -- never hijack a button, a card, or
+  // anything outside the map that a mismatched hit-test could theoretically also return.
+  if (start.target.tagName !== "path" || !start.target.classList.contains("leaflet-interactive")) return;
+  e.preventDefault();   // stop the browser's own (wrongly-aimed) click from also firing
+  start.target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, clientX: t.clientX, clientY: t.clientY }));
+}, { passive: false });
+
 // `highlight` (optional {distStart, distEnd, color}, in the same km units as the profile's own
 // x-axis) draws a shaded band over that distance range — used to show which stretch of a
 // Trailrunde's elevation profile belongs to whichever of its component trails was last clicked.
@@ -3692,7 +3741,11 @@ function buildElevationSvg(profile, highlight, color, trailId, reversed, segment
       ${highlightRect}
       <text x="2" y="${(y(eleMax) + 8).toFixed(1)}" class="ele-label">${Math.round(eleMax)} m</text>
       <text x="2" y="${(y(eleMin) - 2).toFixed(1)}" class="ele-label">${Math.round(eleMin)} m</text>
-      <circle class="ele-hover-dot" r="4.5" cx="0" cy="0" style="display:none"></circle>
+      <!-- An ELLIPSE, not a circle, because this SVG is stretched: the viewBox is a fixed 240 x H and
+           preserveAspectRatio="none" scales x and y by different factors, so a circle renders as an egg
+           (user, 2026-08-04). The handler sets rx/ry per position from the element's real size, which is
+           the only place the scale is known; these are just a sane starting pair. -->
+      <ellipse class="ele-hover-dot" rx="4.5" ry="4.5" cx="0" cy="0" style="display:none"></ellipse>
     </svg>`;
 }
 
@@ -3910,6 +3963,13 @@ function handleEleChartHover(e){
 
   const dot = svg.querySelector(".ele-hover-dot");
   dot.setAttribute("cx", chartX.toFixed(1)); dot.setAttribute("cy", chartY.toFixed(1)); dot.style.display = "";
+  // Undo the chart's non-uniform scale so the dot is round on SCREEN: the viewBox is W x H and the element is
+  // rect.width x rect.height, so a user-space radius of R renders as R * rect.width / W wide and
+  // R * rect.height / H tall. Dividing the wanted on-screen radius by each factor makes both come out at
+  // ELE_DOT_R px. Done here rather than in CSS because only this code knows the rendered size.
+  const ELE_DOT_R = 4.5;
+  dot.setAttribute("rx", (ELE_DOT_R * W / rect.width).toFixed(2));
+  dot.setAttribute("ry", (ELE_DOT_R * H / rect.height).toFixed(2));
 
   // `targetKm` is read off the chart, so it lives on the profile's axis -- convert before walking the
   // geometry (see profileKmToGeometryKm). While reversed, the profile itself was mirrored by
@@ -4198,7 +4258,10 @@ function baselineLineOpacity(lid){
 function applyLineWeight(target, hover, opacity){
   const apply = (l) => {
     const base = l._tmBaseWeight || BASE_WEIGHT;
-    l.setStyle({ weight: hover ? base + (HOVER_WEIGHT - BASE_WEIGHT) : base, opacity });
+    // A connector grows by less than a trail does: same reason it is thinner in the first place, plus its dash
+    // pattern only survives at a modest width -- see CONNECTOR_HOVER_DELTA.
+    const delta = base === CONNECTOR_WEIGHT ? CONNECTOR_HOVER_DELTA : (HOVER_WEIGHT - BASE_WEIGHT);
+    l.setStyle({ weight: hover ? base + delta : base, opacity });
   };
   if (target.eachLayer) target.eachLayer(apply); else apply(target);   // featureGroup vs. a single polyline
 }
@@ -4481,6 +4544,17 @@ function restoreActiveState(){
     // Forward-compat: silently drop any saved group key that no longer exists in the catalog
     // (e.g. a region got renamed/removed since the user last visited).
     saved.activeRegionGroups = (saved.activeRegionGroups || []).filter(g => REGION_CATALOG[g]);
+    // boot() reads both of these as arrays without checking first (`saved.activeRegions.filter(...)`, `new
+    // Set(saved.activeDiffs)`), so a saved state missing either key -- written by an older build, hand-edited,
+    // or truncated -- threw "Cannot read properties of undefined (reading 'filter')" out of boot() and put up
+    // the fatal panel on every load, which on a home-screen PWA is not something a rider can clear themselves.
+    // Deliberately left MISSING here rather than defaulted to a concrete value: an empty array and "the key was
+    // never there" are different situations that need different defaults (an empty `activeRegions` means the
+    // user switched every sub-region off on purpose and must stay off; a missing key means nobody ever set it
+    // and should leave whatever activateRegionGroup()'s own "everything visible" default already put in place),
+    // and boot() is where that distinction is actually made -- see its own Array.isArray guards.
+    if (!Array.isArray(saved.activeRegions)) delete saved.activeRegions;
+    if (!Array.isArray(saved.activeDiffs)) delete saved.activeDiffs;
     if (typeof saved.showUphill !== "boolean") saved.showUphill = true;
     if (typeof saved.showLoop !== "boolean") saved.showLoop = true;
     if (typeof saved.showDownhill !== "boolean") saved.showDownhill = true;
@@ -5462,7 +5536,15 @@ async function boot(){
   }
 
   const saved = restoreActiveState();
-  const initialGroups = (saved && saved.activeRegionGroups.length) ? saved.activeRegionGroups : ["paznaun"];
+  // No default region any more (2026-08-04, user: on a genuinely first-ever visit, the dialog that immediately
+  // follows showed "Silvretta Bike Arena" already marked Aktiv -- which is Paznaun's own catalog label, so this
+  // was never a wrong region sneaking in, but it is a real contradiction of "consciously picks their region(s)"
+  // a few lines below: the dialog cannot ask the user to choose while one is already chosen for them. An empty
+  // `initialGroups` degrades cleanly -- activateRegionGroup simply has nothing to do, the bounds-fit further
+  // down already guards on `combinedBounds.isValid()`, and the header/section already say "Regionen wählen"
+  // with nothing active. This also now covers a RETURNING visitor who deliberately deactivated every region:
+  // that was silently overridden back to Paznaun before, which is the same mistake one level down.
+  const initialGroups = saved ? saved.activeRegionGroups : [];
 
   // The plain on/off flags are restored BEFORE the regions load, deliberately split from the rest of the
   // state below. activateRegionGroup() reads showPlaces (through its own applyPlaceVisibility() call, which
@@ -5472,7 +5554,10 @@ async function boot(){
   // whatever the switch said (user, 2026-07-30). Everything that depends on freshly LOADED data --
   // activeRegions, the region-chip DOM -- has to stay below, and does.
   if (saved) {
-    activeDiffs = new Set(saved.activeDiffs);
+    // Guarded, not unconditional: a saved state can genuinely lack this key (see restoreActiveState), and
+    // `new Set(undefined)` is an EMPTY set -- every difficulty filtered out -- which is a worse default than
+    // just leaving the module-level `activeDiffs` (all four, declared above) standing.
+    if (Array.isArray(saved.activeDiffs)) activeDiffs = new Set(saved.activeDiffs);
     showUphill = saved.showUphill;
     showLoop = saved.showLoop;
     showDownhill = saved.showDownhill;
@@ -5488,7 +5573,10 @@ async function boot(){
   // Saved fine-grained filters take precedence over activateRegionGroup's "everything active by
   // default" behavior — but only restore sub-region keys that actually got loaded just now.
   if (saved) {
-    activeRegions = new Set(saved.activeRegions.filter(k => REGIONS[k]));
+    // Same guard as activeDiffs above, and for the same reason: when this key is genuinely missing, leave
+    // whatever activateRegionGroup() already put in activeRegions (every sub-region of a freshly-loaded group
+    // defaults to visible) rather than replacing it with an empty Set that hides everything just loaded.
+    if (Array.isArray(saved.activeRegions)) activeRegions = new Set(saved.activeRegions.filter(k => REGIONS[k]));
     // rebuildRegionChips() re-derives region-chip DOM from activeRegions fresh, but the difficulty
     // chips (and the uphill/loop/downhill toggles) are static markup (all "active"/checked by
     // default) — sync here.
@@ -5656,7 +5744,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v121"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v129"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

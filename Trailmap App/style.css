@@ -453,7 +453,10 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 #infoPanel .ip-trail .ip-gap{ display:inline-block; width:15px; }
 .ele-chart{ display:block; width:100%; height:46px; margin:4px 0 0; }
 .ele-chart .ele-label{ font-size:7px; fill:#4c574d; font-family:Arial, sans-serif; }
-.ele-chart .ele-hover-dot{ fill:var(--blau); stroke:#fff; stroke-width:1.2; }
+/* non-scaling-stroke because this SVG is stretched non-uniformly (see the ellipse in buildElevationSvg): without
+   it the white halo comes out thicker on the sides than on top, which on a 4.5px dot is visible. The radii
+   themselves are set per position by the hover handler. */
+.ele-chart .ele-hover-dot{ fill:var(--blau); stroke:#fff; stroke-width:1.4; vector-effect: non-scaling-stroke; }
 /* .ip-actions is gone (2026-08-02): its one button moved up onto the stats line, where there was already room,
    and a container that exists to hold a single inline button is a line of layout for nothing. */
 #infoPanel .ip-segment-info{ margin-top:8px; padding:4px 0 4px 8px; font-size:11.5px; line-height:1.4; }

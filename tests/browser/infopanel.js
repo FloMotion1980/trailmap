@@ -1,7 +1,7 @@
 // @suite   infopanel
 // @area    Info panel: trail, lift, Tour segments, reverse, GPX, elevation chart
 // @files   Trailmap App/index.html
-// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL
+// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart
 // @needs   region=bikekingdom, builder=off
 //
 // The panel is a custom div rather than a Leaflet popup so nothing covers the trail, which means every piece
@@ -151,7 +151,10 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   }));
   await TM.wait(300);
   T.ok("a marker appeared on the map", dots() > before2, dots(), "> " + before2);
-  T.ok("and a dot inside the chart", !!chart.querySelector("circle"), !!chart.querySelector("circle"), true);
+  // An ELLIPSE, not a circle: the chart's viewBox is stretched non-uniformly (preserveAspectRatio="none"), so a
+  // true circle would render as an egg on screen -- fixed 2026-08-04 by making the dot an ellipse whose rx/ry
+  // are set per position to cancel the stretch out.
+  T.ok("and a dot inside the chart", !!chart.querySelector("ellipse"), !!chart.querySelector("ellipse"), true);
   content().dispatchEvent(new MouseEvent("mouseleave", { bubbles: true }));
   await TM.wait(350);
   T.eq("both go away when the mouse leaves the panel", dots(), before2);
@@ -186,6 +189,69 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   await TM.wait(300);
   T.ok("tapping somewhere else clears both", !chartDot() && dots() === before2,
        [chartDot(), dots()], "[false, " + before2 + "]");
+
+  T.test("a tap that settles a few pixels away still opens the trail it started on");
+  // Browsers hit-test a touch's native `click` at the TOUCHEND position, not the touchstart one, and a normal
+  // tap's finger settles a few pixels between down and up -- ordinary human behaviour, not a drag. On a densely
+  // packed map that drift is often enough to move off the intended trail's hit-line entirely, onto a neighbour's
+  // start/end dot or onto empty map: measured on Donnersberg's own boot zoom, a realistic 4px settle mismatched
+  // 134 of 400 sampled points (user, 2026-08-04 -- "ich schaffe es ... einen Trail zu aktivieren ohne dass die
+  // Info Box aufgeht", reported at a low zoom where many short trails compress into a small screen area). The
+  // fix retargets onto wherever the touch STARTED when the native click would land somewhere else; this
+  // reproduces exactly that mismatch with real Touch/TouchEvent objects; a scripted click on the down element
+  // alone would prove the DOM works but not that the map's own touchstart/touchend listeners actually catch it.
+  // The sidebar drawer sits on top of the map on a touch layout, so it must be closed first -- the app is not
+  // guaranteed to start in that state here (bootFresh cases elsewhere in a run may leave the toggle either way).
+  const aside = TM.$("aside");
+  if (aside && aside.classList.contains("open")) { TM.$("#sidebarToggle").click(); await TM.wait(400); }
+  // Rather than trusting one hit-line's own bounding-box centre (a curved/angled path's actual drawn pixels are
+  // not reliably under that point, and it is exactly as likely to sit over open sidebar space as over the map),
+  // scan the map for a point where a real 4px settle genuinely lands on a DIFFERENT element -- the same method
+  // used to first find and quantify this bug.
+  const mapBox = TM.$("#map").getBoundingClientRect();
+  let found = null;
+  outer:
+  for (let y = Math.round(mapBox.top) + 20; y < mapBox.bottom - 20; y += 6) {
+    for (let x = Math.round(mapBox.left) + 8; x < mapBox.right - 8; x += 6) {
+      const down = document.elementFromPoint(x, y);
+      if (!down || down.tagName !== "path" || !down.classList.contains("leaflet-interactive") ||
+          parseFloat(down.getAttribute("stroke-width") || 0) < 14) continue;
+      const up = document.elementFromPoint(x + 4, y + 3);
+      if (up !== down) { found = { hit: down, x0: x, y0: y, x1: x + 4, y1: y + 3 }; break outer; }
+    }
+  }
+  if (!found) {
+    T.skip("no down/up mismatch found on this map to probe");
+  } else {
+    const { hit, x0, y0, x1, y1 } = found;
+    panel().classList.remove("visible");
+    const mapEl = TM.$("#map");
+    const t1 = new Touch({ identifier: 21, target: hit, clientX: x0, clientY: y0 });
+    mapEl.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, cancelable: true, touches: [t1], targetTouches: [t1], changedTouches: [t1] }));
+    await TM.wait(30);
+    const upEl = document.elementFromPoint(x1, y1);
+    const t2 = new Touch({ identifier: 21, target: upEl, clientX: x1, clientY: y1 });
+    const ev2 = new TouchEvent("touchend", { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [t2] });
+    mapEl.dispatchEvent(ev2);
+    await TM.wait(400);
+    T.ok("the up-position genuinely differs from the down one (otherwise this proves nothing)",
+         upEl !== hit, upEl === hit, "a different element");
+    T.ok("the native click was suppressed", ev2.defaultPrevented, ev2.defaultPrevented, true);
+    T.ok("the trail's panel opened anyway", panel().classList.contains("visible"), panel().classList.contains("visible"), true);
+
+    T.test("a real drag is left completely alone");
+    panel().classList.remove("visible");
+    const t3 = new Touch({ identifier: 22, target: hit, clientX: x0, clientY: y0 });
+    mapEl.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, cancelable: true, touches: [t3], targetTouches: [t3], changedTouches: [t3] }));
+    await TM.wait(30);
+    const farEl = document.elementFromPoint(x0, y0 + 60);
+    const t4 = new Touch({ identifier: 22, target: farEl, clientX: x0, clientY: y0 + 60 });
+    const ev4 = new TouchEvent("touchend", { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [t4] });
+    mapEl.dispatchEvent(ev4);
+    await TM.wait(300);
+    T.ok("a 60px movement is not treated as a tap", !ev4.defaultPrevented, ev4.defaultPrevented, false);
+    T.ok("and nothing gets opened by it", !panel().classList.contains("visible"), panel().classList.contains("visible"), false);
+  }
 
   T.test("the GPX export offers the app's own geometry");
   // Deliberately not clicking it (that downloads a file); the point is that the exporter finds the trail.

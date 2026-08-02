@@ -450,6 +450,29 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
   // restored BEFORE the fetches -- otherwise a hard reload always came up with the labels showing.
   T.eq("and no place label is painted", placeLabels, 0);
 
+  T.test("a saved state missing activeRegions/activeDiffs cannot crash boot()");
+  // Found 2026-08-04 by accident while testing an unrelated fix: boot() reads `saved.activeRegions.filter(...)`
+  // with no guard, so a state that is otherwise a valid object but happens to be missing that one key -- written
+  // by an older build, hand-edited, or truncated -- threw "Cannot read properties of undefined (reading
+  // 'filter')" out of boot() and put up the fatal panel on EVERY load, which on a home-screen PWA a rider cannot
+  // dismiss or work around themselves. restoreActiveState() now normalises both arrays the same way it already
+  // normalised the boolean switches below.
+  // activeRegionGroups is set explicitly rather than trusting whatever the live page currently has: by this
+  // point in the suite other cases have activated and deactivated regions, so the real, current saved value is
+  // not something this case should depend on -- only the two keys actually under test matter here.
+  const maimed = await TM.bootFresh(({ state, put }) => {
+    const s = Object.assign({}, state, { activeRegionGroups: ["bikekingdom"] });
+    delete s.activeRegions;
+    delete s.activeDiffs;
+    put("state", s);
+  });
+  const maimedFatal = maimed.doc.getElementById("fatalError");
+  const maimedShown = maimed.doc.defaultView.getComputedStyle(maimedFatal).display !== "none";
+  const maimedTrails = maimed.doc.querySelectorAll("#trailList .trail-card").length;
+  maimed.done();
+  T.eq("no fatal panel", maimedShown, false);
+  T.ok("the region still loaded, just with everything visible by default", maimedTrails > 0, maimedTrails, "> 0");
+
   T.test("a saved region key that no longer exists is dropped silently");
   const ghost = await TM.bootFresh(({ state, put }) => put("state", Object.assign({}, state, {
     activeRegionGroups: (state.activeRegionGroups || []).concat(["region_that_was_deleted"]),
@@ -477,12 +500,35 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
   T.eq("the title switched to the mode indicator", bTitle, "Trailbuilder");
   T.ok("and the builder sheet is open", /visible/.test(bSheet || ""), bSheet, "visible");
 
-  T.test("a first-ever visit asks which regions rather than landing on the default unasked");
+  T.test("a first-ever visit asks which regions, with NOTHING preselected");
+  // Used to land on Paznaun behind the dialog, which contradicted the dialog's own point: it cannot ask the
+  // user to "consciously pick" while one is already picked for them. The old case even asserted that as
+  // correct ("and the default region is loaded behind it"). What made the user notice was the catalog label --
+  // Paznaun's own display name is "Silvretta Bike Arena" (2026-08-04), so the dialog showed that region marked
+  // Aktiv on a session that had never chosen anything, which is the report verbatim, just not the region it
+  // sounded like.
   const first = await TM.bootFresh(({ put }) => { put("state", null); put("builder", null); });
   const dlgShown = first.doc.getElementById("regionDialog").classList.contains("visible");
   const firstCards = first.doc.querySelectorAll("#trailList .trail-card").length;
+  const activeToggleCount = [...first.doc.querySelectorAll(".region-dialog-row .rd-toggle.active")].length;
+  const headerText = first.doc.getElementById("regionsLabel").textContent;
   first.done();
   T.ok("the region dialog is open", dlgShown, dlgShown, true);
-  T.ok("and the default region is loaded behind it", firstCards > 0, firstCards, "> 0");
+  T.eq("no region is loaded behind it", firstCards, 0);
+  T.eq("none of the dialog's own rows shows Aktiv", activeToggleCount, 0);
+  T.ok("and the header says so too", /wählen/.test(headerText), headerText, "mentions wählen");
+
+  T.test("a returning visitor who deliberately cleared every region stays cleared");
+  // The same fallback used to override THIS case back to Paznaun too, on the reasoning that an empty array is
+  // indistinguishable from "nothing saved" -- but a returning visitor (saved !== null) who emptied their
+  // regions on purpose gets their choice respected, and does NOT see the dialog auto-open a second time.
+  const returning = await TM.bootFresh(({ state, put }) => {
+    put("state", Object.assign({}, state || {}, { activeRegionGroups: [], activeRegions: [] }));
+  });
+  const returningDlgShown = returning.doc.getElementById("regionDialog").classList.contains("visible");
+  const returningCards = returning.doc.querySelectorAll("#trailList .trail-card").length;
+  returning.done();
+  T.eq("no region is loaded", returningCards, 0);
+  T.ok("and the dialog does not auto-open for a returning visitor", !returningDlgShown, returningDlgShown, false);
   }
 });
