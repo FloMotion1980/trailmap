@@ -78,13 +78,20 @@ aside::-webkit-scrollbar{ display:none; width:0; height:0; }
   background:transparent; border:none; cursor:pointer;
   -webkit-tap-highlight-color: transparent; -webkit-user-select:none; user-select:none;
 }
-/* Quieter than the wordmark on purpose: the bars are the affordance, the name is the brand. */
-#sidebarToggle .st-bars{ font-family: Arial, sans-serif; font-size:17px; line-height:1; color:rgba(242,243,236,.8); }
+/* Three drawn bars, not the ☰ glyph -- see the markup. The element IS the middle bar; the other two are its
+   box-shadows, symmetric above and below, so whatever centres this 2px box centres the whole icon. That is what
+   makes it land right on iOS (real Copperplate) and everywhere else (a fallback) alike. Quieter than the
+   wordmark on purpose: the bars are the affordance, the name is the brand. */
+#sidebarToggle .st-bars{
+  width:18px; height:2px; border-radius:1px; flex:0 0 auto;
+  background: rgba(242,243,236,.8);
+  box-shadow: 0 -6px 0 rgba(242,243,236,.8), 0 6px 0 rgba(242,243,236,.8);
+}
 #sidebarToggle:active{ background:rgba(242,243,236,.14); }
 #sidebarToggle:focus-visible{ outline:2px solid rgba(242,243,236,.6); outline-offset:2px; }
 @media (hover: hover){
   #sidebarToggle:hover{ background:rgba(242,243,236,.10); }
-  #sidebarToggle:hover .st-bars{ color:#f2f3ec; }
+  #sidebarToggle:hover .st-bars{ background:#f2f3ec; box-shadow: 0 -6px 0 #f2f3ec, 0 6px 0 #f2f3ec; }
 }
 #sidebarBackdrop{ display:none; position:fixed; inset:0; background:rgba(15,20,16,0.45); z-index:2400; }
 #sidebarBackdrop.visible{ display:block; }
@@ -510,7 +517,9 @@ html.landscape-compact #locateCluster{
 /* Tighter with the wordmark in landscape, where the title itself is 15px. No width/height: this is a row of
    two things now, not a square. */
 html.landscape-compact #sidebarToggle{ gap:7px; margin:-5px -7px; padding:5px 7px; }
-html.landscape-compact #sidebarToggle .st-bars{ font-size:15px; }
+html.landscape-compact #sidebarToggle .st-bars{
+  width:16px; box-shadow: 0 -5px 0 rgba(242,243,236,.8), 0 5px 0 rgba(242,243,236,.8);
+}
 #locateBtn{
   width:46px; height:46px; border-radius:50%;
   background: rgba(255,255,255,0.97); border:1px solid #d8ddd0;
@@ -688,13 +697,19 @@ html.landscape-compact #sidebarToggle .st-bars{ font-size:15px; }
 #fatalError p{ margin:0 0 8px; font-size:13.5px; line-height:1.5; color:var(--ink); }
 #fatalError code{ background:#f3e6da; padding:1px 5px; border-radius:4px; font-size:12px; }
 
+/* Outlined, not the filled rust pill it was until 2026-08-02. Two peer controls sat side by side in the header
+   in two different treatments and two different heights, which the user read as one of them being special
+   without being able to say why -- and rust is the app's accent colour, loud against the dark green when it is
+   carrying nothing more urgent than "these regions are active". Identical box to #builderModeBtn now, so the
+   row is one family; what tells them apart is their content (🌍 vs 🧩) and the fact that only the builder ever
+   fills, and only while its mode is on. */
 #regionsBtn{
-  background: var(--rust); color:#fff; border:none; border-radius:14px;
-  padding:5px 13px; font-family: Arial, sans-serif; font-size:12.5px; font-weight:600;
+  background: transparent; color:#f2f3ec; border:1px solid rgba(242,243,236,.45); border-radius:14px;
+  padding:4px 12px; font-family: Arial, sans-serif; font-size:12.5px; font-weight:600;
   cursor:pointer; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   align-self:center;
 }
-#regionsBtn:hover{ background: var(--rust-light); }
+#regionsBtn:hover{ background:rgba(242,243,236,.12); }
 #regionDialog{
   position:fixed; inset:0; z-index:4000; background: rgba(15,20,16,0.5);
   display:none; align-items:center; justify-content:center; padding:24px;
@@ -903,8 +918,9 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
 
 /* The mode switch, in the header (2026-07-27). It sat in the sidebar first, then also as a round 🧭 button
    on the map, and the user rejected both: the sidebar buries a map-mode switch behind two taps, and the map
-   corner already holds the locate button and Leaflet's attribution. Deliberately styled unlike #regionsBtn
-   (which is a filled rust pill) so two chips side by side don't read as the same kind of control. */
+   corner already holds the locate button and Leaflet's attribution. It used to be styled deliberately UNLIKE
+   #regionsBtn so two chips would not read as the same kind of control; since 2026-08-02 they share one box on
+   purpose instead, and the difference is carried by their content and by this one's filled "on" state. */
 #builderModeBtn{
   display:flex; align-items:center; gap:6px; align-self:center;
   background:transparent; color:#f2f3ec; border:1px solid rgba(242,243,236,.45); border-radius:14px;
@@ -913,11 +929,25 @@ html.landscape-compact #builderSheetBody{ max-height:min(52vh, 190px); }
 #builderModeBtn:hover{ background:rgba(242,243,236,.12); }
 #builderModeBtn.on{ background: var(--highlight); border-color: var(--highlight); color: var(--ink); }
 #builderModeBtn .bm-icon{ font-size:13px; line-height:1; }
+/* One explicit line-height for both, so the two boxes are the same height whatever is inside them. Without it
+   they came out 26 and 24: the 🌍 in the region label renders taller than Latin text and pushed that button's
+   line box open, while the builder's flex row is sized by its own two spans. The min-height covers the third
+   case, the one that only shows up on a phone: with the label hidden the builder's row is just a 13px icon, so
+   it shrank to 23 while the region chip stayed at 26. Same padding and border alone were not enough for any of
+   the three. */
+#regionsBtn, #builderModeBtn{ line-height:16px; min-height:26px; box-sizing:border-box; }
 
-@media (max-width: 768px), (pointer: coarse){
-  /* Icon only, so the header still fits on one line next to the region chip on a 375px phone. */
+/* Icon only where the line is genuinely too short for the label, which is a question of WIDTH -- it used to be
+   keyed on `pointer: coarse` as well, so a landscape phone with 812px to spare hid the word anyway (user,
+   2026-08-02: "im Querformat, also wenn genug Platz ist, erscheint der Text neben dem Icon aber nicht mehr").
+   600px is comfortably above what the row needs with the label (~450px) and below the narrowest layout that
+   cannot take it. */
+@media (max-width: 600px){
   #builderModeBtn .bm-label{ display:none; }
-  #builderModeBtn{ padding:4px 9px; flex-shrink:0; }
+  #builderModeBtn{ padding:4px 9px; }
+}
+@media (max-width: 768px), (pointer: coarse){
+  #builderModeBtn{ flex-shrink:0; }
   /* Title + region chip + this button do not fit a 375px line at full width -- and "Trailbuilder" is wider
      than "Trailmap", so switching the mode used to wrap the header onto a second line and shove the map
      down. One line instead, with the region chip taking the squeeze: it already truncates with an ellipsis

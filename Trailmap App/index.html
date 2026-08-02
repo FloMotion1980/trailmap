@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=72" />
+<link rel="stylesheet" href="style.css?v=75" />
 </head>
 <body>
 <div id="fatalError">
@@ -68,7 +68,12 @@
          Filter, Kartenoptionen, Touren and Lifte. Touch layouts only: on desktop the sidebar is permanently in
          flow and a handle for it would open nothing. -->
     <div id="sidebarToggle" role="button" tabindex="0" title="Listen und Filter öffnen" aria-label="Menü öffnen">
-      <span class="st-bars" aria-hidden="true">☰</span>
+      <!-- Drawn in CSS, not the ☰ character. A glyph's position inside its line box is the font's business,
+           and this header mixes Copperplate (a real system font on iOS, a fallback everywhere else) with the
+           bars' own font -- so "vertically centred" came out differently on the phone than in any desktop
+           browser, and could not be fixed by measuring here. Three CSS bars have exactly the geometry we give
+           them, on every platform. -->
+      <span class="st-bars" aria-hidden="true"></span>
       <h1 id="appTitle">Trailmap</h1>
     </div>
     <button id="regionsBtn">🌍 Regionen wählen</button>
@@ -5543,7 +5548,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v72"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v75"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
