@@ -57,6 +57,9 @@ current; a stale count is worse than none, because it looks like evidence.
 
 | `infopanel` | put the mismatch-only gate back on the touchend handler (`if (start.target === document.elementFromPoint(...)) return;`) | "tapping a trail opens it even when the platform's own click would not have fired" fails both checks -- an IDENTICAL down/up position no longer gets a click at all, which is exactly the regression this second pass fixed: a scripted touch dispatch never produces the browser's own synthetic click, so this is the only way that failure mode is even reachable in a test |
 
+| `geometry` | set `ARROW_OFFSET_M` to 0 | "buildChevron draws a V shape offset to the side, tip forward" fails on "the whole shape is offset away from the anchor" -- with no side offset, all three points collapse back onto the centreline within the 3m tolerance |
+| `geometry` | force `reversed = false` at the top of `buildDirectionArrowShapes` regardless of the argument passed | "reversed arrows point the opposite way along the trail" fails: forward and reversed arrows point the identical direction (two near-equal deltas of the same sign), instead of opposite signs |
+
 ## Not yet mutation-checked
 
 `geometry`, `infopanel`, `lifts` and `builder`'s newer cases have not had a mutation applied. They pass, and

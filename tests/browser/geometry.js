@@ -1,7 +1,7 @@
 // @suite   geometry
 // @area    Pure geometry, distance and elevation-profile helpers
 // @files   Trailmap App/index.html
-// @touches haversineM, cumulativeDistanceKm, latLngAtDistance, bearingDeg, elevationAtDistance, profileSlice, reverseElevationProfile, hexToRgba, round3, buildDirectionArrows, buildElevationSvg, profileKmToGeometryKm, buildProfileToGeometryAxis, liftClimb, trailLabelHtml, formatAge
+// @touches haversineM, cumulativeDistanceKm, latLngAtDistance, bearingDeg, destinationPoint, buildChevron, elevationAtDistance, profileSlice, reverseElevationProfile, hexToRgba, round3, buildDirectionArrowShapes, buildElevationSvg, profileKmToGeometryKm, buildProfileToGeometryAxis, liftClimb, trailLabelHtml, formatAge
 // @needs   any region active
 //
 // The cheapest coverage in the app: these are pure functions with no DOM and no app state, they are what the
@@ -94,10 +94,38 @@ TM.add("geometry", () => typeof haversineM === "function", async (T) => {
   T.eq("round3 keeps three decimals", round3(1.23456), 1.235);
   T.eq("round3 of an integer", round3(5), 5);
 
-  T.test("buildDirectionArrows spaces arrows by distance and stays within its cap");
+  T.test("destinationPoint is bearingDeg's own inverse");
+  // "which way" and "how far that way" have to agree with each other: walking bearingDeg's own reported
+  // direction for the distance haversineM reports must land back at the second point.
+  const from = [47, 10], to = [47.01, 10.02];
+  const dist = haversineM(from, to), brng = bearingDeg(from, to);
+  const landed = destinationPoint(from[0], from[1], brng, dist);
+  T.near("latitude matches", landed[0], to[0], 0.0003);
+  T.near("longitude matches", landed[1], to[1], 0.0005);
+  T.near("due north for 1000m moves ~0.009° latitude, 0° longitude",
+         destinationPoint(47, 10, 0, 1000)[0] - 47, 0.00899, 0.0002);
+  T.near("and due north does not drift in longitude", destinationPoint(47, 10, 0, 1000)[1], 10, 0.0001);
+  T.near("a round trip (there and back) returns to the start",
+         haversineM(destinationPoint(destinationPoint(47, 10, 30, 500)[0], destinationPoint(47, 10, 30, 500)[1], 210, 500), [47, 10]),
+         0, 1);
+
+  T.test("buildChevron draws a V shape offset to the side, tip forward");
+  const chevron = buildChevron([47, 10], 90, 1);   // pointing due east
+  T.eq("three points: back-left, tip, back-right", chevron.length, 3);
+  const [backLeft, tip, backRight] = chevron;
+  // Offset to the side: none of the three points sits exactly on the centreline's own latitude/longitude.
+  T.ok("the whole shape is offset away from the anchor, not drawn on top of it",
+       chevron.every((p) => haversineM(p, [47, 10]) > 3), chevron.map((p) => Math.round(haversineM(p, [47, 10]))), "> 3m each");
+  T.ok("the tip is further EAST than the back of the chevron (it points the way it is told to)",
+       tip[1] > (backLeft[1] + backRight[1]) / 2, tip[1], "> " + (backLeft[1] + backRight[1]) / 2);
+  T.ok("back-left and back-right straddle the tip's own latitude, roughly symmetrically",
+       Math.abs((backLeft[0] - tip[0]) - -(backRight[0] - tip[0])) < 0.0001,
+       [backLeft[0] - tip[0], backRight[0] - tip[0]], "roughly equal and opposite");
+
+  T.test("buildDirectionArrowShapes spaces arrows by distance and stays within its cap");
   const short = [[47, 10], [47.001, 10]];                       // ~111 m
   const long = Array.from({ length: 400 }, (_, i) => [47 + i * 0.0005, 10]);   // ~22 km
-  const few = buildDirectionArrows(short), many = buildDirectionArrows(long);
+  const few = buildDirectionArrowShapes(short, false), many = buildDirectionArrowShapes(long, false);
   // The cap is written out rather than read from ARROW_MAX_COUNT: that is a `const` inside the app's try{}
   // block, so it is genuinely unreachable from here (only function declarations leak out). Referencing it
   // throws a ReferenceError -- and if the tests are served from a different origin than the app, the browser
@@ -107,17 +135,22 @@ TM.add("geometry", () => typeof haversineM === "function", async (T) => {
   T.ok("even a very short trail gets one arrow", few.length >= 1, few.length, ">= 1");
   T.ok("a long trail gets many but never more than the cap",
        many.length > 10 && many.length <= ARROW_CAP, many.length, "11.." + ARROW_CAP);
-  // Shape is {pos, baseAngle} -- `baseAngle` because applyReversedEndpoints adds 180 to it for a reversed
-  // trail rather than rebuilding the arrows, so the stored value has to stay the unreversed one.
-  T.ok("every arrow has a position and a base angle",
-       many.every((a) => a && Array.isArray(a.pos) && typeof a.baseAngle === "number"),
-       JSON.stringify(many[0]), "{pos:[lat,lng], baseAngle:n}");
-  T.ok("angles are compass degrees", many.every((a) => a.baseAngle >= 0 && a.baseAngle < 360),
-       many.map((a) => Math.round(a.baseAngle)).slice(0, 4), "0..360");
-  T.near("a due-north line points north", many[1].baseAngle, 0, 2);
+  // Each shape is a 3-point chevron (see buildChevron); the geometry itself is checked there, so this only
+  // checks the SHAPE of what buildDirectionArrowShapes hands back, one per sampled position along the trail.
+  T.ok("every arrow is a 3-point chevron", many.every((a) => Array.isArray(a) && a.length === 3),
+       JSON.stringify(many[0]), "[p,p,p]");
   T.ok("arrows sit inside the trail, not on its endpoints",
-       many[0].pos[0] > long[0][0] && many[many.length - 1].pos[0] < long[long.length - 1][0], true, true);
-  T.eq("a zero-length track gets no arrows", buildDirectionArrows([[47, 10], [47, 10]]).length, 0);
+       many[0][1][0] > long[0][0] && many[many.length - 1][1][0] < long[long.length - 1][0], true, true);
+  T.eq("a zero-length track gets no arrows", buildDirectionArrowShapes([[47, 10], [47, 10]], false).length, 0);
+  // `reversed` has to flip which way the chevrons point, the same way latLngAtDistance already reads a
+  // reversed trail from its other end -- checked by comparing the tip direction of the FIRST arrow forward
+  // against the tip direction of the LAST arrow reversed: on a straight due-north line they should point
+  // opposite ways (south vs. north), i.e. their tips move away from their own anchors in opposite latitudes.
+  const fwdArrows = buildDirectionArrowShapes(long, false), revArrows = buildDirectionArrowShapes(long, true);
+  const tipDeltaLat = (shape) => shape[1][0] - (shape[0][0] + shape[2][0]) / 2;
+  T.ok("reversed arrows point the opposite way along the trail",
+       Math.sign(tipDeltaLat(fwdArrows[0])) !== Math.sign(tipDeltaLat(revArrows[revArrows.length - 1])),
+       [tipDeltaLat(fwdArrows[0]), tipDeltaLat(revArrows[revArrows.length - 1])], "opposite signs");
 
   T.test("buildElevationSvg stamps the axis data its hover-sync reads back");
   // The hover handler re-derives everything from these attributes rather than having them threaded through

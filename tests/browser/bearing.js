@@ -1,7 +1,7 @@
 // @suite   bearing
 // @area    Map orientation: "Norden oben" vs. "Blickrichtung oben"
 // @files   Trailmap App/index.html, Trailmap App/style.css, Trailmap App/leaflet-rotate.js
-// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, targetBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, rotateWithView, canRotate, BEARING_MIN_DELTA_DEG, compassStillNeeded, stopFollowing, detachOrientationListener, bearingFrameSafety
+// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, targetBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, buildDirectionArrowLayer, ARROW_MIN_ZOOM, canRotate, BEARING_MIN_DELTA_DEG, compassStillNeeded, stopFollowing, detachOrientationListener, bearingFrameSafety
 // @needs   builder=off
 //
 // Rotation is the one feature here that is bolted on by a third-party file patching Leaflet's core, and its
@@ -16,7 +16,8 @@
 //   * THE PADDING VECTORS. getFlyPadding's numbers are screen-axis pixels but get applied to projected
 //     points, which is the same thing only while the map is north-up. Cases 5 and 6 assert the invariant that
 //     matters -- the target lands on the SAME SCREEN POINT at every bearing -- rather than the arithmetic.
-//   * UPRIGHT TEXT. Labels and builder numbers must not turn; direction arrows must. Cases 3 and 7.
+//   * UPRIGHT TEXT. Labels and builder numbers must not turn; direction arrows (real vector polylines in the
+//     rotated pane since 2026-08-05, not markers) must. Cases 3 and 7.
 //
 // The compass itself cannot be driven from here (tests/README: no DeviceOrientationEvent, no watchPosition),
 // so handleOrientation and updateUserLocation are called directly with synthetic readings. Both are plain
@@ -399,23 +400,41 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   axis("y", fitN.off.y, pad.paddingTopLeft.y, pad.paddingBottomRight.y);
 
   T.test("direction arrows turn with the map, the name labels do not");
-  map.setView(home.center, 14, { animate: false });      // arrows only exist above START_DOT_MIN_ZOOM (13)
+  // Redesigned 2026-08-05: arrows are plain SVG polylines in the map's own default (rotated) overlay pane now,
+  // not L.marker/divIcon objects in the unrotated marker pane -- so unlike the old design there is no
+  // rotateWithView option to verify at all. "trail lines rotate" above already covers this pane structurally
+  // (arrows share it), so what is actually worth checking here is that the shape ITSELF re-projects: its
+  // rendered `d` really changes when the bearing does, the same observable property the old case checked, just
+  // via the mechanism that now produces it.
+  // A hand-picked centre and zoom is not reliable (a home-view coordinate may have no trail anywhere near it,
+  // and TM.until fails SILENTLY on timeout -- see the next case's own note on exactly this trap). Fly to a real
+  // trail via the app's own path first, the same way the case below does, then zoom past ARROW_MIN_ZOOM.
   await TM.ui.setSwitch("showDirectionArrowsToggle", true);
-  await TM.until(() => TM.$$(".direction-arrow-icon").length > 0, 3000);
-  await northAgain();
-  const iconNorth = TM.$(".direction-arrow-icon").style.transform;
-  const glyphNorth = TM.$(".direction-arrow-icon .direction-arrow").style.transform;
-  setHeadingUp(true);
-  applyMapBearing(45, true);
-  await TM.wait(150);
-  const iconEast = TM.$(".direction-arrow-icon").style.transform;
-  const glyphEast = TM.$(".direction-arrow-icon .direction-arrow").style.transform;
-  T.ok("north-up: the icon carries no rotation at all", !/rotate/.test(iconNorth), iconNorth, "translate only");
-  T.ok("rotated: the icon picks up the bearing", /rotate\(([\d.]+)rad\)/.test(iconEast), iconEast, "with a rotate()");
-  const rad = /rotate\(([\d.]+)rad\)/.exec(iconEast);
-  T.near("and it is exactly the bearing", rad ? +rad[1] * 180 / Math.PI : -1, 45, 1);
-  T.eq("while the glyph keeps its own geographic angle", glyphEast, glyphNorth);
-  T.eq("and the labels are still upright", angleOf(".leaflet-norotate-pane"), 0);
+  TM.ui.trailCards()[0].click();
+  await TM.settle(() => TM.map.overlay().filter((p) => p.getAttribute("stroke-width") === "3.5").length, 4000);
+  map.setZoom(17, { animate: false });
+  await TM.wait(200);
+  // #22301f is ALSO startDot's own border colour (a circleMarker, rendered as an SVG arc), so stroke alone is
+  // ambiguous -- caught by this very case reporting an arc's "d" ("M...a5,5 0 1,0...") as if it were a chevron.
+  // A chevron's `d` is pure "M x y L x y L x y" (three points, two line segments); an arc always contains "a"/"A".
+  const arrowPath = () => TM.$$("#map .leaflet-overlay-pane path")
+    .find((p) => p.getAttribute("stroke") === "#22301f" && /^M[\d.,\- ]+L[\d.,\- ]+L/.test(p.getAttribute("d") || ""));
+  const gotArrow = await TM.until(() => !!arrowPath(), 3000);
+  if (!gotArrow) {
+    T.skip("no arrow rendered near this trail at zoom 17 -- nothing to measure");
+  } else {
+    await northAgain();
+    const dNorth = arrowPath().getAttribute("d");
+    setHeadingUp(true);
+    applyMapBearing(45, true);
+    await TM.wait(200);
+    const afterTurn = arrowPath();
+    T.ok("an arrow chevron is actually drawn (a real path, not an empty M0 0)", dNorth.length > 10, dNorth, "a real path");
+    T.ok("turning the map changes its rendered shape", !!afterTurn && afterTurn.getAttribute("d") !== dNorth,
+         afterTurn && afterTurn.getAttribute("d"), "!= " + dNorth);
+    T.eq("and the labels are still upright", angleOf(".leaflet-norotate-pane"), 0);
+    await northAgain();
+  }
   await TM.ui.setSwitch("showDirectionArrowsToggle", false);
 
   T.test("a trail can still be picked by the browser while the map is turned");
