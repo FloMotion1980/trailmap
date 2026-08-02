@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=79" />
+<link rel="stylesheet" href="style.css?v=97" />
 </head>
 <body>
 <div id="fatalError">
@@ -109,7 +109,7 @@
           </div>
           <div class="toggle-row-group">
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDownhillToggle" checked><span class="slider"></span></span>⬇ Downhill</label>
-            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showUphillToggle" checked><span class="slider"></span></span>⚡ Uphill</label>
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showUphillToggle" checked><span class="slider"></span></span>⬆️ Uphill</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLoopToggle" checked><span class="slider"></span></span>🔁 Touren</label>
             <!-- Stays here with the other visibility switches, next to the categories it sits beside on the
                  map, even though the lifts have had their own list section since 2026-07-30 (user, same day:
@@ -218,8 +218,11 @@
           <textarea id="builderExport" readonly rows="6" spellcheck="false"></textarea>
         </div>
       </div>
+      <!-- No ✕ any more (user, 2026-08-02). Tapping empty map space closes the panel, which is the gesture
+           people were using anyway, and the button cost 22px of clearance in the heading -- exactly the row the
+           four action buttons now want. The one behaviour that goes with it is the ✕'s deliberate difference
+           from a map tap: it closed the panel but LEFT the trail selected. Closing now always deselects. -->
       <div id="infoPanel">
-        <button class="ip-close" id="ipClose" title="Schließen">&times;</button>
         <div id="ipContent"></div>
       </div>
       <div id="layerWarning"></div>
@@ -924,9 +927,9 @@ function rebuildRegionChips(){
     // Closing the region lives HERE, in its own box, since 2026-07-31 -- the region section became the place
     // where you manage your regions, and the dialog is only one of two ways in now. Deliberately without a
     // confirmation (the user's call): re-adding takes a moment but nothing is lost.
-    // At the RIGHT END OF THE LEGEND ROW since 2026-08-02, pushed there by margin-left:auto. It used to be
-    // absolutely positioned on the box's top border, in one opaque group with the 📍 -- a construction that
-    // existed entirely to cut a clean gap in that border. With no top border there is nothing to cut.
+    // On the box's TOP-RIGHT CORNER, straddling the border: that is where its glyph lines up with the section
+    // carets above it, which the user checks against. It was briefly a plain member of the legend row (while
+    // the box had no top border) and lost that alignment by ~10px, which is what brought it back here.
     const closeBtn = document.createElement("button");
     closeBtn.className = "region-group-close-btn";
     closeBtn.textContent = "✕";
@@ -955,8 +958,11 @@ function rebuildRegionChips(){
     });
 
     groupRow.appendChild(flyBtn);
-    groupRow.appendChild(closeBtn);
     groupBlock.appendChild(groupRow);
+    // The ✕ is a child of the BLOCK, not of the legend row: it is positioned against the box's own top-right
+    // corner, and the row is itself absolutely positioned at the left, so a right offset inside it would be
+    // measured from the row's own width (which is the name's width) -- it landed 111px off that way.
+    groupBlock.appendChild(closeBtn);
 
     const chipsRow = document.createElement("div");
     chipsRow.className = "region-group-chips";
@@ -3452,15 +3458,6 @@ function handleInfoPanelClick(e){
 }
 ipContent.addEventListener("click", handleInfoPanelClick);
 
-document.getElementById("ipClose").addEventListener("click", () => {
-  infoPanel.classList.remove("visible");
-  openTrailId = null;
-  openLiftId = null;
-  selectedSegmentId = null;
-  clearSolo();
-  // Deliberately NOT clearing the map selection here -- a trail keeps its outline, endpoints and card
-  // after the ×, and a lift now behaves the same (its stations survive via currentSelectedLiftId).
-});
 // Full "nothing is selected/open/soloed anymore" reset -- shared by clicking empty map space and by
 // render()'s filter-driven hide branch (a filter change hiding the currently-selected trail needs the
 // exact same reset, not just the map highlight: leaving the info panel open and solo still engaged for
@@ -3828,7 +3825,7 @@ function buildInfoPanelHtml(t){
   const profile = (isReversed && rawProfile) ? reverseElevationProfile(rawProfile) : rawProfile;
   const upShown = isReversed ? t.down : t.up;
   const downShown = isReversed ? t.up : t.down;
-  const uphillBadge = t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⚡</span>` : "";
+  const uphillBadge = t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⬆️</span>` : "";
   const loopBadge = t.loop ? ` <span class="badge-loop" title="Tour (mehrere Trails kombiniert)">🔁</span>` : "";
 
   // If this is a loop and one of its segments was last clicked, highlight that stretch in the
@@ -3846,7 +3843,7 @@ function buildInfoPanelHtml(t){
       segmentInfoHtml = `
         <div class="ip-segment-info" style="border-left:3px solid ${diffColor[segTrail.diff]}">
           <b>${segTrail.name}</b><br>
-          ${segTrail.len} km &middot; ${segTrail.up} m ↑ / ${segTrail.down} m ↓
+          ${segTrail.len} km &middot; ${segTrail.up} m ⬆️ / ${segTrail.down} m ⬇️
         </div>`;
     } else if (seg && segLift && seg.distStart != null) {
       // A clicked LIFT stretch: no difficulty and no up/down to report -- what matters is that this
@@ -3882,21 +3879,25 @@ function buildInfoPanelHtml(t){
     });
   }
 
+  // All four actions are ONE inline-flex group at the end of the heading, which is what makes the layout the
+  // user asked for fall out of inline flow rather than needing a measurement: an inline-flex box is atomic, so
+  // it either fits after the last word of the name or drops whole onto its own line under it -- never split,
+  // never a button dangling alone. Before this they were spread over three places (the 📍 in the heading, the
+  // 👁/🔄 after the stats, the GPX in a row of its own), and the GPX was the one that fitted in only 2 of 8
+  // measured trails once the m ⬆️/⬇️ emoji went in (user, 2026-08-02).
+  // NOTE: never use a backtick in this comment. It sits inside a JS template literal, where a backtick ends the
+  // string: writing a field name in code quotes here silently broke the whole script block, and with it the
+  // fatal-error panel, which lives in that same block and so could not report it.
   return `
-    <h3>${t.name}${uphillBadge}${loopBadge} <button class="locate-btn" data-id="${t.id}" title="Zum Trail springen">📍</button></h3>
-    <div class="ip-trail">
-      <span class="dot-start">●</span> → ${t.len} km → <span class="dot-end">●</span>
-      &middot; ${upShown} m ↑ / ${downShown} m ↓
+    <h3>${t.name}${uphillBadge}${loopBadge} <span class="ip-btns">
+      <button class="locate-btn" data-id="${t.id}" title="Zum Trail springen">📍</button>
       <button class="solo-btn${isSolo ? " active" : ""}" data-id="${t.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button>
       <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">🔄</button>
-      <!-- GPX sits on this line, with the other two actions, rather than in a row of its own below the chart.
-           That row cost a full line for one button while this line had 119px of measured free space after the
-           🔄 (user, 2026-08-02). It is the last of the three because it is the rarest.
-           NOTE: never use a backtick in this comment. It sits inside a JS template literal, where a backtick
-           ends the string: writing a field name in code quotes here silently broke the whole script block,
-           and with it the fatal-error panel, which lives in that same block and so could not report it.
-           The "Zur Tour auf der Website" link was removed on 2026-07-28 with the url field it read from. -->
-      <button class="ip-link gpx-download-btn" data-id="${t.id}" title="GPX herunterladen">GPX ⬇</button>
+      <button class="gpx-download-btn" data-id="${t.id}" title="GPX herunterladen">GPX</button>
+    </span></h3>
+    <div class="ip-trail">
+      <span class="dot-start">●</span> → ${t.len} km → <span class="dot-end">●</span><span
+        class="ip-gap"></span>${upShown} m ⬆️<span class="ip-gap"></span>${downShown} m ⬇️
       ${profile ? buildElevationSvg(profile, highlight, diffColor[t.diff], t.id, isReversed, chartSegments) : ""}
       ${segmentInfoHtml}
     </div>`;
@@ -3921,10 +3922,12 @@ function showLiftInfo(l){
   const typeLabel = LIFT_TYPE_LABEL[l.type] || "Bergbahn";
   const isSolo = soloId === l.id;
   ipContent.innerHTML = `
-    <h3>🚡 ${l.name} <button class="locate-btn" data-lift-id="${l.id}" title="Zum Lift springen">📍</button></h3>
+    <h3>🚡 ${l.name} <span class="ip-btns">
+      <button class="locate-btn" data-lift-id="${l.id}" title="Zum Lift springen">📍</button>
+      <button class="solo-btn${isSolo ? " active" : ""}" data-lift-id="${l.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Lift zeigen"}">👁</button>
+    </span></h3>
     <div class="ip-trail">
       ${typeLabel}${l.code ? ` &middot; ${l.code}` : ""} &middot; Biketransport
-      <button class="solo-btn${isSolo ? " active" : ""}" data-lift-id="${l.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Lift zeigen"}">👁</button>
       <div class="ip-lift-stats">
         ${l.baseEle} m → ${l.topEle} m &middot; <b>+${liftClimb(l)} m</b>
       </div>
@@ -5055,7 +5058,7 @@ function makeTrailCard(t, regionKey){
   // No 🔁 badge any more: a Tour is only ever listed in the Touren section, so the badge would be on every
   // card there and on none anywhere else. It stays in the info panel, where a Tour and a trail do meet.
   card.innerHTML = `
-    <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⚡</span>` : ""}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
+    <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⬆️</span>` : ""}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
     <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span></div>`;
   card.addEventListener("click", (e) => {
     const soloBtn = e.target.closest(".card-solo-btn");
@@ -5495,7 +5498,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v79"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v97"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

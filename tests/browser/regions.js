@@ -83,19 +83,18 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
   }
 
   async function regionCases(T) {
-  T.test("every active region has its own box, with the row that names it at the top");
-  // Redesigned on 2026-08-02, at the user's request, and the old geometry is worth knowing about because these
-  // checks used to assert it: the ✕ and the 📍 were absolutely positioned onto the box's TOP border, stacked in
-  // one opaque group that cut a gap in that line. Everything that construction needed -- the negative
-  // translateY, the shared background, a floated spacer so the first chip line could dodge the pin -- existed
-  // only because the row straddled a border. The top border is gone now, so the row is simply the first thing
-  // in the box: the name, the 📍 beside it, the ✕ pushed to the far end.
+  T.test("every active region has its own box, framed except where its controls sit on the line");
+  // A fieldset, and that is the whole idea: the frame is drawn all the way round, and each control that sits ON
+   // the line carries the sidebar's background so it cuts its own gap (user, 2026-08-02: "da wo oben
+  // Schaltflächen sind, ist er nicht zu sehen"). Between those two dates the controls briefly moved INSIDE a
+  // closed box, and this case asserted that instead -- worth knowing, because it is why the checks read the way
+  // they do now: the ✕'s glyph has to land on the same vertical line as the section carets, and losing that by
+  // 10px is exactly what the inside-the-box version got wrong.
   const boxes = TM.$$("#regionChips .region-group-block");
   T.eq("one box per active region", boxes.length, activeGroupCount());
   T.ok("each has a close button", boxes.every((b) => !!b.querySelector(".region-group-close-btn")), true, true);
   T.ok("each has a fly button", boxes.every((b) => !!b.querySelector(".region-group-fly-btn")), true, true);
-  T.eq("the box draws no top border", getComputedStyle(boxes[0]).borderTopWidth, "0px");
-  T.ok("but keeps the other three", ["borderLeftWidth", "borderRightWidth", "borderBottomWidth"]
+  T.ok("the frame is drawn on all four sides", ["borderTopWidth", "borderRightWidth", "borderBottomWidth", "borderLeftWidth"]
        .every((p) => parseFloat(getComputedStyle(boxes[0])[p]) > 0), true, true);
   // Geometry only means something once the sidebar is really laid out. It is 1px wide when the browser pane is
   // not compositing, and every position then reads as nonsense -- better an honest skip than checks that pass
@@ -106,40 +105,72 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
            "px) — open the drawer or use a wider viewport for the geometry checks");
   } else {
     const box = boxes[0].getBoundingClientRect();
+    const row = boxes[0].querySelector(".region-group-row");
+    const rowRect = row.getBoundingClientRect();
     const label = boxes[0].querySelector(".region-group-label").getBoundingClientRect();
     const pin = boxes[0].querySelector(".region-group-fly-btn").getBoundingClientRect();
     const x = boxes[0].querySelector(".region-group-close-btn").getBoundingClientRect();
     const chip = boxes[0].querySelector(".region-group-chips .chip").getBoundingClientRect();
-    T.ok("the name sits at the box's left edge", label.left - box.left < 16,
-         Math.round(label.left - box.left), "< 16px in");
-    T.ok("the 📍 is beside the name, not under it", pin.left >= label.right - 1 &&
+    T.ok("the legend straddles the top border", Math.abs((rowRect.top + rowRect.bottom) / 2 - box.top) < 4,
+         Math.round((rowRect.top + rowRect.bottom) / 2 - box.top), "≈ 0 from the top edge");
+    // The gap in the border is cut by the background, nothing else. If it ever goes transparent the line runs
+    // straight through the name and nothing else notices.
+    T.ok("and cuts its gap with an opaque background",
+         !/rgba\(0, 0, 0, 0\)|transparent/.test(getComputedStyle(row).backgroundColor),
+         getComputedStyle(row).backgroundColor, "an opaque colour");
+    T.ok("the name sits close to the box's left edge", label.left - box.left <= 12,
+         Math.round(label.left - box.left), "<= 12px in");
+    T.ok("the 📍 is beside the name, on the same line", pin.left >= label.right - 1 &&
          Math.abs((pin.top + pin.bottom) / 2 - (label.top + label.bottom) / 2) < 4,
          [Math.round(pin.left - label.right), Math.round((pin.top + pin.bottom) / 2 - (label.top + label.bottom) / 2)],
          "to the right, same centre line");
-    T.ok("the ✕ is at the far end of that row", box.right - x.right < 16 && x.left > pin.right,
-         [Math.round(box.right - x.right), Math.round(x.left - pin.right)], "at the right, after the pin");
-    // The reason this row exists as a row: the label used to overlap the first line of chips (user, 2026-08-02,
-    // "die Buttons liegen fast übereinander"). Nothing may overlap now.
-    T.ok("and the chips start below it, clear of the row", chip.top >= label.bottom - 1,
-         Math.round(chip.top - label.bottom), ">= 0");
+    // Both of these are what the user checks by eye: the ✕ on the box's corner, and its glyph on the same
+    // vertical line as the carets of every section heading.
+    T.ok("the ✕ is centred on the box's top-right corner",
+         Math.abs((x.left + x.right) / 2 - box.right) < 3 && Math.abs((x.top + x.bottom) / 2 - box.top) < 4,
+         [Math.round((x.left + x.right) / 2 - box.right), Math.round((x.top + x.bottom) / 2 - box.top)], "≈ 0, ≈ 0");
+    const caretAfter = getComputedStyle(TM.$("#secRegion > summary"), "::after");
+    const caretMid = TM.$("#secRegion > summary").getBoundingClientRect().right +
+                     Math.abs(parseFloat(caretAfter.marginRight)) - parseFloat(caretAfter.width) / 2;
+    T.ok("and its glyph lands on the section carets' line", Math.abs((x.left + x.right) / 2 - caretMid) < 3,
+         Math.round((x.left + x.right) / 2 - caretMid), "≈ 0 from the caret centre");
+    // The straddling legend hangs INTO the box, so the first chip row has to clear it. At 14px of box padding
+    // they were 1px apart and read as overlapping, which is what the padding is now 20px for.
+    T.ok("the chips clear the legend", chip.top >= rowRect.bottom - 1,
+         Math.round(chip.top - rowRect.bottom), ">= 0");
     T.ok("the chips get the box's full width, with no reserved corner",
          !boxes[0].querySelector(".region-group-chip-spacer"), true, true);
-    // The chip rows now use the full width of the box, on every line -- the floated spacer that used to keep the
-    // first line clear of the pin is gone with the pin's old corner. Bike Kingdom's nine sub-regions are the
-    // case that made this matter: reserving that width on every line cost them their two-per-row layout.
     const chips = TM.$$(".region-group-chips .chip", boxes[0]);
-    T.ok("the chips run to the box's inner right edge when there are enough of them",
+    T.ok("and run to the box's inner right edge when there are enough of them",
          chips.length < 3 || Math.max(...chips.map((c) => c.getBoundingClientRect().right)) > box.right - 60,
-         [chips.length, Math.round(Math.max(...chips.map((c) => c.getBoundingClientRect().right))), Math.round(box.right)],
+         [chips.length, Math.round(Math.max(...chips.map((c) => c.getBoundingClientRect().right)))],
          "not held back by a reserved corner");
+    // Greedy line-filling has to be OPTIMAL: whenever a chip starts a new line, the previous line must genuinely
+    // have had no room for it. It did not, for a whole day -- as inline-blocks the last chip on a line still
+    // contributed its own margin-right, so a pair needing 274.9px of 275px wrapped anyway and every region box
+    // was a line taller than it had to be (user, 2026-08-02: "müssten nicht mehr in eine Zeile passen"). The
+    // check is arithmetic on the rendered boxes, so it holds for any region and any name lengths.
+    {
+      const GAP = 6;   // must match .region-group-chips' gap
+      const inner = chips.length ? chips[0].parentNode.clientWidth : 0;
+      let worstWasted = 0, culprit = null;
+      for (let i = 1; i < chips.length; i++) {
+        const prev = chips[i - 1].getBoundingClientRect(), cur = chips[i].getBoundingClientRect();
+        if (Math.abs(cur.top - prev.top) < 2) continue;      // same line, nothing to prove
+        const usedOnPrevLine = prev.right - chips[0].parentNode.getBoundingClientRect().left;
+        const spare = inner - usedOnPrevLine - GAP - cur.width;
+        if (spare >= 0 && spare > worstWasted) { worstWasted = spare; culprit = chips[i].textContent.trim(); }
+      }
+      T.ok("every chip that wrapped had to wrap", worstWasted < 0.5,
+           culprit ? culprit + " had " + Math.round(worstWasted) + "px to spare on the line above" : "none",
+           "no wasted line");
+    }
     if (boxes.length > 1) {
-      T.ok("and nothing hangs into the box below", box.bottom <= boxes[1].getBoundingClientRect().top,
+      T.ok("nothing hangs into the box below", box.bottom <= boxes[1].getBoundingClientRect().top,
            [Math.round(box.bottom), Math.round(boxes[1].getBoundingClientRect().top)], "boxes clear");
     }
-    // A long region name shares its row with the two buttons, so the row must not overflow the box.
-    const legend = boxes[0].querySelector(".region-group-row").getBoundingClientRect();
-    T.ok("the row fits inside the box", legend.right <= box.right + 1,
-         [Math.round(legend.right), Math.round(box.right)], "row ends inside");
+    T.ok("a long name stays off the ✕", rowRect.right <= x.left + 1,
+         [Math.round(rowRect.right), Math.round(x.left)], "legend ends before the ✕");
   }
 
   T.test("✕ closes that region straight away, with no confirmation");

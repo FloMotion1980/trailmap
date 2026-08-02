@@ -152,6 +152,45 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
   T.ok("and it is the selected one", again.classList.contains("selected"), again.className, "selected");
   T.eq("still exactly one selected", TM.$$(".trail-card.selected").length, 1);
 
+  T.test("selecting a card does not resize it or move the cards below it");
+  // Selecting used to change a card's geometry three separate ways, all of which showed as the list twitching
+  // under your finger (user, 2026-08-02): the selected card's border went to 2px, so its box grew 2px; the solo
+  // button it reveals was a 20px inline box in a 19px line, worth another 4px; and on a name long enough to fill
+  // the line -- every lift card, measured -- that button pushed a word onto a second line, worth 19px. So this
+  // takes the LONGEST name in each list, which is the case that reproduced the worst of it, and asserts that
+  // nothing about the card's size or its neighbour's position changes at all.
+  // The Lifte and Touren sections start collapsed, and a card inside a closed <details> measures 0 by 0 -- which
+  // would make every check below pass without measuring anything.
+  ["#secLifts", "#secTouren", "#secTrails"].forEach((id) => { const d = TM.$(id); if (d) d.open = true; });
+  await TM.wait(250);
+  for (const [listName, cards] of [["Trails", TM.ui.trailCards()], ["Lifte", TM.ui.liftCards()], ["Touren", TM.ui.tourCards()]]) {
+    if (!cards || cards.length < 2) { T.ok(listName + ": needs two cards", true, "skipped", "skipped"); continue; }
+    const worst = cards.reduce((a, b) =>
+      a.querySelector(".trail-name").textContent.length > b.querySelector(".trail-name").textContent.length ? a : b);
+    const neighbour = cards[cards.indexOf(worst) + 1] || cards[cards.indexOf(worst) - 1];
+    TM.$$(".trail-card.selected").forEach((c) => c.classList.remove("selected"));
+    await TM.wait(150);
+    // Both measurements are RELATIVE to the card itself, never viewport-relative: selecting a card elsewhere
+    // calls scrollIntoView({behavior:"smooth"}), and that scroll is still running when this case starts, so
+    // absolute tops drift by hundreds of pixels between two reads for reasons that have nothing to do with the
+    // selection. The distance from this card's top to its neighbour's is exactly the quantity in question.
+    const h0 = worst.getBoundingClientRect().height;
+    const gap0 = neighbour.getBoundingClientRect().top - worst.getBoundingClientRect().top;
+    worst.classList.add("selected");
+    await TM.wait(200);
+    const grew = worst.getBoundingClientRect().height - h0;
+    const moved = (neighbour.getBoundingClientRect().top - worst.getBoundingClientRect().top) - gap0;
+    const btn = worst.querySelector(".card-solo-btn");
+    const cr = worst.getBoundingClientRect(), br = btn ? btn.getBoundingClientRect() : null;
+    T.ok(listName + ": the card is actually laid out", h0 > 10, Math.round(h0), "> 10px tall");
+    T.ok(listName + ": the card keeps its height", Math.abs(grew) < 0.6, Math.round(grew * 10) / 10, "0px");
+    T.ok(listName + ": the card below stays put", Math.abs(moved) < 0.6, Math.round(moved * 10) / 10, "0px");
+    T.ok(listName + ": and its solo button is inside the card",
+         !!br && br.top >= cr.top - 0.6 && br.bottom <= cr.bottom + 0.6,
+         br ? [Math.round(br.top - cr.top), Math.round(cr.bottom - br.bottom)] : "no button", "inside");
+    worst.classList.remove("selected");
+  }
+
   T.test("selecting a lift drops the trail selection, and vice versa");
   const liftCard = TM.ui.liftCards()[0];
   liftCard.click();

@@ -215,22 +215,47 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 /* margin-top is back to a normal 10px: the 18px existed to give the old absolutely-positioned legend room to
    hang above its box without covering the "Regionen" heading. Nothing hangs any more. */
 .region-groups-container{ display:flex; flex-direction:column; gap: 18px; margin-top: 10px; }
-/* NO TOP BORDER (user, 2026-08-02) -- and that is what makes the rest of this simple. The legend used to sit
-   across that line, which is why it needed absolute positioning, a negative translateY and an opaque
-   background to cut a gap in it. Left, right and bottom read as a container just as well, and the row can
-   just be a row. */
-.region-group-block{ position: relative; border: 1.5px solid #d3d9c9; border-top: none;
-  border-radius: 0 0 10px 10px; padding: 0 10px 10px; }
-/* In flow at the top of the box. The left padding is deliberately 0 against the box's own 10px, so the name
-   button sits as far left as the box allows: the user asked for that specifically, as the emphasis that shows
-   where a region's block begins. */
-.region-group-row{ display:flex; align-items:center; gap: 6px; margin: 0 0 9px -10px; padding-left: 10px; }
+/* A closed frame again (user, 2026-08-02, after briefly dropping the top line). What does NOT come back is the
+   legend straddling it: the row lives in flow inside the box now, so the border needs no gap cut into it and
+   none of the machinery that used to require -- negative translateY, per-group opaque backgrounds, a max-width
+   on the row, a floated spacer in the chips. */
+/* A FIELDSET, and that is the point: the frame is drawn all the way round EXCEPT where a control sits on it
+   (user, 2026-08-02, after I briefly put the controls inside a closed box -- "da wo oben Schaltflächen sind,
+   ist er nicht zu sehen"). Each control that straddles the line carries the sidebar's own background, which is
+   what cuts the gap. --forest for the line itself, matching the dashed "+ Region hinzufügen" button below it:
+   one box per active region, one dashed box to add another, so the two should read as a set.
+   padding-top 20px is what keeps the straddling legend off the first row of chips -- at 14px they were 1px
+   apart and looked like they overlapped, which was the original complaint. */
+/* Side padding 8px, in from 10: the chips' line width is what that padding is spent on, and pairs were missing
+   each other by single digits ("Bear Mountains (24)" + "Western Summits (20)" needed 282px of 275px -- user,
+   2026-08-02, asking why they did not fit). Together with 2px off each region chip's own side padding, a
+   two-chip line has 12px more to work with, which is enough for that pair and for the next one that lands close.
+   Tuning to the exact 7px would not have been enough: this has to survive iOS rendering the same names slightly
+   wider than Chrome does. */
+.region-group-block{ position: relative; border: 1.5px solid var(--forest); border-radius: 10px;
+  padding: 20px 8px 10px; }
+/* Hard against the frame's own left line, and with no padding on that side, so the name button's left edge IS
+   that line: the region reads as the thing the box hangs off, which is the optical emphasis the user asked for
+   twice (2026-08-02 -- restoring the frame had quietly put it back 7px in). The 10px corner radius is what
+   stops it going further: past x=0 the opaque gap starts eating the curve, and a box with a cut-off top-left
+   corner is exactly the complaint the ✕ collected on the other side. Padding stays on the right, where it keeps
+   the 📍 off the frame line. */
+.region-group-row{ position: absolute; top: 0; left: 0; transform: translateY(-50%);
+  display:flex; align-items:center; gap: 4px; background: var(--card-bg); padding: 0 3px 0 0;
+  max-width: calc(100% - 30px); }
 .region-group-label{ font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px;
   color: var(--forest); font-weight: 700; font-family: Arial, sans-serif;
   cursor: pointer; padding: 6px 13px; border: 1.5px solid var(--forest); border-radius: 20px;
   background: transparent; transition: all .15s ease; }
-.region-group-label:hover{ background: var(--forest); color: #fff; }
+/* Filled means "every sub-region of this group is on" -- and NOTHING else may fill it. The hover rule used to
+   live outside a media query, so on a phone it stuck after the tap: pressing the name switched all the chips
+   off, they went empty, and this button stayed filled until you tapped somewhere else (user, 2026-08-02). The
+   state it shows has to be the state, not the last thing your finger touched. */
+.region-group-label{ -webkit-tap-highlight-color: transparent; }
 .region-group-label.all-active{ background: var(--forest); color: #fff; }
+@media (hover: hover){
+  .region-group-label:hover{ background: var(--forest); color: #fff; }
+}
 /* Both of these now live in the legend row, in flow, so all the geometry that used to pin them onto the box's
    top border is gone: the fixed 30x28 boxes, the -15px offset that put the border line through their glyphs,
    the shared opaque background that stopped the grey line showing through the gap between them, the
@@ -241,25 +266,65 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   border:none; background:transparent; cursor:pointer; line-height:1;
   display:flex; align-items:center; justify-content:center;
   width:28px; height:26px; padding:0; border-radius:7px; flex:0 0 auto;
+  /* No tap tint on either: on a touch screen :hover sticks after a tap until you press something else, so a
+     coloured hover state reads as "this button is now on" long after the tap (user, 2026-08-02). Hover styling
+     lives in the @media (hover: hover) block below, where a real pointer exists. */
+  -webkit-tap-highlight-color: transparent;
 }
 .region-group-fly-btn{ font-size:13px; }
-.region-group-fly-btn:hover{ background:#eef1e8; }
-/* Pushed to the far end of the row: closing a region is the one destructive thing in this box, and it should
-   not sit next to the two buttons you press all the time. */
-.region-group-close-btn{ margin-left:auto; font-size:13px; font-weight:700; color: var(--stone); }
-.region-group-close-btn:hover{ background: #f7e2df; color: var(--rot); }
+/* Pushed to the far end of the row AND centred on the box's right border, because that border is the same
+   vertical line as the section carets above it (measured: both at the summary's right edge) and the ✕ is meant
+   to sit on it. Half the button therefore hangs outside the box, so it carries the sidebar's own background to
+   cut a clean gap in the border rather than having the grey line cross its glyph. One button, so the seam that
+   plagued the old stacked pair cannot come back. */
+/* Back on the box's top-right corner, where its glyph lines up with the section carets above (measured: those
+   sit on the box's right border line) and where it hides the border instead of interrupting it awkwardly.
+   right:-15px against its own 30px width centres it on that border; translateY(-14px) against its 28px height
+   centres it on the top border. Alone now -- the 📍 moved into the legend beside the name -- so the seam that
+   the old stacked pair showed between them cannot come back. */
+.region-group-close-btn{
+  position: absolute; top: 0; right: -15px; transform: translateY(-14px);
+  width: 30px; height: 28px; border-radius: 6px;
+  /* --forest, the frame's own colour (user, 2026-08-02): it sits ON that line, so it should belong to it rather
+     than be a grey glyph parked there. The rust hover stays as the "this deletes something" signal, and only
+     where a real pointer exists -- see the media query below. */
+  font-size:13px; font-weight:700; color: var(--forest); background: var(--card-bg);
+}
+/* ONE tint for both, and it is the one the app already uses for a forest-coloured control under the cursor
+   (#e4ece0, as on the region dialog's own locate button). They had two -- pale green for the 📍, pale red for
+   the ✕ -- which the user read as an inconsistency, and rightly: both glyphs are --forest, both sit on the same
+   frame, and a hover tint is not the place to argue that one of them is dangerous. */
+@media (hover: hover){
+  .region-group-fly-btn:hover,
+  .region-group-close-btn:hover{ background:#e4ece0; }
+}
 /* Plain block row of inline-block chips. It used to need a floated spacer so the first line could flow around
    the 📍 hanging into the box's top-right corner; the 📍 is in the legend row now, so the chips get the full
    width on every line. Kept as inline-block rather than flex only because that is what already works with the
    count-width reservation on each chip. */
-.region-group-chips{ display:block; }
-.region-group-chips .chip{ display:inline-block; margin: 0 6px 6px 0; vertical-align:top; }
+/* Flex with a gap, exactly like .chip-row above, and NOT inline-block with margins -- which is what it was, and
+   which cost a chip per line (user, 2026-08-02: "müssten nicht mehr in eine Zeile passen"). Measured: "Southern
+   Delights (7)" and "Biketicket 2 Ride (4)" need 274.9px of the 275px available and still wrapped, because in
+   inline layout the LAST box's own margin-right counts towards the line and pushed the pair to 280.9px. A gap
+   only ever sits between two chips, so the arithmetic on screen is the arithmetic you expect. align-items:start
+   keeps a short chip from being stretched to a taller neighbour's height. */
+.region-group-chips{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:6px; }
+/* 9px of side padding rather than .chip's own 11px -- see the note on .region-group-block for the two pixels.
+   These are the only chips in the app whose labels are long enough for it to matter; the difficulty chips above
+   are four short words that always fit, so they keep the roomier default. */
+.region-group-chips .chip{ margin:0; text-align:left; padding-left:9px; padding-right:9px; }
 .region-group-label{ white-space: normal; text-align: left; }
 /* Under the boxes, full width, so "what have I got" and "add one more" read as one list. Disabled rather than
    hidden at the cap -- a button that disappears at three explains nothing. */
 /* border-radius matches .region-group-block (10px), not a pill: it sits directly under those boxes and the
    two shapes read as one column (user, 2026-08-01). */
-.region-add-btn{ width: 100%; padding: 9px 12px; border-radius: 10px; cursor: pointer;
+/* Pulled 7px closer than the container's 18px gap (user, 2026-08-02). That gap exists so a box's straddling
+   legend cannot reach the bottom border of the box above it -- this button has no legend, so it does not need
+   the clearance, and 18px read as a hole between the regions and the way to add one. */
+/* margin-top -9px, not -7: the gap above this button now equals the gap below it (user, 2026-08-02) -- 9px both
+   sides, the lower one being the section's own padding-bottom before its grey rule. Negative because each region
+   box carries its own bottom margin, which this cancels down to the wanted figure. */
+.region-add-btn{ width: 100%; margin-top: -9px;padding: 9px 12px; border-radius: 10px; cursor: pointer;
   font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
   font-weight: 700; color: var(--forest); background: transparent;
   border: 1.5px dashed var(--forest); transition: all .15s ease; }
@@ -271,13 +336,20 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 .hub-group{ }
 .hub-title{ padding: 10px 0 4px; font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase;
   letter-spacing: .6px; color: var(--rust); font-weight: 700; cursor:pointer; }
-.trail-card{ margin: 4px 0 8px; padding: 8px 10px; border-radius: 6px; border: 1px solid #e3e6da;
+.trail-card{ position: relative; margin: 4px 0 8px; padding: 8px 10px; border-radius: 6px; border: 1px solid #e3e6da;
   cursor: pointer; transition: background .12s ease, border-color .12s ease;
   background: var(--card-tint, transparent); }
 .trail-card:hover, .trail-card.hovered{ background: #fbf1de; border-color: var(--highlight); }
 .trail-card.dimmed{ opacity: .28; pointer-events:none; }
-.trail-card.selected{ background:#fffbe6; border-color: var(--select-yellow); border-width:2px; box-shadow: 0 0 0 1px var(--select-yellow); }
-.trail-name{ font-size: 14.5px; font-weight: 600; margin: 0 0 3px; }
+/* The selected card must be the same SIZE as an unselected one -- it was 2px taller, because thickening its
+   border thickens its box, and that alone moved every card below it down 2px on every selection (user,
+   2026-08-02). The ring is the same weight as before; it just comes from the box-shadow, which paints outside
+   the border box and costs no layout. The other 2px of that twitch was the solo button -- see its own rule. */
+.trail-card.selected{ background:#fffbe6; border-color: var(--select-yellow); box-shadow: 0 0 0 2px var(--select-yellow); }
+/* The right padding is ALWAYS there, selected or not, and that is the point: it is the solo button's slot, so
+   the name wraps at exactly the same word whether the button is showing or not. Reserving the width is what
+   makes reserving no height possible -- see .card-solo-btn. */
+.trail-name{ font-size: 14.5px; font-weight: 600; margin: 0 0 3px; padding-right: 26px; }
 .trail-meta{ font-family: Arial, sans-serif; font-size: 11.5px; color: #4c574d; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .badge{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; vertical-align:middle; }
 .badge.gruen{ background:var(--gruen); }
@@ -318,21 +390,52 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   z-index: 1000;
 }
 #infoPanel.visible{ display:block; }
-#infoPanel .ip-close{
-  position:absolute; top:8px; right:10px;
-  border:none; background:none; font-size:18px; line-height:1;
-  color: var(--stone); cursor:pointer; padding:4px;
-}
-#infoPanel .ip-close:hover{ color: var(--rust); }
+/* .ip-close is gone with the ✕ itself (user, 2026-08-02) -- and with it the 22px of right padding the heading
+   carried purely to keep the name off that button. The heading now has the panel's full width for the name and
+   its action group, which is what makes them fit behind a longer name. The rule under the name still has to
+   reach both edges, so that clearance was padding rather than margin in the first place; there is simply
+   nothing left to clear. */
 #infoPanel h3{
   font-family:'Copperplate','Trebuchet MS',sans-serif; font-size:14px; text-transform:uppercase;
   letter-spacing:.5px; color:var(--forest-dark); margin:0 0 8px; border-bottom:1px solid #ddd;
-  /* Padding, not margin, for the ✕'s clearance: as a margin it shortened the rule under the name by those
-     22px, which read as a line that does not reach the edge (user, 2026-08-02). Padding keeps the text clear
-     of the button while the border still spans the panel. */
-  padding:0 22px 6px 0;
+  padding:0 0 6px;
 }
+/* The whole action group, and the reason it is inline-flex rather than flex: an inline-flex box is an atomic
+   inline, so inline layout itself decides where it goes -- behind the name when the name's last line leaves
+   room, on its own line under it when it does not (user, 2026-08-02: "alle Buttons in gleicher Größe als Extra
+   Zeile unter den Namen ... wenn sie alle hinter den Namen passen gerne auch dahinter"). A flex row with
+   flex-wrap could not do that: the name would shrink to its longest word and the buttons would stay beside it.
+   The resets undo the h3's own type: uppercase is harmless on GPX but the .5px tracking is not, and a heading's
+   14px line-height would otherwise set the row's height instead of the buttons doing it. */
+#infoPanel h3 .ip-btns{
+  display:inline-flex; align-items:center; gap:5px; white-space:nowrap; vertical-align:middle;
+  letter-spacing:0; line-height:1;
+}
+/* One size for all four (22px, the round buttons' own size), which is the other half of the request. GPX is the
+   one that cannot be square -- a file format has to be named, an icon cannot say "GPX" -- so it matches on
+   height and shape family instead and takes only the width its label needs. */
+#infoPanel h3 .ip-btns > button{
+  height:22px; border:none; cursor:pointer; padding:0; margin:0;
+  background: var(--forest); color:#fff; line-height:1;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+#infoPanel h3 .ip-btns > button:hover{ background: var(--forest-dark); }
+#infoPanel h3 .ip-btns .locate-btn,
+#infoPanel h3 .ip-btns .solo-btn,
+#infoPanel h3 .ip-btns .reverse-btn{ width:22px; border-radius:50%; font-size:12px; }
+#infoPanel h3 .ip-btns .gpx-download-btn{
+  border-radius:11px; padding:0 8px; font-size:10.5px; font-family:Arial, sans-serif; font-weight:700;
+}
+/* Yellow means "this toggle is on" and has to beat the group's own green fill above. */
+#infoPanel h3 .ip-btns .solo-btn.active,
+#infoPanel h3 .ip-btns .reverse-btn.active{ background: var(--select-yellow); color: var(--ink); }
 #infoPanel .ip-trail{ font-size:12.5px; margin-bottom:10px; line-height:1.5; }
+/* The separator on the stats line is now just space (user, 2026-08-02: the · and the / "sollte als optischer
+   Trenner genügen" without a glyph). An empty inline-block rather than spaces or NBSPs: a run of ordinary spaces
+   collapses to one, NBSPs would refuse to break the line if the row ever got long enough to need it, and this
+   gives one number to tune. The ⬆️/⬇️ already say which figure is which, so the punctuation was carrying
+   nothing. */
+#infoPanel .ip-trail .ip-gap{ display:inline-block; width:15px; }
 .ele-chart{ display:block; width:100%; height:46px; margin:4px 0 0; }
 .ele-chart .ele-label{ font-size:7px; fill:#4c574d; font-family:Arial, sans-serif; }
 .ele-chart .ele-hover-dot{ fill:var(--blau); stroke:#fff; stroke-width:1.2; }
@@ -342,59 +445,32 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 #infoPanel .ip-segment-info b{ font-size:12.5px; }
 /* Base -> top station and height gained, in a lift's own (much sparser) info panel. */
 #infoPanel .ip-lift-stats{ margin-top:6px; font-size:13px; }
-#infoPanel .ip-trail .gpx-download-btn{ vertical-align:middle; }
 #infoPanel .ip-trail .dot-start{ color:#3fbf5e; font-size:19px; vertical-align:middle; }
 #infoPanel .ip-trail .dot-end{ color:#e0392b; font-size:19px; vertical-align:middle; }
 #infoPanel .ip-trail b{ font-size:13.5px; }
-#infoPanel .ip-trail .ip-link{
-  display:inline-block; margin-top:4px; color:#fff; background: var(--rust); text-decoration:none;
-  font-size:11.5px; padding:4px 10px; border-radius:14px;
-}
-#infoPanel .ip-trail .ip-link:hover{ background: var(--rust-light); }
-/* margin-top:0 and a little tighter than .ip-link's shared padding: on this line it needs to fit AFTER the two
-   round buttons, and in portrait it was four pixels short of doing so (measured: 43px free, 47px needed). The
-   padding is what those four pixels came from. */
-#infoPanel .ip-trail .gpx-download-btn{
-  background: var(--forest); font-size:10.5px; padding:3px 6px; margin-top:0; border:none; cursor:pointer;
-  font-family:Arial, sans-serif;
-}
-#infoPanel .ip-trail .gpx-download-btn:hover{ background: var(--forest-dark); }
-#infoPanel .ip-trail .solo-btn{
-  display:inline-flex; align-items:center; justify-content:center;
-  width:22px; height:22px; margin-left:4px; vertical-align:middle;
-  border:none; border-radius:50%; cursor:pointer; font-size:12px; line-height:1;
-  background: var(--forest); color:#fff; padding:0;
-}
-#infoPanel .ip-trail .solo-btn:hover{ background: var(--forest-dark); }
-#infoPanel .ip-trail .solo-btn.active{ background: var(--select-yellow); color: var(--ink); }
+/* The .ip-link, .ip-trail .gpx-download-btn, .ip-trail .solo-btn/.reverse-btn and h3 .locate-btn rules are gone
+   (2026-08-02): all four buttons live in one .ip-btns group in the heading now and are styled together up
+   there, so per-button copies of the same green circle would only be four places to forget. .ip-link went with
+   them -- its last user was the GPX button, and the "Zur Tour auf der Website" link it was written for was
+   removed on 2026-07-28 with the url field it read from. */
 /* Same solo toggle, reachable straight from the selected trail's own sidebar card -- added so
-   soloing doesn't require opening the info panel first (2026-07-24, per the user). Only the
-   currently-selected card ever renders one (see render()'s card-building code), so it doesn't need
-   its own persistent layout slot on every card. */
+   soloing doesn't require opening the info panel first (2026-07-24, per the user).
+   Out of the text flow entirely, which is the only way selecting a trail can leave its card exactly the size it
+   was (user, 2026-08-02). Inline, it changed the card's height two ways: a 20px box in a 19px line grew every
+   card by 4px, and on a name long enough to fill the line -- every lift card, measured at 19px -- it pushed a
+   word onto a second line. Absolute costs no layout at all, and .trail-name reserves its 26px of width on every
+   card so the name wraps identically whether the button is there or not. Top 8px is the card's own padding, so
+   it lands on the name's first line. */
 .trail-card .card-solo-btn{
   display:none; align-items:center; justify-content:center;
-  width:20px; height:20px; margin-left:6px; vertical-align:middle; flex-shrink:0;
+  position:absolute; top:8px; right:8px; margin:0;
+  width:20px; height:20px; flex-shrink:0;
   border:none; border-radius:50%; cursor:pointer; font-size:11px; line-height:1;
   background: var(--forest); color:#fff; padding:0;
 }
 .trail-card.selected .card-solo-btn{ display:inline-flex; }
 .trail-card .card-solo-btn:hover{ background: var(--forest-dark); }
 .trail-card .card-solo-btn.active{ background: var(--select-yellow); color: var(--ink); }
-#infoPanel .ip-trail .reverse-btn{
-  display:inline-flex; align-items:center; justify-content:center;
-  width:22px; height:22px; margin-left:4px; vertical-align:middle;
-  border:none; border-radius:50%; cursor:pointer; font-size:12px; line-height:1;
-  background: var(--forest); color:#fff; padding:0;
-}
-#infoPanel .ip-trail .reverse-btn:hover{ background: var(--forest-dark); }
-#infoPanel .ip-trail .reverse-btn.active{ background: var(--select-yellow); color: var(--ink); }
-#infoPanel h3 .locate-btn{
-  display:inline-flex; align-items:center; justify-content:center;
-  width:18px; height:18px; margin-left:4px; vertical-align:middle;
-  border:none; border-radius:50%; cursor:pointer; font-size:10px; line-height:1;
-  background: var(--forest); color:#fff; padding:0;
-}
-#infoPanel h3 .locate-btn:hover{ background: var(--forest-dark); }
 
 /* Small chevrons along a trail's own line showing ride direction on the map itself, not just at the
    Start/Ziel dots (added 2026-07-25, per the user). Neutral dark colour (independent of the trail's
@@ -419,9 +495,13 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    the map; the value here is only the fallback. The box keeps its size: 2px of border against 1px less
    padding, and no font-size change, because labels sit close together on a dense hub and a growing box would
    shove its neighbours around. The z-index lifts it clear of any label it overlaps. */
+/* 3px and a stronger shadow since 2026-08-02, per the user: 2px was too quiet to pick out of a dense hub. The
+   box still keeps its WIDTH (3px of border against 3px less horizontal padding) for the reason it always did --
+   labels sit close together and a widening box shoves its neighbours around. It does grow 2px taller, which is
+   the one dimension where nothing sits directly against it. */
 .trail-label-tooltip.tl-hover{
-  background: #fff; border-color: var(--rust); border-width: 2px; padding: 0 5px;
-  box-shadow: 0 1px 5px rgba(0,0,0,.28); z-index: 700;
+  background: #fff; border-color: var(--rust); border-width: 3px; padding: 0 3px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.40); z-index: 700;
 }
 /* The difficulty as a dot in front of the name, mirroring the 🚡 that starts a lift's label (user's own
    analogy, 2026-07-28). The thin dark ring keeps the black "schwarz" dot readable against the light tooltip
@@ -790,7 +870,11 @@ html.landscape-compact #sidebarToggle .st-bars{
   #infoPanel{
     top:auto; bottom: calc(16px + env(safe-area-inset-bottom, 0px) + 54px); left:50%; right:auto;
     transform: translateX(-50%);
-    width:max-content; max-width:min(92vw, 360px);
+    /* ONE fixed width, not max-content (user, 2026-08-02: "Die Breite der Infobox soll aber nicht variabel
+       sein"). It was sized by its content, so measured across ten trails the same panel came out 320, 338 or
+       360px wide depending on the name -- and since it is centred, both its edges moved every time you tapped a
+       different trail. The value is the old max-width, so nothing that fitted before gets tighter. */
+    width:min(92vw, 360px);
     max-height:min(38vh, 300px);
   }
   #locateCluster{ display:grid; }   /* touch-only; grid layout is defined in the base rule */

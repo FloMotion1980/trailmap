@@ -100,8 +100,12 @@ TM.add("filters", () => typeof trailPassesFilters === "function" && trailPassesF
   T.ok("the line starts with the Trails term", /^\d+ Trails?\b/.test(c.filter), c.filter, "N Trails ...");
   T.ok("and ends with ausgeblendet", /ausgeblendet$/.test(c.filter), c.filter, "... ausgeblendet");
   T.eq("shown + hidden = the old total", TM.ui.num(c.trails) + hiddenTrails, trails0);
+  // "Tour(en)?", not "Touren?": the app says "1 Tour" in the singular and this pattern demanded at least
+  // "Toure", so it only ever passed while the hidden difficulty happened to contain no Tour at all. In
+  // bikekingdom exactly one Tour is schwarz, and the line it produced -- "24 Trails · 1 Tour ausgeblendet" --
+  // is correct. A check that depends on which region's data it meets is worse than no check.
   T.ok("Touren are named separately when some are hidden",
-       tours0 === TM.ui.num(c.touren) || /Touren?/.test(c.filter), c.filter, "mentions Touren");
+       tours0 === TM.ui.num(c.touren) || /Tour(en)?\b/.test(c.filter), c.filter, "mentions Tour/Touren");
   T.eq("the lift count is untouched by a difficulty", TM.ui.num(c.lifts), lifts0);
   await TM.ui.setDiff("schwarz", true);
   await TM.wait(300);

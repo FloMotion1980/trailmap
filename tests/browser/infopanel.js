@@ -25,7 +25,7 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   const card = await openFirstTrail();
   const meta = card.querySelector(".trail-meta").textContent.replace(/\s+/g, " ");
   T.ok("the heading names the trail", content().querySelector("h3").textContent.trim().length > 2, true, true);
-  T.ok("length and elevation are shown", /km/.test(content().textContent) && /m ↑/.test(content().textContent), true, true);
+  T.ok("length and elevation are shown", /km/.test(content().textContent) && /m ⬆/.test(content().textContent), true, true);
   T.ok("the card and the panel agree on the length",
        content().textContent.indexOf(meta.split(" km")[0].trim()) > -1, true, true);
   for (const sel of [".locate-btn", ".solo-btn", ".reverse-btn", ".gpx-download-btn"]) {
@@ -35,7 +35,10 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
 
   T.test("the reverse button swaps the numbers, mirrors the profile and moves the markers");
   const readUpDown = () => {
-    const m = /(\d+)\s*m\s*↑\s*\/\s*(\d+)\s*m\s*↓/.exec(content().textContent.replace(/\s+/g, " "));
+    // The stats line reads "<up> m U+2B06 <down> m U+2B07" -- emoji arrows since 2026-08-02, and the dot and
+    // slash that used to separate the two figures are now pure space (an empty .ip-gap span, no character at
+    // all), so nothing may be required between them. The trailing U+FE0F is optional in both.
+    const m = /(\d+)\s*m\s*⬆️?\s*(\d+)\s*m\s*⬇️?/.exec(content().textContent.replace(/\s+/g, " "));
     return m ? [+m[1], +m[2]] : null;
   };
   const before = readUpDown();
@@ -161,17 +164,71 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
        !!content().querySelector(".gpx-download-btn").dataset.id,
        content().querySelector(".gpx-download-btn").dataset.id, "an id");
 
-  T.test("the × keeps the map selection but closes the panel");
+  T.test("the panel has no ✕ of its own and closing it deselects");
+  // The ✕ was removed on 2026-08-02 (user), and with it the one behaviour that distinguished it from a map tap:
+  // it closed the panel but LEFT the trail selected. So this case asserts the button is gone AND that the
+  // remaining way out still works, because "no ✕" without a working map tap would be a panel you cannot close.
   const openCard = TM.ui.trailCards()[0];
   openCard.click();
   await TM.until(() => panel().classList.contains("visible"));
-  TM.$("#ipClose").click();
+  T.eq("no ✕ in the panel", panel().querySelectorAll("#ipClose, .ip-close").length, 0);
+  T.ok("and the heading keeps no room for one", parseFloat(getComputedStyle(content().querySelector("h3")).paddingRight) < 4,
+       Math.round(parseFloat(getComputedStyle(content().querySelector("h3")).paddingRight)), "< 4px");
+  closeInfoPanelAndDeselect();   // what a tap on empty map space calls
   await TM.wait(300);
   T.ok("panel closed", !panel().classList.contains("visible"), false, false);
-  // Deliberate: a trail keeps its outline, its Start/Ziel dots and its selected card after the ×.
-  T.ok("the card is still selected", openCard.classList.contains("selected"), openCard.className, "selected");
-  T.ok("and the outline is still on the map", TM.map.selectionOutlines() > 0, TM.map.selectionOutlines(), "> 0");
-  closeInfoPanelAndDeselect();
-  await TM.wait(200);
-  T.eq("the full reset does clear it", TM.map.selectionOutlines(), 0);
+  T.ok("the card is deselected too", !openCard.classList.contains("selected"), openCard.className, "not selected");
+  T.eq("and the outline left the map", TM.map.selectionOutlines(), 0);
+
+  T.test("all four actions are one unbreakable row of equal-sized buttons");
+  // The layout the user asked for: the group sits behind the name when the name's last line leaves room and drops
+  // WHOLE onto its own line under it when it does not. Both halves are asserted below by walking every trail in
+  // the list -- so a name long enough to force the second line has to exist in the region for this to prove
+  // much, and bikecircus has several ("Connection ..." ones).
+  let behind = 0, ownLine = 0, worstOverflow = -1e9, sizes = new Set();
+  for (const c of TM.ui.trailCards().slice(0, 14)) {
+    c.click();
+    await TM.until(() => panel().classList.contains("visible") && content().querySelector(".ip-btns"));
+    const h3 = content().querySelector("h3"), grp = h3.querySelector(".ip-btns");
+    const g = grp.getBoundingClientRect(), p = panel().getBoundingClientRect();
+    const first = grp.firstElementChild.getBoundingClientRect();
+    const last = grp.lastElementChild.getBoundingClientRect();
+    // One row: every button shares the group's own top, and the group's width is the sum of its parts.
+    if (Math.abs(first.top - last.top) > 1) worstOverflow = 1e9;
+    worstOverflow = Math.max(worstOverflow, g.right - p.right);
+    [...grp.children].forEach((b) => sizes.add(Math.round(b.getBoundingClientRect().height)));
+    const nameNode = h3.firstChild;
+    const r = document.createRange(); r.setStart(nameNode, 0); r.setEnd(nameNode, nameNode.length);
+    const lines = [...r.getClientRects()];
+    if (lines.length && Math.abs(g.top - lines[lines.length - 1].top) < 12) behind++; else ownLine++;
+  }
+  T.ok("every button is the same height", sizes.size === 1, [...sizes], "one height");
+  T.ok("the group never leaves the panel", worstOverflow <= 0, Math.round(worstOverflow), "<= 0");
+  T.ok("it sits behind the name where the name leaves room", behind > 0, behind, "> 0");
+  T.ok("and drops to its own line where it does not", ownLine > 0, ownLine, "> 0");
+
+  T.test("the panel's width does not depend on which trail is open");
+  // It was sized by its content (width:max-content), so the same panel came out 320, 338 or 360px wide depending
+  // on the name -- and since the touch layout centres it, both its edges moved on every tap (user, 2026-08-02).
+  const widths = new Set();
+  for (const c of TM.ui.trailCards().slice(0, 8)) {
+    c.click();
+    await TM.until(() => panel().classList.contains("visible"));
+    widths.add(Math.round(panel().getBoundingClientRect().width));
+  }
+  T.ok("one width across eight trails", widths.size === 1, [...widths], "one width");
+  // And the rule itself, because the measurement above can only see the layout this run happens to be in: the
+  // variable width lived in the touch/coarse-pointer media block, which a desktop-sized run never applies.
+  let touchWidth = null;
+  for (const sheet of document.styleSheets) {
+    let rules; try { rules = sheet.cssRules; } catch (e) { continue; }
+    for (const rule of rules || []) {
+      if (!(rule.media && /coarse|max-width/.test(rule.conditionText || ""))) continue;
+      for (const inner of rule.cssRules || []) {
+        if (inner.selectorText === "#infoPanel" && inner.style.width) touchWidth = inner.style.width;
+      }
+    }
+  }
+  T.ok("and the touch layout's own rule is a fixed width, not max-content",
+       touchWidth !== null && !/content/.test(touchWidth), touchWidth, "a length");
 });
