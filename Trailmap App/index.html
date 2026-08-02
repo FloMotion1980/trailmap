@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=116" />
+<link rel="stylesheet" href="style.css?v=119" />
 </head>
 <body>
 <div id="fatalError">
@@ -204,6 +204,12 @@
              rather than diagnosis -- and the chip itself is the fold handle, so it can never be covered the
              way a separate handle tucked under the locate button was. Tapping it slides the full line
              (fix age, compass state, map bearing, the counters) out to the left. -->
+        <!-- Teaches the hold gesture at the moment it is relevant: right after a TAP, which is the cheap half of
+             the same button. A short partial fill runs up the locate cell at the same time, so the sentence and
+             the gesture it describes are shown together. Three times at most, and never again once the follow
+             mode has been used -- see showFollowHint(). aria-hidden because it is a transient duplicate of the
+             button's own title, which a screen reader already reads out. -->
+        <div id="followHint" aria-hidden="true">Halten für Folgen-Modus</div>
         <div id="liveStatus">
           <div id="liveStatusPanel"><span id="liveStatusText">Live-Tracking</span></div>
           <button id="liveStatusChip" title="Anzeige ein-/ausklappen">
@@ -1712,20 +1718,6 @@ function setRendererPadding(p){
 // off and on again (user, 2026-08-02). So: attach right away where no permission exists, and otherwise wait
 // for the first tap ANYWHERE and use that one. Capture phase, so it still counts if the tap lands on a control
 // that stops propagation, and self-removing so it asks exactly once.
-function armCompassPermission(){
-  if (orientationHandler !== null) return;
-  const needsGesture = typeof DeviceOrientationEvent !== "undefined" &&
-                       typeof DeviceOrientationEvent.requestPermission === "function";
-  if (!needsGesture) { requestOrientationPermission(); return; }
-  const askOnce = () => {
-    document.removeEventListener("click", askOnce, true);
-    document.removeEventListener("touchend", askOnce, true);
-    if (orientationHandler === null) requestOrientationPermission();
-  };
-  document.addEventListener("click", askOnce, true);
-  document.addEventListener("touchend", askOnce, true);
-}
-
 function setHeadingUp(on){
   headingUp = !!on && canRotate;
   if (canRotate) setRendererPadding(headingUp ? rotationPadding() : null);
@@ -2185,6 +2177,38 @@ function stopFollowing(){
 const HOLD_MS = 500;
 let holdTimer = null, holdFired = false;
 
+// ---- Teaching the hold gesture (2026-08-04) -------------------------------------------------------
+// A hidden gesture that nobody finds is a feature nobody has, and the button's `title` is worth nothing on a
+// touch screen. So the hint fires after a TAP -- the moment the user has just asked "where am I", which is
+// exactly when "and you can keep following" is worth knowing -- and it shows the same partial fill the hold
+// itself draws, so the sentence and the gesture are learnt together rather than the words alone.
+// Three times at most, and dropped to zero the first time the follow mode is actually used: someone who found
+// it does not need telling, and a hint that keeps coming back after that is nagging, not teaching.
+const FOLLOW_HINT_MS = 3800;
+let followHintsLeft = 3;
+let followHintTimer = null;
+const followHintEl = document.getElementById("followHint");
+function hideFollowHint(){
+  if (followHintTimer !== null) { clearTimeout(followHintTimer); followHintTimer = null; }
+  followHintEl.classList.remove("visible");
+  locateBtn.classList.remove("hinting");
+}
+function showFollowHint(){
+  if (followHintsLeft <= 0 || followMode) return;
+  followHintsLeft--;
+  persistActiveState();
+  hideFollowHint();                     // restart cleanly if one is still on screen
+  followHintEl.classList.add("visible");
+  locateBtn.classList.add("hinting");
+  followHintTimer = setTimeout(() => { followHintTimer = null; hideFollowHint(); }, FOLLOW_HINT_MS);
+}
+function markFollowLearned(){
+  hideFollowHint();
+  if (followHintsLeft === 0) return;
+  followHintsLeft = 0;
+  persistActiveState();
+}
+
 // A one-shot position brings the heading cone with it -- the user was explicit, because "where am I and which
 // way am I facing" is the actual question at a junction.
 //
@@ -2230,6 +2254,7 @@ locateBtn.addEventListener("pointerdown", () => {
     holdTimer = null;
     holdFired = true;
     locateBtn.classList.remove("holding");
+    markFollowLearned();     // found it -- stop offering
     startFollowing();
   }, HOLD_MS);
 });
@@ -2255,8 +2280,9 @@ locateBtn.addEventListener("click", () => {
   // A completed hold is followed by a click event; swallowing it is what stops the follow from being switched
   // straight back off. Same pattern as the builder's swipe-to-delete.
   if (holdFired) { holdFired = false; return; }
-  if (followMode) stopFollowing();
-  else oneShotLocate();
+  if (followMode) { stopFollowing(); return; }
+  oneShotLocate();
+  showFollowHint();
 });
 
 // The orientation-mode switch. `click`, not `pointerdown`: this is the one call site where getting the
@@ -4428,7 +4454,7 @@ function persistActiveState(){
       showPlaces,
       showDirectionArrows,
       liveStatusOpen,
-      headingUp
+      followHintsLeft,
     }));
   } catch (e) { /* localStorage unavailable (private mode etc.) — filters just won't persist */ }
 }
@@ -4447,8 +4473,8 @@ function restoreActiveState(){
     if (typeof saved.showLifts !== "boolean") saved.showLifts = true;
     if (typeof saved.showPlaces !== "boolean") saved.showPlaces = true;
     if (typeof saved.liveStatusOpen !== "boolean") saved.liveStatusOpen = true;
+    if (typeof saved.followHintsLeft !== "number") saved.followHintsLeft = 3;
     if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = false;
-    if (typeof saved.headingUp !== "boolean") saved.headingUp = false;
     return saved;
   } catch (e) { return null; }
 }
@@ -5440,8 +5466,8 @@ async function boot(){
     showLifts = saved.showLifts;
     showPlaces = saved.showPlaces;
     liveStatusOpen = saved.liveStatusOpen;
+    followHintsLeft = Math.max(0, Math.min(3, saved.followHintsLeft));
     showDirectionArrows = saved.showDirectionArrows;
-    headingUp = saved.headingUp && canRotate;
   }
 
   await loadRegionVersions(); // fresh per-file versions before any region fetch (see versionedRegionUrl)
@@ -5464,11 +5490,13 @@ async function boot(){
     document.getElementById("showPlacesToggle").checked = showPlaces;
     applyLiveStatusOpen();
     document.getElementById("showDirectionArrowsToggle").checked = showDirectionArrows;
-    // Syncs the 🧭 button to the restored mode, and gets the compass going for it -- see
-    // armCompassPermission for why that cannot simply happen here on iOS. The map still comes up north-up:
-    // no heading has arrived yet, which is also why the fit below needs no bearing correction.
-    setHeadingUp(headingUp);
-    if (headingUp) armCompassPermission();
+    // "Blickrichtung oben" always starts OFF, whatever the last session did (user, 2026-08-04). The mode needs
+    // the compass, the compass needs a permission, and iOS only grants that permission inside a real gesture --
+    // so a restored-on mode is a button that says it is on while nothing is turning. It used to come up armed,
+    // with armCompassPermission() waiting for the first tap anywhere to ask; that made the state honest only
+    // after an unrelated tap, and until then the readout reported a compass that had never been asked for.
+    // Off at boot means the one tap that switches it on IS the gesture the permission needs.
+    setHeadingUp(false);
   }
   // Builder STATE before render(), because render() hides Tours while builder mode is on -- restoring it
   // afterwards left a reloaded page in builder mode with the Tours still showing until something else
@@ -5616,7 +5644,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v116"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v119"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

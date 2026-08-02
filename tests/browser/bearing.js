@@ -555,7 +555,7 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   await northAgain();
   T.eq("switching off eases back to exactly north", angleOf(".leaflet-rotate-pane"), 0);
 
-  T.test("the 🧭 button switches the mode and persists it");
+  T.test("the 🧭 button switches the mode, and the mode is deliberately NOT persisted");
   setHeadingUp(false);
   const btn = TM.$("#bearingBtn");
   T.ok("the button exists on this layout or is display:none on desktop", !!btn, !!btn, true);
@@ -563,28 +563,37 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   await TM.wait(120);
   T.ok("one tap arms heading-up", btn.classList.contains("active"), btn.className, "active");
   T.eq("and says so to assistive tech", btn.getAttribute("aria-pressed"), "true");
-  T.eq("and it is written to the saved state",
-       JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}").headingUp, true);
+  // Not saved, on purpose: the mode needs a permission that iOS only grants inside a gesture, so a restored-on
+  // mode would claim to be on while nothing turns (user, 2026-08-04). Switching it ON must therefore leave the
+  // saved state untouched -- this used to assert the opposite.
+  T.ok("switching it on writes nothing to the saved state",
+       !("headingUp" in JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}")),
+       JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}").headingUp, "undefined");
   btn.click();
   await TM.until(() => Math.round(currentMapBearing()) % 360 === 0, 2500);
   // % 360, because the tween can land a hair below zero and round to 360 -- the same angle, and the app is
   // right to keep it in [0,360). Asserting a bare 0 failed on exactly that.
   T.eq("a second tap goes back to north", Math.round(currentMapBearing()) % 360, 0);
   T.eq("the button is no longer marked", btn.classList.contains("active"), false);
-  T.eq("and that is persisted too",
-       JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}").headingUp, false);
+  T.ok("and the mode is not persisted at all any more",
+       !("headingUp" in JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}")),
+       Object.keys(JSON.parse(localStorage.getItem("trailmap-active-state-v1") || "{}")).indexOf("headingUp"),
+       "absent (-1)");
 
-  T.test("a fresh boot with heading-up saved comes up armed, but north-up");
-  // Nothing attaches the orientation listener until the user taps, so a restored mode has no heading to turn
-  // to yet. Coming up rotated to a stale angle would be worse than coming up straight.
+  T.test("a fresh boot always comes up north-up, whatever the last session left behind");
+  // The mode needs the compass, the compass needs a permission, and iOS grants that only inside a real gesture --
+  // so a restored-on mode would be a button claiming to be on while nothing turns (user, 2026-08-04). It used to
+  // come up marked and wait for the first tap anywhere to ask. Off at boot means the tap that switches it on IS
+  // the gesture. The saved value is written here deliberately: a stale key from an older version must be ignored,
+  // not obeyed.
   const f = await TM.bootFresh(({ state, put }) => {
     put("state", Object.assign({}, state || {}, { headingUp: true }));
   });
   const fBtn = f.doc.getElementById("bearingBtn");
   const fPane = f.doc.querySelector(".leaflet-rotate-pane");
   T.ok("it booted", f.shows("#trailList .trail-card") > 0, f.shows("#trailList .trail-card"), "> 0");
-  T.ok("the button comes up marked", fBtn && fBtn.classList.contains("active"), fBtn && fBtn.className, "active");
-  T.ok("but the map is not turned", !fPane || !/matrix\(-?[\d.]+, [^0]/.test(f.win.getComputedStyle(fPane).transform),
+  T.ok("the button comes up UNmarked", fBtn && !fBtn.classList.contains("active"), fBtn && fBtn.className, "not active");
+  T.ok("and the map is not turned", !fPane || !/matrix\(-?[\d.]+, [^0]/.test(f.win.getComputedStyle(fPane).transform),
        fPane && f.win.getComputedStyle(fPane).transform, "no rotation");
   f.done();
 
