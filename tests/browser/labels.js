@@ -1,7 +1,7 @@
 // @suite   labels
 // @area    Map name labels for trails, Tour segments and lifts
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches applyNameLabels, setLabelHovered, showNames, trailLabelHtml, tl-hover, tl-diff, segmentNameLabels, buildLiftLayer, setLiftHover, applyPlaceVisibility, buildPlaceMarkers
+// @touches applyNameLabels, setLabelHovered, showNames, trailLabelHtml, tl-hover, tl-diff, segmentNameLabels, buildLiftLayer, setLiftHover, applyPlaceVisibility, buildPlaceMarkers, resetAllHoverStyles
 // @needs   region=bikekingdom, builder=off
 //
 // Labels are where "it looks fine" hides the most. Two shipped bugs behind these cases:
@@ -100,6 +100,31 @@ TM.add("labels", () => typeof applyNameLabels === "function" && TM.ui.cardNamed(
   await TM.ui.setSwitch("showLiftsToggle", true);
   await TM.wait(400);
   T.eq("still none after the lifts came back", TM.map.liftLabels().length, 0);
+
+  T.test("clicking straight from one trail to another does not stack their labels");
+  // A touch tap dispatches its synthetic click directly on the target with no mouseover/mouseout in
+  // between (see the touchstart/touchend handler on the map container) -- a plain DOM "click" MouseEvent
+  // on a hit-line's own <path> reproduces exactly that, since Leaflet translates it straight into the
+  // layer's "click" without any hover event firing first. `lineLayers` itself is unreachable here (a
+  // `const` inside the app's own try{} block, see the harness notes at the top of this bundle), so the
+  // two hit-lines are picked directly off the SVG by the fixed weight:22/opacity:0 style buildTrailLayer
+  // gives every trail's hitLine, rather than through the app's own registry.
+  // resetAllHoverStyles() is what has to close the previous trail's leftover tooltip in that case; it used
+  // to only reset the line weight, not the tooltip, so the old name stayed open and the new one stacked on
+  // top of it (found 2026-08-07, reported by the user).
+  const hitLinePaths = TM.$$('.leaflet-overlay-pane path[stroke-width="22"]');
+  const [pathA, pathB] = hitLinePaths;
+  T.ok("found at least two trail hit-lines to click", hitLinePaths.length >= 2, hitLinePaths.length, ">= 2");
+  const clickOn = (el) => el.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window }));
+  clickOn(pathA);
+  await TM.until(() => TM.map.trailLabels().length > 0, 2000);
+  T.eq("first trail's label shows", TM.map.trailLabels().length, 1);
+  clickOn(pathB);
+  await TM.wait(300);
+  T.eq("only the newly-clicked trail's label remains, not both", TM.map.trailLabels().length, 1);
+  closeInfoPanelAndDeselect();
+  await TM.wait(300);
+  T.eq("closes once deselected", TM.map.trailLabels().length, 0);
 
   T.test("solo hides the other trails' labels and keeps the soloed one's");
   await TM.ui.setSwitch("showNamesToggle", true);

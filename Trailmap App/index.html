@@ -4348,6 +4348,13 @@ function resetAllHoverStyles(exceptId){
       applyLineWeight(layer.styleTarget, false, baselineLineOpacity(lid));
       if (layer.card) layer.card.classList.remove("hovered");
       if (currentSelectedId !== lid) hideEndpoints(lid);
+      // Force-close a leftover hover-triggered name tooltip too, not just the line weight -- a touch tap
+      // dispatches its synthetic click directly (see the touchstart/touchend handler on the map container)
+      // with no mouseout in between, so clicking straight from one trail to the next never ran the previous
+      // trail's setHover(false) and its tooltip stayed open, stacking with the newly-clicked trail's own
+      // (found 2026-08-07, reported by the user). Harmless no-op on the normal mouse path, where the
+      // browser's real mouseout already closed it before this ever runs.
+      if (!showNames) layer.hitLine.closeTooltip();
     }
   });
 }
