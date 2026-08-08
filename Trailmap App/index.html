@@ -856,14 +856,13 @@ const REGION_CATALOG = {
     }
   },
   varazze: {
-    // Built 2026-08-08, first batch: 10 of ~53 real singletrack trails from Trailforks' own region listing
-    // (trailforks.com/region/varazze-trail-area/trails/) -- the rest (mostly lower-popularity trails, plus
-    // ~13 access-road/connector entries deliberately left out, same rule as Bike Kingdom's fire roads)
-    // are backlog for a follow-up session. Geometry decoded in-browser from each trail's own page
-    // (see docs/... trailforks-anonymous-polyline-extraction technique); stats/difficulty scraped from the
+    // Built 2026-08-08, all 53 real singletrack trails from Trailforks' own region listing
+    // (trailforks.com/region/varazze-trail-area/trails/) -- ~13 access-road/connector entries deliberately
+    // left out, same rule as Bike Kingdom's fire roads. Geometry decoded in-browser from each trail's own
+    // page (see trailforks-anonymous-polyline-extraction technique); stats/difficulty scraped from the
     // region's own trail TABLE view in one page load rather than per-trail. Only one sub-region so far.
-    countries: ["IT"], label: "Varazze", file: "regions/varazze.json", trailCount: 10,
-    bounds: [[44.35725, 8.5424], [44.43284, 8.58683]],
+    countries: ["IT"], label: "Varazze", file: "regions/varazze.json", trailCount: 53,
+    bounds: [[44.35562, 8.52288], [44.45728, 8.61788]],
     subRegions: {
       varazze: { label: "Varazze", color: "#1c8a6e" }
     }
