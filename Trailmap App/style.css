@@ -199,13 +199,26 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3); transition: transform .15s ease; }
 .ios-switch input:checked + .slider{ background: var(--forest); }
 .ios-switch input:checked + .slider::before{ transform: translateX(14px); }
+/* The margin moved here from #trailSearchInput itself, since the ✕ button (added 2026-08-09, see the
+   markup) needs to be positioned relative to the field, not the sidebar edge. */
+.search-field-wrap{ position:relative; margin: 0 16px 10px; }
 /* font-size:16px is not a design choice, see the #regionSearch note further down: anything under that
    auto-zooms iOS Safari on focus with no way back. Same look as that field, own id since this one lives in
-   the sidebar's normal flow (margin, not a dialog box) rather than inside #regionDialog. */
-#trailSearchInput{ display:block; margin: 0 16px 10px; width: calc(100% - 32px); box-sizing:border-box;
-  border:1.5px solid #d3d9c9; border-radius:18px; padding:7px 13px;
+   the sidebar's normal flow (margin, not a dialog box) rather than inside #regionDialog.
+   padding-right leaves room for the ✕ so typed text never runs under it. */
+#trailSearchInput{ display:block; width:100%; box-sizing:border-box;
+  border:1.5px solid #d3d9c9; border-radius:18px; padding:7px 30px 7px 13px;
   font-family: Arial, sans-serif; font-size:16px; color:var(--ink); background:#fff; }
 #trailSearchInput:focus{ outline:none; border-color:var(--forest); }
+/* The native type="search" cancel glyph is dropped in favour of this one -- its own visibility and size
+   are inconsistent across browsers (reported effectively invisible on the user's phone), and every other
+   dismiss control in this app is already a styled button of its own for the same reason. */
+#trailSearchInput::-webkit-search-cancel-button{ -webkit-appearance:none; appearance:none; }
+.search-clear-btn{ display:none; position:absolute; top:0; right:0; bottom:0; width:30px;
+  border:none; background:transparent; color:var(--stone); font-size:13px; line-height:1; cursor:pointer;
+  -webkit-tap-highlight-color: transparent; }
+.search-field-wrap.has-value .search-clear-btn{ display:block; }
+@media (hover: hover){ .search-clear-btn:hover{ color:var(--rust); } }
 .trail-list{ padding: 4px 0 16px; }
 .region-group-title{ padding: 12px 0 2px; font-family: 'Copperplate','Trebuchet MS',sans-serif; font-size: 12.5px;
   text-transform: uppercase; letter-spacing: 1px; color: var(--forest-dark); font-weight: 700;

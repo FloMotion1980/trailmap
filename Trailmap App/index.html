@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=141" />
+<link rel="stylesheet" href="style.css?v=142" />
 </head>
 <body>
 <div id="fatalError">
@@ -149,8 +149,15 @@
       <!-- Searches Trails, Touren and Lifte together (2026-08-09) -- sits above all three list sections
            since it applies to all of them, not just Trails. See matchesSearch()/trailPassesFilters() for
            how a match becomes an additional visibility condition alongside region/diff/category. -->
-      <input id="trailSearchInput" type="search" autocomplete="off" spellcheck="false"
-             placeholder="Trail, Lift oder Tour suchen…" aria-label="Trails, Lifte und Touren durchsuchen">
+      <!-- A real ✕ button rather than relying on the native type="search" cancel glyph (2026-08-09, user):
+           that glyph's own visibility/size is inconsistent across browsers -- effectively invisible on the
+           user's phone -- and every other dismiss affordance in this app (region slots, the map's own info
+           panel) is already a styled button of its own for exactly that reason. -->
+      <div class="search-field-wrap">
+        <input id="trailSearchInput" type="search" autocomplete="off" spellcheck="false"
+               placeholder="Trail, Lift oder Tour suchen…" aria-label="Trails, Lifte und Touren durchsuchen">
+        <button id="trailSearchClear" class="search-clear-btn" type="button" aria-label="Suche löschen">✕</button>
+      </div>
       <details class="filter-section" id="secTrails" open>
         <summary><span class="section-title-row"><span>Trails</span><span class="section-meta" id="trailCountLabel"></span></span></summary>
         <div class="trail-list" id="trailList"></div>
@@ -1202,6 +1209,8 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
 // now", not a standing filter someone would expect to survive a reload the way region/diff/category do.
 {
   const trailSearchEl = document.getElementById("trailSearchInput");
+  const trailSearchWrapEl = document.getElementById("trailSearchInput").closest(".search-field-wrap");
+  const trailSearchClearBtn = document.getElementById("trailSearchClear");
   // Touren and Lifte are collapsed by default -- force them open while a search is active so a match there
   // isn't hidden behind a closed section, then put back whatever the user actually had (not just "closed"):
   // only the sections THIS search opened get closed again, sections the user had already opened stay open.
@@ -1220,20 +1229,30 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
     }
     suppressSectionPersist = false;
   }
-  trailSearchEl.addEventListener("input", () => {
+  // Shared by typing, Escape and the ✕ button, so all three ways of ending a search leave the exact same
+  // state behind -- term cleared, sections restored, ✕ hidden again.
+  function updateSearch(){
     searchTerm = rdNorm(trailSearchEl.value);
+    trailSearchWrapEl.classList.toggle("has-value", trailSearchEl.value.length > 0);
     applySearchSectionExpansion(!!searchTerm);
     render();
-  });
+  }
+  trailSearchEl.addEventListener("input", updateSearch);
   // Same two-step Escape as the region dialog's search: clear the term first, only hand the key back (e.g.
   // to close the sidebar drawer) once the field is already empty.
   trailSearchEl.addEventListener("keydown", (e) => {
     if (e.key !== "Escape" || !trailSearchEl.value) return;
     e.stopPropagation();
     trailSearchEl.value = "";
-    searchTerm = "";
-    applySearchSectionExpansion(false);
-    render();
+    updateSearch();
+  });
+  // A real ✕ (2026-08-09, user): the native type="search" cancel glyph is invisible/unreliable enough on a
+  // real phone that it does not count as an affordance at all -- see the CSS note on ::-webkit-search-
+  // cancel-button. Refocuses the field afterwards, same as tapping "clear" in any normal search UI would.
+  trailSearchClearBtn.addEventListener("click", () => {
+    trailSearchEl.value = "";
+    updateSearch();
+    trailSearchEl.focus();
   });
 }
 
@@ -5998,7 +6017,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v141"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v142"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
