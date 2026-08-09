@@ -203,13 +203,21 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    markup) needs to be positioned relative to the field, not the sidebar edge. */
 .search-field-wrap{ position:relative; margin: 0 16px 10px; }
 /* font-size:16px is not a design choice, see the #regionSearch note further down: anything under that
-   auto-zooms iOS Safari on focus with no way back. Same look as that field, own id since this one lives in
-   the sidebar's normal flow (margin, not a dialog box) rather than inside #regionDialog.
-   padding-right leaves room for the ✕ so typed text never runs under it. */
+   auto-zooms iOS Safari on focus with no way back -- but the border colour and radius do NOT copy that
+   field (user, 2026-08-09): #d3d9c9 is the region-dialog/builder's own grey, while this field lives in the
+   main sidebar, whose own family grey is #e3e6da (trail cards, filter-section rules, region-group-block --
+   see the note on that one). 10px matches the sort/group selects just below it; 18px on a 34px-tall field
+   was practically a full pill, which reads as a chip's shape, not a list control's.
+   padding-left/right leave room for the 🔍 and the ✕ so neither ever sits under typed text. */
 #trailSearchInput{ display:block; width:100%; box-sizing:border-box;
-  border:1.5px solid #d3d9c9; border-radius:18px; padding:7px 38px 7px 13px;
+  border:1.5px solid #e3e6da; border-radius:10px; padding:7px 38px 7px 34px;
   font-family: Arial, sans-serif; font-size:16px; color:var(--ink); background:#fff; }
 #trailSearchInput:focus{ outline:none; border-color:var(--forest); }
+/* A static 🔍 (2026-08-09) -- every other control in this app signals what it is with an icon before its
+   label/placeholder (📍 locate, 🚡 lifts, 🔁 Touren…), and a plain unlabelled text field was the one
+   exception. pointer-events:none so it never steals the tap that should focus the field under it. */
+.search-icon{ position:absolute; top:0; left:0; bottom:0; width:26px; display:flex;
+  align-items:center; justify-content:center; font-size:13px; opacity:0.6; pointer-events:none; }
 /* The native type="search" cancel glyph is dropped in favour of this one -- its own visibility and size
    are inconsistent across browsers (reported effectively invisible on the user's phone), and every other
    dismiss control in this app is already a styled button of its own for the same reason. */
@@ -223,6 +231,27 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   -webkit-tap-highlight-color: transparent; }
 .search-field-wrap.has-value .search-clear-btn{ display:flex; }
 @media (hover: hover){ .search-clear-btn:hover{ color:var(--rust); } }
+/* The gear (2026-08-09, replacing a permanent row of two <select> elements -- "braucht richtig viel Platz"
+   and read as ugly combo boxes, user). Sits inside .section-title-row, which is what keeps the outer
+   <summary>'s own justify-content:space-between down to exactly two things (that whole group vs. the ▸
+   arrow) -- see the note on .section-title-row itself. margin-left:auto pushes it to the row's own right
+   edge, clear of a long trail count, without needing the row's flex-basis touched. */
+.trail-view-gear{ margin-left:auto; border:none; background:transparent; font-size:14px; line-height:1;
+  padding:2px 4px; cursor:pointer; -webkit-tap-highlight-color: transparent; border-radius:6px; }
+@media (hover: hover){ .trail-view-gear:hover{ background:#eff2e9; } }
+/* Collapsed by default, plain height animation would need a max-height guess -- display toggle is simpler
+   and this panel's own open/close isn't something that needs to be smooth. */
+.trail-view-settings{ display:none; margin:0 16px 10px; padding:10px; border:1.5px solid #e3e6da;
+  border-radius:10px; background:#fbfcf9; }
+.trail-view-settings.open{ display:block; }
+.trail-view-row + .trail-view-row{ margin-top:8px; }
+.trail-view-label{ display:block; font-family: Arial, sans-serif; font-size:11px; text-transform:uppercase;
+  letter-spacing:.5px; color:var(--stone); margin-bottom:4px; }
+/* Reuses .chip/.chip.active as-is (same look as the difficulty filter above it) rather than inventing a
+   second "pick one" control -- smaller padding/font since these rows sit inside an already-indented panel,
+   not the wider Filter section. */
+.trail-view-chips.chip-row{ margin-bottom:0; }
+.trail-view-chips .chip{ padding:3px 9px; font-size:11px; }
 .trail-list{ padding: 4px 0 16px; }
 .region-group-title{ padding: 12px 0 2px; font-family: 'Copperplate','Trebuchet MS',sans-serif; font-size: 12.5px;
   text-transform: uppercase; letter-spacing: 1px; color: var(--forest-dark); font-weight: 700;

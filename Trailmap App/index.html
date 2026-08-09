@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=143" />
+<link rel="stylesheet" href="style.css?v=146" />
 </head>
 <body>
 <div id="fatalError">
@@ -154,12 +154,44 @@
            user's phone -- and every other dismiss affordance in this app (region slots, the map's own info
            panel) is already a styled button of its own for exactly that reason. -->
       <div class="search-field-wrap">
+        <span class="search-icon" aria-hidden="true">🔍</span>
         <input id="trailSearchInput" type="search" autocomplete="off" spellcheck="false"
                placeholder="Trail, Lift oder Tour suchen…" aria-label="Trails, Lifte und Touren durchsuchen">
         <button id="trailSearchClear" class="search-clear-btn" type="button" aria-label="Suche löschen">✕</button>
       </div>
       <details class="filter-section" id="secTrails" open>
-        <summary><span class="section-title-row"><span>Trails</span><span class="section-meta" id="trailCountLabel"></span></span></summary>
+        <summary><span class="section-title-row"><span>Trails</span><span class="section-meta" id="trailCountLabel"></span>
+          <!-- A gear, not a permanent row of controls (user, 2026-08-09: the two dropdowns "brauchen richtig
+               viel Platz" and read as ugly combo boxes) -- clicking it reveals #trailViewSettings below
+               instead. preventDefault/stopPropagation because this button lives inside a <summary>, whose
+               native behaviour is to toggle the WHOLE <details> open/closed on any click inside it. -->
+          <button type="button" id="trailViewGearBtn" class="trail-view-gear" title="Gruppieren/Sortieren" aria-label="Trail-Liste gruppieren/sortieren">⚙️</button>
+        </span></summary>
+        <!-- Trails-list-only: Touren/Lifte keep their own fixed sort (Touren by published number, Lifte
+             alphabetical), a different axis than a trail's difficulty/length/name -- this panel only ever
+             reorders/regroups #trailList. Chip buttons (reusing .chip, same as the difficulty filter above)
+             rather than <select> elements, for the same reason the gear replaced a permanent row: this
+             app's own visual language for "pick one of a few" is already a chip row, not a native dropdown. -->
+        <div class="trail-view-settings" id="trailViewSettings">
+          <div class="trail-view-row">
+            <span class="trail-view-label">Gruppieren</span>
+            <div class="chip-row trail-view-chips" data-target="group">
+              <button type="button" class="chip" data-value="region">Region</button>
+              <button type="button" class="chip" data-value="diff">Schwierigkeit</button>
+              <button type="button" class="chip" data-value="category">Downhill/Uphill</button>
+              <button type="button" class="chip" data-value="none">Keine</button>
+            </div>
+          </div>
+          <div class="trail-view-row">
+            <span class="trail-view-label">Sortieren</span>
+            <div class="chip-row trail-view-chips" data-target="sort">
+              <button type="button" class="chip" data-value="diff">Schwierigkeit</button>
+              <button type="button" class="chip" data-value="name">Name</button>
+              <button type="button" class="chip" data-value="length">Länge</button>
+              <button type="button" class="chip" data-value="descent">Höhenmeter ↓</button>
+            </div>
+          </div>
+        </div>
         <div class="trail-list" id="trailList"></div>
       </details>
       <!-- Tours get their own list section too (user, 2026-07-31), between Trails and Lifte. They DO have a
@@ -1257,6 +1289,57 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
     trailSearchEl.blur();
   });
 }
+
+// Trails-list grouping/sorting (2026-08-09). Display-only -- unlike activeDiffs/activeRegions/showLifts
+// etc. these never change which trails PASS trailPassesFilters(), only how the already-visible ones are
+// arranged in #trailList, so they get their own tiny localStorage key rather than joining
+// persistActiveState()/restoreActiveState(), which are about visibility. Touren/Lifte are untouched --
+// each already has its own fixed sort (published number / alphabetical) that isn't this axis.
+const TRAIL_VIEW_KEY = "trailmap-list-view-v1";
+let trailGroupMode = "region";
+let trailSortMode = "diff";
+function persistTrailListView(){
+  try { localStorage.setItem(TRAIL_VIEW_KEY, JSON.stringify({ groupMode: trailGroupMode, sortMode: trailSortMode })); }
+  catch (e) { /* not persisted, the session still works */ }
+}
+// Chip rows (2026-08-09), not <select> elements -- reuses .chip/.chip.active as-is, the same "pick one"
+// control the difficulty filter already uses, rather than a native combo box. Marks the saved/default
+// choice active on boot and keeps exactly one .chip.active per row on every click.
+function syncTrailViewChips(){
+  document.querySelectorAll(".trail-view-chips").forEach(row => {
+    const value = row.dataset.target === "group" ? trailGroupMode : trailSortMode;
+    row.querySelectorAll(".chip").forEach(btn => btn.classList.toggle("active", btn.dataset.value === value));
+  });
+}
+(function initTrailListView(){
+  try {
+    const raw = localStorage.getItem(TRAIL_VIEW_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      if (typeof saved.groupMode === "string") trailGroupMode = saved.groupMode;
+      if (typeof saved.sortMode === "string") trailSortMode = saved.sortMode;
+    }
+  } catch (e) { /* localStorage unavailable or corrupt -- the two defaults above already apply */ }
+  syncTrailViewChips();
+})();
+document.querySelectorAll(".trail-view-chips .chip").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const row = btn.closest(".trail-view-chips");
+    if (row.dataset.target === "group") trailGroupMode = btn.dataset.value;
+    else trailSortMode = btn.dataset.value;
+    syncTrailViewChips();
+    persistTrailListView();
+    render();
+  });
+});
+// The gear toggles #trailViewSettings open/closed. preventDefault + stopPropagation: this button lives
+// inside #secTrails' own <summary>, whose native behaviour is to toggle the whole <details> on any click
+// inside it -- without these the gear would also collapse the Trails section itself.
+document.getElementById("trailViewGearBtn").addEventListener("click", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  document.getElementById("trailViewSettings").classList.toggle("open");
+});
 
 // ---- Tourenbuilder controls ----
 // ONE control for one state: the header button. It started as a sidebar switch, then also got a 🧭 button
@@ -5646,6 +5729,78 @@ function renderTourList(){
   return shown;   // the selected card is re-marked by reattachSelectedCard() at the end of render()
 }
 
+const DIFF_ORDER = { gruen:0, blau:1, rot:2, schwarz:3 };
+const DIFF_LABEL = { gruen:"Sehr leicht", blau:"Leicht", rot:"Mittel", schwarz:"Schwer" };
+
+// The Trails list's own grouping/sorting (2026-08-09) -- Touren/Lifte are untouched, each already has its
+// own fixed sort. `trails` is already fully filtered (trailPassesFilters ran in render()'s region loop);
+// this only ever decides how that same set is grouped into headings and ordered within each one.
+const TRAIL_SORTERS = {
+  diff: (a, b) => DIFF_ORDER[a.diff] - DIFF_ORDER[b.diff] || a.name.localeCompare(b.name, "de", { numeric: true }),
+  name: (a, b) => a.name.localeCompare(b.name, "de", { numeric: true }),
+  // Shortest first: a length-sorted list reads as "quick trails first, big ones further down", the
+  // conventional direction for a numeric ascending sort where there is no other precedent to follow.
+  length: (a, b) => a.len - b.len,
+  // Most descent first, the opposite direction from length -- this app is downhill-first (see the
+  // Downhill/Uphill/Touren category split elsewhere), so "sorted by Höhenmeter" means "biggest descents on
+  // top", not buried at the bottom of an ascending list.
+  descent: (a, b) => b.down - a.down,
+};
+function appendTrailGroup(list, headingText, headingColor){
+  if (!list.length) return;
+  const sorted = list.slice().sort(TRAIL_SORTERS[trailSortMode] || TRAIL_SORTERS.diff);
+  const group = document.createElement("div");
+  group.className = "hub-group";
+  if (headingText) {
+    const title = document.createElement("div");
+    title.className = "hub-title";
+    title.textContent = headingText;
+    if (headingColor) title.style.color = headingColor;
+    const count = document.createElement("span");
+    count.className = "region-count";
+    count.textContent = ` (${sorted.length})`;
+    title.appendChild(count);
+    group.appendChild(title);
+  }
+  sorted.forEach(t => group.appendChild(makeTrailCard(t, t.region)));
+  listEl.appendChild(group);
+}
+function buildTrailListDom(trails){
+  if (!trails.length) return;
+  if (trailGroupMode === "region") {
+    // Mirrors this list's original, only-ever grouping: REGION_GROUPS, then REGIONS within each, in their
+    // natural (activation) order -- not alphabetical, so a newly activated region doesn't reshuffle ones
+    // already there.
+    Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
+      const regionKeysInGroup = Object.keys(REGIONS).filter(k => REGIONS[k].group === groupKey);
+      const groupTrails = trails.filter(t => regionKeysInGroup.includes(t.region));
+      if (!groupTrails.length) return;
+      const groupTitle = document.createElement("div");
+      groupTitle.className = "region-group-title";
+      groupTitle.textContent = groupInfo.label;
+      const count = document.createElement("span");
+      count.className = "region-count";
+      count.textContent = ` (${groupTrails.length})`;
+      groupTitle.appendChild(count);
+      listEl.appendChild(groupTitle);
+      regionKeysInGroup.forEach(regionKey => {
+        appendTrailGroup(trails.filter(t => t.region === regionKey), REGIONS[regionKey].label, REGIONS[regionKey].color);
+      });
+    });
+  } else if (trailGroupMode === "diff") {
+    ["gruen", "blau", "rot", "schwarz"].forEach(d => {
+      appendTrailGroup(trails.filter(t => t.diff === d), DIFF_LABEL[d], diffColor[d]);
+    });
+  } else if (trailGroupMode === "category") {
+    // Loop trails never reach here (they are Tours, listed separately) -- so this axis only ever splits
+    // into the same two categories the Filter section's own Downhill/Uphill switches already offer.
+    appendTrailGroup(trails.filter(t => !t.uphill), "Downhill", null);
+    appendTrailGroup(trails.filter(t => t.uphill), "Uphill", null);
+  } else {
+    appendTrailGroup(trails, null, null);
+  }
+}
+
 function render(){
   listEl.innerHTML = "";
   let shownTrails = 0, totalTrails = 0, shownTours = 0, totalTours = 0;
@@ -5655,46 +5810,31 @@ function render(){
   // so a chip reads "how many would you actually see right now".
   const regionVisibleCounts = {};
   const groupVisibleCounts = {};
-  // Split per list, so the Trails list's own hub headings count trails and the Touren list's count Tours.
-  const regionTrailCounts = {};
-  const regionTourCounts = {};
 
+  // Collected instead of built straight into DOM (as this loop used to) -- the loop still owns map layer
+  // visibility and every count below (region chips, hub headings), all about REAL regions and independent
+  // of how the list is displayed. Only #trailList's own markup depends on trailGroupMode/trailSortMode,
+  // built once at the end by buildTrailListDom() from this flat collection.
+  const visibleTrailsForList = [];
   Object.entries(REGION_GROUPS).forEach(([groupKey, groupInfo]) => {
     groupVisibleCounts[groupKey] = 0;   // trails AND Tours -- feeds the sub-region chips
-    let groupTrailCount = 0;            // trails only -- feeds this list's own group heading
     const regionKeysInGroup = Object.keys(REGIONS).filter(k => REGIONS[k].group === groupKey);
-    let groupTitleAdded = false;
-    let groupTitleEl = null;
 
     regionKeysInGroup.forEach(regionKey => {
       regionVisibleCounts[regionKey] = 0;
-      const DIFF_ORDER = { gruen:0, blau:1, rot:2, schwarz:3 };
-      const regionLineTrails = lineTrails
-        .filter(t => t.region === regionKey)
-        .sort((a, b) => DIFF_ORDER[a.diff] - DIFF_ORDER[b.diff]);
+      const regionLineTrails = lineTrails.filter(t => t.region === regionKey);
       if (regionLineTrails.length === 0) return;
 
-      const regionOk = activeRegions.has(regionKey);
-
-      const group = document.createElement("div");
-      group.className = "hub-group";
-      const title = document.createElement("div");
-      title.className = "hub-title";
-      title.textContent = REGIONS[regionKey].label;
-      title.style.color = REGIONS[regionKey].color;
-      group.appendChild(title);
-
-      let anyVisibleInRegion = false;
       regionLineTrails.forEach(t => {
         const layer = lineLayers[t.id];
         const visible = trailPassesFilters(t);
         if (visible) {
           // The chip counts stay "everything visible in this region", Tours included -- a sub-region like
           // "Biketicket 2 Ride" holds nothing else, and a chip reading (0) next to four visible Tours would
-          // be a lie. The per-list hub counts below are the ones that count only their own list.
+          // be a lie. The Trails list's own hub-heading counts are read straight off visibleTrailsForList
+          // by buildTrailListDom() now, not tallied here.
           regionVisibleCounts[regionKey]++; groupVisibleCounts[groupKey]++;
-          if (t.loop) { shownTours++; regionTourCounts[regionKey] = (regionTourCounts[regionKey] || 0) + 1; }
-          else        { shownTrails++; groupTrailCount++; regionTrailCounts[regionKey] = (regionTrailCounts[regionKey] || 0) + 1; }
+          if (t.loop) shownTours++; else shownTrails++;
         }
         if (t.loop) totalTours++; else totalTrails++;
         if (layer) {
@@ -5730,39 +5870,12 @@ function render(){
         // Filtered out, or a Tour: Tours are listed in their own section, built by renderTourList() further
         // down in this same render() -- which is what re-attaches layer.card for them.
         if (!visible || t.loop) { if (layer) layer.card = null; return; }
-        anyVisibleInRegion = true;
-        group.appendChild(makeTrailCard(t, regionKey));
+        visibleTrailsForList.push(t);
       });
-      // Same "(n)" visible-count convention as the sidebar filter chips (regionVisibleCounts is now
-      // final for this region — the forEach above has fully run) — added here too per the user
-      // 2026-07-23: they wanted the count in the trail list itself, not just the filter chips above.
-      const hubCount = document.createElement("span");
-      hubCount.className = "region-count";
-      hubCount.textContent = ` (${regionTrailCounts[regionKey] || 0})`;
-      title.appendChild(hubCount);
-      if (anyVisibleInRegion) {
-        if (!groupTitleAdded) {
-          const groupTitle = document.createElement("div");
-          groupTitle.className = "region-group-title";
-          groupTitle.textContent = groupInfo.label;
-          listEl.appendChild(groupTitle);
-          groupTitleAdded = true;
-          groupTitleEl = groupTitle;
-        }
-        listEl.appendChild(group);
-      }
     });
-    if (groupTitleEl) {
-      const groupCount = document.createElement("span");
-      groupCount.className = "region-count";
-      // Trails only, like the hub counts inside this same list -- `groupVisibleCounts` also counts Tours,
-      // which belong to their own section since 2026-07-31. Using it here made a group heading claim 147
-      // above hub headings adding up to 141 (found by tests/browser/lists.js). The sub-region CHIPS keep the
-      // broader count on purpose: a Tours-only sub-region reading (0) would be a lie.
-      groupCount.textContent = ` (${groupTrailCount})`;
-      groupTitleEl.appendChild(groupCount);
-    }
   });
+
+  buildTrailListDom(visibleTrailsForList);
 
   // Tours and lifts each have their own list; the Tours' map layers were already handled by the loop above
   // (a Tour is a `lineTrails` entry), only its cards live elsewhere.
@@ -6019,7 +6132,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v143"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v146"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

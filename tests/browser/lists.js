@@ -1,7 +1,7 @@
 // @suite   lists
 // @area    The three sidebar list sections and their cards
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches makeTrailCard, renderTourList, renderLiftList, render, selectTrail, selectLiftCard, selectCardFor, clearSelection, highlightSelectedTrail, trail-card, lift-card, card-solo-btn, hub-title, region-group-title, card-tint
+// @touches makeTrailCard, renderTourList, renderLiftList, render, selectTrail, selectLiftCard, selectCardFor, clearSelection, highlightSelectedTrail, trail-card, lift-card, card-solo-btn, hub-title, region-group-title, card-tint, buildTrailListDom, appendTrailGroup, trailGroupMode, trailSortMode, trailViewGearBtn, trailViewSettings, syncTrailViewChips, persistTrailListView, TRAIL_SORTERS
 // @needs   region=bikekingdom, builder=off
 //
 // Trails, Touren and Lifte are three lists built by three different code paths that must not drift apart, so
@@ -93,6 +93,82 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
     for (let i = 1; i < diffs.length; i++) if (diffs[i] < diffs[i - 1]) badOrder.push(g.querySelector(".hub-title").textContent.trim());
   });
   T.eq("easiest first, everywhere", [...new Set(badOrder)], []);
+
+  T.test("the Trails list's own gear opens its settings without toggling the section itself");
+  // The gear lives inside #secTrails' own <summary>, whose native behaviour is to toggle the whole
+  // <details> on any click inside it -- the gear's click handler has to preventDefault/stopPropagation or
+  // every tap on it would also collapse the Trails section (2026-08-09).
+  const gearBtn = TM.$("#trailViewGearBtn");
+  const panel = TM.$("#trailViewSettings");
+  T.eq("closed by default", panel.classList.contains("open"), false);
+  gearBtn.click();
+  T.ok("opens on click", panel.classList.contains("open"), true, true);
+  T.ok("the Trails section itself is untouched by the gear", TM.$("#secTrails").open, true, true);
+
+  T.test("grouping by difficulty splits into per-difficulty headings, canonical order, counts add up");
+  TM.$('.trail-view-chips[data-target="group"] [data-value="diff"]').click();
+  await TM.wait(300);
+  T.eq("no region grouping left", TM.$$("#trailList .region-group-title").length, 0);
+  const DIFF_ORDER_NAMES = ["Sehr leicht", "Leicht", "Mittel", "Schwer"];
+  const diffSeen = TM.$$("#trailList .hub-title").map((e) => e.textContent.replace(/\s*\(\d+\)$/, "").trim());
+  T.ok("every heading is one of the four difficulty labels", diffSeen.every((s) => DIFF_ORDER_NAMES.includes(s)), diffSeen, "all in " + DIFF_ORDER_NAMES);
+  T.eq("in canonical order, easiest first", diffSeen, DIFF_ORDER_NAMES.filter((d) => diffSeen.includes(d)));
+  const diffTotal = TM.$$("#trailList .hub-title").reduce((sum, e) => sum + (+(/\((\d+)\)/.exec(e.textContent) || [0, 0])[1]), 0);
+  T.eq("the heading counts add up to the section total", diffTotal, TM.ui.num(TM.ui.counts().trails));
+  const DIFF_CLASS_BY_LABEL = { "Sehr leicht": "gruen", "Leicht": "blau", "Mittel": "rot", "Schwer": "schwarz" };
+  const mismatched = TM.$$("#trailList .hub-group").filter((g) => {
+    const want = DIFF_CLASS_BY_LABEL[g.querySelector(".hub-title").textContent.replace(/\s*\(\d+\)$/, "").trim()];
+    return [...g.querySelectorAll(".trail-card .badge")].some((b) => !b.classList.contains(want));
+  });
+  T.eq("every card under a difficulty heading really has that difficulty", mismatched.length, 0);
+
+  T.test("grouping by category splits into exactly Downhill and Uphill, no Tour ever in either");
+  TM.$('.trail-view-chips[data-target="group"] [data-value="category"]').click();
+  await TM.wait(300);
+  const catSeen = TM.$$("#trailList .hub-title").map((e) => e.textContent.replace(/\s*\(\d+\)$/, "").trim());
+  T.eq("exactly Downhill then Uphill", catSeen, ["Downhill", "Uphill"]);
+  const uphillGroup = TM.$$("#trailList .hub-group").find((g) => /Uphill/.test(g.querySelector(".hub-title").textContent));
+  T.ok("every card in Uphill carries the uphill badge",
+       !!uphillGroup && [...uphillGroup.querySelectorAll(".trail-card")].every((c) => /⬆️/.test(c.textContent)), true, true);
+  T.eq("no loop badge sneaks into either category (Tours are a separate list)",
+       TM.$$("#trailList .badge-loop").length, 0);
+
+  T.test("grouping 'none' is a flat list; sorting by name/length/descent reorders it, not the count");
+  TM.$('.trail-view-chips[data-target="group"] [data-value="none"]').click();
+  await TM.wait(300);
+  T.eq("no headings of either kind", TM.$$("#trailList .hub-title").length + TM.$$("#trailList .region-group-title").length, 0);
+  const flatCount = TM.ui.trailCards().length;
+  T.eq("but every trail is still listed", flatCount, TM.ui.num(TM.ui.counts().trails));
+
+  TM.$('.trail-view-chips[data-target="sort"] [data-value="name"]').click();
+  await TM.wait(300);
+  const flatNames = TM.ui.names("trailCards");
+  T.eq("name sort is alphabetical, numeric-aware", flatNames,
+       flatNames.slice().sort((a, b) => a.localeCompare(b, "de", { numeric: true })));
+  T.eq("the count is unaffected by which sort is picked", TM.ui.trailCards().length, flatCount);
+
+  TM.$('.trail-view-chips[data-target="sort"] [data-value="length"]').click();
+  await TM.wait(300);
+  const lens = TM.ui.trailCards().map((c) => parseFloat(c.querySelector(".trail-meta span").textContent));
+  T.ok("length sort is ascending -- shortest first", lens.every((v, i) => i === 0 || v >= lens[i - 1] - 1e-9),
+       lens.slice(0, 6), "ascending");
+
+  TM.$('.trail-view-chips[data-target="sort"] [data-value="descent"]').click();
+  await TM.wait(300);
+  const descents = TM.ui.trailCards().map((c) =>
+    +(/(\d+)\s*m\s*↓/.exec(c.querySelector(".trail-meta span:nth-child(2)").textContent) || [0, 0])[1]);
+  T.ok("descent sort is descending -- biggest descent first", descents.every((v, i) => i === 0 || v <= descents[i - 1]),
+       descents.slice(0, 6), "descending");
+
+  T.test("the group/sort choice is persisted under its own key, separate from region/diff filters");
+  T.eq("the current choice is saved", JSON.parse(localStorage.getItem("trailmap-list-view-v1") || "{}"),
+       { groupMode: "none", sortMode: "descent" });
+
+  // Reset to the defaults every later case in this suite (and the rest of the bundle) assumes.
+  TM.$('.trail-view-chips[data-target="group"] [data-value="region"]').click();
+  TM.$('.trail-view-chips[data-target="sort"] [data-value="diff"]').click();
+  panel.classList.remove("open");
+  await TM.wait(300);
 
   T.test("Tour cards are sorted by name, numeric-aware, and keep their difficulty badge");
   const sorted = tourNames.slice().sort((a, b) => a.localeCompare(b, "de", { numeric: true }));
