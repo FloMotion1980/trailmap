@@ -2,7 +2,7 @@
 // @area    Tourenbuilder: junctions, direction, clipping, row list
 // @standalone
 // @files   Trailmap App/index.html
-// @touches builderResolve, junctionCandidates, builderTryAdd, renderBuilder, wireBuilderRowDrag, wireBuilderRowSwipe, drawBuilderHighlight, builderCoordsOf, builderNameOf, builderCycleConnect, persistBuilder, restoreBuilder, builderTouchLayout, syncBuilderRowFocus, JUNCTION_MAX_GAP_M
+// @touches builderResolve, junctionCandidates, builderTryAdd, renderBuilder, wireBuilderRowDrag, drawBuilderHighlight, builderCoordsOf, builderNameOf, builderCycleConnect, persistBuilder, restoreBuilder, builderTouchLayout, syncBuilderRowFocus, JUNCTION_MAX_GAP_M, categoryBadge
 // @needs   region=bikecircus, builder=ON, phone viewport, SELF-CONTAINED (paste alone, it brings its own harness)
 //
 // Tourenbuilder regression cases — paste into the browser console and run.
@@ -345,18 +345,17 @@
   }
 
   // =====================================================================================
-  // 6. TOUCH BEHAVIOUR — the axis split is delegated to the browser via touch-action, so these three
-  //    values ARE the behaviour. `manipulation` on the sheet is what stops a double-tap from zooming the
-  //    map; it sits on the sheet precisely so the two more specific rules still win.
-  // =====================================================================================
+  // 6. TOUCH BEHAVIOUR — the drag handle's own axis split is delegated to the browser via touch-action, so
+  //    these values ARE the behaviour. `manipulation` on the sheet is what stops a double-tap from zooming
+  //    the map. .bi-body itself used to carry pan-y for the row's own swipe-to-delete gesture; that gesture
+  //    is gone (2026-08-09, replaced by the ❌ button staying visible on every layout instead), and with it
+  //    the reason .bi-body needed anything other than the browser's own default touch-action.
   test("touch-action values that the gestures depend on");
   {
     await build([["trail", T.x], ["lift", L.sprinter]]);
     const v = (sel, prop) => getComputedStyle($(sel))[prop];
     ok("#builderSheet manipulation (no double-tap zoom)", v("#builderSheet", "touchAction") === "manipulation",
        v("#builderSheet", "touchAction"), "manipulation");
-    ok(".bi-body pan-y (vertical scrolls, horizontal swipes)", v(".bi-body", "touchAction") === "pan-y",
-       v(".bi-body", "touchAction"), "pan-y");
     ok(".bi-drag none (vertical drag is not stolen by scrolling)", v(".bi-drag", "touchAction") === "none",
        v(".bi-drag", "touchAction"), "none");
   }

@@ -1234,21 +1234,17 @@ header{ position:relative; z-index:1; }
   #regionsBtn{ min-width:0; flex-shrink:1; }
 }
 #builderList{ display:flex; flex-direction:column; gap:4px; }
-/* The row is only a positioning shell: the visible box is .bi-body, which is what slides sideways on a
-   swipe, revealing the delete hint underneath. Splitting the two is what makes the gesture possible at all
-   without an extra wrapper element per row. */
+/* The row is a positioning shell around the visible box, .bi-body -- kept as two elements (rather than
+   folding bi-body's styles into the row itself) since is-dragging/is-new both still need to animate the
+   ROW (translateY/opacity) independently of whatever bi-body itself is doing (its own border/background
+   flash, see builderRowFlash below). overflow:hidden used to also clip a swipe-to-delete hint that slid
+   out from behind bi-body; that gesture is gone (2026-08-09, see the note above wireBuilderRowDrag), but
+   the property stays -- the flash animation below was deliberately designed as a background/border colour
+   change rather than a box-shadow ring specifically because a ring would have been clipped by it, and nothing
+   forces revisiting that now. */
 .builder-row{ position:relative; overflow:hidden; border-radius:7px; cursor:pointer; }
-.builder-row::before{
-  content:"🗑 Entfernen"; position:absolute; left:10px; top:50%; transform:translateY(-50%);
-  font-size:11.5px; font-weight:700; color:var(--rust); opacity:0; pointer-events:none;
-}
-.builder-row.is-swiping::before{ opacity:1; }
-.builder-row.will-delete::before{ text-decoration:underline; }
 .bi-body{
   border:1px solid #e3e6da; border-radius:6px; background:var(--card-bg); font-size:12px;
-  /* pan-y hands vertical drags to the sheet's own scrolling (we then get a pointercancel) while letting
-     horizontal ones through as pointermove -- the axis split without any manual guessing. */
-  touch-action: pan-y;
 }
 .bi-main{ display:flex; align-items:center; gap:6px; padding:5px 7px; }
 /* Everything after the name -- length, flags, buttons -- as ONE flex item, so the mobile rule below can
@@ -1384,11 +1380,11 @@ header{ position:relative; z-index:1; }
 
 /* Touch targets. A 13px glyph with 3px of padding is not one, which is what the user hit: "Auf dem Handy
    sind die Knöpfe für hoch und runter bzw. löschen viel zu klein." ↑/↓ are gone entirely (dragging replaced
-   them) and ✕ steps aside for the right-swipe, so the two that remain can afford real size. */
+   them); ❌ used to step aside for a right-swipe here too, but that gesture is gone (2026-08-09) and the
+   button -- already restyled with a real emoji glyph the same day -- stays visible and full-size instead. */
 @media (max-width: 768px), (pointer: coarse){
   .builder-row .bi-main{ padding:6px 8px; gap:6px; }
   .bi-main button{ min-width:38px; min-height:38px; font-size:16px; padding:0; }
-  .builder-row .bi-del{ display:none; }        /* the swipe does this job on a touch screen */
   .bi-drag{ font-size:17px; padding:8px 4px; }
   .builder-connector{ padding:5px 12px; font-size:11.5px; margin:-10px 0 -10px 38px; }
   .builder-connector .bx-cycle{ font-size:15px; }
