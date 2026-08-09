@@ -1,7 +1,7 @@
 // @suite   lists
 // @area    The three sidebar list sections and their cards
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches makeTrailCard, renderTourList, renderLiftList, render, selectTrail, selectLiftCard, selectCardFor, clearSelection, highlightSelectedTrail, trail-card, lift-card, card-solo-btn, hub-title, region-group-title, card-tint, buildTrailListDom, appendTrailGroup, trailGroupMode, trailSortMode, trailSortDir, trailViewGearBtn, trailViewSettings, trailViewResetBtn, syncTrailViewChips, persistTrailListView, TRAIL_SORT_COMPARE, TRAIL_SORT_DEFAULT_DIR, TRAIL_VIEW_DEFAULTS, categoryBadge, badge-uphill, SORT_LABELS
+// @touches makeTrailCard, renderTourList, renderLiftList, render, selectTrail, selectLiftCard, selectCardFor, clearSelection, highlightSelectedTrail, trail-card, lift-card, card-solo-btn, hub-title, region-group-title, card-tint, buildTrailListDom, appendTrailGroup, trailGroupMode, trailSortMode, trailSortDir, trailViewGearBtn, trailViewSettings, trailViewResetBtn, syncTrailViewChips, persistTrailListView, TRAIL_SORT_COMPARE, TRAIL_SORT_DEFAULT_DIR, TRAIL_VIEW_DEFAULTS, categoryBadge, badge-uphill, SORT_LABELS, sidebarScroll, sidebar-search-footer, syncSidebarToggleA11y, isMobileLayout, openSidebar, closeSidebar
 // @needs   region=bikekingdom, builder=off
 //
 // Trails, Touren and Lifte are three lists built by three different code paths that must not drift apart, so
@@ -25,8 +25,13 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
   if (resetBtn) { resetBtn.click(); await TM.wait(250); }
 
   T.test("the sidebar has exactly three list sections, in order");
-  const ids = TM.$$("aside > details").map((d) => d.id);
-  T.eq("order", ids, ["secTrails", "secTouren", "secLifts"]);
+  // #sidebarScroll (2026-08-09) wraps everything scrolling, so the list sections are no longer DIRECT
+  // children of <aside> -- a plain descendant selector still returns every <details> in DOCUMENT ORDER
+  // (querySelectorAll's own guarantee), so filtering that down to just the three list ids still proves the
+  // order, unlike a per-id lookup would (that would trivially "pass" regardless of where each one sits).
+  const listSectionIds = ["secTrails", "secTouren", "secLifts"];
+  const ids = TM.$$("aside details").map((d) => d.id).filter((id) => listSectionIds.includes(id));
+  T.eq("order", ids, listSectionIds);
   T.ok("each has its own count label",
        ["#trailCountLabel", "#tourCountLabel", "#liftCountLabel"].every((s) => !!TM.$(s)), true, true);
   // One content column for the whole sidebar (2026-08-01). Checked as the rendered LEFT EDGE, not as a padding
@@ -54,6 +59,10 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
   // top of its own coloured heading -- two lines and a title for one boundary before a new region group.
   const seps = [];
   TM.$$("aside *").forEach((e) => {
+    // .sidebar-search-footer's own top border (2026-08-09) is deliberately full-bleed edge-to-edge, the
+    // same kind of divider the header already draws at the OTHER end of the page -- not inset to the 16px
+    // content column like every section separator this case actually checks. Excluded by design, not missed.
+    if (e.classList.contains("sidebar-search-footer")) return;
     const cs = getComputedStyle(e), r = e.getBoundingClientRect();
     if (r.width < 40) return;
     // A separator is a line, i.e. a border on the top or bottom ONLY. Anything with a left or right border is a

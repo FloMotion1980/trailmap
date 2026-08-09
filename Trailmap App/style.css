@@ -53,9 +53,22 @@ html.landscape-compact header{
 html.landscape-compact header h1{ font-size:15px; letter-spacing:1px; line-height:1.1; }
 html.landscape-compact header .sub{ font-size:11px; }
 .layout{ flex:1; display:flex; min-height:0; }
+/* aside itself no longer scrolls (2026-08-09) -- it is a column of exactly two things now, the scrolling
+   content and the fixed search footer below it. overflow:hidden here is what stops the (still scrolling)
+   content from spilling out from behind the footer during the drawer's own slide-in/out transition. */
 aside{ width: 350px; min-width: 300px; background: var(--card-bg); border-right: 1px solid #d8ddd0;
-  display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden; transition: transform .25s ease;
-  scrollbar-width: none; -ms-overflow-style: none; }
+  display:flex; flex-direction:column; overflow:hidden; transition: transform .25s ease; }
+/* min-height:0 is load-bearing: without it, a flex child with real content refuses to shrink below its own
+   content height, which would make THIS scroll instead of being clipped to the space #aside actually has --
+   i.e. the footer would be pushed off the bottom of the drawer instead of staying put.
+   padding-bottom is room for the search footer to sit on top of the LAST card without covering it -- the
+   footer's own height (input + its padding + border + a safe-area margin) plus a little breathing room, so
+   the last item in whichever list happens to be at the bottom can still scroll fully clear of it and stay
+   clickable (user, 2026-08-09: "sicherstellen, dass man auch das allerletzte Listenelement sichtbar und
+   anklickbar bekommt"). */
+.sidebar-scroll{ flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+  scrollbar-width: none; -ms-overflow-style: none;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
 /* A classic (non-overlay) scrollbar reserves ~15-17px of width only while content actually
    overflows -- on Windows Chrome (no OS-level overlay scrollbars) that width would appear/
    disappear as the sidebar's own content height changes (e.g. deactivating regions shortens the
@@ -63,7 +76,7 @@ aside{ width: 350px; min-width: 300px; background: var(--card-bg); border-right:
    chips' own size never changed (found 2026-07-23). Hidden entirely (still fully scrollable via
    wheel/trackpad/touch) so the available width -- and therefore the chip wrapping -- never
    depends on whether a scrollbar happens to be needed at that moment. */
-aside::-webkit-scrollbar{ display:none; width:0; height:0; }
+.sidebar-scroll::-webkit-scrollbar{ display:none; width:0; height:0; }
 
 /* The bars and the wordmark are one control, and deliberately UNBORDERED: a box drawn around the app's own name
    turns the title into button content, when the point is the other way round -- the title IS the way into the
@@ -114,10 +127,13 @@ aside::-webkit-scrollbar{ display:none; width:0; height:0; }
   aside.open{ transform: translateX(0); }
   #sidebarToggle .st-bars{ display:block; }
 }
-/* Sidebar scroll-to-top. `position:sticky` inside the scrolling <aside> as its LAST child: it pins itself
-   12px above the scrollport's bottom edge for as long as there is content below, which means it needs no
-   knowledge of the sidebar's width — that differs between the 350px desktop column and the min(88vw,340px)
-   phone drawer, and hardcoding either is what a fixed-position version would have required.
+/* Sidebar scroll-to-top. `position:sticky` inside .sidebar-scroll (aside's own scrolling child since
+   2026-08-09 -- see the note there) as its LAST element: it pins itself 12px above the scrollport's bottom
+   edge for as long as there is content below, which means it needs no knowledge of the sidebar's width —
+   that differs between the 350px desktop column and the min(88vw,340px) phone drawer, and hardcoding either
+   is what a fixed-position version would have required. The `.scrolled` class it depends on still lives on
+   `aside` itself, not .sidebar-scroll -- a plain descendant selector reaches it either way, and keeping the
+   class where it always was meant fewer lines to touch when the scrolling column moved.
    Only appears once there is somewhere to scroll back to (`aside.scrolled`, set in JS), so it does not sit on
    top of a short list for no reason. A floating button like this was rejected in 2026-07-24 in favour of
    making the header title do it; the title still does, but it cannot be reached on a phone (see the markup). */
@@ -213,9 +229,17 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3); transition: transform .15s ease; }
 .ios-switch input:checked + .slider{ background: var(--forest); }
 .ios-switch input:checked + .slider::before{ transform: translateX(14px); }
-/* The margin moved here from #trailSearchInput itself, since the ✕ button (added 2026-08-09, see the
-   markup) needs to be positioned relative to the field, not the sidebar edge. */
-.search-field-wrap{ position:relative; margin: 0 16px 10px; }
+/* The FOOTER around .search-field-wrap (2026-08-09) -- a fixed, non-scrolling last row of the sidebar (see
+   .sidebar-scroll's own note for why: the field used to scroll away with the list, taking the only visible
+   "a search is active" cue with it). flex-shrink:0 so the scrolling content above never squeezes it, a
+   top border + opaque background so it visually separates from whatever card ends up scrolled underneath it
+   ("underneath" only in the z-order sense -- .sidebar-scroll's own bottom padding keeps the true last card
+   from ever sitting behind it), and safe-area padding for the home-indicator strip on an iPhone. */
+.sidebar-search-footer{ flex-shrink:0; border-top:1px solid #e3e6da; background:var(--card-bg);
+  padding: 8px 16px calc(8px + env(safe-area-inset-bottom, 0px)); }
+/* The margin moved OUT (was on .search-field-wrap itself before the footer existed), since the ✕ button
+   (2026-08-09) needs to be positioned relative to the field, not whatever now wraps it. */
+.search-field-wrap{ position:relative; }
 /* font-size:16px is not a design choice, see the #regionSearch note further down: anything under that
    auto-zooms iOS Safari on focus with no way back -- but the border colour and radius do NOT copy that
    field (user, 2026-08-09): #d3d9c9 is the region-dialog/builder's own grey, while this field lives in the
@@ -227,6 +251,12 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   border:1.5px solid #e3e6da; border-radius:10px; padding:7px 38px 7px 34px;
   font-family: Arial, sans-serif; font-size:16px; color:var(--ink); background:#fff; }
 #trailSearchInput:focus{ outline:none; border-color:var(--forest); }
+/* The one visible cue that a search is currently filtering the map (2026-08-09, user: "ein entsprechendes
+   Highlight, vll. in Gold wie bei den Buttons, damit es mehr ins Auge fällt") -- --highlight, the same amber
+   this app already uses for "this control is on" (the solo/reverse buttons, #builderModeBtn.on). Beats
+   :focus's own forest border while both are true (typing AND non-empty), since "a search is active" is the
+   more important of the two facts once there is text in the field. */
+.search-field-wrap.has-value #trailSearchInput{ border-color:var(--highlight); box-shadow:0 0 0 2px rgba(224,163,38,.25); }
 /* A static 🔍 (2026-08-09) -- every other control in this app signals what it is with an icon before its
    label/placeholder (📍 locate, 🚡 lifts, 🔁 Touren…), and a plain unlabelled text field was the one
    exception. pointer-events:none so it never steals the tap that should focus the field under it. */

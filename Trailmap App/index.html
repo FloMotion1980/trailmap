@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=152" />
+<link rel="stylesheet" href="style.css?v=153" />
 </head>
 <body>
 <div id="fatalError">
@@ -103,6 +103,12 @@
   </header>
   <div class="layout">
     <aside>
+      <!-- Split into a scrolling content area and a fixed footer (2026-08-09, user) -- the search field used
+           to live at the TOP of this same scrolling column, above #secTrails, so scrolling any list down far
+           enough scrolled the field itself (and therefore any visual cue that a search is even active) out of
+           view. #sidebarScroll now owns the scrolling; the search footer below it never moves. See the JS
+           section that used to track `asideEl.scrollTop` -- it now tracks #sidebarScroll instead. -->
+      <div class="sidebar-scroll" id="sidebarScroll">
       <div class="filters">
         <details class="filter-section" id="secRegion" open>
           <!-- "Regionen", plural like every other section, and without the live "· <one region>" indicator that
@@ -153,19 +159,6 @@
       <!-- The Tourenbuilder has no sidebar section at all any more: its switch is the header button and
            its list is #builderSheet, pinned to the map. Keeping a copy of either here would mean one
            state with three owners -- see docs/tour-builder.md. -->
-      <!-- Searches Trails, Touren and Lifte together (2026-08-09) -- sits above all three list sections
-           since it applies to all of them, not just Trails. See matchesSearch()/trailPassesFilters() for
-           how a match becomes an additional visibility condition alongside region/diff/category. -->
-      <!-- A real ✕ button rather than relying on the native type="search" cancel glyph (2026-08-09, user):
-           that glyph's own visibility/size is inconsistent across browsers -- effectively invisible on the
-           user's phone -- and every other dismiss affordance in this app (region slots, the map's own info
-           panel) is already a styled button of its own for exactly that reason. -->
-      <div class="search-field-wrap">
-        <span class="search-icon" aria-hidden="true">🔍</span>
-        <input id="trailSearchInput" type="search" autocomplete="off" spellcheck="false"
-               placeholder="Trail, Lift oder Tour suchen…" aria-label="Trails, Lifte und Touren durchsuchen">
-        <button id="trailSearchClear" class="search-clear-btn" type="button" aria-label="Suche löschen">✕</button>
-      </div>
       <details class="filter-section" id="secTrails" open>
         <summary><span class="section-title-row"><span>Trails</span><span class="section-meta" id="trailCountLabel"></span></span>
           <!-- A gear, not a permanent row of controls (user, 2026-08-09: the two dropdowns "brauchen richtig
@@ -236,6 +229,21 @@
            unreachable exactly when a long list would need it (user, 2026-07-28). Sticky rather than fixed so
            it positions itself against whichever width the sidebar currently has. -->
       <button id="sidebarTopBtn" title="Nach oben">↑</button>
+      </div>
+      <!-- The fixed footer #sidebarScroll's own note explains why this moved out of the scrolling column: it
+           used to sit at the TOP, above #secTrails, so scrolling any list far enough scrolled the field (and
+           the only visual cue that a search is even filtering) out of view. Also gets a gold ring while a
+           search is active (2026-08-09, user: "ein entsprechendes Highlight, vll. in Gold wie bei den
+           Buttons") -- see .search-field-wrap.has-value in the CSS -- which now stays visible regardless of
+           scroll position for exactly that reason. -->
+      <div class="sidebar-search-footer">
+        <div class="search-field-wrap">
+          <span class="search-icon" aria-hidden="true">🔍</span>
+          <input id="trailSearchInput" type="search" autocomplete="off" spellcheck="false"
+                 placeholder="Trail, Lift oder Tour suchen…" aria-label="Trails, Lifte und Touren durchsuchen">
+          <button id="trailSearchClear" class="search-clear-btn" type="button" aria-label="Suche löschen">✕</button>
+        </div>
+      </div>
     </aside>
     <div class="map-wrap">
       <div id="map"></div>
@@ -1518,6 +1526,7 @@ function persistFilterSectionsState(){
 // ---- Map + custom base layer switcher (own buttons, no Leaflet control-layers) ----
 // ---- Mobile sidebar toggle (list overlay) ----
 const asideEl = document.querySelector('aside');
+const sidebarScrollEl = document.getElementById('sidebarScroll');
 const sidebarToggleBtn = document.getElementById('sidebarToggle');
 const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 
@@ -1529,17 +1538,46 @@ function closeSidebar(){
   asideEl.classList.remove('open');
   sidebarBackdrop.classList.remove('visible');
 }
+// Touch-only in effect, not just in appearance (2026-08-09, found by the user right after the title became
+// permanently visible on desktop too): the click handler itself used to run on every layout, so a desktop
+// click on the now-visible title still called openSidebar() -- which shows #sidebarBackdrop full-screen
+// regardless of layout, greying out the whole page for a drawer that (on desktop) never actually moves,
+// since the sidebar is permanently in flow there and has nothing to slide in. isMobileLayout() already
+// exists for exactly this kind of check elsewhere in the file.
 sidebarToggleBtn.addEventListener('click', () => {
+  if (!isMobileLayout()) return;
   if (asideEl.classList.contains('open')) closeSidebar(); else openSidebar();
 });
 // The handle is a div carrying role="button" (an <h1> cannot live inside a real <button>), so the keyboard
 // behaviour a button would have given us for free has to be spelled out. Space is prevented from scrolling.
 sidebarToggleBtn.addEventListener('keydown', (e) => {
+  if (!isMobileLayout()) return;
   if (e.key !== 'Enter' && e.key !== ' ') return;
   e.preventDefault();
   sidebarToggleBtn.click();
 });
 sidebarBackdrop.addEventListener('click', closeSidebar);
+
+// The tooltip/keyboard-focusability/button semantics are touch-only too, same reasoning as the click handler
+// just above -- a title tooltip and a role="button" promise something is clickable, which on desktop is no
+// longer even true once the click itself is gated. The <h1> inside keeps its own id regardless (document
+// outline, and syncBuilderModeChrome() still looks it up), only the WRAPPER's interactive attributes move.
+function syncSidebarToggleA11y(){
+  if (isMobileLayout()) {
+    sidebarToggleBtn.setAttribute('role', 'button');
+    sidebarToggleBtn.tabIndex = 0;
+    sidebarToggleBtn.title = 'Listen und Filter öffnen';
+    sidebarToggleBtn.setAttribute('aria-label', 'Menü öffnen');
+  } else {
+    sidebarToggleBtn.removeAttribute('role');
+    sidebarToggleBtn.removeAttribute('tabindex');
+    sidebarToggleBtn.removeAttribute('title');
+    sidebarToggleBtn.removeAttribute('aria-label');
+  }
+}
+syncSidebarToggleA11y();
+window.addEventListener('resize', syncSidebarToggleA11y);
+window.addEventListener('orientationchange', syncSidebarToggleA11y);
 
 // Scrolling the sidebar back to its top is #sidebarTopBtn's job alone (2026-07-30, per the user). The header
 // title used to do it too -- added 2026-07-24 to avoid a new floating element, then made redundant on
@@ -1548,12 +1586,15 @@ sidebarBackdrop.addEventListener('click', closeSidebar);
 // list needs it. Two triggers for one action, one of them invisible on the layout where it matters most, is
 // worse than one that is always where the list is. The <h1> keeps its id but carries no handler.
 // Shown only once scrolled, so it never covers a short list for nothing.
+// Tracks #sidebarScroll now, not `aside` itself (2026-08-09) -- aside stopped scrolling when the search
+// field moved out to its own fixed footer; see that change's own notes for why. The `.scrolled` class
+// itself still lands on `aside`, which #sidebarTopBtn's CSS still reaches via a plain descendant selector.
 {
   const topBtn = document.getElementById('sidebarTopBtn');
   const SHOW_AFTER_PX = 180;
-  const syncTopBtn = () => asideEl.classList.toggle('scrolled', asideEl.scrollTop > SHOW_AFTER_PX);
-  asideEl.addEventListener('scroll', syncTopBtn, { passive: true });
-  topBtn.addEventListener('click', () => asideEl.scrollTo({ top: 0, behavior: 'smooth' }));
+  const syncTopBtn = () => asideEl.classList.toggle('scrolled', sidebarScrollEl.scrollTop > SHOW_AFTER_PX);
+  sidebarScrollEl.addEventListener('scroll', syncTopBtn, { passive: true });
+  topBtn.addEventListener('click', () => sidebarScrollEl.scrollTo({ top: 0, behavior: 'smooth' }));
   syncTopBtn();
 }
 
@@ -6194,7 +6235,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v152"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v153"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
