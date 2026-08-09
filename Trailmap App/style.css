@@ -61,14 +61,23 @@ aside{ width: 350px; min-width: 300px; background: var(--card-bg); border-right:
 /* min-height:0 is load-bearing: without it, a flex child with real content refuses to shrink below its own
    content height, which would make THIS scroll instead of being clipped to the space #aside actually has --
    i.e. the footer would be pushed off the bottom of the drawer instead of staying put.
-   padding-bottom is room for the search footer to sit on top of the LAST card without covering it -- the
-   footer's own height (input + its padding + border + a safe-area margin) plus a little breathing room, so
-   the last item in whichever list happens to be at the bottom can still scroll fully clear of it and stay
-   clickable (user, 2026-08-09: "sicherstellen, dass man auch das allerletzte Listenelement sichtbar und
-   anklickbar bekommt"). */
-.sidebar-scroll{ flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+   display:flex; flex-direction:column is what `aside` itself used to provide before this element existed --
+   #sidebarTopBtn's own `align-self:flex-end` only does anything when its PARENT is a flex container, and its
+   parent became this div, not `aside`, the moment the search field moved out (found by the user, 2026-08-09:
+   the button silently fell back to the LEFT edge, since align-self on a non-flex-child is simply ignored,
+   not an error).
+   No extra padding-bottom for the last card's sake, unlike the 64px this first shipped with -- the user
+   found the result excessive ("etwas viel Whitespace"), and it turned out to be solving a problem that
+   #sidebarTopBtn already solves by existing: it is the last element in this same scrolling column, its own
+   height and margin already reserve real clearance below the true last card, and being `position:sticky`
+   itself, its resting spot is measured from THIS element's own padding edge -- so adding padding here to
+   "protect" the last card was actually pushing the sticky button's own rest position that same amount
+   further from the footer too, compounding into one large gap instead of the small, correct one (12px,
+   exactly the button's own `bottom` offset) this element's natural content already provides for free. Only
+   real padding left is the safe-area inset, for the home-indicator strip on an iPhone. */
+.sidebar-scroll{ flex:1 1 auto; min-height:0; display:flex; flex-direction:column; overflow-y:auto; overflow-x:hidden;
   scrollbar-width: none; -ms-overflow-style: none;
-  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+  padding-bottom: env(safe-area-inset-bottom, 0px); }
 /* A classic (non-overlay) scrollbar reserves ~15-17px of width only while content actually
    overflows -- on Windows Chrome (no OS-level overlay scrollbars) that width would appear/
    disappear as the sidebar's own content height changes (e.g. deactivating regions shortens the
@@ -141,7 +150,12 @@ aside{ width: 350px; min-width: 300px; background: var(--card-bg); border-right:
   position: sticky; bottom: 12px; align-self: flex-end;
   margin: 0 12px 12px; flex-shrink: 0;
   width: 38px; height: 38px; border-radius: 50%;
-  border: 1px solid #d8ddd0; background: rgba(255,255,255,0.97); color: var(--forest);
+  /* Solid, not the rgba(255,255,255,0.97) this started as (user, 2026-08-09: "minimal transparent") -- that
+     3% was never a deliberate choice, and there is nothing gained by seeing 3% of whatever briefly scrolls
+     underneath it during the fade. Stays white/--forest rather than the amber "this is on" colour the other
+     buttons use: unlike solo/reverse/the gear panel, this button has no ON state to show -- it is a one-shot
+     action (jump to top), not a toggle -- so the highlight colour's own meaning would not actually apply here. */
+  border: 1px solid #d8ddd0; background: var(--card-bg); color: var(--forest);
   font-size: 17px; line-height: 1; cursor: pointer;
   box-shadow: 0 2px 8px rgba(0,0,0,0.18);
   opacity: 0; pointer-events: none; transition: opacity .18s ease;
