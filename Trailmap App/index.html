@@ -1451,6 +1451,11 @@ L.Renderer.prototype._update = function(){
 
 map.on("zoomend", updateStartDotVisibility);
 
+// Bottom right, the same corner Leaflet's own attribution already occupies -- Leaflet stacks multiple
+// controls sharing a corner automatically, so this needs no positioning of our own and sits correctly on
+// every layout (desktop, portrait, landscape-compact) for free.
+L.control.scale({ position: "bottomright", imperial: false }).addTo(map);
+
 const baseLayers = {
   osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
