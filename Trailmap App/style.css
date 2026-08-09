@@ -513,9 +513,13 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 #infoPanel h3 .ip-btns .gpx-download-btn{
   border-radius:11px; padding:0 8px; font-size:10.5px; font-family:Arial, sans-serif; font-weight:700;
 }
-/* Yellow means "this toggle is on" and has to beat the group's own green fill above. */
+/* --highlight (amber/gold), not --select-yellow (2026-08-09, user) -- pure yellow is reserved for trail
+   SELECTION everywhere else (the map highlight, the selected list entry), and reusing it here for an
+   unrelated "this toggle is on" state read as visually confusing rather than consistent. --highlight is
+   already this app's own colour for exactly that meaning elsewhere (#builderModeBtn.on). Has to beat the
+   group's own green fill above. */
 #infoPanel h3 .ip-btns .solo-btn.active,
-#infoPanel h3 .ip-btns .reverse-btn.active{ background: var(--select-yellow); color: var(--ink); }
+#infoPanel h3 .ip-btns .reverse-btn.active{ background: var(--highlight); color: var(--ink); }
 /* No bottom margin: it separated this block from .ip-actions, the row that used to hold the GPX button, and both
    are gone -- so it was 10px of empty panel under the elevation chart, on top of the panel's own 10px of padding
    (user, 2026-08-02: "die InfoBox hat jetzt unten recht viel Whitespace"). */
@@ -565,7 +569,10 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 }
 .trail-card.selected .card-solo-btn{ display:inline-flex; }
 .trail-card .card-solo-btn:hover{ background: var(--forest-dark); }
-.trail-card .card-solo-btn.active{ background: var(--select-yellow); color: var(--ink); }
+/* --highlight, not --select-yellow -- same reasoning as the info panel's solo/reverse buttons: pure yellow
+   means "this trail is selected" everywhere else in the app, and this button's own "on" state is a
+   different thing entirely (solo mode, which can be on for a trail that isn't even selected). */
+.trail-card .card-solo-btn.active{ background: var(--highlight); color: var(--ink); }
 
 /* Direction arrows are plain SVG polylines now (2026-08-05), styled entirely through Leaflet's own layer
    options in buildDirectionArrowLayer() -- no CSS classes needed any more. */
