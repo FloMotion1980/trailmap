@@ -169,7 +169,14 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 /* Wraps a summary's label + dynamic meta text (visible-count / current-region) as ONE flex item, so
    justify-content:space-between on the summary still only ever spaces two things apart — this group
    vs. the arrow — instead of spreading label/meta/arrow apart individually (added 2026-07-23). */
-.section-title-row{ display:flex; align-items:baseline; gap:8px; min-width:0; }
+/* flex:1 (2026-08-09) so this row itself absorbs the summary's own justify-content:space-between gap --
+   needed once #secTrails' gear became a THIRD flex child of <summary>, sitting between this row and the ▸
+   arrow (::after): without the grow, space-between would spread all three apart evenly instead of packing
+   the gear snug against the arrow with this row filling everything to its left. Harmless for every other
+   section's summary, which only ever had the two children (this row, the arrow) space-between already
+   spread apart the same way -- .section-meta already grows to fill this row's own width, so the row simply
+   fills a little more of the same space it always did. */
+.section-title-row{ display:flex; align-items:baseline; gap:8px; min-width:0; flex:1 1 auto; }
 .section-title-row > span:first-child{ flex-shrink:0; }
 .section-meta{ font-weight:400; text-transform:none; letter-spacing:normal; opacity:0.75; font-size:10.5px;
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; flex:1 1 auto; }
@@ -232,11 +239,11 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 .search-field-wrap.has-value .search-clear-btn{ display:flex; }
 @media (hover: hover){ .search-clear-btn:hover{ color:var(--rust); } }
 /* The gear (2026-08-09, replacing a permanent row of two <select> elements -- "braucht richtig viel Platz"
-   and read as ugly combo boxes, user). Sits inside .section-title-row, which is what keeps the outer
-   <summary>'s own justify-content:space-between down to exactly two things (that whole group vs. the ▸
-   arrow) -- see the note on .section-title-row itself. margin-left:auto pushes it to the row's own right
-   edge, clear of a long trail count, without needing the row's flex-basis touched. */
-.trail-view-gear{ margin-left:auto; border:none; background:transparent; font-size:14px; line-height:1;
+   and read as ugly combo boxes, user; then moved again the same day -- "hätte das Zahnrad links neben das
+   Dreieck gemacht" -- from inside .section-title-row out to a direct sibling of it, right beside the ▸
+   caret rather than floating near the trail count). flex-shrink:0 so a long "N Trails" count never
+   squeezes it; see .section-title-row's own note for how the caret ends up snug against it. */
+.trail-view-gear{ flex-shrink:0; border:none; background:transparent; font-size:14px; line-height:1;
   padding:2px 4px; cursor:pointer; -webkit-tap-highlight-color: transparent; border-radius:6px; }
 @media (hover: hover){ .trail-view-gear:hover{ background:#eff2e9; } }
 /* Collapsed by default, plain height animation would need a max-height guess -- display toggle is simpler

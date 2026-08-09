@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=146" />
+<link rel="stylesheet" href="style.css?v=147" />
 </head>
 <body>
 <div id="fatalError">
@@ -160,13 +160,16 @@
         <button id="trailSearchClear" class="search-clear-btn" type="button" aria-label="Suche löschen">✕</button>
       </div>
       <details class="filter-section" id="secTrails" open>
-        <summary><span class="section-title-row"><span>Trails</span><span class="section-meta" id="trailCountLabel"></span>
+        <summary><span class="section-title-row"><span>Trails</span><span class="section-meta" id="trailCountLabel"></span></span>
           <!-- A gear, not a permanent row of controls (user, 2026-08-09: the two dropdowns "brauchen richtig
                viel Platz" and read as ugly combo boxes) -- clicking it reveals #trailViewSettings below
-               instead. preventDefault/stopPropagation because this button lives inside a <summary>, whose
-               native behaviour is to toggle the WHOLE <details> open/closed on any click inside it. -->
+               instead. A sibling of .section-title-row, not nested inside it (moved there per the user,
+               2026-08-09: wanted it directly beside the ▸ caret, not floating near the trail count) -- see
+               the CSS note on .section-title-row's own flex-grow for why that positioning needs it there.
+               preventDefault/stopPropagation because this button lives inside a <summary>, whose native
+               behaviour is to toggle the WHOLE <details> open/closed on any click inside it. -->
           <button type="button" id="trailViewGearBtn" class="trail-view-gear" title="Gruppieren/Sortieren" aria-label="Trail-Liste gruppieren/sortieren">⚙️</button>
-        </span></summary>
+        </summary>
         <!-- Trails-list-only: Touren/Lifte keep their own fixed sort (Touren by published number, Lifte
              alphabetical), a different axis than a trail's difficulty/length/name -- this panel only ever
              reorders/regroups #trailList. Chip buttons (reusing .chip, same as the difficulty filter above)
@@ -6132,7 +6135,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v146"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v147"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
