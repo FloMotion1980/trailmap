@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=159" />
+<link rel="stylesheet" href="style.css?v=160" />
 </head>
 <body>
 <div id="fatalError">
@@ -1639,30 +1639,59 @@ function closeSidebarIfMobile(){
   if (isMobileLayout()) closeSidebar();
 }
 
-// The on-map "glass" search field (2026-08-09, user): ONE shared input/wrap, reparented between its normal
-// home (.sidebar-search-footer) and the map itself, rather than a second synced field. On mobile the sidebar
-// is off-screen when closed, which used to take the only visible "a search is filtering" cue with it the
-// moment you closed the drawer to actually look at the map -- exactly the case the user described ("Vor
-// allem auf dem Handy, wo das Menü idR ausgeblendet ist"). Reparenting keeps it to one input/one set of
-// listeners, so typing in the floating field IS typing in the real search box, no sync code needed.
-// Desktop floats too (2026-08-09, user: the sidebar is always visible there, but that is not the same as
-// a map indicator -- the gold ring on the sidebar field alone wasn't enough). The ONLY guard left is the
-// mobile drawer itself being open: it is a fixed, full-height overlay ON TOP of the map (z-index 2500), so
-// floating the field while it is open would move the very input the user is looking at behind that overlay,
-// out of sight, mid-keystroke.
+// The on-map "glass" search field (2026-08-09, user). On MOBILE this reparents the one shared input/wrap
+// between its normal home (.sidebar-search-footer) and the map itself, rather than a second synced field.
+// The sidebar is off-screen when closed, which used to take the only visible "a search is filtering" cue
+// with it the moment you closed the drawer to actually look at the map -- exactly the case the user
+// described ("Vor allem auf dem Handy, wo das Menü idR ausgeblendet ist"). Reparenting keeps it to one
+// input/one set of listeners, so typing in the floating field IS typing in the real search box.
+//
+// DESKTOP DOES NOT REPARENT (2026-08-09, second pass, user: "es springt einfach hoch und verliert den
+// Fokus"). It first shipped floating the same way as mobile, and moving a focused element to a new DOM
+// parent is exactly what caused that -- the sidebar is always in flow on desktop, so the very first
+// keystroke of a search triggered the move while the field still had focus, and reparenting a focused
+// element is not guaranteed to keep it focused (it visibly didn't here). Desktop instead only ever
+// TOGGLES `position: fixed` on the SAME node without ever moving it in the DOM -- a pure style change,
+// which cannot drop focus -- and this specifically only works because `aside` carries no `transform` at
+// all outside the mobile media query: a `transform`'d ancestor would hijack `position:fixed`'s containing
+// block, which is exactly why MOBILE can't use this trick (aside's open/closed slide IS a transform there,
+// and reparenting is the only way to truly escape it once the drawer is closed off-screen).
 function syncSearchFieldLocation(){
   const wrap = document.querySelector(".search-field-wrap");
   const mapWrap = document.querySelector(".map-wrap");
   const footer = document.querySelector(".sidebar-search-footer");
   if (!wrap || !mapWrap || !footer) return;
-  const mobileDrawerOpen = isMobileLayout() && asideEl.classList.contains("open");
+  const mobile = isMobileLayout();
+  const mobileDrawerOpen = mobile && asideEl.classList.contains("open");
   const shouldFloat = !!searchTerm && !mobileDrawerOpen;
-  if (shouldFloat && wrap.parentElement !== mapWrap) {
-    mapWrap.appendChild(wrap);
-    wrap.classList.add("floating-on-map");
-  } else if (!shouldFloat && wrap.parentElement !== footer) {
-    footer.appendChild(wrap);
-    wrap.classList.remove("floating-on-map");
+
+  if (mobile) {
+    wrap.classList.remove("floating-fixed");
+    wrap.style.removeProperty("--float-left");
+    wrap.style.removeProperty("--float-top");
+    if (shouldFloat && wrap.parentElement !== mapWrap) {
+      mapWrap.appendChild(wrap);
+      wrap.classList.add("floating-on-map");
+    } else if (!shouldFloat && wrap.parentElement !== footer) {
+      footer.appendChild(wrap);
+      wrap.classList.remove("floating-on-map");
+    }
+    return;
+  }
+
+  // Desktop: never reparent. Position it just inside the map area via CSS custom properties computed from
+  // the map's own on-screen rect, so it tracks a sidebar-width change or a window resize (both already call
+  // this function) without hardcoding the sidebar's width here.
+  wrap.classList.remove("floating-on-map");
+  if (shouldFloat) {
+    const r = mapWrap.getBoundingClientRect();
+    wrap.style.setProperty("--float-left", (r.left + 10) + "px");
+    wrap.style.setProperty("--float-top", (r.top + 10) + "px");
+    wrap.classList.add("floating-fixed");
+  } else {
+    wrap.classList.remove("floating-fixed");
+    wrap.style.removeProperty("--float-left");
+    wrap.style.removeProperty("--float-top");
   }
 }
 window.addEventListener("resize", syncSearchFieldLocation);
@@ -6233,7 +6262,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v159"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v160"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

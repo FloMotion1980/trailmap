@@ -1,7 +1,7 @@
 // @suite   filters
 // @area    Visibility rules and the four summary counts
 // @files   Trailmap App/index.html
-// @touches trailPassesFilters, liftPassesFilters, liftHiddenBySolo, matchesSearch, searchTerm, trailSearchInput, activeDiffs, activeRegions, showUphill, showLoop, showDownhill, showLifts, render, filterCountLabel, trailCountLabel, tourCountLabel, liftCountLabel, syncSearchFieldLocation, floating-on-map, sidebar-search-footer, isMobileLayout, openSidebar, closeSidebar
+// @touches trailPassesFilters, liftPassesFilters, liftHiddenBySolo, matchesSearch, searchTerm, trailSearchInput, activeDiffs, activeRegions, showUphill, showLoop, showDownhill, showLifts, render, filterCountLabel, trailCountLabel, tourCountLabel, liftCountLabel, syncSearchFieldLocation, floating-on-map, floating-fixed, sidebar-search-footer, isMobileLayout, openSidebar, closeSidebar
 // @needs   region=bikekingdom, builder=off
 //
 // The search box (added 2026-08-09) is matchesSearch() as one more AND-ed condition inside
@@ -253,32 +253,41 @@ TM.add("filters", () => typeof trailPassesFilters === "function" && trailPassesF
     }
   }
 
-  T.test("on desktop the same field floats on the map too, capped to a compact width");
+  T.test("on desktop the field floats WITHOUT reparenting, so a focused search never loses focus");
   // isMobileLayout() only reads window.innerWidth here (a real mouse pointer never matches (pointer:coarse)),
   // so stubbing it is enough to force the desktop branch deterministically, whatever width this window
-  // actually happens to be pasted into. syncSearchFieldLocation() has no separate "mobile vs desktop" branch
-  // of its own any more (2026-08-09, user: the sidebar being always visible on desktop still wasn't an
-  // on-map indicator) -- the only remaining guard is the mobile drawer being open, which cannot be true here.
+  // actually happens to be pasted into. The first version of this feature floated the field on desktop the
+  // same way as mobile -- by reparenting it -- and the user hit a real bug doing exactly this: typing the
+  // very first character of a search moved the (still focused) node to a new parent and the field lost
+  // focus ("es springt einfach hoch und verliert den Fokus", 2026-08-09). Desktop now only ever toggles
+  // `position:fixed` on the SAME node (.floating-fixed, not .floating-on-map -- that class stays mobile-only
+  // and reparents) via CSS custom properties, so this asserts the node itself never moves AND stays focused
+  // through the whole test, not just that it visually ends up in the right place.
   {
     const widthDesc = Object.getOwnPropertyDescriptor(window, "innerWidth");
     Object.defineProperty(window, "innerWidth", { value: 1400, configurable: true });
     try {
       const wrap = TM.$(".search-field-wrap");
+      const footer = TM.$(".sidebar-search-footer");
+      searchEl.focus();
       await setSearch("flowline");
-      T.ok("floats onto the map on a wide window with no mobile drawer involved at all",
-           wrap.parentElement.classList.contains("map-wrap") && wrap.classList.contains("floating-on-map"),
-           true, true);
-      // The un-capped version stretched to the map's own top-right control cluster, which on a genuinely wide
-      // window read as "too wide" (user, 2026-08-09) -- width is now an explicit min(), not a left+right
-      // stretch, so it must stay compact regardless of how much room the map actually has.
+      T.ok("the node never left the sidebar footer", wrap.parentElement === footer, wrap.parentElement.className, "sidebar-search-footer");
+      T.ok("it switched to position:fixed instead", wrap.classList.contains("floating-fixed"), wrap.className, "…floating-fixed…");
+      T.ok("and never picked up the mobile (reparenting) class", !wrap.classList.contains("floating-on-map"), wrap.className, "no floating-on-map");
+      T.ok("the field kept focus through the whole transition", document.activeElement === searchEl,
+           document.activeElement && document.activeElement.id, "trailSearchInput");
+      // The un-capped first version stretched to the map's own top-right control cluster, which on a
+      // genuinely wide window read as "too wide" (user, 2026-08-09) -- width is an explicit min(), not a
+      // left+right stretch, so it must stay compact regardless of how much room the map actually has.
       const w = wrap.getBoundingClientRect().width;
       T.ok("width stays capped rather than stretching with the window", w > 0 && w <= 330, w, "<= 330");
       await setSearch("");
-      T.ok("clearing sends it back to the sidebar footer",
-           wrap.parentElement.classList.contains("sidebar-search-footer") && !wrap.classList.contains("floating-on-map"),
-           true, true);
+      T.ok("clearing removes the fixed positioning, still the same node in the same place",
+           wrap.parentElement === footer && !wrap.classList.contains("floating-fixed"),
+           { parent: wrap.parentElement.className, cls: wrap.className }, "back in the footer, no floating-fixed");
     } finally {
       if (widthDesc) Object.defineProperty(window, "innerWidth", widthDesc); else delete window.innerWidth;
+      searchEl.blur();
     }
   }
 

@@ -271,15 +271,14 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    :focus's own forest border while both are true (typing AND non-empty), since "a search is active" is the
    more important of the two facts once there is text in the field. */
 .search-field-wrap.has-value #trailSearchInput{ border-color:var(--highlight); box-shadow:0 0 0 2px rgba(224,163,38,.25); }
-/* The on-map "glass" twin of this exact field (2026-08-09, user's idea) -- syncSearchFieldLocation() in
-   index.html reparents the real .search-field-wrap here rather than cloning it, so this is the same input,
-   same listeners, just relocated, whenever a search is active (mobile with the drawer closed, OR desktop,
-   where the sidebar is always visible but that alone wasn't enough of an on-map cue, user 2026-08-09).
-   .has-value is always true whenever this class is, so the gold ring above still applies; this only adds
-   the position and the iOS-style translucency on top of it. An explicit `width` (not a left+right stretch)
-   is load-bearing, not cosmetic: on a wide desktop window or a landscape phone the old stretch-to-the-
-   cluster version read as "too wide" (user, 2026-08-09, specifically about landscape) -- capping the width
-   and only anchoring the left edge is what keeps it a compact bar instead of a banner. */
+/* The on-map "glass" twin of this exact field, MOBILE only (2026-08-09, user's idea) -- syncSearchFieldLocation()
+   in index.html reparents the real .search-field-wrap here rather than cloning it, so this is the same input,
+   same listeners, just relocated, whenever a search is active and the drawer is closed. .has-value is always
+   true whenever this class is, so the gold ring above still applies; this only adds the position and the
+   iOS-style translucency on top of it. An explicit `width` (not a left+right stretch) is load-bearing, not
+   cosmetic: on a landscape phone the old stretch-to-the-cluster version read as "too wide" (user, 2026-08-09)
+   -- capping the width and only anchoring the left edge is what keeps it a compact bar instead of a banner.
+   Desktop uses a DIFFERENT class, .floating-fixed below, on purpose -- see its own note for why. */
 .search-field-wrap.floating-on-map{
   position:absolute;
   top: calc(10px + env(safe-area-inset-top, 0px));
@@ -300,6 +299,39 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 html.landscape-compact .search-field-wrap.floating-on-map{
   top: calc(3px + env(safe-area-inset-top, 0px));
   width: min(240px, calc(100vw - 20px - 150px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+}
+/* Desktop's own version of the same idea, and deliberately NOT a reparent (2026-08-09, second pass -- the
+   first version floated it exactly like mobile and the user hit a real bug: "es springt einfach hoch und
+   verliert den Fokus". Moving a FOCUSED element to a new DOM parent is what did that -- the desktop sidebar
+   is always in flow, so the very first keystroke of a search triggered the move mid-focus. This class only
+   ever toggles `position` on the SAME node (syncSearchFieldLocation() sets --float-left/--float-top from the
+   map's own live rect, so it tracks a sidebar-width change or a window resize without any DOM move at all --
+   a pure style change cannot drop focus. `position:fixed` here is genuinely viewport-relative, unlike the
+   mobile case, because desktop's `aside` never carries a `transform` at all (only mobile's open/close slide
+   does) -- a transformed ancestor is what would have hijacked this into being relative to itself instead.
+   The slide-and-fade keyframe is the "oder schön animiert werden" half of the same report: a plain instant
+   position:static -> position:fixed jump cannot itself be transitioned (only properties like top/left/opacity
+   can), so this animates in on class-add instead of relying on a CSS transition. */
+.search-field-wrap.floating-fixed{
+  position:fixed;
+  top: var(--float-top, 70px);
+  left: var(--float-left, 360px);
+  width: min(320px, calc(100vw - 40px));
+  z-index:1300;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.3));
+  animation: tm-search-float-in .22s ease;
+}
+.search-field-wrap.floating-fixed #trailSearchInput{
+  background: rgba(255,255,255,0.68);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+}
+@keyframes tm-search-float-in{
+  from{ opacity:0; transform: translateY(-10px); }
+  to{ opacity:1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce){
+  .search-field-wrap.floating-fixed{ animation:none; }
 }
 /* A static 🔍 (2026-08-09) -- every other control in this app signals what it is with an icon before its
    label/placeholder (📍 locate, 🚡 lifts, 🔁 Touren…), and a plain unlabelled text field was the one
