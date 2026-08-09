@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=147" />
+<link rel="stylesheet" href="style.css?v=149" />
 </head>
 <body>
 <div id="fatalError">
@@ -114,7 +114,7 @@
             <button class="chip diff-schwarz active" data-diff="schwarz">Schwer</button>
           </div>
           <div class="toggle-row-group">
-            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDownhillToggle" checked><span class="slider"></span></span>⬇ Downhill</label>
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDownhillToggle" checked><span class="slider"></span></span>⬇️ Downhill</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showUphillToggle" checked><span class="slider"></span></span>⬆️ Uphill</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showLoopToggle" checked><span class="slider"></span></span>🔁 Touren</label>
             <!-- Stays here with the other visibility switches, next to the categories it sits beside on the
@@ -185,15 +185,23 @@
               <button type="button" class="chip" data-value="none">Keine</button>
             </div>
           </div>
+          <!-- Each chip carries a direction, not just an on/off state (user, 2026-08-09: "kann ich nur in
+               eine Richtung sortieren") -- tapping the ALREADY-active chip flips it instead of doing
+               nothing, and syncTrailViewChips() appends ↑/↓ to that one chip's own label so the direction
+               is visible without opening anything else. Bergauf/Bergab replace a single "Höhenmeter ↓" chip
+               (same user, same message): climb and descent are two different numbers on a card, and only one
+               of them was ever sortable. -->
           <div class="trail-view-row">
             <span class="trail-view-label">Sortieren</span>
             <div class="chip-row trail-view-chips" data-target="sort">
               <button type="button" class="chip" data-value="diff">Schwierigkeit</button>
               <button type="button" class="chip" data-value="name">Name</button>
               <button type="button" class="chip" data-value="length">Länge</button>
-              <button type="button" class="chip" data-value="descent">Höhenmeter ↓</button>
+              <button type="button" class="chip" data-value="up">Bergauf</button>
+              <button type="button" class="chip" data-value="down">Bergab</button>
             </div>
           </div>
+          <button type="button" id="trailViewResetBtn" class="trail-view-reset">↺ Zurücksetzen</button>
         </div>
         <div class="trail-list" id="trailList"></div>
       </details>
@@ -1299,19 +1307,33 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
 // persistActiveState()/restoreActiveState(), which are about visibility. Touren/Lifte are untouched --
 // each already has its own fixed sort (published number / alphabetical) that isn't this axis.
 const TRAIL_VIEW_KEY = "trailmap-list-view-v1";
-let trailGroupMode = "region";
-let trailSortMode = "diff";
+const TRAIL_VIEW_DEFAULTS = { groupMode: "region", sortMode: "diff", sortDir: 1 };
+let trailGroupMode = TRAIL_VIEW_DEFAULTS.groupMode;
+let trailSortMode = TRAIL_VIEW_DEFAULTS.sortMode;
+// 1 = ascending in that mode's own natural sense (easiest/A-Z/shortest first), -1 = reversed. A per-mode
+// default rather than one fixed direction (user, 2026-08-09): "Bergauf"/"Bergab" read naturally as
+// biggest-first, the same downhill-first bias the rest of the app already has, while difficulty/name/length
+// read naturally ascending -- TRAIL_SORT_DEFAULT_DIR is what each chip resets to on first pick.
+let trailSortDir = TRAIL_VIEW_DEFAULTS.sortDir;
 function persistTrailListView(){
-  try { localStorage.setItem(TRAIL_VIEW_KEY, JSON.stringify({ groupMode: trailGroupMode, sortMode: trailSortMode })); }
+  try { localStorage.setItem(TRAIL_VIEW_KEY, JSON.stringify({ groupMode: trailGroupMode, sortMode: trailSortMode, sortDir: trailSortDir })); }
   catch (e) { /* not persisted, the session still works */ }
 }
 // Chip rows (2026-08-09), not <select> elements -- reuses .chip/.chip.active as-is, the same "pick one"
 // control the difficulty filter already uses, rather than a native combo box. Marks the saved/default
-// choice active on boot and keeps exactly one .chip.active per row on every click.
+// choice active on boot and keeps exactly one .chip.active per row on every click. The sort row's ACTIVE
+// chip additionally gets an arrow appended to its own label (↑/↓, from SORT_LABELS' base text) -- the only
+// visible indicator of trailSortDir, since a plain "selected" state can't show a direction at all.
+const SORT_LABELS = { diff: "Schwierigkeit", name: "Name", length: "Länge", up: "Bergauf", down: "Bergab" };
 function syncTrailViewChips(){
   document.querySelectorAll(".trail-view-chips").forEach(row => {
-    const value = row.dataset.target === "group" ? trailGroupMode : trailSortMode;
-    row.querySelectorAll(".chip").forEach(btn => btn.classList.toggle("active", btn.dataset.value === value));
+    const isSort = row.dataset.target === "sort";
+    const value = isSort ? trailSortMode : trailGroupMode;
+    row.querySelectorAll(".chip").forEach(btn => {
+      const active = btn.dataset.value === value;
+      btn.classList.toggle("active", active);
+      if (isSort) btn.textContent = SORT_LABELS[btn.dataset.value] + (active ? (trailSortDir === 1 ? " ↑" : " ↓") : "");
+    });
   });
 }
 (function initTrailListView(){
@@ -1321,19 +1343,38 @@ function syncTrailViewChips(){
       const saved = JSON.parse(raw);
       if (typeof saved.groupMode === "string") trailGroupMode = saved.groupMode;
       if (typeof saved.sortMode === "string") trailSortMode = saved.sortMode;
+      if (saved.sortDir === 1 || saved.sortDir === -1) trailSortDir = saved.sortDir;
     }
-  } catch (e) { /* localStorage unavailable or corrupt -- the two defaults above already apply */ }
+  } catch (e) { /* localStorage unavailable or corrupt -- the defaults above already apply */ }
   syncTrailViewChips();
 })();
 document.querySelectorAll(".trail-view-chips .chip").forEach(btn => {
   btn.addEventListener("click", () => {
     const row = btn.closest(".trail-view-chips");
-    if (row.dataset.target === "group") trailGroupMode = btn.dataset.value;
-    else trailSortMode = btn.dataset.value;
+    if (row.dataset.target === "group") {
+      trailGroupMode = btn.dataset.value;
+    } else if (btn.dataset.value === trailSortMode) {
+      // Tapping the ALREADY-active sort chip flips direction instead of doing nothing (user, 2026-08-09:
+      // "kann ich nur in eine Richtung sortieren").
+      trailSortDir = -trailSortDir;
+    } else {
+      trailSortMode = btn.dataset.value;
+      trailSortDir = TRAIL_SORT_DEFAULT_DIR[trailSortMode];
+    }
     syncTrailViewChips();
     persistTrailListView();
     render();
   });
+});
+// Back to region/Schwierigkeit-ascending in one tap (user, 2026-08-09) rather than reconstructing it chip
+// by chip -- the same defaults a first-ever visit starts from.
+document.getElementById("trailViewResetBtn").addEventListener("click", () => {
+  trailGroupMode = TRAIL_VIEW_DEFAULTS.groupMode;
+  trailSortMode = TRAIL_VIEW_DEFAULTS.sortMode;
+  trailSortDir = TRAIL_VIEW_DEFAULTS.sortDir;
+  syncTrailViewChips();
+  persistTrailListView();
+  render();
 });
 // The gear toggles #trailViewSettings open/closed. preventDefault + stopPropagation: this button lives
 // inside #secTrails' own <summary>, whose native behaviour is to toggle the whole <details> on any click
@@ -4370,7 +4411,7 @@ function buildInfoPanelHtml(t){
   const profile = (isReversed && rawProfile) ? reverseElevationProfile(rawProfile) : rawProfile;
   const upShown = isReversed ? t.down : t.up;
   const downShown = isReversed ? t.up : t.down;
-  const uphillBadge = t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⬆️</span>` : "";
+  const uphillBadge = categoryBadge(t);
   const loopBadge = t.loop ? ` <span class="badge-loop" title="Tour (mehrere Trails kombiniert)">🔁</span>` : "";
 
   // If this is a loop and one of its segments was last clicked, highlight that stretch in the
@@ -5632,6 +5673,16 @@ function renderLiftList(){
   return shown;
 }
 
+// Shared between the trail-card name line and the info panel heading, so the two can never drift apart.
+// The blue-emoji treatment (2026-08-09, user) stays limited to the Uphill trail badge and the Filter
+// section's own Downhill/Uphill switches (⬇️/⬆️ there) -- a downhill CARD deliberately gets no matching
+// badge in the menu (tried and reverted the same day: "In den Traileinträgen im Menü will ich das blaue
+// Emoji nicht bei Downhill Trails"), since a regular trail is the unmarked default and every card already
+// carries one already, the difficulty dot.
+function categoryBadge(t){
+  return t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⬆️</span>` : "";
+}
+
 // One trail's (or Tour's) sidebar card. Shared by the Trails list and the Touren list rather than copied:
 // solo, hover, the builder route and the "clicking the card flies there and opens the panel" behaviour are
 // identical for both, and the Tour list would have drifted from the trail list otherwise.
@@ -5650,7 +5701,7 @@ function makeTrailCard(t, regionKey){
   // No 🔁 badge any more: a Tour is only ever listed in the Touren section, so the badge would be on every
   // card there and on none anywhere else. It stays in the info panel, where a Tour and a trail do meet.
   card.innerHTML = `
-    <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⬆️</span>` : ""}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
+    <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${categoryBadge(t)}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
     <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span></div>`;
   card.addEventListener("click", (e) => {
     const soloBtn = e.target.closest(".card-solo-btn");
@@ -5738,20 +5789,24 @@ const DIFF_LABEL = { gruen:"Sehr leicht", blau:"Leicht", rot:"Mittel", schwarz:"
 // The Trails list's own grouping/sorting (2026-08-09) -- Touren/Lifte are untouched, each already has its
 // own fixed sort. `trails` is already fully filtered (trailPassesFilters ran in render()'s region loop);
 // this only ever decides how that same set is grouped into headings and ordered within each one.
-const TRAIL_SORTERS = {
+// Every comparator returns its OWN natural ascending order; trailSortDir (±1, see the chip-click handler)
+// is multiplied in separately so one comparator serves both directions instead of needing a mirrored pair.
+const TRAIL_SORT_COMPARE = {
   diff: (a, b) => DIFF_ORDER[a.diff] - DIFF_ORDER[b.diff] || a.name.localeCompare(b.name, "de", { numeric: true }),
   name: (a, b) => a.name.localeCompare(b.name, "de", { numeric: true }),
-  // Shortest first: a length-sorted list reads as "quick trails first, big ones further down", the
-  // conventional direction for a numeric ascending sort where there is no other precedent to follow.
   length: (a, b) => a.len - b.len,
-  // Most descent first, the opposite direction from length -- this app is downhill-first (see the
-  // Downhill/Uphill/Touren category split elsewhere), so "sorted by Höhenmeter" means "biggest descents on
-  // top", not buried at the bottom of an ascending list.
-  descent: (a, b) => b.down - a.down,
+  up: (a, b) => a.up - b.up,
+  down: (a, b) => a.down - b.down,
 };
+// The direction each chip STARTS at when newly picked (not while already active -- see the chip-click
+// handler for the flip). Difficulty/name/length read naturally ascending; Bergauf/Bergab read naturally
+// biggest-first, the same downhill-first bias the rest of the app already has (Downhill/Uphill/Touren split,
+// "sorted by Höhenmeter" meaning "biggest climbs/descents on top" before this was even two separate chips).
+const TRAIL_SORT_DEFAULT_DIR = { diff: 1, name: 1, length: 1, up: -1, down: -1 };
 function appendTrailGroup(list, headingText, headingColor){
   if (!list.length) return;
-  const sorted = list.slice().sort(TRAIL_SORTERS[trailSortMode] || TRAIL_SORTERS.diff);
+  const compare = TRAIL_SORT_COMPARE[trailSortMode] || TRAIL_SORT_COMPARE.diff;
+  const sorted = list.slice().sort((a, b) => trailSortDir * compare(a, b));
   const group = document.createElement("div");
   group.className = "hub-group";
   if (headingText) {
@@ -6135,7 +6190,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v147"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v149"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

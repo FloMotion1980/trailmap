@@ -1,7 +1,7 @@
 // @suite   lists
 // @area    The three sidebar list sections and their cards
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches makeTrailCard, renderTourList, renderLiftList, render, selectTrail, selectLiftCard, selectCardFor, clearSelection, highlightSelectedTrail, trail-card, lift-card, card-solo-btn, hub-title, region-group-title, card-tint, buildTrailListDom, appendTrailGroup, trailGroupMode, trailSortMode, trailViewGearBtn, trailViewSettings, syncTrailViewChips, persistTrailListView, TRAIL_SORTERS
+// @touches makeTrailCard, renderTourList, renderLiftList, render, selectTrail, selectLiftCard, selectCardFor, clearSelection, highlightSelectedTrail, trail-card, lift-card, card-solo-btn, hub-title, region-group-title, card-tint, buildTrailListDom, appendTrailGroup, trailGroupMode, trailSortMode, trailSortDir, trailViewGearBtn, trailViewSettings, trailViewResetBtn, syncTrailViewChips, persistTrailListView, TRAIL_SORT_COMPARE, TRAIL_SORT_DEFAULT_DIR, TRAIL_VIEW_DEFAULTS, categoryBadge, badge-uphill, SORT_LABELS
 // @needs   region=bikekingdom, builder=off
 //
 // Trails, Touren and Lifte are three lists built by three different code paths that must not drift apart, so
@@ -13,6 +13,16 @@
 // Tours moved out of the trail list.
 
 TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("liftCards", /Hörnli/) && TM.ui.cardNamed("tourCards", /Biketicket/), async (T) => {
+  // This suite is the one that mutates trailGroupMode/trailSortMode/trailSortDir (like "regions" is the one
+  // that mutates which regions are loaded) -- TM.baseline() deliberately does not touch either, since it is
+  // UI-layout state, not a filter. Reset via the real reset button (the variables themselves are `let`s
+  // inside the app's own try{} block and unreachable here, like lineLayers/soloId -- see the harness notes)
+  // rather than trust whatever a previous run or a bit of manual poking in the same session left behind: a
+  // leftover "diff" or "none" groupMode makes the very first case below (which expects #trailList
+  // .region-group-title to exist) throw on a null getBoundingClientRect() instead of failing cleanly, which
+  // is exactly what happened once already while writing this suite.
+  const resetBtn = TM.$("#trailViewResetBtn");
+  if (resetBtn) { resetBtn.click(); await TM.wait(250); }
 
   T.test("the sidebar has exactly three list sections, in order");
   const ids = TM.$$("aside > details").map((d) => d.id);
@@ -133,7 +143,7 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
   T.eq("no loop badge sneaks into either category (Tours are a separate list)",
        TM.$$("#trailList .badge-loop").length, 0);
 
-  T.test("grouping 'none' is a flat list; sorting by name/length/descent reorders it, not the count");
+  T.test("grouping 'none' is a flat list; sorting by name/length reorders it, not the count");
   TM.$('.trail-view-chips[data-target="group"] [data-value="none"]').click();
   await TM.wait(300);
   T.eq("no headings of either kind", TM.$$("#trailList .hub-title").length + TM.$$("#trailList .region-group-title").length, 0);
@@ -150,23 +160,60 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
   TM.$('.trail-view-chips[data-target="sort"] [data-value="length"]').click();
   await TM.wait(300);
   const lens = TM.ui.trailCards().map((c) => parseFloat(c.querySelector(".trail-meta span").textContent));
-  T.ok("length sort is ascending -- shortest first", lens.every((v, i) => i === 0 || v >= lens[i - 1] - 1e-9),
+  T.ok("length sort is ascending by default -- shortest first", lens.every((v, i) => i === 0 || v >= lens[i - 1] - 1e-9),
        lens.slice(0, 6), "ascending");
 
-  TM.$('.trail-view-chips[data-target="sort"] [data-value="descent"]').click();
+  T.test("Bergauf/Bergab are separate sortable axes, each reversible by tapping the already-active chip");
+  // The user's own report: a single "Höhenmeter" chip could only ever sort by descent, and there was no way
+  // to flip direction at all -- both fixed in the same change, so tested together here.
+  const upSortChip = TM.$('.trail-view-chips[data-target="sort"] [data-value="up"]');
+  upSortChip.click();
   await TM.wait(300);
-  const descents = TM.ui.trailCards().map((c) =>
-    +(/(\d+)\s*m\s*↓/.exec(c.querySelector(".trail-meta span:nth-child(2)").textContent) || [0, 0])[1]);
-  T.ok("descent sort is descending -- biggest descent first", descents.every((v, i) => i === 0 || v <= descents[i - 1]),
-       descents.slice(0, 6), "descending");
+  T.eq("newly picked, Bergauf defaults to biggest-climb-first (descending)", upSortChip.textContent, "Bergauf ↓");
+  const ups = TM.ui.trailCards().map((c) => +(/(\d+)\s*m\s*↑/.exec(c.querySelector(".trail-meta span:nth-child(2)").textContent) || [0, 0])[1]);
+  T.ok("really is descending by climb", ups.every((v, i) => i === 0 || v <= ups[i - 1]), ups.slice(0, 6), "descending");
+  upSortChip.click();
+  await TM.wait(300);
+  T.eq("tapping the already-active chip flips its own label to ↑", upSortChip.textContent, "Bergauf ↑");
+  const upsFlipped = TM.ui.trailCards().map((c) => +(/(\d+)\s*m\s*↑/.exec(c.querySelector(".trail-meta span:nth-child(2)").textContent) || [0, 0])[1]);
+  T.ok("and really is ascending now", upsFlipped.every((v, i) => i === 0 || v >= upsFlipped[i - 1]), upsFlipped.slice(0, 6), "ascending");
 
-  T.test("the group/sort choice is persisted under its own key, separate from region/diff filters");
+  const downSortChip = TM.$('.trail-view-chips[data-target="sort"] [data-value="down"]');
+  downSortChip.click();
+  await TM.wait(300);
+  T.eq("Bergab is its OWN axis, independent of Bergauf, also defaulting to descending", downSortChip.textContent, "Bergab ↓");
+  T.eq("picking a different chip resets its direction rather than carrying Bergauf's flipped one over",
+       upSortChip.textContent, "Bergauf");
+  const downs = TM.ui.trailCards().map((c) => +(/(\d+)\s*m\s*↓/.exec(c.querySelector(".trail-meta span:nth-child(2)").textContent) || [0, 0])[1]);
+  T.ok("really is descending by descent", downs.every((v, i) => i === 0 || v <= downs[i - 1]), downs.slice(0, 6), "descending");
+
+  T.test("only Uphill trails carry a category badge -- a downhill card stays unmarked, on purpose");
+  // Tried the symmetric ⬇️ badge on every downhill card the same day and reverted it (user: "In den
+  // Traileinträgen im Menü will ich das blaue Emoji nicht bei Downhill Trails") -- the blue-emoji pairing
+  // is Filter's own Downhill/Uphill switches (⬇️/⬆️) now, not the cards.
+  const uphillBadgeCount = TM.$$("#trailList .badge-uphill").length;
+  T.ok("there is at least one uphill-badged card in this region", uphillBadgeCount > 0, uphillBadgeCount, "> 0");
+  T.eq("no card anywhere carries a downhill badge -- the class doesn't exist any more",
+       TM.$$(".badge-downhill").length, 0);
+  const filterLabels = TM.$$("#secFilter .toggle-row").map((l) => l.textContent.trim());
+  T.ok("Downhill switch uses the blue ⬇️ emoji, matching Uphill's ⬆️",
+       filterLabels.some((t) => t.startsWith("⬇️")), filterLabels, "one starting with ⬇️");
+  T.ok("Uphill switch still uses ⬆️", filterLabels.some((t) => t.startsWith("⬆️")), filterLabels, "one starting with ⬆️");
+
+  T.test("the group/sort choice, including direction, is persisted under its own key");
   T.eq("the current choice is saved", JSON.parse(localStorage.getItem("trailmap-list-view-v1") || "{}"),
-       { groupMode: "none", sortMode: "descent" });
+       { groupMode: "none", sortMode: "down", sortDir: -1 });
 
-  // Reset to the defaults every later case in this suite (and the rest of the bundle) assumes.
-  TM.$('.trail-view-chips[data-target="group"] [data-value="region"]').click();
-  TM.$('.trail-view-chips[data-target="sort"] [data-value="diff"]').click();
+  T.test("the reset button restores every default in one tap");
+  TM.$("#trailViewResetBtn").click();
+  await TM.wait(300);
+  T.eq("group back to region", TM.$('.trail-view-chips[data-target="group"] .active').dataset.value, "region");
+  T.eq("sort back to Schwierigkeit, ascending", TM.$('.trail-view-chips[data-target="sort"] .active').textContent, "Schwierigkeit ↑");
+  T.ok("the list itself is grouped by region again", TM.$$("#trailList .region-group-title").length > 0,
+       TM.$$("#trailList .region-group-title").length, "> 0");
+  T.eq("and the reset is what's persisted now", JSON.parse(localStorage.getItem("trailmap-list-view-v1") || "{}"),
+       { groupMode: "region", sortMode: "diff", sortDir: 1 });
+
   panel.classList.remove("open");
   await TM.wait(300);
 

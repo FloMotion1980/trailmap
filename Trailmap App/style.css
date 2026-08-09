@@ -259,6 +259,13 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    not the wider Filter section. */
 .trail-view-chips.chip-row{ margin-bottom:0; }
 .trail-view-chips .chip{ padding:3px 9px; font-size:11px; }
+/* A plain text-style link, not another chip -- resetting is the one action here that ISN'T "pick one of
+   these", so giving it the same pill shape as the choices above it would read as a fifth option rather
+   than as an action, and (user, 2026-08-09) it needs to be findable without becoming the visual anchor of
+   the panel. */
+.trail-view-reset{ display:block; margin:10px auto 0; border:none; background:transparent; color:var(--stone);
+  font-family: Arial, sans-serif; font-size:11px; text-decoration:underline; cursor:pointer; padding:2px 4px; }
+@media (hover: hover){ .trail-view-reset:hover{ color:var(--forest); } }
 .trail-list{ padding: 4px 0 16px; }
 .region-group-title{ padding: 12px 0 2px; font-family: 'Copperplate','Trebuchet MS',sans-serif; font-size: 12.5px;
   text-transform: uppercase; letter-spacing: 1px; color: var(--forest-dark); font-weight: 700;
