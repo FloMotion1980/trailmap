@@ -253,6 +253,35 @@ TM.add("filters", () => typeof trailPassesFilters === "function" && trailPassesF
     }
   }
 
+  T.test("on desktop the same field floats on the map too, capped to a compact width");
+  // isMobileLayout() only reads window.innerWidth here (a real mouse pointer never matches (pointer:coarse)),
+  // so stubbing it is enough to force the desktop branch deterministically, whatever width this window
+  // actually happens to be pasted into. syncSearchFieldLocation() has no separate "mobile vs desktop" branch
+  // of its own any more (2026-08-09, user: the sidebar being always visible on desktop still wasn't an
+  // on-map indicator) -- the only remaining guard is the mobile drawer being open, which cannot be true here.
+  {
+    const widthDesc = Object.getOwnPropertyDescriptor(window, "innerWidth");
+    Object.defineProperty(window, "innerWidth", { value: 1400, configurable: true });
+    try {
+      const wrap = TM.$(".search-field-wrap");
+      await setSearch("flowline");
+      T.ok("floats onto the map on a wide window with no mobile drawer involved at all",
+           wrap.parentElement.classList.contains("map-wrap") && wrap.classList.contains("floating-on-map"),
+           true, true);
+      // The un-capped version stretched to the map's own top-right control cluster, which on a genuinely wide
+      // window read as "too wide" (user, 2026-08-09) -- width is now an explicit min(), not a left+right
+      // stretch, so it must stay compact regardless of how much room the map actually has.
+      const w = wrap.getBoundingClientRect().width;
+      T.ok("width stays capped rather than stretching with the window", w > 0 && w <= 330, w, "<= 330");
+      await setSearch("");
+      T.ok("clearing sends it back to the sidebar footer",
+           wrap.parentElement.classList.contains("sidebar-search-footer") && !wrap.classList.contains("floating-on-map"),
+           true, true);
+    } finally {
+      if (widthDesc) Object.defineProperty(window, "innerWidth", widthDesc); else delete window.innerWidth;
+    }
+  }
+
   T.test("render() is idempotent: calling it twice changes no number");
   const before = JSON.stringify(TM.ui.counts());
   render();

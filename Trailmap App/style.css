@@ -273,16 +273,20 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 .search-field-wrap.has-value #trailSearchInput{ border-color:var(--highlight); box-shadow:0 0 0 2px rgba(224,163,38,.25); }
 /* The on-map "glass" twin of this exact field (2026-08-09, user's idea) -- syncSearchFieldLocation() in
    index.html reparents the real .search-field-wrap here rather than cloning it, so this is the same input,
-   same listeners, just relocated. Only ever applied on mobile while the sidebar (its normal home) is
-   off-screen and a search is active -- .has-value is always true whenever this class is, so the gold ring
-   above still applies; this only adds the position and the iOS-style translucency on top of it. Stops short
-   of the map's own top-right control cluster (~44px column + 16px offset in portrait, a full row of them in
-   landscape) rather than centring, so it never has to share a line with those buttons. */
+   same listeners, just relocated, whenever a search is active (mobile with the drawer closed, OR desktop,
+   where the sidebar is always visible but that alone wasn't enough of an on-map cue, user 2026-08-09).
+   .has-value is always true whenever this class is, so the gold ring above still applies; this only adds
+   the position and the iOS-style translucency on top of it. An explicit `width` (not a left+right stretch)
+   is load-bearing, not cosmetic: on a wide desktop window or a landscape phone the old stretch-to-the-
+   cluster version read as "too wide" (user, 2026-08-09, specifically about landscape) -- capping the width
+   and only anchoring the left edge is what keeps it a compact bar instead of a banner. */
 .search-field-wrap.floating-on-map{
   position:absolute;
   top: calc(10px + env(safe-area-inset-top, 0px));
   left: calc(10px + env(safe-area-inset-left, 0px));
-  right: calc(68px + env(safe-area-inset-right, 0px));
+  /* min() still leaves the 68px clearance for the map's own top-right control cluster (44px column + 16px
+     offset + a little air) on a narrow screen, where the cap itself has no room to bite. */
+  width: min(320px, calc(100vw - 20px - 68px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
   z-index:1300;
   filter: drop-shadow(0 4px 14px rgba(0,0,0,0.3));
 }
@@ -291,9 +295,11 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   -webkit-backdrop-filter: blur(14px) saturate(1.4);
   backdrop-filter: blur(14px) saturate(1.4);
 }
+/* Tighter still in landscape -- the control cluster becomes a wide ROW there (up to three 44px cells) rather
+   than a column, and the phone has far less height to spare in the first place. */
 html.landscape-compact .search-field-wrap.floating-on-map{
   top: calc(3px + env(safe-area-inset-top, 0px));
-  right: calc(150px + env(safe-area-inset-right, 0px));
+  width: min(240px, calc(100vw - 20px - 150px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
 }
 /* A static 🔍 (2026-08-09) -- every other control in this app signals what it is with an icon before its
    label/placeholder (📍 locate, 🚡 lifts, 🔁 Touren…), and a plain unlabelled text field was the one

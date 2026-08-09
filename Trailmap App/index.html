@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=158" />
+<link rel="stylesheet" href="style.css?v=159" />
 </head>
 <body>
 <div id="fatalError">
@@ -1644,15 +1644,19 @@ function closeSidebarIfMobile(){
 // is off-screen when closed, which used to take the only visible "a search is filtering" cue with it the
 // moment you closed the drawer to actually look at the map -- exactly the case the user described ("Vor
 // allem auf dem Handy, wo das Menü idR ausgeblendet ist"). Reparenting keeps it to one input/one set of
-// listeners, so typing in the floating field IS typing in the real search box, no sync code needed. Desktop
-// never floats (isMobileLayout() is always false there) -- its own indicator is the gold ring already on the
-// sidebar field via .search-field-wrap.has-value.
+// listeners, so typing in the floating field IS typing in the real search box, no sync code needed.
+// Desktop floats too (2026-08-09, user: the sidebar is always visible there, but that is not the same as
+// a map indicator -- the gold ring on the sidebar field alone wasn't enough). The ONLY guard left is the
+// mobile drawer itself being open: it is a fixed, full-height overlay ON TOP of the map (z-index 2500), so
+// floating the field while it is open would move the very input the user is looking at behind that overlay,
+// out of sight, mid-keystroke.
 function syncSearchFieldLocation(){
   const wrap = document.querySelector(".search-field-wrap");
   const mapWrap = document.querySelector(".map-wrap");
   const footer = document.querySelector(".sidebar-search-footer");
   if (!wrap || !mapWrap || !footer) return;
-  const shouldFloat = isMobileLayout() && !asideEl.classList.contains("open") && !!searchTerm;
+  const mobileDrawerOpen = isMobileLayout() && asideEl.classList.contains("open");
+  const shouldFloat = !!searchTerm && !mobileDrawerOpen;
   if (shouldFloat && wrap.parentElement !== mapWrap) {
     mapWrap.appendChild(wrap);
     wrap.classList.add("floating-on-map");
@@ -6229,7 +6233,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v158"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v159"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
