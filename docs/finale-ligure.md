@@ -206,7 +206,14 @@ General rule holding across all three of these: prefer an explicit per-trail off
 
 If delegating Finale data-sourcing work to a subagent, be explicit up front about which files it may edit vs. only read — trail data here is shared/interdependent (hub assignment, difficulty, `REGION_CATALOG` counts) and an agent given free rein has previously made edits outside its intended scope.
 
-## Trailrunde from a Trailforks ROUTE page (first attempt, 2026-08-09)
+## Trailrunde from a Trailforks ROUTE page (feasibility experiment, 2026-08-09 — reverted)
+
+**Outcome: the user asked to delete the Trailrunde again ("war nur ein Versuch") after the jump-boundary
+fix below landed.** The tour itself (`finale_feglino_mtb_prova`, `loop:true`) and its geometry/segments were
+removed from `finale.json`, trailCount back to 217. **"Trail del Boccion parte 2" — the one standalone trail
+sourced along the way — was kept** (real trail, correctly built, has its own value independent of the tour
+experiment). The matching method and its jump-boundary lesson below are kept in this doc for the next time a
+route-based Trailrunde is attempted, since that work is what would need reusing, not repeating.
 
 The user asked whether a Trailforks *route* (not trail) page could become an in-app Trailrunde, using
 `https://www.trailforks.com/route/feglino-mtb-prova/` ("feglino mtb prova", 43.9 km, E-Bike, 2047 m
