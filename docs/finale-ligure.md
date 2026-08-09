@@ -205,3 +205,62 @@ General rule holding across all three of these: prefer an explicit per-trail off
 4. **New pitfall found 2026-07-22**: text-keyword-based hub assignment (searching trail descriptions for place names) was noisy/unreliable due to generic nav-menu boilerplate repeating unrelated area names on every page — downloading each trail's GPX and clustering by actual centroid position proved far more reliable and is now the preferred method for ambiguous hub assignment.
 
 If delegating Finale data-sourcing work to a subagent, be explicit up front about which files it may edit vs. only read — trail data here is shared/interdependent (hub assignment, difficulty, `REGION_CATALOG` counts) and an agent given free rein has previously made edits outside its intended scope.
+
+## Trailrunde from a Trailforks ROUTE page (first attempt, 2026-08-09)
+
+The user asked whether a Trailforks *route* (not trail) page could become an in-app Trailrunde, using
+`https://www.trailforks.com/route/feglino-mtb-prova/` ("feglino mtb prova", 43.9 km, E-Bike, 2047 m
+climb/-1918 m descent) as the test case. Unlike a single trail page, a route page embeds only **one**
+`encodedpath` — the route's own single recorded track — plus a **"Trails in Route"** list of named
+stretches with per-stretch distance, but no per-stretch geometry.
+
+**The purple-triangle icon is the filter, not the trail name.** Every row in "Trails in Route" carries a
+`dicon_small` difficulty icon exactly like the region table view's own icon (see
+[[trailforks-anonymous-polyline-extraction]]); on a route, most rows are `dpurple`/"Access Trail, Road or
+Doubletrack" — access/connector stretches the route happens to ride, not real named descents. The user's own
+rule, given after seeing the rendered page (the icon is not visible in a plain text extraction — must inspect
+the DOM's `[class*="dicon"]` elements and their `title` attribute directly): only the non-purple rows are
+"real" trails worth integrating; a purple row is only worth reusing if we *already* have that name as one of
+our own trails (regardless of whether it's flagged `uphill`) — otherwise leave it as an anonymous grey
+connector built from the route's own track, don't go source new geometry for it.
+
+Applied to this route's 20 rows (13 unique names): **5 non-purple real trails** — Ludi Trail, Variante
+Rocche Gianche, Rocche Gianche, Trail del Boccion parte 2, Crestino Pt. 2 — of which only **Trail del Boccion
+parte 2** was missing (added as a new `mallare`-region trail, 3.3 km/-444 m, matching the naming/region of
+the already-built "Trail del Boccion" part 1). Two purple rows were reused because we already had them as
+real trails: **Colla San Giacomo AV** and **Cadotto** (the latter already `uphill:true`). The rest (Feglino-
+Carbuta climb, Carbuta-San Giacomo climb, Calice-Carbuta UP, Verso S. Giacomo, Super Groppo Climb, Rocce
+Bianche climb) stayed anonymous connectors.
+
+**Matching method**: decode the route's own track (2061 raw points → 678 after an in-browser Douglas-Peucker
+simplification, re-encoded and pulled through the browser tool in 400-char slices to dodge its ~1000-char
+per-call truncation — a smaller, verifiable chunk size than the trail-page technique's 900-char target, and
+explicitly checking each chunk's returned length against the requested slice size, which caught a real
+silent truncation on the first attempt: the first "1000-char" pull actually returned fewer characters,
+corrupting the decode until re-pulled in 400-char pieces with the length checked every time). For each
+candidate known trail, take the minimum haversine distance from every route point to that trail's own
+geometry; a contiguous run under ~60 m is the matched window, direction decided by comparing the route
+points just outside each end of the window against the trail's own first/last point.
+
+**Rocche Gianche deliberately left unmatched despite a plausible-looking window.** Its candidate window's
+distance-to-geometry at the window's *own* start was 636–659 m — nowhere near either of the trail's own
+endpoints — while only the tail end sat close (45 m). User reports on the route's own comment thread
+independently describe this trail as having "3 sections" of very different character, and the review
+thread's own consensus is to bail onto a different trail partway down. Substituting the whole 2.04 km
+`schwarz` trail here would draw geometry the route never actually rides (violating the loop's own critical
+invariant that `TRAIL_GEO` must exactly equal the segment concatenation — see the Trailrunde doc) — so this
+stretch stayed a plain connector instead of a forced substitution, per the project's standing "leave the
+honest gap" rule ([[no-silent-auto-corrections]]).
+
+**Known imprecision, not yet resolved**: the built geometry totals **47.1 km against the route's own stated
+43.9 km** — a ~7% overshoot. Likely cause: substituting a matched trail's own (often more detailed/winding)
+geometry for a stretch the route's own simplified track crossed more directly. The Bike Kingdom tour-matching
+work ([[pds-tour-vtt-matching]], `docs/trailrunde-feature.md`'s "four traps") solved exactly this class of
+error with `extend_trail_ends`/`MAX_TRAIL_GAP_M`-style refinement — not applied here yet since this was a
+first feasibility pass, not a production build. `up`/`down` (2047/-1918) were kept as Trailforks' own
+official stats rather than recomputed from the (slightly-too-long) built geometry, consistent with `official=`
+always winning over GPX-derived numbers elsewhere in this pipeline.
+
+Result: `finale_feglino_mtb_prova`, region `feglino`, Finale's first `loop:true` entry (`Trailmap App/regions/
+finale.json`), trailCount 216→217. Elevation profile backfilled via `ElevationLookup` over the full
+concatenated geometry (no per-point elevation available from the route page itself, only lat/lng).
