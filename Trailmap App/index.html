@@ -577,31 +577,62 @@ const REGION_CATALOG = {
       trailcombis: { label: "LONG Lines & Trails", color: "#8a3a6a" }
     }
   },
-  // Dolomiti Paganella (Trentino, IT), 24 trails, built 2026-07-26. Sub-regions are the park's OWN three
-  // zones (Andalo 10 / Fai 9 / Molveno 5) -- that's the top-level grouping on its official trail list;
-  // its second axis ("Bike park" lift-served lines vs. "Shared trail" natural trails) is deliberately NOT
-  // a sub-region, to avoid 6 half-empty ones.
+  // Dolomiti Paganella (Trentino, IT), 28 trails, built 2026-07-26, extended 2026-08-09. Sub-regions are
+  // the park's own three zones (Andalo / Fai / Molveno) plus a 4th, "Shared Trails" (`shared`), added
+  // 2026-08-09 for the "Shared trail" half of the official trail list (as opposed to "Bike park" lift-served
+  // lines) -- all 12 of them, regardless of which zone's own table they're listed under on the operator
+  // site, since they are long natural descents that cross zones rather than belonging to one. Splitting
+  // this out as its own sub-region (rather than folding "Shared trail" into the zone tables, tried first)
+  // is what let the zone counts stay meaningful.
+  // Only 5 of those 12 are `loop:true` (a Tour) -- Ude's Trail, Monte Corno, From Top To Lake, Bear Trails,
+  // Lake to Lake, per the user's own split (2026-08-09): a Shared Trail becomes a Tour once it exceeds
+  // 200 hm of descent AND reads as a proper point-to-point outing rather than one more park descent: Ribs,
+  // Giada, Carton's, Bus del Giaz, Malghette, Giuel and Secret Trail all clear 200 hm too but stay plain
+  // trails. Of the 5 Tours, only "Lake to Lake" and "Bear Trails" carry `trailSegments` -- see below for
+  // why the other three (including the two other long ones) are single plain lines instead.
   // Sourcing: the operator site paganellabikepark.com has no GPX of its own, but every
-  // /en/trail/<slug> page embeds an Outdooractive tour id, which feeds the same direct GPX endpoint used
-  // for Finale Ligure (download.tour.gpx?i=<id>) -- so geometry AND real embedded elevation, no elevation
-  // API needed. Difficulty comes from the park's own 6-tier grading, scraped from the level icons on its
-  // "by zone" trail table (beginner/beg-int/int/int-adv/advanced/expert -> gruen/blau/blau/rot/schwarz/
-  // schwarz). That was chosen over Outdooractive's S-scale on purpose: the documented S1->blau/S2->rot/
-  // S3+->schwarz shift would have made 17 of 27 trails schwarz, which misrepresents a park that markets
-  // beginner flow lines. Length/up/down are the park's own published numbers (parsed out of the same
-  // table's labels), per the "prefer official over GPX-derived" rule.
+  // /en/trail/<slug> page embeds an Outdooractive tour id. The original 24 trails used the direct GPX
+  // endpoint (download.tour.gpx?i=<id>, same one Finale Ligure uses); the 2026-08-09 additions instead hit
+  // regio.outdooractive.com's own project API directly (api/v2/project/oar-paganella/contents/tour/<id>
+  // ?display=trackinfo&key=XMEBUY3Z-EMWGKPCA-4OSSBA9A, found via the tour page's own network requests --
+  // no browser automation needed, a plain server-side GET returns the full track incl. real elevation) --
+  // same underlying recording, different API shape, and it carries the identical lift-as-straight-line
+  // defect described below, so the fix below still applies regardless of which endpoint is used.
+  // Difficulty comes from the park's own 6-tier grading, scraped from the level icons on its "by zone"
+  // trail table (beginner/beg-int/int/int-adv/advanced/expert -> gruen/blau/blau/rot/schwarz/schwarz).
+  // That was chosen over Outdooractive's S-scale on purpose: the documented S1->blau/S2->rot/S3+->schwarz
+  // shift would have made 17 of 27 trails schwarz, which misrepresents a park that markets beginner flow
+  // lines. Length/up/down are the park's own published numbers (parsed out of the same table's labels),
+  // per the "prefer official over GPX-derived" rule.
   // WORTH A SPOT-CHECK: for a few trails the official length disagrees with the GPX by >25% --
   // Interstellar (1.3 official vs 0.80 GPX), Easy Rider (2.2 vs 1.14), Top Gun (4.7 vs 3.67),
   // Arancia Meccanica (1.3 vs 1.89, GPX longer), Ude's Trail (8.8 vs 12.06). Official numbers were kept.
-  // NOT BUILT (3 of the official list's 27): the long lift-assisted marathon routes "Lake to Lake"
-  // (75 km), "Bear Trails" (60 km) and "from Top to Lake" (30 km). Their official GPX draws the
-  // cable-car rides as straight lines -- verified in the source GPX, not a simplification artifact:
-  // the Andalo lift shows as +741 m over a 2384 m straight segment, the Doss Pelà lift as +373 m over
-  // 1190 m -- so they would render as 2.4 km straight lines across the map, and their GPX-computed climb
-  // is correspondingly wrong (from Top to Lake: 1083 m computed vs 200 m official). The right container
-  // for these is the Touren/segment feature with the lift stretches as connectors, not a plain trail
-  // card. Everything else has no gap over 559 m, and those are just coarse sampling on straight
-  // stretches (elevation changes only ±30 m across them), not lifts.
+  // LIFT-AS-STRAIGHT-LINE DEFECT: the recorded track for any route that starts by riding UP a lift (rather
+  // than starting already at altitude) embeds that lift ride as a straight jump between two GPS points --
+  // e.g. the Andalo-Doss Pelà gondola as +741 m over a 2384 m straight segment, Doss Pelà-Cima Paganella
+  // (via Albi de Mez) as +374 m over 1190 m. "From Top To Lake" (784) had exactly two such jumps, both at
+  // the very start (the recorded track begins in Andalo village and rides two lifts up before the real
+  // descent begins at Cima Paganella) -- fixed by clipping the leading 20 raw points before simplifying;
+  // everything after that is one clean continuous descent with no gap over 200 m.
+  // "LAKE TO LAKE" AND "BEAR TRAILS" (both `TC`, 75 km / 60 km): unlike "From Top To Lake", their
+  // lift-as-straight-line jumps recur SEVERAL TIMES mid-route (both hop between all three zones), so
+  // clipping the ends doesn't fix them -- built instead (2026-08-09, per the user: "Ja mit Segment
+  // Technik") with real `trailSegments`, using `tools/build_bikekingdom_tours.py`'s classical tour-vs-trail
+  // matcher (see docs/trailrunde-feature.md's "Matching a tour against existing trails and lifts" section)
+  // rather than one-off code: it labels lift rides first (a ride is geometrically unmistakable -- straight,
+  // station to station), then matches everything else against this region's OTHER trails' own geometry, so
+  // a stretch that rides e.g. Ude's Trail or Monte Corno draws THEIR exact line, not the tour's own coarser
+  // recording of it. One adjustment needed for this region specifically: the matcher's own candidate list
+  // skips anything with `loop:true`, which in Bike Kingdom correctly meant "another tour being built in
+  // this same run" but here also excludes every "Shared trail" Tour above -- exactly the kind of real named
+  // descent these mega-routes actually ride. Fixed by passing the matcher a copy of the trail list with
+  // `loop` stripped for matching purposes only (never written back). Result: both routes came out riding
+  // real named trails (Bear Trails: Ude's Trail -> Doss Pelà+Albi de Mez lifts -> Giada Trail -> Monte
+  // Corno -> Santel-Meriz lift -> Ribs Trail -> Doss Pelà again -> From Top To Lake -> Secret Trail -- a
+  // genuine "ride the park's greatest hits" route, consistent with its marketing name). A handful of seams
+  // over the matcher's own 115 m "quiet join" threshold remain (worst: 498 m, where a matched trail's clip
+  // end and the tour's own connector recording don't quite meet) -- reported by the build script rather
+  // than silently smoothed over, per this project's standing rule for uncertain-heuristic output.
   zugspitzarena: {
     // Built 2026-07-28 from the operator's own per-tour downloads on zugspitzarena.com. Two things worth
     // knowing: the download link ends in `.gpx` but serves KML, and several tracks carry extra fragments
@@ -695,12 +726,13 @@ const REGION_CATALOG = {
     }
   },
   paganella: {
-    countries: ["IT"], label: "Dolomiti Paganella", file: "regions/paganella.json", trailCount: 24,
+    countries: ["IT"], label: "Dolomiti Paganella", file: "regions/paganella.json", trailCount: 28,
     bounds: [[46.13632, 10.9538], [46.22536, 11.0866]],
     subRegions: {
       andalo: { label: "Andalo", color: "#1c8ac2" },
       fai: { label: "Fai della Paganella", color: "#c26a1c" },
-      molveno: { label: "Molveno", color: "#6a8a2f" }
+      molveno: { label: "Molveno", color: "#6a8a2f" },
+      shared: { label: "Shared Trails", color: "#8a3a9c" }
     }
   },
   // Portes du Soleil (FR/CH) -- the resort markets itself as "our 5 bikeparks", so the sub-regions are
