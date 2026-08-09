@@ -1,9 +1,15 @@
 // @suite   filters
 // @area    Visibility rules and the four summary counts
 // @files   Trailmap App/index.html
-// @touches trailPassesFilters, liftPassesFilters, liftHiddenBySolo, activeDiffs, activeRegions, showUphill, showLoop, showDownhill, showLifts, render, filterCountLabel, trailCountLabel, tourCountLabel, liftCountLabel
+// @touches trailPassesFilters, liftPassesFilters, liftHiddenBySolo, matchesSearch, searchTerm, trailSearchInput, activeDiffs, activeRegions, showUphill, showLoop, showDownhill, showLifts, render, filterCountLabel, trailCountLabel, tourCountLabel, liftCountLabel
 // @needs   region=bikekingdom, builder=off
 //
+// The search box (added 2026-08-09) is matchesSearch() as one more AND-ed condition inside
+// trailPassesFilters()/liftPassesFilters(), so it has to be proven to COMBINE with the others rather than
+// override them -- a name match on a difficulty that is switched off must still be hidden. searchTerm itself
+// is a `let` inside the app's own try{} block and unreachable from here (same reason lineLayers/soloId are
+// unreachable, see the harness notes), so every case below drives the real #trailSearchInput element instead
+// of poking the variable.
 // One rule decides what is on the map and what is in a list -- trailPassesFilters -- and it is called from two
 // places (the map loop in render() and renderTourList). The suite pins the rule itself AND the numbers it
 // produces, because the counts are what a user reads to check the filters did what they asked.
@@ -139,6 +145,73 @@ TM.add("filters", () => typeof trailPassesFilters === "function" && trailPassesF
     const hub = TM.$$("#tourList .hub-title").find((h) => /Biketicket/i.test(h.textContent));
     T.eq("and it equals that hub's Tour count in the Touren list", trailing(chip), hub ? trailing(hub) : -1);
   }
+
+  T.test("the search box matches Trails, Touren and Lifte by name, case/diacritics-insensitive");
+  const searchEl = TM.$("#trailSearchInput");
+  const setSearch = async (v) => {
+    searchEl.value = v;
+    searchEl.dispatchEvent(new Event("input", { bubbles: true }));
+    await TM.wait(300);
+  };
+  // FLOWline/FLOWline lower are real ids in this region -- the exact pair the user's own report named
+  // (2026-08-09: searching "flowline" left every OTHER trail's name label on the map, see the labels suite
+  // for that half of the bug).
+  await setSearch("flowline");
+  T.eq("only the two FLOWline trails are listed", TM.ui.trailCards().length, 2);
+  T.ok("both really carry the term", TM.ui.names("trailCards").every((n) => /flowline/i.test(n)),
+       TM.ui.names("trailCards"), "all containing 'flowline'");
+  await setSearch("FLOWLINE");
+  T.eq("case does not matter", TM.ui.trailCards().length, 2);
+  await setSearch("hornli");   // no umlaut, on purpose
+  T.ok("diacritics-insensitive: 'hornli' still finds the Hörnli lift", TM.ui.cardNamed("liftCards", /Hörnli/),
+       TM.ui.names("liftCards"), "a Hörnli card");
+  await setSearch("biketicket");
+  T.ok("and it matches a Tour's name too", TM.ui.cardNamed("tourCards", /Biketicket/i),
+       TM.ui.names("tourCards"), "a Biketicket card");
+  await setSearch("thisnametrailwillneverexist");
+  T.eq("a term matching nothing empties all three lists",
+       TM.ui.trailCards().length + TM.ui.tourCards().length + TM.ui.liftCards().length, 0);
+  await setSearch("");
+  T.eq("clearing restores the full trail count", TM.ui.trailCards().length, trails0);
+  T.eq("and the full lift count", TM.ui.liftCards().length, lifts0);
+
+  T.test("a search match does not override a filtered-out difficulty, region or category");
+  // Both FLOWline trails are blau; both PRIMEline trails are rot. A name match must not resurrect a trail
+  // whose difficulty the user has switched off -- the two conditions AND together, neither wins alone.
+  await setSearch("flowline");
+  await TM.ui.setDiff("blau", false);
+  T.eq("the difficulty filter still wins", TM.ui.trailCards().length, 0);
+  await TM.ui.setDiff("blau", true);
+  await TM.wait(300);
+  T.eq("back once blau is on again", TM.ui.trailCards().length, 2);
+  await setSearch("primeline");
+  await TM.ui.setDiff("rot", false);
+  T.eq("same for a different difficulty", TM.ui.trailCards().length, 0);
+  await TM.ui.setDiff("rot", true);
+  await TM.wait(300);
+  T.eq("back once rot is on again", TM.ui.trailCards().length, 2);
+  await setSearch("");
+  await TM.wait(300);
+
+  T.test("the search box force-opens Touren/Lifte while active and restores what the user had");
+  document.getElementById("secTouren").open = false;
+  document.getElementById("secLifts").open = false;
+  await setSearch("biketicket");
+  T.eq("Touren opens so the match is not hidden behind a closed section", document.getElementById("secTouren").open, true);
+  await setSearch("");
+  T.eq("and closes again on clear, since the user had it closed", document.getElementById("secTouren").open, false);
+  T.eq("the persisted section state was not overwritten by the search",
+       JSON.parse(localStorage.getItem("trailmap-ui-sections-v1") || "{}").secTouren, false);
+  document.getElementById("secTouren").open = true;   // leave sections as later suites expect (all open)
+  document.getElementById("secLifts").open = true;
+
+  T.test("Escape clears the search box, same two-step behaviour as the region dialog's own search");
+  await setSearch("flowline");
+  T.eq("narrowed first", TM.ui.trailCards().length, 2);
+  searchEl.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+  await TM.wait(300);
+  T.eq("Escape empties the field", searchEl.value, "");
+  T.eq("and the full list is back", TM.ui.trailCards().length, trails0);
 
   T.test("render() is idempotent: calling it twice changes no number");
   const before = JSON.stringify(TM.ui.counts());

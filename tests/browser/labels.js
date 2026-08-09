@@ -1,14 +1,21 @@
 // @suite   labels
 // @area    Map name labels for trails, Tour segments and lifts
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches applyNameLabels, setLabelHovered, showNames, trailLabelHtml, tl-hover, tl-diff, segmentNameLabels, buildLiftLayer, setLiftHover, applyPlaceVisibility, buildPlaceMarkers, resetAllHoverStyles
+// @touches applyNameLabels, setLabelHovered, showNames, trailLabelHtml, tl-hover, tl-diff, segmentNameLabels, buildLiftLayer, setLiftHover, applyPlaceVisibility, buildPlaceMarkers, resetAllHoverStyles, render, trailSearchInput, matchesSearch
 // @needs   region=bikekingdom, builder=off
 //
-// Labels are where "it looks fine" hides the most. Two shipped bugs behind these cases:
+// Labels are where "it looks fine" hides the most. Three shipped bugs behind these cases:
 //   * turning "Namen" ON used to REMOVE the only way to read a lift's name -- nothing opened the permanent
 //     tooltip, and the hover handler only opened one while the switch was off.
 //   * a permanent tooltip re-opens itself every time Leaflet re-adds its layer, so every add path has to
 //     decide open-or-closed again; missing one made labels pop open with no hover involved.
+//   * the opposite direction (found 2026-08-09, user): with "Namen" already ON, filtering a trail OUT --
+//     by difficulty/region/category, or by the new search box, all of which land in the same render() loop
+//     -- removed its LINE from the map but never closed its already-open name tooltip. That is a separate
+//     overlay Leaflet does not auto-close just because the owning layer was removed, so the label kept
+//     floating on the map with nothing under it any more. The case just below this comment is the one that
+//     would have caught it; the existing "filter re-add" case further down does not, because it turns
+//     Namen OFF first and so never has an open label to lose in the first place.
 // Note the harness waits by polling: Leaflet FADES tooltips out, so a synchronous read right after a toggle
 // still sees elements that are logically gone. That produced a false "still there" reading once already.
 
@@ -29,6 +36,31 @@ TM.add("labels", () => typeof applyNameLabels === "function" && TM.ui.cardNamed(
        TM.map.trailLabels().length, ">= " + trailsShown);
   T.ok("a lift label names a lift", TM.map.liftLabels().some((e) => /bahn|Express|Shuttle|Seil|lift/i.test(e.textContent)),
        TM.map.liftLabels()[0].textContent.trim(), "a lift name");
+
+  T.test("filtering a trail out while Namen stays ON closes its own label, not just hides its line");
+  // The exact reported repro (2026-08-09): search "flowline" in Bike Kingdom with Namen on, and every OTHER
+  // trail's name label stayed floating on the map with its line gone. Checked via BOTH routes into
+  // trailPassesFilters -- the search box and an ordinary difficulty toggle -- since the bug was in the
+  // shared render() loop, not in matchesSearch() itself.
+  const allTrailLabels = TM.map.trailLabels().length;
+  const searchElL = TM.$("#trailSearchInput");
+  searchElL.value = "flowline";
+  searchElL.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.wait(400);
+  T.eq("only the two matching trails keep a label", TM.map.trailLabels().length, 2);
+  T.ok("and they are really the matching ones", TM.map.trailLabels().every((e) => /flowline/i.test(e.textContent)),
+       TM.map.trailLabels().map((e) => e.textContent.trim()), "all containing 'flowline'");
+  searchElL.value = "";
+  searchElL.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.until(() => TM.map.trailLabels().length === allTrailLabels, 3000);
+  T.eq("clearing the search brings every label back", TM.map.trailLabels().length, allTrailLabels);
+  await TM.ui.setDiff("schwarz", false);
+  await TM.wait(400);
+  T.ok("a difficulty toggle closes those trails' labels too, not just the search box",
+       TM.map.trailLabels().length < allTrailLabels, TM.map.trailLabels().length, "< " + allTrailLabels);
+  await TM.ui.setDiff("schwarz", true);
+  await TM.until(() => TM.map.trailLabels().length === allTrailLabels, 3000);
+  T.eq("and they return once schwarz is back on", TM.map.trailLabels().length, allTrailLabels);
 
   T.test("a trail label carries its difficulty as a coloured dot");
   // The label often covers the very line whose colour would have told you how hard it is.

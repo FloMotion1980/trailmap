@@ -5169,7 +5169,17 @@ function setLabelHovered(id, on, label){
 
 function applyNameLabels(){
   Object.values(lineLayers).forEach(layer => {
-    if (showNames) layer.hitLine.openTooltip(layer.coords[layer.midIdx]);
+    // trailVisible was missing until 2026-08-09 (found by the user: searching "flowline" in Bike Kingdom
+    // with Namen on left every OTHER trail's name floating on the map with its line gone). openTooltip() is
+    // a safe no-op on a layer that is currently off the map, but it is a no-op -- it does NOT close an
+    // already-open tooltip left over from a previous render() while the trail WAS visible. Since this
+    // function is only ever driven by the global `showNames`, a trail that gets filtered out (by region/
+    // diff/category or the search box) while showNames stays true kept calling openTooltip() forever and
+    // never once reached the closeTooltip() branch, which only fires when showNames itself is off. Gating
+    // the open on the trail's own current visibility too is the same fix segmentNameLabels already needed
+    // (see ownerVisible below) applied to the main label itself.
+    const trailVisible = map.hasLayer(layer.hitLine);
+    if (showNames && trailVisible) layer.hitLine.openTooltip(layer.coords[layer.midIdx]);
     else layer.hitLine.closeTooltip();
     // Drop any leftover hover mark: turning "Namen" off mid-hover would otherwise leave the class on an
     // element that setLabelHovered() no longer touches, and it would still be there when they come back on.
@@ -5191,7 +5201,10 @@ function applyNameLabels(){
     (layer.segmentNameLabels || []).forEach(({ trailId, label }) => {
       const otherLayer = lineLayers[trailId];
       const otherVisible = otherLayer && map.hasLayer(otherLayer.line);
-      const shouldShow = showNames && !otherVisible;
+      // The owning loop itself has to be visible too -- the same gap as trailVisible above, one level down:
+      // without it, a hidden loop's own segment labels could reappear whenever its referenced component
+      // trail also happened to be filtered out.
+      const shouldShow = showNames && trailVisible && !otherVisible;
       if (shouldShow && !map.hasLayer(label)) label.addTo(map);
       else if (!shouldShow && map.hasLayer(label)) map.removeLayer(label);
     });
