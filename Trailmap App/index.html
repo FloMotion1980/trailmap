@@ -3496,8 +3496,8 @@ function renderBuilder(){
             <!-- The arrow IS the state, and pressing it flips: → ridden in the element's own direction,
                  ← against it (user, 2026-07-27). Always enabled since 2026-07-28: the sequence can no
                  longer take the choice away. -->
-            <button data-act="flip" class="bi-dir" title="${goesBack ? "Rückwärts — antippen für vorwärts" : "Vorwärts — antippen für rückwärts"}">${goesBack ? "←" : "→"}</button>
-            <button data-act="del" class="bi-del" title="Entfernen">✕</button>
+            <button data-act="flip" class="bi-dir${goesBack ? " on" : ""}" title="${goesBack ? "Rückwärts — antippen für vorwärts" : "Vorwärts — antippen für rückwärts"}">${goesBack ? "⬅️" : "➡️"}</button>
+            <button data-act="del" class="bi-del" title="Entfernen">❌</button>
           </span>
         </div>
       </div>`;
