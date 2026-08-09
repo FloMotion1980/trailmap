@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=157" />
+<link rel="stylesheet" href="style.css?v=158" />
 </head>
 <body>
 <div id="fatalError">
@@ -1092,7 +1092,10 @@ function rebuildRegionChips(){
     const subKeys = Object.keys(REGIONS).filter(k => REGIONS[k].group === groupKey);
     const syncAllActive = () => groupLabel.classList.toggle("all-active", subKeys.every(k => activeRegions.has(k)));
     syncAllActive();
-    groupLabel.appendChild(document.createTextNode(groupInfo.label));
+    const groupNameEl = document.createElement("span");
+    groupNameEl.className = "region-group-name";
+    groupNameEl.textContent = groupInfo.label;
+    groupLabel.appendChild(groupNameEl);
     const groupCountEl = document.createElement("span");
     groupCountEl.className = "region-count";
     // Reserve width for the widest this count can ever be (the group's own total trail count, a
@@ -1293,6 +1296,7 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
     searchTerm = rdNorm(trailSearchEl.value);
     trailSearchWrapEl.classList.toggle("has-value", trailSearchEl.value.length > 0);
     applySearchSectionExpansion(!!searchTerm);
+    syncSearchFieldLocation();
     render();
   }
   trailSearchEl.addEventListener("input", updateSearch);
@@ -1533,10 +1537,12 @@ const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 function openSidebar(){
   asideEl.classList.add('open');
   sidebarBackdrop.classList.add('visible');
+  syncSearchFieldLocation();
 }
 function closeSidebar(){
   asideEl.classList.remove('open');
   sidebarBackdrop.classList.remove('visible');
+  syncSearchFieldLocation();
 }
 // Touch-only in effect, not just in appearance (2026-08-09, found by the user right after the title became
 // permanently visible on desktop too): the click handler itself used to run on every layout, so a desktop
@@ -1632,6 +1638,31 @@ function isMobileLayout(){
 function closeSidebarIfMobile(){
   if (isMobileLayout()) closeSidebar();
 }
+
+// The on-map "glass" search field (2026-08-09, user): ONE shared input/wrap, reparented between its normal
+// home (.sidebar-search-footer) and the map itself, rather than a second synced field. On mobile the sidebar
+// is off-screen when closed, which used to take the only visible "a search is filtering" cue with it the
+// moment you closed the drawer to actually look at the map -- exactly the case the user described ("Vor
+// allem auf dem Handy, wo das Menü idR ausgeblendet ist"). Reparenting keeps it to one input/one set of
+// listeners, so typing in the floating field IS typing in the real search box, no sync code needed. Desktop
+// never floats (isMobileLayout() is always false there) -- its own indicator is the gold ring already on the
+// sidebar field via .search-field-wrap.has-value.
+function syncSearchFieldLocation(){
+  const wrap = document.querySelector(".search-field-wrap");
+  const mapWrap = document.querySelector(".map-wrap");
+  const footer = document.querySelector(".sidebar-search-footer");
+  if (!wrap || !mapWrap || !footer) return;
+  const shouldFloat = isMobileLayout() && !asideEl.classList.contains("open") && !!searchTerm;
+  if (shouldFloat && wrap.parentElement !== mapWrap) {
+    mapWrap.appendChild(wrap);
+    wrap.classList.add("floating-on-map");
+  } else if (!shouldFloat && wrap.parentElement !== footer) {
+    footer.appendChild(wrap);
+    wrap.classList.remove("floating-on-map");
+  }
+}
+window.addEventListener("resize", syncSearchFieldLocation);
+window.addEventListener("orientationchange", syncSearchFieldLocation);
 
 // Rotation is OPTIONAL: leaflet-rotate is a vendored third-party file that patches Leaflet's core, so the
 // app must survive it not being there at all (failed load, a cache that only holds an older ?v=). Every
@@ -6198,7 +6229,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v157"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v158"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

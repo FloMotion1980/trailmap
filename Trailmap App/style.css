@@ -271,6 +271,30 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    :focus's own forest border while both are true (typing AND non-empty), since "a search is active" is the
    more important of the two facts once there is text in the field. */
 .search-field-wrap.has-value #trailSearchInput{ border-color:var(--highlight); box-shadow:0 0 0 2px rgba(224,163,38,.25); }
+/* The on-map "glass" twin of this exact field (2026-08-09, user's idea) -- syncSearchFieldLocation() in
+   index.html reparents the real .search-field-wrap here rather than cloning it, so this is the same input,
+   same listeners, just relocated. Only ever applied on mobile while the sidebar (its normal home) is
+   off-screen and a search is active -- .has-value is always true whenever this class is, so the gold ring
+   above still applies; this only adds the position and the iOS-style translucency on top of it. Stops short
+   of the map's own top-right control cluster (~44px column + 16px offset in portrait, a full row of them in
+   landscape) rather than centring, so it never has to share a line with those buttons. */
+.search-field-wrap.floating-on-map{
+  position:absolute;
+  top: calc(10px + env(safe-area-inset-top, 0px));
+  left: calc(10px + env(safe-area-inset-left, 0px));
+  right: calc(68px + env(safe-area-inset-right, 0px));
+  z-index:1300;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.3));
+}
+.search-field-wrap.floating-on-map #trailSearchInput{
+  background: rgba(255,255,255,0.68);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4);
+}
+html.landscape-compact .search-field-wrap.floating-on-map{
+  top: calc(3px + env(safe-area-inset-top, 0px));
+  right: calc(150px + env(safe-area-inset-right, 0px));
+}
 /* A static 🔍 (2026-08-09) -- every other control in this app signals what it is with an icon before its
    label/placeholder (📍 locate, 🚡 lifts, 🔁 Touren…), and a plain unlabelled text field was the one
    exception. pointer-events:none so it never steals the tap that should focus the field under it. */
@@ -369,7 +393,18 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 .region-group-label{ font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px;
   color: var(--forest); font-weight: 700; font-family: Arial, sans-serif;
   cursor: pointer; padding: 6px 13px; border: 1.5px solid var(--forest); border-radius: 20px;
-  background: transparent; transition: all .15s ease; }
+  background: transparent; transition: all .15s ease;
+  /* Flex so the name can shrink+truncate while the count never does -- see .region-group-name. */
+  display: flex; align-items: center; min-width: 0; max-width: 100%; }
+/* Truncates with an ellipsis instead of wrapping to a second line once the box is too narrow for the
+   full name (found 2026-08-09 on "Bikeland Schladming-Dachstein": even the box's full width, minus the
+   fixed-width 📍 button beside it, falls short of the name's natural width -- there is no padding left
+   to reclaim that closes a 20px+ gap, so wrapping was the only alternative to this). min-width:0
+   overrides the flex-item default (content-based), which is what lets it shrink below its own text's
+   width instead of forcing the row wider or wrapping. The trail count sits in its own sibling span
+   (.region-count) with a fixed reservation and is never part of what gets truncated. */
+.region-group-name{ overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.region-group-label .region-count{ flex-shrink: 0; }
 /* Filled means "every sub-region of this group is on" -- and NOTHING else may fill it. The hover rule used to
    live outside a media query, so on a phone it stuck after the tap: pressing the name switched all the chips
    off, they went empty, and this button stayed filled until you tapped somewhere else (user, 2026-08-02). The
@@ -437,7 +472,6 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    These are the only chips in the app whose labels are long enough for it to matter; the difficulty chips above
    are four short words that always fit, so they keep the roomier default. */
 .region-group-chips .chip{ margin:0; text-align:left; padding-left:9px; padding-right:9px; }
-.region-group-label{ white-space: normal; text-align: left; }
 /* Under the boxes, full width, so "what have I got" and "add one more" read as one list. Disabled rather than
    hidden at the cap -- a button that disappears at three explains nothing. */
 /* border-radius matches .region-group-block (10px), not a pill: it sits directly under those boxes and the
