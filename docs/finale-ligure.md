@@ -252,15 +252,38 @@ invariant that `TRAIL_GEO` must exactly equal the segment concatenation — see 
 stretch stayed a plain connector instead of a forced substitution, per the project's standing "leave the
 honest gap" rule ([[no-silent-auto-corrections]]).
 
-**Known imprecision, not yet resolved**: the built geometry totals **47.1 km against the route's own stated
-43.9 km** — a ~7% overshoot. Likely cause: substituting a matched trail's own (often more detailed/winding)
-geometry for a stretch the route's own simplified track crossed more directly. The Bike Kingdom tour-matching
-work ([[pds-tour-vtt-matching]], `docs/trailrunde-feature.md`'s "four traps") solved exactly this class of
-error with `extend_trail_ends`/`MAX_TRAIL_GAP_M`-style refinement — not applied here yet since this was a
-first feasibility pass, not a production build. `up`/`down` (2047/-1918) were kept as Trailforks' own
-official stats rather than recomputed from the (slightly-too-long) built geometry, consistent with `official=`
-always winning over GPX-derived numbers elsewhere in this pipeline.
+**Known imprecision from the first pass, since fixed (2026-08-09, same day)**: the user reported visible
+"jumps" — straight lines cutting across terrain at odd angles — right after Ludi Trail, after Cadotto, and
+entering Trail del Boccion parte 2. Root cause: the first pass decided a trail's matched *window* by
+proximity to **any** point on the trail's geometry (a 60 m corridor threshold), then cut the connector at
+that window's edge — but never checked that the cut point was actually close to the trail's own **endpoint**.
+A window can sit well inside a trail's corridor while its edge is still hundreds of metres from where the
+trail's stored line actually starts/ends, and substituting the *whole* trail geometry from that wrong edge
+produces exactly this: a straight jump from the connector's last real-track point to the trail's own (distant)
+endpoint. Measured gaps once diagnosed: 174 m after Ludi Trail, 357 m after Cadotto, 846 m entering Boccion
+parte 2.
+
+**The fix**: for every candidate trail, search the *whole* route track for the closest point to that trail's
+own `geo[0]` and `geo[-1]` specifically (not "any point in the corridor"), and only keep the trail as a
+substituted segment if **both** ends land within roughly 100 m of a real endpoint match. Re-running this over
+Ludi Trail exposed why its match was always wrong: the route only ever grazes Ludi's own *starting* junction
+(twice, each time diverging onto a different unrelated spur within 3 points, `d=0m` at the junction itself but
+150m+ away by the time it would need to reach Ludi's other end) — it never actually rides the trail, so the
+"403 m" Trailforks attributes to it in "Trails in Route" doesn't correspond to riding this stored geometry at
+all. Excluded entirely; that whole stretch is now a plain connector. Cadotto and Boccion parte 2 both turned
+out to be genuinely good matches once anchored to endpoints instead of the corridor: Cadotto's real exit sits
+just 23 m from `geo[0]` (not 357 m away), Boccion 2's the same story at both ends (11–105 m, not 846 m).
+
+Rebuilding with these corrected boundaries **also improved the overall length accuracy as a side effect**:
+42.6 km built vs. the route's own stated 43.9 km (was 47.1 km before the fix) — removing Ludi Trail's
+false ~400 m substitution and tightening every other boundary happened to close most of the earlier
+overshoot too, without deliberately chasing that number. `up`/`down` (2047/-1918) stay Trailforks' own
+official stats regardless, consistent with `official=` always winning over GPX-derived numbers elsewhere in
+this pipeline. This endpoint-anchored check is the one to reuse first on any future route-page Trailrunde,
+before trusting a corridor-proximity window at all.
 
 Result: `finale_feglino_mtb_prova`, region `feglino`, Finale's first `loop:true` entry (`Trailmap App/regions/
-finale.json`), trailCount 216→217. Elevation profile backfilled via `ElevationLookup` over the full
-concatenated geometry (no per-point elevation available from the route page itself, only lat/lng).
+finale.json`), trailCount 216→218 (217 for the tour itself, 218 once Trail del Boccion parte 2 was added as
+its own standalone trail entry too — its own `lineTrails`/`trailGeo`/`elevationProfiles` entry, not just a
+segment reference). Elevation profile backfilled via `ElevationLookup` over the full concatenated geometry
+(no per-point elevation available from the route page itself, only lat/lng).
