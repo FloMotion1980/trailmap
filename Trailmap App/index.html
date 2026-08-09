@@ -860,11 +860,17 @@ const REGION_CATALOG = {
     // (trailforks.com/region/varazze-trail-area/trails/) -- ~13 access-road/connector entries deliberately
     // left out, same rule as Bike Kingdom's fire roads. Geometry decoded in-browser from each trail's own
     // page (see trailforks-anonymous-polyline-extraction technique); stats/difficulty scraped from the
-    // region's own trail TABLE view in one page load rather than per-trail. Only one sub-region so far.
-    countries: ["IT"], label: "Varazze", file: "regions/varazze.json", trailCount: 53,
-    bounds: [[44.35562, 8.52288], [44.45728, 8.61788]],
+    // region's own trail TABLE view in one page load rather than per-trail.
+    // Arenzano sub-region added 2026-08-09 (14 of 16 real trails from Trailforks' own
+    // arenzano-mtb-experience-trails-area region listing -- Monte Tardia excluded as a hiking-only trail,
+    // Collegamento Ruggi - Sent. A excluded as a near-flat connector between two named trails). Geometry
+    // decoded via the user's own logged-in Chrome (Claude in Chrome), which lifts the anonymous
+    // hard_regwall that otherwise caps this technique at ~1 trail-detail page per session.
+    countries: ["IT"], label: "Varazze", file: "regions/varazze.json", trailCount: 67,
+    bounds: [[44.35562, 8.52288], [44.45728, 8.68242]],
     subRegions: {
-      varazze: { label: "Varazze", color: "#1c8a6e" }
+      varazze: { label: "Varazze", color: "#1c8a6e" },
+      arenzano: { label: "Arenzano", color: "#c9720e" }
     }
   }
 };
