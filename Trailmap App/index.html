@@ -146,6 +146,11 @@
       <!-- The Tourenbuilder has no sidebar section at all any more: its switch is the header button and
            its list is #builderSheet, pinned to the map. Keeping a copy of either here would mean one
            state with three owners -- see docs/tour-builder.md. -->
+      <!-- Searches Trails, Touren and Lifte together (2026-08-09) -- sits above all three list sections
+           since it applies to all of them, not just Trails. See matchesSearch()/trailPassesFilters() for
+           how a match becomes an additional visibility condition alongside region/diff/category. -->
+      <input id="trailSearchInput" type="search" autocomplete="off" spellcheck="false"
+             placeholder="Trail, Lift oder Tour suchen…" aria-label="Trails, Lifte und Touren durchsuchen">
       <details class="filter-section" id="secTrails" open>
         <summary><span class="section-title-row"><span>Trails</span><span class="section-meta" id="trailCountLabel"></span></span></summary>
         <div class="trail-list" id="trailList"></div>
@@ -1193,6 +1198,45 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
   applyPlaceVisibility();
 });
 
+// Trails/Touren/Lifte search box. Not persisted (like regionSearchTerm) -- a search is a one-off "find this
+// now", not a standing filter someone would expect to survive a reload the way region/diff/category do.
+{
+  const trailSearchEl = document.getElementById("trailSearchInput");
+  // Touren and Lifte are collapsed by default -- force them open while a search is active so a match there
+  // isn't hidden behind a closed section, then put back whatever the user actually had (not just "closed"):
+  // only the sections THIS search opened get closed again, sections the user had already opened stay open.
+  let searchOpenedSections = null;
+  function applySearchSectionExpansion(active){
+    const sections = [document.getElementById("secTouren"), document.getElementById("secLifts")];
+    suppressSectionPersist = true;
+    if (active) {
+      if (!searchOpenedSections) {
+        searchOpenedSections = sections.filter(d => d && !d.open);
+        searchOpenedSections.forEach(d => { d.open = true; });
+      }
+    } else if (searchOpenedSections) {
+      searchOpenedSections.forEach(d => { d.open = false; });
+      searchOpenedSections = null;
+    }
+    suppressSectionPersist = false;
+  }
+  trailSearchEl.addEventListener("input", () => {
+    searchTerm = rdNorm(trailSearchEl.value);
+    applySearchSectionExpansion(!!searchTerm);
+    render();
+  });
+  // Same two-step Escape as the region dialog's search: clear the term first, only hand the key back (e.g.
+  // to close the sidebar drawer) once the field is already empty.
+  trailSearchEl.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape" || !trailSearchEl.value) return;
+    e.stopPropagation();
+    trailSearchEl.value = "";
+    searchTerm = "";
+    applySearchSectionExpansion(false);
+    render();
+  });
+}
+
 // ---- Tourenbuilder controls ----
 // ONE control for one state: the header button. It started as a sidebar switch, then also got a 🧭 button
 // on the map, and the user rejected both placements (2026-07-27) -- the sidebar hides a map-mode switch
@@ -1298,7 +1342,12 @@ document.getElementById("builderExportBtn").addEventListener("click", () => {
 // trail list) — plain <details>/<summary>, open/closed state persisted separately from the actual
 // filter values above (activeRegions/activeDiffs/etc.), since it's UI layout state, not a filter.
 const FILTER_SECTIONS_KEY = "trailmap-ui-sections-v1";
+// Set while the search box force-opens Touren/Lifte so a match is visible without hunting for it -- that is
+// a temporary UI reaction, not the user's own choice of which sections stay open, so it must not overwrite
+// the persisted preference (see applySearchSectionExpansion()).
+let suppressSectionPersist = false;
 function persistFilterSectionsState(){
+  if (suppressSectionPersist) return;
   try {
     const state = {};
     document.querySelectorAll("details.filter-section").forEach(d => { state[d.id] = d.open; });
@@ -5308,6 +5357,15 @@ function flyToTrailBounds(bounds){
   map.flyTo(view.center, view.zoom, { duration:0.6 });
 }
 
+// The sidebar search box's current term, already run through rdNorm() (diacritics/punctuation-insensitive,
+// same helper the region dialog's own search uses) so every matchesSearch() call is a plain substring test.
+// It is an additional condition in trailPassesFilters()/liftPassesFilters() rather than a separate list-only
+// mechanism, so a search narrows the map exactly like every other filter (region/diff/category) already does.
+let searchTerm = "";
+function matchesSearch(name){
+  return !searchTerm || rdNorm(name).indexOf(searchTerm) > -1;
+}
+
 // ---- Lifts: one place that decides visibility, one sidebar section --------------------------------
 // A lift obeys its filters exactly as a trail obeys its own -- no exemption for being ridden by a visible
 // Tour. There WAS one (2026-07-26 to 2026-07-30): a lift a Tour rides stayed on the map even with the
@@ -5317,7 +5375,7 @@ function flyToTrailBounds(bounds){
 // lift stretch (buildTrailLayer draws its mask too since the exemption went, or the tile's own aerialway
 // line would have shown through it).
 function liftPassesFilters(l){
-  return showLifts && activeRegions.has(l.region);
+  return showLifts && activeRegions.has(l.region) && matchesSearch(l.name);
 }
 // Solo hides a lift rather than dimming it -- see the LIFT_MASK_COLOR block for why dimming cannot work
 // for a masked line. A soloed Tour keeps the lifts it RIDES: they are part of that route, not competing
@@ -5503,7 +5561,7 @@ function makeTrailCard(t, regionKey){
 // labels and its wide hit-lines all get in the way of clicking them, which is the whole activity there.
 function trailPassesFilters(t){
   const categoryOk = t.loop ? (showLoop && !builderMode) : (t.uphill ? showUphill : showDownhill);
-  return activeRegions.has(t.region) && activeDiffs.has(t.diff) && categoryOk;
+  return activeRegions.has(t.region) && activeDiffs.has(t.diff) && categoryOk && matchesSearch(t.name);
 }
 
 // The "Touren" sidebar section, between Trails and Lifte. Same two-level grouping as the other two lists,

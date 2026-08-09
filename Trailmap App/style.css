@@ -199,6 +199,13 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
   background:#fff; border-radius:50%; box-shadow:0 1px 3px rgba(0,0,0,0.3); transition: transform .15s ease; }
 .ios-switch input:checked + .slider{ background: var(--forest); }
 .ios-switch input:checked + .slider::before{ transform: translateX(14px); }
+/* font-size:16px is not a design choice, see the #regionSearch note further down: anything under that
+   auto-zooms iOS Safari on focus with no way back. Same look as that field, own id since this one lives in
+   the sidebar's normal flow (margin, not a dialog box) rather than inside #regionDialog. */
+#trailSearchInput{ display:block; margin: 0 16px 10px; width: calc(100% - 32px); box-sizing:border-box;
+  border:1.5px solid #d3d9c9; border-radius:18px; padding:7px 13px;
+  font-family: Arial, sans-serif; font-size:16px; color:var(--ink); background:#fff; }
+#trailSearchInput:focus{ outline:none; border-color:var(--forest); }
 .trail-list{ padding: 4px 0 16px; }
 .region-group-title{ padding: 12px 0 2px; font-family: 'Copperplate','Trebuchet MS',sans-serif; font-size: 12.5px;
   text-transform: uppercase; letter-spacing: 1px; color: var(--forest-dark); font-weight: 700;
