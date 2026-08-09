@@ -1,7 +1,7 @@
 // @suite   filters
 // @area    Visibility rules and the four summary counts
 // @files   Trailmap App/index.html
-// @touches trailPassesFilters, liftPassesFilters, liftHiddenBySolo, matchesSearch, searchTerm, trailSearchInput, activeDiffs, activeRegions, showUphill, showLoop, showDownhill, showLifts, render, filterCountLabel, trailCountLabel, tourCountLabel, liftCountLabel
+// @touches trailPassesFilters, liftPassesFilters, liftHiddenBySolo, matchesSearch, searchTerm, trailSearchInput, activeDiffs, activeRegions, showUphill, showLoop, showDownhill, showLifts, render, filterCountLabel, trailCountLabel, tourCountLabel, liftCountLabel, syncSearchFieldLocation, floating-on-map, sidebar-search-footer, isMobileLayout, openSidebar, closeSidebar
 // @needs   region=bikekingdom, builder=off
 //
 // The search box (added 2026-08-09) is matchesSearch() as one more AND-ed condition inside
@@ -212,6 +212,46 @@ TM.add("filters", () => typeof trailPassesFilters === "function" && trailPassesF
   await TM.wait(300);
   T.eq("Escape empties the field", searchEl.value, "");
   T.eq("and the full list is back", TM.ui.trailCards().length, trails0);
+
+  T.test("closing the sidebar on mobile floats the live search field onto the map, edited in place");
+  // TM.bootFresh()'s iframe is 420px wide on purpose (see its own comment) -- narrow enough that
+  // isMobileLayout() is true inside it, which is exactly the layout syncSearchFieldLocation() only acts on.
+  // It shares localStorage with this window, so it comes up with the same active region (bikekingdom) already
+  // on, and its DOM is real and same-origin -- driving #sidebarToggle/#trailSearchInput/#sidebarBackdrop
+  // there exercises the actual reparenting code, not a stand-in for it.
+  {
+    const boot = await TM.bootFresh();
+    try {
+      const fdoc = boot.doc;
+      T.ok("the iframe is narrow enough to count as mobile", boot.win.innerWidth <= 768, boot.win.innerWidth, "<=768");
+      const wrap = fdoc.querySelector(".search-field-wrap");
+      const fInput = fdoc.getElementById("trailSearchInput");
+      T.ok("the field starts in the sidebar footer, closed sidebar, no search yet",
+           wrap.parentElement.classList.contains("sidebar-search-footer") && !wrap.classList.contains("floating-on-map"),
+           true, true);
+      fdoc.getElementById("sidebarToggle").click();
+      fInput.value = "flowline";
+      fInput.dispatchEvent(new Event("input", { bubbles: true }));
+      await TM.wait(50);
+      T.ok("still in the footer while the sidebar (its normal home) is open",
+           wrap.parentElement.classList.contains("sidebar-search-footer"), true, true);
+      fdoc.getElementById("sidebarBackdrop").click();
+      T.ok("closing the sidebar with a search active floats the SAME node onto the map",
+           wrap.parentElement.classList.contains("map-wrap") && wrap.classList.contains("floating-on-map"),
+           true, true);
+      fInput.value = "flowlinex";
+      fInput.dispatchEvent(new Event("input", { bubbles: true }));
+      await TM.wait(50);
+      T.eq("it is genuinely the same input -- typing while floated keeps its own value", fInput.value, "flowlinex");
+      fdoc.getElementById("trailSearchClear").click();
+      T.ok("the ✕ clears the term and sends the field back to the (now empty, hidden) footer",
+           fInput.value === "" && wrap.parentElement.classList.contains("sidebar-search-footer") &&
+           !wrap.classList.contains("floating-on-map"),
+           true, true);
+    } finally {
+      boot.done();
+    }
+  }
 
   T.test("render() is idempotent: calling it twice changes no number");
   const before = JSON.stringify(TM.ui.counts());
