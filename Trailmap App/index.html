@@ -878,13 +878,19 @@ const REGION_CATALOG = {
     // Ortensie Bandita Sassello is Trailforks-tagged "E-Biking Trail" and stretches far north of the rest
     // of Stella's cluster, but its own page confirms Mountain Bike + Singletrack, so it's kept as a normal
     // (not uphill-flagged) trail -- climb and descent are both substantial over its 8.3km.
-    countries: ["IT"], label: "Varazze", file: "regions/varazze.json", trailCount: 111,
-    bounds: [[44.34509, 8.42467], [44.4728, 8.68242]],
+    // Albisola Superiore sub-region added 2026-08-09, same method (26 of 35 real trails; excluded 8 rows
+    // tagged Access/Doubletrack by Trailforks itself, plus Costa-delle-scaglie -- like Arenzano's Monte
+    // Tardia, its own page title is "... Hiking Trail" despite a Difficult/Red rating). Casa Bandita To AV,
+    // Raccordo Rio Buraxe - Cresta del Gallo and Rio Buraxe are flagged uphill:true off climb/descent
+    // dominance (Rio Buraxe is even a Doubletrack, but not Access-tagged, so kept rather than excluded).
+    countries: ["IT"], label: "Varazze", file: "regions/varazze.json", trailCount: 137,
+    bounds: [[44.32545, 8.42212], [44.4728, 8.68242]],
     subRegions: {
       varazze: { label: "Varazze", color: "#1c8a6e" },
       arenzano: { label: "Arenzano", color: "#c9720e" },
       celleland: { label: "CelleLand", color: "#3b6fb0" },
-      stella: { label: "Stella", color: "#8a4fbe" }
+      stella: { label: "Stella", color: "#8a4fbe" },
+      albisola: { label: "Albisola Superiore", color: "#c94f6f" }
     }
   }
 };
