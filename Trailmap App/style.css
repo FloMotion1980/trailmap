@@ -69,9 +69,13 @@ aside::-webkit-scrollbar{ display:none; width:0; height:0; }
    turns the title into button content, when the point is the other way round -- the title IS the way into the
    drawer. What signals that it is touchable is the bars sitting with it, plus the press feedback below. Its own
    negative margin keeps the wordmark on the same x it had before the bars joined it, so the header's left edge
-   does not visibly shift when this appears (it is touch-only, exactly as the floating button was). */
+   does not visibly shift when this appears.
+   The CONTAINER is always visible now (2026-08-09) -- it used to be display:none outside a touch layout,
+   which took the "Trailmap" wordmark down with it and left desktop with no title at all (user report). Only
+   .st-bars below stays touch-only, so desktop keeps the name without gaining a hamburger icon that would
+   open nothing there (the sidebar is permanently in flow on desktop). */
 #sidebarToggle{
-  display:none; align-items:center; gap:9px; align-self:center;
+  display:flex; align-items:center; gap:9px; align-self:center;
   /* 14px, the same radius #regionsBtn and #builderModeBtn use -- the press tint should read as the same family
      of control as the rest of the row, even though this one has no resting box. */
   margin:-6px -8px; padding:6px 8px; border-radius:14px;
@@ -81,9 +85,12 @@ aside::-webkit-scrollbar{ display:none; width:0; height:0; }
 /* Three drawn bars, not the ☰ glyph -- see the markup. The element IS the middle bar; the other two are its
    box-shadows, symmetric above and below, so whatever centres this 2px box centres the whole icon. That is what
    makes it land right on iOS (real Copperplate) and everywhere else (a fallback) alike. Quieter than the
-   wordmark on purpose: the bars are the affordance, the name is the brand. */
+   wordmark on purpose: the bars are the affordance, the name is the brand.
+   display:none by default -- unlike the container above, THIS stays touch-only (moved here from
+   #sidebarToggle itself, 2026-08-09): a bare hamburger icon on desktop would imply a drawer to open, and
+   there isn't one. */
 #sidebarToggle .st-bars{
-  width:18px; height:2px; border-radius:1px; flex:0 0 auto;
+  display:none; width:18px; height:2px; border-radius:1px; flex:0 0 auto;
   background: rgba(242,243,236,.8);
   box-shadow: 0 -6px 0 rgba(242,243,236,.8), 0 6px 0 rgba(242,243,236,.8);
 }
@@ -105,7 +112,7 @@ aside::-webkit-scrollbar{ display:none; width:0; height:0; }
     box-shadow: 4px 0 20px rgba(0,0,0,0.3);
   }
   aside.open{ transform: translateX(0); }
-  #sidebarToggle{ display:flex; }
+  #sidebarToggle .st-bars{ display:block; }
 }
 /* Sidebar scroll-to-top. `position:sticky` inside the scrolling <aside> as its LAST child: it pins itself
    12px above the scrollport's bottom edge for as long as there is content below, which means it needs no
@@ -259,13 +266,14 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    not the wider Filter section. */
 .trail-view-chips.chip-row{ margin-bottom:0; }
 .trail-view-chips .chip{ padding:3px 9px; font-size:11px; }
-/* A plain text-style link, not another chip -- resetting is the one action here that ISN'T "pick one of
-   these", so giving it the same pill shape as the choices above it would read as a fifth option rather
-   than as an action, and (user, 2026-08-09) it needs to be findable without becoming the visual anchor of
-   the panel. */
-.trail-view-reset{ display:block; margin:10px auto 0; border:none; background:transparent; color:var(--stone);
-  font-family: Arial, sans-serif; font-size:11px; text-decoration:underline; cursor:pointer; padding:2px 4px; }
-@media (hover: hover){ .trail-view-reset:hover{ color:var(--forest); } }
+/* A small outlined pill, not a plain underlined link (the first version, which the user found "nicht so
+   schön", 2026-08-09) -- but a NEUTRAL grey outline rather than the chips' own forest green, so it still
+   reads as the one action here that ISN'T "pick one of these" (the chips above are a group of choices,
+   this is a command) without looking like an unstyled afterthought either. */
+.trail-view-reset{ display:flex; align-items:center; gap:5px; justify-content:center;
+  margin:10px auto 0; border:1.5px solid #e3e6da; border-radius:14px; background:#fff; color:var(--stone);
+  font-family: Arial, sans-serif; font-size:11px; cursor:pointer; padding:4px 12px; }
+@media (hover: hover){ .trail-view-reset:hover{ background:#eff2e9; color:var(--forest); border-color:var(--forest); } }
 .trail-list{ padding: 4px 0 16px; }
 .region-group-title{ padding: 12px 0 2px; font-family: 'Copperplate','Trebuchet MS',sans-serif; font-size: 12.5px;
   text-transform: uppercase; letter-spacing: 1px; color: var(--forest-dark); font-weight: 700;

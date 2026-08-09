@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=149" />
+<link rel="stylesheet" href="style.css?v=151" />
 </head>
 <body>
 <div id="fatalError">
@@ -58,21 +58,28 @@
 </div>
 <div class="app">
   <header>
-    <!-- The title doubles as the mode indicator: "Trailbuilder" while the builder mode is on (user,
-         2026-07-27). It no longer scrolls the sidebar to the top (user, 2026-07-29 — that job belongs to
-         #sidebarTopBtn now), but it MUST keep an id: syncBuilderModeChrome() writes this text, and dropping
-         the id along with the handler crashed the app outright for anyone who had builder mode on. -->
-    <!-- The bars and the wordmark are ONE control that opens the drawer (user, 2026-08-02) -- and it has no
-         border, because a box around the app's own name reads as a button that happens to contain the title
-         rather than as the title being the way in.
+    <!-- Always says "Trailmap" now (2026-08-09) -- it used to swap to "Trailbuilder" while that mode was on
+         (user's own idea, 2026-07-27), but a name that changes under you reads as a different app once it
+         is visible on desktop too, not a mode indicator; the builder button's own fill carries that now.
+         It no longer scrolls the sidebar to the top (user, 2026-07-29 — that job belongs to #sidebarTopBtn
+         now), but it MUST keep an id: syncBuilderModeChrome() still calls getElementById on it (see the
+         comment there for the crash that taught us that), even though it no longer writes its text. -->
+    <!-- The bars and the wordmark are still ONE control that opens the drawer on a touch layout (user,
+         2026-08-02) -- and it has no border, because a box around the app's own name reads as a button that
+         happens to contain the title rather than as the title being the way in. The CONTAINER itself is no
+         longer touch-only, though (2026-08-09, user: "Beim Handy ist der Text verschmolzen mit dem Menü
+         Icon... Dort soll aber auch der Text stehen" -- reported after the wordmark went missing from
+         desktop entirely, since the whole element, bars included, used to be display:none there). Only
+         .st-bars itself stays hidden outside a touch layout now -- see the CSS -- so desktop keeps the name
+         without gaining a hamburger icon that would open nothing (the sidebar is permanently in flow there).
+         Explicitly NOT split into two separate elements (title text vs. icon) -- tried while investigating
+         this, and the user rejected it: the title must keep opening the drawer on mobile, unchanged.
          A div with role=button, not a <button>: an <h1> is flow content and invalid inside a button, and the
-         heading has to stay, both for the document outline and because syncBuilderModeChrome() writes this
-         text ("Trailbuilder" while that mode is on). Same pattern as #builderSheetHandle. The keydown handler
-         is what a real button would have given us for free.
-         It used to float over the map at the top left, which cost map space in the layout that has least of it,
-         and it read "Trails" -- true when the drawer held only that list, misleading once it also held Region,
-         Filter, Kartenoptionen, Touren and Lifte. Touch layouts only: on desktop the sidebar is permanently in
-         flow and a handle for it would open nothing. -->
+         heading has to stay for the document outline. Same pattern as #builderSheetHandle. The keydown
+         handler is what a real button would have given us for free.
+         It used to float over the map at the top left, which cost map space in the layout that has least of
+         it, and it read "Trails" -- true when the drawer held only that list, misleading once it also held
+         Region, Filter, Kartenoptionen, Touren and Lifte. -->
     <div id="sidebarToggle" role="button" tabindex="0" title="Listen und Filter öffnen" aria-label="Menü öffnen">
       <!-- Drawn in CSS, not the ☰ character. A glyph's position inside its line box is the font's business,
            and this header mixes Copperplate (a real system font on iOS, a fallback everywhere else) with the
@@ -1407,15 +1414,12 @@ function setBuilderMode(on){
   renderBuilder();
   render();  // Tours are hidden while the mode is on, so the map/list have to be rebuilt either way
 }
-// The header carries the state: the button fills in, and the title itself becomes the mode indicator
-// ("Trailbuilder" instead of "Trailmap", the user's own idea).
-// This line crashed the whole app between 2026-07-29 and 2026-07-30: removing the title's
-// scroll-to-top handler also removed its id, so getElementById returned null here. Since
-// syncBuilderModeChrome() runs from boot() whenever builder mode was left on, the app came up as the
-// fatal-error panel and nothing else -- an uncaught TypeError, not a silent degradation.
+// The header used to carry the mode into the title itself ("Trailbuilder" instead of "Trailmap") -- dropped
+// 2026-08-09 (user: "Das kann raus, wir lassen immer den gleichen Text") once the title became permanently
+// visible on desktop too, where a name that changes under you reads as a different app rather than a mode.
+// The button's own fill is the only mode indicator now.
 function syncBuilderModeChrome(){
   document.getElementById("builderModeBtn").classList.toggle("on", builderMode);
-  document.getElementById("appTitle").textContent = builderMode ? "Trailbuilder" : "Trailmap";
 }
 document.getElementById("builderModeBtn").addEventListener("click", () => setBuilderMode(!builderMode));
 document.getElementById("builderSheetHandle").addEventListener("click", (e) => {
@@ -4383,7 +4387,7 @@ function applyReversedEndpoints(id){
   layer.endMarker.setLatLng(endPt);
   // coords is never reordered (same rule as everywhere else in this feature) -- rebuild the arrow layer from
   // scratch with `reversed` flipped rather than storing a second permanent copy for every trail. Cheap (a
-  // couple of dozen small shapes at most) and only runs on the rare, deliberate 🔄 tap, never on a hot path.
+  // couple of dozen small shapes at most) and only runs on the rare, deliberate ⏪ tap, never on a hot path.
   // The replacement layer's add/remove-from-map state must match whatever the old one had -- otherwise a
   // reverse toggle at a zoom/filter combination where arrows are hidden would silently show them (or vice
   // versa) the moment the layer is rebuilt.
@@ -4469,7 +4473,7 @@ function buildInfoPanelHtml(t){
   // user asked for fall out of inline flow rather than needing a measurement: an inline-flex box is atomic, so
   // it either fits after the last word of the name or drops whole onto its own line under it -- never split,
   // never a button dangling alone. Before this they were spread over three places (the 📍 in the heading, the
-  // 👁/🔄 after the stats, the GPX in a row of its own), and the GPX was the one that fitted in only 2 of 8
+  // 👁/⏪ after the stats, the GPX in a row of its own), and the GPX was the one that fitted in only 2 of 8
   // measured trails once the m ⬆️/⬇️ emoji went in (user, 2026-08-02).
   // NOTE: never use a backtick in this comment. It sits inside a JS template literal, where a backtick ends the
   // string: writing a field name in code quotes here silently broke the whole script block, and with it the
@@ -4478,7 +4482,7 @@ function buildInfoPanelHtml(t){
     <h3>${t.name}${uphillBadge}${loopBadge} <span class="ip-btns">
       <button class="locate-btn" data-id="${t.id}" title="Zum Trail springen">📍</button>
       <button class="solo-btn${isSolo ? " active" : ""}" data-id="${t.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button>
-      <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">🔄</button>
+      <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">⏪</button>
       <button class="gpx-download-btn" data-id="${t.id}" title="GPX herunterladen">GPX</button>
     </span></h3>
     <div class="ip-trail">
@@ -6190,7 +6194,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v149"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v151"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

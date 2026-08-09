@@ -492,12 +492,17 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     put("builder", Object.assign({}, builder || {}, { builderMode: true, builderItems: [], builderSheetOpen: true })));
   const bFatal = b.doc.defaultView.getComputedStyle(b.doc.getElementById("fatalError")).display !== "none";
   const bTitle = b.doc.getElementById("appTitle") && b.doc.getElementById("appTitle").textContent;
+  const bBtnOn = b.doc.getElementById("builderModeBtn").classList.contains("on");
   const bSheet = b.doc.getElementById("builderSheet").className;
   const bCards = b.doc.querySelectorAll("#trailList .trail-card").length;
   b.done();
   T.eq("no fatal panel", bFatal, false);
   T.ok("the list is filled", bCards > 0, bCards, "> 0");
-  T.eq("the title switched to the mode indicator", bTitle, "Trailbuilder");
+  // The title used to become the mode indicator ("Trailbuilder") -- dropped 2026-08-09 (user) once it became
+  // permanently visible on desktop too, where a name that changes under you reads as a different app. The
+  // builder button's own fill is the only mode indicator now.
+  T.eq("the title stays \"Trailmap\", builder mode or not", bTitle, "Trailmap");
+  T.ok("the builder button itself shows the mode instead", bBtnOn, bBtnOn, true);
   T.ok("and the builder sheet is open", /visible/.test(bSheet || ""), bSheet, "visible");
 
   T.test("a first-ever visit asks which regions, with NOTHING preselected");
