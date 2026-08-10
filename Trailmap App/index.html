@@ -478,8 +478,40 @@ const REGION_CATALOG = {
   // is GPX-derived (Trailforks' own table rounds anything >=1km to a bare integer, too coarse to trust as
   // "official"); climb/descent came from that same table where given in exact metres, elevation profiles
   // backfilled via OpenTopoData mapzen same as the original 4. Build script: tools/build_donnersberg_expansion.py.
+  // 2026-08-10 follow-up (user review): a point-by-point nearest-neighbour distance check (not just name/
+  // bbox) between the pre-existing donnersberg_gipfel batch and the newly-added trails found 7 further
+  // duplicates the eyeball endpoint-check above had missed -- Falkensteiner Trail/Burgtrail, Falkensteiner
+  // Jump Trail/Falkensteiner Schlucht Trail, Katharinenweg/Dicke Eiche Trail, Zeltplatz Trail/K2 Langental
+  // Trail, Rote Halde Trail/Eiserner Mann -> Weiße Grube, Hidden Trail 2/Kupferberghütten Trail, Marienthal
+  // - Donnersberg Uphill/Klause Trail. Per the user's standing rule ("im Zweifel gewinnt Trailforks bei Name
+  // und Trail"), the OLD (OSM-sourced) entry was deleted in each pair and the Trailforks-sourced one kept --
+  // including dropping the `uphill` flag on Marienthal, since Trailforks' own Klause Trail is a plain
+  // descent with real stats, not an uphill route. 5 more pre-existing trails (Keiperweg, Katharinental,
+  // Hidden Trail, Eiserner Mann Trail, Grillhüttentrail) turned out to sit geographically in the Winnweiler
+  // cluster, not near the summit, and were moved into the winnweiler sub-region. Net: 51 -> 44 trails.
+  // 2026-08-10 second follow-up (user found more misses): the checks above only compared each OLD trail's
+  // full length against each NEW trail's full length, which misses the case where one is a PARTIAL
+  // sub-segment of the other (matches for part of its length, diverges for the rest -- e.g. an old OSM
+  // hiking-route-relation chain that Trailforks' riders split into several separately-named descents). A
+  // proper fix needed a directional containment check -- "what fraction of the SHORTER trail's points sit
+  // within 20m of the LONGER trail" -- run over every pair in the region, not just old-vs-new. That surfaced
+  // 3 more: Zum Wildensteiner Tal Trail (3.06km OSM chain) contained Shadow Trail (82%) and HillSide (77%)
+  // as sub-segments; Keltenwall 2 (1.21km) contained Rocky-Root-Garden (70%) and Rolling Stone (64%); Hidden
+  // Trail (0.5km) was 68% contained in K2 Bienstandstollen-Kühunter (its later points sit on that trail,
+  // its first few diverge). All three long/old entries were deleted, keeping the shorter Trailforks-named
+  // ones -- this discards whatever fireroad/connector portion of the old combined route wasn't covered by
+  // either named trail, an accepted simplification for now (no Trailforks entry exists for it, and this
+  // region's one loop route has no trailSegments referencing these ids, so nothing else needed updating).
+  // Contrast with two pairs that share only a common trailhead and were correctly left alone (both kept):
+  // Eiserner Mann Trail / Eiserner Mann -> Weiße Grube share their first 63% then diverge to 400+m apart;
+  // DH Hettrum 1 / Hettrum Trail 2 share exactly one endpoint node (0m) and are 101m apart at the other end.
+  // Net: 44 -> 41 trails. For a bigger, denser region (Pfälzer Wald, same OSM hiking-relation-naming method,
+  // 437 trails) this partial-containment check should run as a matter of course before adding anything, not
+  // as an afterthought -- and a duplicate/subsumed trail that a Trailrunde's trailSegments references by id
+  // would need that loop repointed at its replacement, which this region never had to face (no segments
+  // pointed at any of the 10 removed ids) but a larger region eventually will.
   donnersberg: {
-    countries: ["DE"], label: "Donnersberger Land", file: "regions/donnersberg.json", trailCount: 51,
+    countries: ["DE"], label: "Donnersberger Land", file: "regions/donnersberg.json", trailCount: 41,
     bounds: [[49.53555, 7.85592], [49.63851, 8.06]],
     subRegions: {
       donnersberger_land: { label: "MTB Donnersberger Land", color: "#8a6a2f" },
