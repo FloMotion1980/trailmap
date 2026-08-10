@@ -1,7 +1,7 @@
 // @suite   filters
 // @area    Visibility rules and the four summary counts
 // @files   Trailmap App/index.html
-// @touches trailPassesFilters, liftPassesFilters, liftHiddenBySolo, matchesSearch, searchTerm, trailSearchInput, activeDiffs, activeRegions, showUphill, showLoop, showDownhill, showLifts, render, filterCountLabel, trailCountLabel, tourCountLabel, liftCountLabel, syncSearchFieldLocation, floating-on-map, floating-fixed, sidebar-search-footer, isMobileLayout, openSidebar, closeSidebar
+// @touches trailPassesFilters, liftPassesFilters, liftHiddenBySolo, matchesSearch, searchTerm, trailSearchInput, activeDiffs, activeRegions, showUphill, showLoop, showDownhill, showLifts, render, filterCountLabel, trailCountLabel, tourCountLabel, liftCountLabel, syncSearchFieldLocation, floating-on-map, floating-fixed, sidebar-search-footer, isMobileLayout, openSidebar, closeSidebar, searchOverlayEngaged, updateSearchOverlaySummary, searchOverlaySummary, search-overlay-summary, search-field-row
 // @needs   region=bikekingdom, builder=off
 //
 // The search box (added 2026-08-09) is matchesSearch() as one more AND-ed condition inside
@@ -213,6 +213,16 @@ TM.add("filters", () => typeof trailPassesFilters === "function" && trailPassesF
   T.eq("Escape empties the field", searchEl.value, "");
   T.eq("and the full list is back", TM.ui.trailCards().length, trails0);
 
+  // searchOverlayEngaged (2026-08-10) is what now decides floating, not !!searchTerm -- FOCUSING the field is
+  // what "engages" it, and once engaged it stays floating even through an empty term; only the ✕ or (mobile)
+  // reopening the drawer disengage it. Both calls matter here: `.focus()` is what actually moves
+  // document.activeElement (needed for the "did it keep focus" assertion below) but only fires a real "focus"
+  // DOM event when the document itself has OS-level focus -- true for a person pasting this suite into their
+  // own foregrounded tab, but NOT in a headless/background runner (confirmed via document.hasFocus() while
+  // building this). The explicit dispatchEvent is what makes the app's own listener fire reliably either way
+  // -- harmless double-fire in the normal case, load-bearing in the background one.
+  const engage = (el) => { el.focus(); el.dispatchEvent(new FocusEvent("focus", { bubbles: false })); };
+
   T.test("closing the sidebar on mobile floats the live search field onto the map, edited in place");
   // TM.bootFresh()'s iframe is 420px wide on purpose (see its own comment) -- narrow enough that
   // isMobileLayout() is true inside it, which is exactly the layout syncSearchFieldLocation() only acts on.
@@ -226,28 +236,49 @@ TM.add("filters", () => typeof trailPassesFilters === "function" && trailPassesF
       T.ok("the iframe is narrow enough to count as mobile", boot.win.innerWidth <= 768, boot.win.innerWidth, "<=768");
       const wrap = fdoc.querySelector(".search-field-wrap");
       const fInput = fdoc.getElementById("trailSearchInput");
-      T.ok("the field starts in the sidebar footer, closed sidebar, no search yet",
+      T.ok("the field starts in the sidebar footer, closed sidebar, not engaged yet",
            wrap.parentElement.classList.contains("sidebar-search-footer") && !wrap.classList.contains("floating-on-map"),
            true, true);
       fdoc.getElementById("sidebarToggle").click();
+      engage(fInput);
       fInput.value = "flowline";
       fInput.dispatchEvent(new Event("input", { bubbles: true }));
       await TM.wait(50);
-      T.ok("still in the footer while the sidebar (its normal home) is open",
+      T.ok("still in the footer while the sidebar (its normal home) is open, even though engaged",
            wrap.parentElement.classList.contains("sidebar-search-footer"), true, true);
       fdoc.getElementById("sidebarBackdrop").click();
-      T.ok("closing the sidebar with a search active floats the SAME node onto the map",
+      T.ok("closing the sidebar with the field engaged floats the SAME node onto the map",
            wrap.parentElement.classList.contains("map-wrap") && wrap.classList.contains("floating-on-map"),
            true, true);
       fInput.value = "flowlinex";
       fInput.dispatchEvent(new Event("input", { bubbles: true }));
       await TM.wait(50);
       T.eq("it is genuinely the same input -- typing while floated keeps its own value", fInput.value, "flowlinex");
+      fInput.value = "";
+      fInput.dispatchEvent(new Event("input", { bubbles: true }));
+      await TM.wait(50);
+      T.ok("clearing the term no longer closes it (2026-08-10) -- it stays floating, empty",
+           wrap.parentElement.classList.contains("map-wrap") && wrap.classList.contains("floating-on-map"),
+           true, true);
+      const summary = fdoc.getElementById("searchOverlaySummary");
+      T.ok("the summary line underneath is now visible and non-empty (nothing to search for, but still a status)",
+           fdoc.defaultView.getComputedStyle(summary).display !== "none" && summary.textContent.length > 0,
+           summary.textContent, "non-empty");
       fdoc.getElementById("trailSearchClear").click();
-      T.ok("the ✕ clears the term and sends the field back to the (now empty, hidden) footer",
+      T.ok("the ✕ is what actually closes it now, sending the field back to the (hidden) footer",
            fInput.value === "" && wrap.parentElement.classList.contains("sidebar-search-footer") &&
            !wrap.classList.contains("floating-on-map"),
            true, true);
+      // Reopening the drawer is the OTHER named closer -- re-engage, close the drawer to float again, then
+      // reopen it and confirm the field is back in the footer, disengaged, not just "drawer open, still armed".
+      engage(fInput);
+      fdoc.getElementById("sidebarBackdrop").click();
+      T.ok("re-engaging and closing again floats it a second time", wrap.classList.contains("floating-on-map"), true, true);
+      fdoc.getElementById("sidebarToggle").click();
+      T.ok("opening the drawer disengages it too", !wrap.classList.contains("floating-on-map"), false, false);
+      fdoc.getElementById("sidebarBackdrop").click();
+      T.ok("...and it stays disengaged: closing the drawer again does NOT float it a third time",
+           !wrap.classList.contains("floating-on-map"), false, false);
     } finally {
       boot.done();
     }
@@ -269,20 +300,33 @@ TM.add("filters", () => typeof trailPassesFilters === "function" && trailPassesF
     try {
       const wrap = TM.$(".search-field-wrap");
       const footer = TM.$(".sidebar-search-footer");
-      searchEl.focus();
+      // Focusing ALONE floats it now (2026-08-10, user) -- before typing a single character, matching the
+      // "schon beim Klick verschieben" request from the day before. The regression this whole class exists
+      // to prevent (reparenting a focused node drops its focus) can ONLY happen synchronously inside this
+      // very focus handler -- syncSearchFieldLocation() runs right inside it -- so THIS is the moment that
+      // matters for "did toggling position:fixed keep focus", checked immediately rather than after the
+      // render()-heavy setSearch() calls below, which a backgrounded/headless runner's own focus handling
+      // can independently be unreliable about (document.hasFocus() flickered true/false across runs while
+      // building this, unrelated to anything the app does).
+      engage(searchEl);
+      syncSearchFieldLocation();
+      T.ok("focus alone floats it, before any text at all", wrap.classList.contains("floating-fixed"), wrap.className, "…floating-fixed…");
+      T.ok("and the focus/reparent-avoidance toggle itself did not drop focus",
+           document.activeElement === searchEl, document.activeElement && document.activeElement.id, "trailSearchInput");
       await setSearch("flowline");
       T.ok("the node never left the sidebar footer", wrap.parentElement === footer, wrap.parentElement.className, "sidebar-search-footer");
       T.ok("it switched to position:fixed instead", wrap.classList.contains("floating-fixed"), wrap.className, "…floating-fixed…");
       T.ok("and never picked up the mobile (reparenting) class", !wrap.classList.contains("floating-on-map"), wrap.className, "no floating-on-map");
-      T.ok("the field kept focus through the whole transition", document.activeElement === searchEl,
-           document.activeElement && document.activeElement.id, "trailSearchInput");
       // The un-capped first version stretched to the map's own top-right control cluster, which on a
       // genuinely wide window read as "too wide" (user, 2026-08-09) -- width is an explicit min(), not a
       // left+right stretch, so it must stay compact regardless of how much room the map actually has.
       const w = wrap.getBoundingClientRect().width;
       T.ok("width stays capped rather than stretching with the window", w > 0 && w <= 330, w, "<= 330");
       await setSearch("");
-      T.ok("clearing removes the fixed positioning, still the same node in the same place",
+      T.ok("clearing no longer un-floats it either (2026-08-10) -- same rule as mobile",
+           wrap.classList.contains("floating-fixed"), wrap.className, "…floating-fixed…");
+      TM.$("#trailSearchClear").click();
+      T.ok("only the ✕ closes it on desktop too",
            wrap.parentElement === footer && !wrap.classList.contains("floating-fixed"),
            { parent: wrap.parentElement.className, cls: wrap.className }, "back in the footer, no floating-fixed");
     } finally {

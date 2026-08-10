@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=160" />
+<link rel="stylesheet" href="style.css?v=161" />
 </head>
 <body>
 <div id="fatalError">
@@ -238,10 +238,17 @@
            scroll position for exactly that reason. -->
       <div class="sidebar-search-footer">
         <div class="search-field-wrap">
-          <span class="search-icon" aria-hidden="true">🔍</span>
-          <input id="trailSearchInput" type="search" autocomplete="off" spellcheck="false"
-                 placeholder="Trail, Lift oder Tour suchen…" aria-label="Trails, Lifte und Touren durchsuchen">
-          <button id="trailSearchClear" class="search-clear-btn" type="button" aria-label="Suche löschen">✕</button>
+          <div class="search-field-row">
+            <span class="search-icon" aria-hidden="true">🔍</span>
+            <input id="trailSearchInput" type="search" autocomplete="off" spellcheck="false"
+                   placeholder="Trail, Lift oder Tour suchen…" aria-label="Trails, Lifte und Touren durchsuchen">
+            <button id="trailSearchClear" class="search-clear-btn" type="button" aria-label="Suche löschen">✕</button>
+          </div>
+          <!-- Only ever visible while floating on the map (2026-08-10, user) -- the footer's own list sections
+               already show this detail, so it would just be noise there. Filled by updateSearchOverlaySummary()
+               at the end of render(), from the exact same shownTrails/toursShown/liftsShown numbers the sidebar's
+               own count labels use, so the two can never disagree. -->
+          <div class="search-overlay-summary" id="searchOverlaySummary" aria-hidden="true"></div>
         </div>
       </div>
     </aside>
@@ -1324,6 +1331,17 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
     render();
   }
   trailSearchEl.addEventListener("input", updateSearch);
+  // The floating field used to close itself the moment the text was cleared (2026-08-10, user: it "could
+  // make sense" to keep it open with an empty box too -- but only once there was something worth showing in
+  // its place, which is what the summary line below the input is for). searchOverlayEngaged is what keeps it
+  // open across a clear: it is set the moment the field is FOCUSED (not merely non-empty), and only cleared
+  // by the two things the user actually named as closers -- the ✕ button and opening the mobile drawer (see
+  // openSidebar()). syncSearchFieldLocation() floats on `searchOverlayEngaged`, not on `!!searchTerm`, so
+  // backspacing to empty no longer collapses it.
+  trailSearchEl.addEventListener("focus", () => {
+    searchOverlayEngaged = true;
+    syncSearchFieldLocation();
+  });
   // Same two-step Escape as the region dialog's search: clear the term first, only hand the key back (e.g.
   // to close the sidebar drawer) once the field is already empty.
   trailSearchEl.addEventListener("keydown", (e) => {
@@ -1337,8 +1355,12 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
   // cancel-button. Explicitly blurs rather than refocusing (tried first, reverted same day): a tap here
   // means "I'm done with this field", and refocusing popped the virtual keyboard right back up -- the
   // opposite of what the ✕ is for. blur() also dismisses the keyboard if it was already open.
+  // Also the one explicit way (besides opening the mobile drawer) to fully close the floating field
+  // (2026-08-10, user) -- it disengages even if there was no text left to clear, e.g. after the user has
+  // already backspaced everything away and just wants the map back to itself.
   trailSearchClearBtn.addEventListener("click", () => {
     trailSearchEl.value = "";
+    searchOverlayEngaged = false;
     updateSearch();
     trailSearchEl.blur();
   });
@@ -1561,6 +1583,10 @@ const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 function openSidebar(){
   asideEl.classList.add('open');
   sidebarBackdrop.classList.add('visible');
+  // Opening the drawer is the other explicit "close it" gesture the user named (2026-08-10) for the
+  // floating search field, alongside the ✕ -- reopening the menu you'd normally reach the field through is
+  // a clear enough signal that you're done with the floating one, even mid-search.
+  searchOverlayEngaged = false;
   syncSearchFieldLocation();
 }
 function closeSidebar(){
@@ -1680,6 +1706,22 @@ function closeSidebarIfMobile(){
 // all outside the mobile media query: a `transform`'d ancestor would hijack `position:fixed`'s containing
 // block, which is exactly why MOBILE can't use this trick (aside's open/closed slide IS a transform there,
 // and reparenting is the only way to truly escape it once the drawer is closed off-screen).
+// Fills #searchOverlaySummary from the exact numbers render() already computed for the sidebar's own count
+// labels (2026-08-10) -- a second, independent count here could drift from what the sidebar says, and this
+// is meant to be read as "the same status, just also on the map", not a competing source of truth. Runs on
+// every render() regardless of whether the summary is even visible right now (display:none in CSS unless a
+// floating class is present) -- cheap enough, and simpler than tracking "did the floating state change".
+function updateSearchOverlaySummary(shownTrails, toursShown, liftsShown){
+  const el = document.getElementById("searchOverlaySummary");
+  if (!el) return;
+  const parts = [];
+  const add = (n, one, many) => { if (n > 0) parts.push(`${n} ${n === 1 ? one : many}`); };
+  add(shownTrails, "Trail", "Trails");
+  add(toursShown, "Tour", "Touren");
+  add(liftsShown, "Lift", "Lifte");
+  el.textContent = parts.length ? parts.join(" · ") : "keine Treffer";
+}
+
 function syncSearchFieldLocation(){
   const wrap = document.querySelector(".search-field-wrap");
   const mapWrap = document.querySelector(".map-wrap");
@@ -1687,7 +1729,9 @@ function syncSearchFieldLocation(){
   if (!wrap || !mapWrap || !footer) return;
   const mobile = isMobileLayout();
   const mobileDrawerOpen = mobile && asideEl.classList.contains("open");
-  const shouldFloat = !!searchTerm && !mobileDrawerOpen;
+  // searchOverlayEngaged, not !!searchTerm (2026-08-10, user) -- clearing the text no longer closes it on
+  // its own; only the ✕ and opening the drawer do (see their own handlers).
+  const shouldFloat = searchOverlayEngaged && !mobileDrawerOpen;
 
   if (mobile) {
     wrap.classList.remove("floating-fixed");
@@ -5628,6 +5672,10 @@ let searchTerm = "";
 function matchesSearch(name){
   return !searchTerm || rdNorm(name).indexOf(searchTerm) > -1;
 }
+// Whether the floating on-map search field should stay shown even with an empty term -- see the note beside
+// the "focus" listener on #trailSearchInput for the full story. Deliberately independent of searchTerm: the
+// whole point is that clearing the term no longer implies closing the field.
+let searchOverlayEngaged = false;
 
 // ---- Lifts: one place that decides visibility, one sidebar section --------------------------------
 // A lift obeys its filters exactly as a trail obeys its own -- no exemption for being ridden by a visible
@@ -6058,6 +6106,7 @@ function render(){
   add(totalTours - toursShown, "Tour", "Touren");
   add(LIFTS.length - liftsShown, "Lift", "Lifte");
   countEl.textContent = hidden.length ? `${hidden.join(" · ")} ausgeblendet` : "alles sichtbar";
+  updateSearchOverlaySummary(shownTrails, toursShown, liftsShown);
 
   // " (n)" as one string inside the width-reserved, right-aligned box -- see rebuildRegionChips for why the
   // parens belong inside it rather than beside it.
@@ -6292,7 +6341,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v160"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v161"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

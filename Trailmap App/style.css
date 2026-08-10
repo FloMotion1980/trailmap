@@ -254,6 +254,11 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 /* The margin moved OUT (was on .search-field-wrap itself before the footer existed), since the ✕ button
    (2026-08-09) needs to be positioned relative to the field, not whatever now wraps it. */
 .search-field-wrap{ position:relative; }
+/* The icon/input/✕ row, split out from .search-field-wrap itself (2026-08-10) so the summary line below
+   (.search-overlay-summary) can be a normal block-level sibling without stretching .search-icon/.search-
+   clear-btn's own top:0;bottom:0 across the summary's height too -- they anchor to THIS row's height, which
+   is still exactly the input's height, not the wrap's now-taller one. */
+.search-field-row{ position:relative; }
 /* font-size:16px is not a design choice, see the #regionSearch note further down: anything under that
    auto-zooms iOS Safari on focus with no way back -- but the border colour and radius do NOT copy that
    field (user, 2026-08-09): #d3d9c9 is the region-dialog/builder's own grey, while this field lives in the
@@ -332,6 +337,40 @@ html.landscape-compact .search-field-wrap.floating-on-map{
 }
 @media (prefers-reduced-motion: reduce){
   .search-field-wrap.floating-fixed{ animation:none; }
+}
+/* The results/filter summary UNDER the floating field (2026-08-10, user): keeping the field open once the
+   text is cleared was pointless on its own -- an empty floating box says nothing an empty sidebar field
+   doesn't already say. This is what gives it a reason to stay: it turns the field, while floating, into a
+   small persistent status readout (counts, same numbers as the sidebar's own labels via
+   updateSearchOverlaySummary()), useful even with no search term at all (e.g. after a diff/category toggle).
+   display:none by default and only shown while actually floating -- the footer already has the full lists,
+   this line would just be noise sitting under an in-flow field. Its own small translucent chip rather than
+   sharing the input's card: cheaper than restructuring the input/icon/✕ row's background, and reads fine as
+   a caption under the pill. */
+.search-overlay-summary{
+  display:none;
+  margin-top:5px;
+  padding:4px 10px;
+  border-radius:8px;
+  background: rgba(255,255,255,0.6);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-family: Arial, sans-serif;
+  font-size:11px;
+  color: var(--forest-dark);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.search-field-wrap.floating-on-map .search-overlay-summary,
+.search-field-wrap.floating-fixed .search-overlay-summary{
+  display:block;
+}
+/* Landscape has the least height to spare of any layout -- one line, smaller still, no top margin gap. */
+html.landscape-compact .search-overlay-summary{
+  margin-top:3px;
+  padding:2px 8px;
+  font-size:10px;
 }
 /* A static 🔍 (2026-08-09) -- every other control in this app signals what it is with an icon before its
    label/placeholder (📍 locate, 🚡 lifts, 🔁 Touren…), and a plain unlabelled text field was the one
