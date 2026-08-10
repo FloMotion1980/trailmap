@@ -1107,12 +1107,21 @@ const REGION_CATALOG = {
   // Kreuznach Nord-Rotenfelsmassiv). No official length/up/down is published (only descriptive text), so
   // all three are GPX-derived, per the pipeline's documented fallback. No lifts, no published tours; place
   // labels are Bad Kreuznach itself and the Rotenfels landmark for the Nord cluster.
+  // Hardt-Lines added 2026-08-10: same operator (mtb-kh.de) as the rest of Naheland, but its own page
+  // (ueber-hardt-lines) gave no names/geometry -- found instead hiding in the SAME uMap datalayer already
+  // used for the other Naheland trails (umap.openstreetmap.de/de/map/naheland-trails_101795), which the
+  // user pointed at directly. Three "mittelschwere" descents (Bombtrack, Pickeldy, Shrederick) -> rot, plus
+  // an easy access connector (Zubringer) -> blau, near the Rotenfels TV tower at Bad Münster am Stein --
+  // geographically adjacent to the existing Bad Kreuznach clusters, so it's a 3rd sub-region here rather
+  // than its own group. uMap geometry is flat lon/lat with no elevation; backfilled via OpenTopoData like
+  // the rest of this region.
   naheland: {
-    countries: ["DE"], label: "Naheland Trails", file: "regions/naheland.json", trailCount: 10,
-    bounds: [[49.79211, 7.8289], [49.83139, 7.87495]],
+    countries: ["DE"], label: "Naheland Trails", file: "regions/naheland.json", trailCount: 14,
+    bounds: [[49.79211, 7.82016], [49.83139, 7.87495]],
     subRegions: {
       bad_kreuznach_sued: { label: "Bad Kreuznach Süd", color: "#8a6a2f" },
-      bad_kreuznach_nord: { label: "Bad Kreuznach Nord", color: "#4a6d8c" }
+      bad_kreuznach_nord: { label: "Bad Kreuznach Nord", color: "#4a6d8c" },
+      hardt_lines: { label: "Hardt-Lines (Rotenfels)", color: "#a13d3d" }
     }
   },
   // Built 2026-08-10. Source: wildganz.com's own GPX download for "RadLust MTB-Trail Waldmeister"
@@ -1150,6 +1159,34 @@ const REGION_CATALOG = {
     bounds: [[49.23945, 7.07506], [49.31084, 7.2013]],
     subRegions: {
       st_ingbert: { label: "St. Ingbert / Bliesgau", color: "#6b4c9a" }
+    }
+  },
+  // Built 2026-08-10. Source: mv-sb.de/trails/ (Mountainbikeverein Saarbrücken e.V.'s own trail-network
+  // page), which links each of its 20 trails out to its own Trailforks page rather than publishing GPX
+  // itself -- geometry and difficulty both came from there via the logged-in-Chrome embedded-polyline
+  // technique (see memory note trailforks-anonymous-polyline-extraction; no hard_regwall hit across all 20
+  // pages in one sitting). Trailforks' own difficulty tiers here are literally green/blue/red/black, the
+  // same 4-tier ski-slope scale this app already uses, so no S-scale-style shift was needed -- Blue/Red/
+  // Black Rate mapped straight to blau/rot/schwarz. One trail ("Jump line") is rated "Proline Rate" (a
+  // freestyle jump line, not on the usual scale at all) -- mapped to schwarz per the same rule already
+  // applied to Portes du Soleil's "pds_airlines". Every trail's own stated distance matched a fresh
+  // haversine sum of its decoded polyline to within ~1%, so len/up/down are the operator's own Trailforks
+  // numbers, not GPX-derived estimates. Elevation was not embedded in the polyline (lat/lng only) and was
+  // backfilled per-point via OpenTopoData, same as Donnersberg/Naheland. Two sub-regions: "saarbruecken"
+  // (17 trails; the network is legally spread across several municipalities -- St. Johann, Bischmisheim,
+  // Sengscheid/Sankt Ingbert, Neuweiler/Sulzbach -- but is one connected legal trail network with no
+  // official zone split) and "homburg" (the 3 "Flow am Homburg" trails, a distinct, tightly-clustered spot
+  // in Dudweiler ~2.5km from the nearest other trail -- kept separate per the operator's own naming, even
+  // though "Homburg" here is a local hill name, not the town of Homburg further east). No lifts (none
+  // published) and no Touren (mv-sb.de publishes no loop routes combining these trails) -- both
+  // consciously ruled out, not missing. Places are the municipalities/villages nearest the two clusters,
+  // from OSM node[place] within the trail network's bounding box.
+  saarbruecken: {
+    countries: ["DE"], label: "Trailnetz Saarbrücken", file: "regions/saarbruecken.json", trailCount: 20,
+    bounds: [[49.23972, 7.01973], [49.27844, 7.09425]],
+    subRegions: {
+      saarbruecken: { label: "Saarbrücken", color: "#a35c1f" },
+      homburg: { label: "Flow am Homburg", color: "#1f7a9a" }
     }
   }
 };
