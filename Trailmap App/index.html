@@ -1331,17 +1331,19 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
     render();
   }
   trailSearchEl.addEventListener("input", updateSearch);
-  // The floating field used to close itself the moment the text was cleared (2026-08-10, user: it "could
-  // make sense" to keep it open with an empty box too -- but only once there was something worth showing in
-  // its place, which is what the summary line below the input is for). searchOverlayEngaged is what keeps it
-  // open across a clear: it is set the moment the field is FOCUSED (not merely non-empty), and only cleared
-  // by the two things the user actually named as closers -- the ✕ button and opening the mobile drawer (see
-  // openSidebar()). syncSearchFieldLocation() floats on `searchOverlayEngaged`, not on `!!searchTerm`, so
-  // backspacing to empty no longer collapses it.
-  trailSearchEl.addEventListener("focus", () => {
-    searchOverlayEngaged = true;
-    syncSearchFieldLocation();
-  });
+  // The floating field used to close itself the moment the text was cleared (2026-08-10, first pass: a
+  // separate `searchOverlayEngaged` flag, disengaged only by the ✕ or opening the mobile drawer). The user
+  // then hit a real gap in that design: the ✕ itself only shows while there IS text (`.has-value`), so an
+  // empty-but-engaged field had no way to close at all. Second pass, same day, user's own correction after
+  // re-reading the two original options: "Option 1" -- stay floating while FOCUSED (even empty) OR while
+  // there IS text, close the moment NEITHER is true any more. This needs no separate flag at all:
+  // syncSearchFieldLocation() computes it live from `document.activeElement` and `searchTerm`, so a focus and
+  // a blur listener are enough to make blurring an EMPTY field close it on its own, and typing then clicking
+  // away leaves it open (matching "mit Text bleibt es ohnehin immer offen"). The ✕ needs no special-case
+  // either any more -- it already clears the value and blurs, and blurring an empty field is exactly the
+  // condition that closes it now.
+  trailSearchEl.addEventListener("focus", syncSearchFieldLocation);
+  trailSearchEl.addEventListener("blur", syncSearchFieldLocation);
   // Same two-step Escape as the region dialog's search: clear the term first, only hand the key back (e.g.
   // to close the sidebar drawer) once the field is already empty.
   trailSearchEl.addEventListener("keydown", (e) => {
@@ -1354,13 +1356,10 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
   // real phone that it does not count as an affordance at all -- see the CSS note on ::-webkit-search-
   // cancel-button. Explicitly blurs rather than refocusing (tried first, reverted same day): a tap here
   // means "I'm done with this field", and refocusing popped the virtual keyboard right back up -- the
-  // opposite of what the ✕ is for. blur() also dismisses the keyboard if it was already open.
-  // Also the one explicit way (besides opening the mobile drawer) to fully close the floating field
-  // (2026-08-10, user) -- it disengages even if there was no text left to clear, e.g. after the user has
-  // already backspaced everything away and just wants the map back to itself.
+  // opposite of what the ✕ is for. blur() also dismisses the keyboard if it was already open, and -- since
+  // the value is already cleared by the time it fires -- is what actually closes the floating field too.
   trailSearchClearBtn.addEventListener("click", () => {
     trailSearchEl.value = "";
-    searchOverlayEngaged = false;
     updateSearch();
     trailSearchEl.blur();
   });
@@ -1583,10 +1582,10 @@ const sidebarBackdrop = document.getElementById('sidebarBackdrop');
 function openSidebar(){
   asideEl.classList.add('open');
   sidebarBackdrop.classList.add('visible');
-  // Opening the drawer is the other explicit "close it" gesture the user named (2026-08-10) for the
-  // floating search field, alongside the ✕ -- reopening the menu you'd normally reach the field through is
-  // a clear enough signal that you're done with the floating one, even mid-search.
-  searchOverlayEngaged = false;
+  // No special-case needed for the floating search field here any more (2026-08-10, second pass) --
+  // syncSearchFieldLocation()'s own mobileDrawerOpen guard already forces it back into the (now open, visible)
+  // footer regardless of focus/text, and whether it re-floats on the NEXT close is exactly the same
+  // focus-or-text rule as everywhere else, not a one-off reset.
   syncSearchFieldLocation();
 }
 function closeSidebar(){
@@ -1729,9 +1728,14 @@ function syncSearchFieldLocation(){
   if (!wrap || !mapWrap || !footer) return;
   const mobile = isMobileLayout();
   const mobileDrawerOpen = mobile && asideEl.classList.contains("open");
-  // searchOverlayEngaged, not !!searchTerm (2026-08-10, user) -- clearing the text no longer closes it on
-  // its own; only the ✕ and opening the drawer do (see their own handlers).
-  const shouldFloat = searchOverlayEngaged && !mobileDrawerOpen;
+  // "Option 1" (2026-08-10, user's own final call after reconsidering): float while the field is FOCUSED
+  // (even empty) OR while it holds a term (even unfocused) -- so leaving an empty field closes it, but
+  // leaving a field WITH a term does not. Computed live from actual DOM/app state rather than a separate
+  // tracked flag, which is what let a real gap slip through the first version: that flag could only be
+  // cleared by the ✕ or opening the drawer, but the ✕ itself is only visible while there IS a term
+  // (.has-value), so an empty-but-"engaged" field had no way to close at all.
+  const isFocused = document.activeElement === document.getElementById("trailSearchInput");
+  const shouldFloat = (isFocused || !!searchTerm) && !mobileDrawerOpen;
 
   if (mobile) {
     wrap.classList.remove("floating-fixed");
@@ -5672,10 +5676,6 @@ let searchTerm = "";
 function matchesSearch(name){
   return !searchTerm || rdNorm(name).indexOf(searchTerm) > -1;
 }
-// Whether the floating on-map search field should stay shown even with an empty term -- see the note beside
-// the "focus" listener on #trailSearchInput for the full story. Deliberately independent of searchTerm: the
-// whole point is that clearing the term no longer implies closing the field.
-let searchOverlayEngaged = false;
 
 // ---- Lifts: one place that decides visibility, one sidebar section --------------------------------
 // A lift obeys its filters exactly as a trail obeys its own -- no exemption for being ridden by a visible
