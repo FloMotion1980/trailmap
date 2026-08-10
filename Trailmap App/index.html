@@ -1121,18 +1121,26 @@ const REGION_CATALOG = {
       haardt_lines: { label: "Haardt Lines", color: "#a13d3d" }
     }
   },
-  // Built 2026-08-10. Source: wildganz.com's own GPX download for "RadLust MTB-Trail Waldmeister"
-  // (Hattgenstein/Birkenfeld, Hunsrück) -- a single continuous 31.2km loop from Rothenburghütte, real
-  // embedded elevation throughout. Its own page states difficulty "schwer" with no colour/tier shown
-  // alongside it (unlike Naheland's emoji markers) -- mapped here to schwarz per the standard German
-  // 3-tier outdoor convention (leicht/mittel/schwer <-> blau/rot/schwarz), NOT confirmed by an explicit
-  // colour on the source page, so worth rechecking if a second source ever shows otherwise. Kept as its
-  // own region group rather than a 3rd Naheland sub-region: Hattgenstein sits ~50km from Bad Kreuznach,
-  // too far for one shared bounding box/fly-to target. Official length/up/down (31.2/722/700) taken from
-  // the source page, matching the raw GPX's own computed length (31.20km) almost exactly.
+  // Built 2026-08-10, geometry replaced 2026-08-11 (user flagged the original line as visibly too coarse
+  // against the base map). The original wildganz.com GPX had several 100-160m GPS-jitter gaps -- straight
+  // lines cut through the forest at each one, which is what read as "grob". A user-supplied Komoot
+  // recording was checked as a replacement first and rejected: WORSE (36 gaps up to 358m) and undershot at
+  // 25.5km. Investigating the length mismatch turned up a 3-way source conflict: wildganz.com states
+  // 31.2km/722m/700m, but Outdooractive's own page for the exact same trail states 25.6km/678m/663m, and
+  // the Komoot recording (25.5km) and a web summary (25.9km) both independently landed near Outdooractive's
+  // number -- three independent measurements agreeing against wildganz's own single outlier figure. Final
+  // geometry pulled from Outdooractive's own track API (contents/tour/<id>?display=trackinfo, a public
+  // JSONP endpoint keyed by the page's own exposed API key, same technique as Bike Kingdom's harvest --
+  // returns pre-cleaned segments as GeoJSON): 1233 points, real elevation throughout, only ONE gap over
+  // 100m (120m) -- far cleaner than either GPX. Length/up/down (25.6/678/663) taken from Outdooractive's
+  // own computed summary rather than wildganz's stated figure, given the 3-source agreement above.
+  // Difficulty still "schwer" with no colour/tier on either source page -- mapped to schwarz per the
+  // standard German 3-tier convention (leicht/mittel/schwer <-> blau/rot/schwarz), unconfirmed by an
+  // explicit colour. Kept as its own region group rather than a 3rd Bad Kreuznach sub-region: Hattgenstein
+  // sits ~50km away, too far for one shared bounding box/fly-to target.
   waldmeister: {
     countries: ["DE"], label: "RadLust Waldmeister", file: "regions/waldmeister.json", trailCount: 1,
-    bounds: [[49.68249, 7.1402], [49.71818, 7.19273]],
+    bounds: [[49.68247, 7.14166], [49.71818, 7.19273]],
     subRegions: {
       hattgenstein: { label: "Hattgenstein", color: "#8a6a2f" }
     }
