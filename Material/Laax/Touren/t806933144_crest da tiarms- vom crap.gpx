@@ -1,0 +1,2562 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Crest da Tiarms: Vom Crap Sogn Gion bis nach Ilanz</name>
+    <author>
+      <name>Johannes Schilder - Flims Laax</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/806933144"/>
+    <time>2026-03-25T15:53:22.754Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Crest da Tiarms: Vom Crap Sogn Gion bis nach Ilanz</name>
+    <desc>Wild, unberührt und unendlich lange (runter): Das anspruchsvolle Enduro-Erlebnis von Laax bis nach Ilnaz.</desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="46.835439" lon="9.215563">
+        <ele>2215.6</ele>
+        <name>Via Crap Masegn, Falera</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>routingNode</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>16</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.835444" lon="9.215497">
+        <ele>2215.6</ele>
+      </trkpt>
+      <trkpt lat="46.835434" lon="9.215412">
+        <ele>2215.6</ele>
+      </trkpt>
+      <trkpt lat="46.835398" lon="9.21535">
+        <ele>2215.4</ele>
+      </trkpt>
+      <trkpt lat="46.835441" lon="9.215327">
+        <ele>2215.8</ele>
+      </trkpt>
+      <trkpt lat="46.835479" lon="9.215232">
+        <ele>2215.7</ele>
+      </trkpt>
+      <trkpt lat="46.835542" lon="9.215056">
+        <ele>2215.4</ele>
+      </trkpt>
+      <trkpt lat="46.835598" lon="9.214922">
+        <ele>2215.5</ele>
+      </trkpt>
+      <trkpt lat="46.835679" lon="9.214776">
+        <ele>2216.0</ele>
+      </trkpt>
+      <trkpt lat="46.835784" lon="9.214615">
+        <ele>2216.9</ele>
+      </trkpt>
+      <trkpt lat="46.835879" lon="9.214438">
+        <ele>2218.7</ele>
+      </trkpt>
+      <trkpt lat="46.836001" lon="9.214289">
+        <ele>2221.5</ele>
+      </trkpt>
+      <trkpt lat="46.836043" lon="9.214238">
+        <ele>2222.4</ele>
+      </trkpt>
+      <trkpt lat="46.836089" lon="9.214195">
+        <ele>2223.0</ele>
+      </trkpt>
+      <trkpt lat="46.83617" lon="9.214131">
+        <ele>2223.5</ele>
+      </trkpt>
+      <trkpt lat="46.836222" lon="9.214058">
+        <ele>2223.7</ele>
+      </trkpt>
+      <trkpt lat="46.836286" lon="9.213938">
+        <ele>2224.6</ele>
+      </trkpt>
+      <trkpt lat="46.83637" lon="9.213775">
+        <ele>2224.9</ele>
+      </trkpt>
+      <trkpt lat="46.836443" lon="9.213665">
+        <ele>2224.8</ele>
+      </trkpt>
+      <trkpt lat="46.836458" lon="9.213642">
+        <ele>2225.1</ele>
+      </trkpt>
+      <trkpt lat="46.836517" lon="9.213601">
+        <ele>2225.5</ele>
+      </trkpt>
+      <trkpt lat="46.836604" lon="9.213612">
+        <ele>2225.9</ele>
+      </trkpt>
+      <trkpt lat="46.836707" lon="9.213638">
+        <ele>2227.0</ele>
+      </trkpt>
+      <trkpt lat="46.836757" lon="9.213638">
+        <ele>2227.1</ele>
+      </trkpt>
+      <trkpt lat="46.836856" lon="9.213611">
+        <ele>2228.4</ele>
+      </trkpt>
+      <trkpt lat="46.836935" lon="9.213584">
+        <ele>2229.9</ele>
+      </trkpt>
+      <trkpt lat="46.83703" lon="9.213562">
+        <ele>2231.6</ele>
+      </trkpt>
+      <trkpt lat="46.837093" lon="9.213544">
+        <ele>2232.3</ele>
+      </trkpt>
+      <trkpt lat="46.837149" lon="9.213496">
+        <ele>2232.7</ele>
+      </trkpt>
+      <trkpt lat="46.837176" lon="9.213452">
+        <ele>2232.7</ele>
+      </trkpt>
+      <trkpt lat="46.837218" lon="9.213368">
+        <ele>2232.7</ele>
+      </trkpt>
+      <trkpt lat="46.837258" lon="9.2133">
+        <ele>2232.7</ele>
+      </trkpt>
+      <trkpt lat="46.837283" lon="9.213255">
+        <ele>2232.7</ele>
+      </trkpt>
+      <trkpt lat="46.837328" lon="9.213172">
+        <ele>2232.6</ele>
+      </trkpt>
+      <trkpt lat="46.837363" lon="9.213074">
+        <ele>2232.2</ele>
+      </trkpt>
+      <trkpt lat="46.837383" lon="9.212992">
+        <ele>2232.0</ele>
+      </trkpt>
+      <trkpt lat="46.837383" lon="9.212981">
+        <ele>2232.0</ele>
+      </trkpt>
+      <trkpt lat="46.837381" lon="9.212921">
+        <ele>2231.9</ele>
+      </trkpt>
+      <trkpt lat="46.837354" lon="9.21281">
+        <ele>2231.6</ele>
+      </trkpt>
+      <trkpt lat="46.837311" lon="9.212662">
+        <ele>2231.1</ele>
+      </trkpt>
+      <trkpt lat="46.83729" lon="9.212544">
+        <ele>2231.3</ele>
+      </trkpt>
+      <trkpt lat="46.837271" lon="9.212433">
+        <ele>2231.5</ele>
+      </trkpt>
+      <trkpt lat="46.837236" lon="9.212146">
+        <ele>2233.3</ele>
+      </trkpt>
+      <trkpt lat="46.837229" lon="9.212048">
+        <ele>2233.7</ele>
+      </trkpt>
+      <trkpt lat="46.837245" lon="9.211992">
+        <ele>2233.8</ele>
+      </trkpt>
+      <trkpt lat="46.837304" lon="9.211889">
+        <ele>2234.8</ele>
+      </trkpt>
+      <trkpt lat="46.837312" lon="9.211874">
+        <ele>2235.0</ele>
+      </trkpt>
+      <trkpt lat="46.837355" lon="9.211775">
+        <ele>2235.8</ele>
+      </trkpt>
+      <trkpt lat="46.83737" lon="9.211697">
+        <ele>2236.3</ele>
+      </trkpt>
+      <trkpt lat="46.837379" lon="9.211545">
+        <ele>2237.3</ele>
+      </trkpt>
+      <trkpt lat="46.83739" lon="9.211395">
+        <ele>2237.8</ele>
+      </trkpt>
+      <trkpt lat="46.837392" lon="9.211379">
+        <ele>2237.9</ele>
+      </trkpt>
+      <trkpt lat="46.837399" lon="9.211298">
+        <ele>2237.6</ele>
+      </trkpt>
+      <trkpt lat="46.837401" lon="9.211268">
+        <ele>2237.4</ele>
+      </trkpt>
+      <trkpt lat="46.837413" lon="9.211152">
+        <ele>2237.0</ele>
+      </trkpt>
+      <trkpt lat="46.837438" lon="9.210992">
+        <ele>2236.8</ele>
+      </trkpt>
+      <trkpt lat="46.83744" lon="9.210978">
+        <ele>2236.9</ele>
+      </trkpt>
+      <trkpt lat="46.837474" lon="9.210867">
+        <ele>2237.3</ele>
+      </trkpt>
+      <trkpt lat="46.837526" lon="9.210735">
+        <ele>2238.3</ele>
+      </trkpt>
+      <trkpt lat="46.837539" lon="9.210704">
+        <ele>2238.5</ele>
+      </trkpt>
+      <trkpt lat="46.837614" lon="9.21053">
+        <ele>2240.2</ele>
+      </trkpt>
+      <trkpt lat="46.837674" lon="9.210422">
+        <ele>2241.5</ele>
+      </trkpt>
+      <trkpt lat="46.837681" lon="9.210408">
+        <ele>2241.7</ele>
+      </trkpt>
+      <trkpt lat="46.83772" lon="9.210306">
+        <ele>2242.8</ele>
+      </trkpt>
+      <trkpt lat="46.837762" lon="9.210178">
+        <ele>2244.3</ele>
+      </trkpt>
+      <trkpt lat="46.837776" lon="9.210121">
+        <ele>2245.1</ele>
+      </trkpt>
+      <trkpt lat="46.837792" lon="9.210055">
+        <ele>2246.1</ele>
+      </trkpt>
+      <trkpt lat="46.83781" lon="9.209974">
+        <ele>2247.3</ele>
+      </trkpt>
+      <trkpt lat="46.837822" lon="9.209884">
+        <ele>2248.8</ele>
+      </trkpt>
+      <trkpt lat="46.837849" lon="9.209806">
+        <ele>2250.3</ele>
+      </trkpt>
+      <trkpt lat="46.837877" lon="9.209725">
+        <ele>2251.5</ele>
+      </trkpt>
+      <trkpt lat="46.837925" lon="9.209607">
+        <ele>2253.2</ele>
+      </trkpt>
+      <trkpt lat="46.837957" lon="9.209489">
+        <ele>2254.3</ele>
+      </trkpt>
+      <trkpt lat="46.837973" lon="9.2094">
+        <ele>2254.7</ele>
+      </trkpt>
+      <trkpt lat="46.837983" lon="9.209263">
+        <ele>2255.9</ele>
+      </trkpt>
+      <trkpt lat="46.837992" lon="9.209106">
+        <ele>2257.8</ele>
+      </trkpt>
+      <trkpt lat="46.837997" lon="9.208957">
+        <ele>2260.4</ele>
+      </trkpt>
+      <trkpt lat="46.838017" lon="9.208831">
+        <ele>2262.0</ele>
+      </trkpt>
+      <trkpt lat="46.838048" lon="9.20866">
+        <ele>2263.5</ele>
+      </trkpt>
+      <trkpt lat="46.838058" lon="9.208522">
+        <ele>2264.7</ele>
+      </trkpt>
+      <trkpt lat="46.838067" lon="9.208195">
+        <ele>2266.7</ele>
+      </trkpt>
+      <trkpt lat="46.838069" lon="9.208133">
+        <ele>2267.2</ele>
+      </trkpt>
+      <trkpt lat="46.838075" lon="9.207846">
+        <ele>2270.7</ele>
+      </trkpt>
+      <trkpt lat="46.838088" lon="9.207656">
+        <ele>2272.2</ele>
+      </trkpt>
+      <trkpt lat="46.838111" lon="9.207459">
+        <ele>2273.6</ele>
+      </trkpt>
+      <trkpt lat="46.838142" lon="9.207218">
+        <ele>2274.8</ele>
+      </trkpt>
+      <trkpt lat="46.838175" lon="9.206955">
+        <ele>2277.1</ele>
+      </trkpt>
+      <trkpt lat="46.838196" lon="9.206817">
+        <ele>2278.2</ele>
+      </trkpt>
+      <trkpt lat="46.838204" lon="9.206724">
+        <ele>2278.4</ele>
+      </trkpt>
+      <trkpt lat="46.83821" lon="9.206653">
+        <ele>2278.4</ele>
+      </trkpt>
+      <trkpt lat="46.838213" lon="9.206508">
+        <ele>2277.4</ele>
+      </trkpt>
+      <trkpt lat="46.838214" lon="9.206304">
+        <ele>2277.2</ele>
+      </trkpt>
+      <trkpt lat="46.838208" lon="9.206186">
+        <ele>2277.0</ele>
+      </trkpt>
+      <trkpt lat="46.838186" lon="9.206024">
+        <ele>2276.2</ele>
+      </trkpt>
+      <trkpt lat="46.838159" lon="9.205807">
+        <ele>2275.0</ele>
+      </trkpt>
+      <trkpt lat="46.838139" lon="9.20558">
+        <ele>2274.5</ele>
+      </trkpt>
+      <trkpt lat="46.838128" lon="9.205429">
+        <ele>2275.2</ele>
+      </trkpt>
+      <trkpt lat="46.838142" lon="9.205272">
+        <ele>2275.6</ele>
+      </trkpt>
+      <trkpt lat="46.838171" lon="9.205159">
+        <ele>2276.0</ele>
+      </trkpt>
+      <trkpt lat="46.838212" lon="9.205023">
+        <ele>2276.6</ele>
+      </trkpt>
+      <trkpt lat="46.838266" lon="9.20485">
+        <ele>2277.7</ele>
+      </trkpt>
+      <trkpt lat="46.838365" lon="9.204582">
+        <ele>2279.8</ele>
+      </trkpt>
+      <trkpt lat="46.838398" lon="9.204471">
+        <ele>2281.0</ele>
+      </trkpt>
+      <trkpt lat="46.838415" lon="9.204304">
+        <ele>2283.1</ele>
+      </trkpt>
+      <trkpt lat="46.838438" lon="9.204143">
+        <ele>2283.8</ele>
+      </trkpt>
+      <trkpt lat="46.838468" lon="9.203988">
+        <ele>2284.6</ele>
+      </trkpt>
+      <trkpt lat="46.838509" lon="9.203843">
+        <ele>2285.9</ele>
+      </trkpt>
+      <trkpt lat="46.838535" lon="9.20372">
+        <ele>2286.6</ele>
+      </trkpt>
+      <trkpt lat="46.83854" lon="9.203532">
+        <ele>2286.8</ele>
+      </trkpt>
+      <trkpt lat="46.838546" lon="9.203248">
+        <ele>2287.1</ele>
+      </trkpt>
+      <trkpt lat="46.838568" lon="9.203053">
+        <ele>2288.0</ele>
+      </trkpt>
+      <trkpt lat="46.838622" lon="9.202798">
+        <ele>2289.7</ele>
+      </trkpt>
+      <trkpt lat="46.838655" lon="9.202571">
+        <ele>2291.5</ele>
+      </trkpt>
+      <trkpt lat="46.838669" lon="9.202348">
+        <ele>2293.2</ele>
+      </trkpt>
+      <trkpt lat="46.83868" lon="9.202224">
+        <ele>2294.2</ele>
+      </trkpt>
+      <trkpt lat="46.838739" lon="9.202078">
+        <ele>2295.0</ele>
+      </trkpt>
+      <trkpt lat="46.83885" lon="9.20174">
+        <ele>2295.9</ele>
+      </trkpt>
+      <trkpt lat="46.838916" lon="9.201583">
+        <ele>2296.9</ele>
+      </trkpt>
+      <trkpt lat="46.83901" lon="9.201391">
+        <ele>2297.6</ele>
+      </trkpt>
+      <trkpt lat="46.839059" lon="9.201237">
+        <ele>2297.8</ele>
+      </trkpt>
+      <trkpt lat="46.839086" lon="9.201107">
+        <ele>2298.0</ele>
+      </trkpt>
+      <trkpt lat="46.839083" lon="9.20092">
+        <ele>2298.3</ele>
+      </trkpt>
+      <trkpt lat="46.839055" lon="9.200808">
+        <ele>2298.9</ele>
+      </trkpt>
+      <trkpt lat="46.839017" lon="9.200721">
+        <ele>2299.6</ele>
+      </trkpt>
+      <trkpt lat="46.838961" lon="9.200585">
+        <ele>2300.3</ele>
+      </trkpt>
+      <trkpt lat="46.838926" lon="9.200467">
+        <ele>2300.3</ele>
+      </trkpt>
+      <trkpt lat="46.838919" lon="9.200237">
+        <ele>2300.1</ele>
+      </trkpt>
+      <trkpt lat="46.83891" lon="9.200029">
+        <ele>2299.6</ele>
+      </trkpt>
+      <trkpt lat="46.838909" lon="9.199894">
+        <ele>2298.8</ele>
+      </trkpt>
+      <trkpt lat="46.83893" lon="9.199743">
+        <ele>2297.3</ele>
+      </trkpt>
+      <trkpt lat="46.838982" lon="9.199588">
+        <ele>2296.3</ele>
+      </trkpt>
+      <trkpt lat="46.839045" lon="9.199478">
+        <ele>2296.1</ele>
+      </trkpt>
+      <trkpt lat="46.839157" lon="9.199311">
+        <ele>2295.0</ele>
+      </trkpt>
+      <trkpt lat="46.839245" lon="9.199183">
+        <ele>2294.9</ele>
+      </trkpt>
+      <trkpt lat="46.839327" lon="9.199091">
+        <ele>2293.9</ele>
+      </trkpt>
+      <trkpt lat="46.839418" lon="9.198979">
+        <ele>2292.3</ele>
+      </trkpt>
+      <trkpt lat="46.839478" lon="9.198888">
+        <ele>2291.3</ele>
+      </trkpt>
+      <trkpt lat="46.839543" lon="9.198798">
+        <ele>2291.4</ele>
+      </trkpt>
+      <trkpt lat="46.839591" lon="9.198731">
+        <ele>2291.6</ele>
+      </trkpt>
+      <trkpt lat="46.839661" lon="9.198673">
+        <ele>2292.1</ele>
+      </trkpt>
+      <trkpt lat="46.839772" lon="9.198625">
+        <ele>2292.8</ele>
+      </trkpt>
+      <trkpt lat="46.839873" lon="9.198575">
+        <ele>2293.0</ele>
+      </trkpt>
+      <trkpt lat="46.839948" lon="9.198504">
+        <ele>2292.9</ele>
+      </trkpt>
+      <trkpt lat="46.840049" lon="9.198343">
+        <ele>2293.2</ele>
+      </trkpt>
+      <trkpt lat="46.840145" lon="9.198158">
+        <ele>2295.4</ele>
+      </trkpt>
+      <trkpt lat="46.840213" lon="9.198067">
+        <ele>2297.3</ele>
+      </trkpt>
+      <trkpt lat="46.840281" lon="9.197975">
+        <ele>2298.7</ele>
+      </trkpt>
+      <trkpt lat="46.840414" lon="9.197836">
+        <ele>2299.6</ele>
+      </trkpt>
+      <trkpt lat="46.84059" lon="9.19769">
+        <ele>2301.7</ele>
+      </trkpt>
+      <trkpt lat="46.840713" lon="9.197572">
+        <ele>2304.1</ele>
+      </trkpt>
+      <trkpt lat="46.840822" lon="9.197499">
+        <ele>2305.5</ele>
+      </trkpt>
+      <trkpt lat="46.840956" lon="9.197423">
+        <ele>2307.4</ele>
+      </trkpt>
+      <trkpt lat="46.841072" lon="9.197388">
+        <ele>2308.5</ele>
+      </trkpt>
+      <trkpt lat="46.841158" lon="9.197359">
+        <ele>2309.6</ele>
+      </trkpt>
+      <trkpt lat="46.841252" lon="9.197287">
+        <ele>2310.7</ele>
+      </trkpt>
+      <trkpt lat="46.841341" lon="9.197178">
+        <ele>2312.1</ele>
+      </trkpt>
+      <trkpt lat="46.841409" lon="9.197048">
+        <ele>2313.9</ele>
+      </trkpt>
+      <trkpt lat="46.841454" lon="9.196922">
+        <ele>2315.7</ele>
+      </trkpt>
+      <trkpt lat="46.841595" lon="9.196381">
+        <ele>2319.4</ele>
+      </trkpt>
+      <trkpt lat="46.841687" lon="9.196013">
+        <ele>2321.0</ele>
+      </trkpt>
+      <trkpt lat="46.841736" lon="9.195839">
+        <ele>2322.0</ele>
+      </trkpt>
+      <trkpt lat="46.841802" lon="9.195646">
+        <ele>2323.2</ele>
+      </trkpt>
+      <trkpt lat="46.84187" lon="9.195509">
+        <ele>2323.8</ele>
+      </trkpt>
+      <trkpt lat="46.841967" lon="9.19533">
+        <ele>2325.2</ele>
+      </trkpt>
+      <trkpt lat="46.842015" lon="9.195203">
+        <ele>2326.6</ele>
+      </trkpt>
+      <trkpt lat="46.842035" lon="9.195102">
+        <ele>2327.6</ele>
+      </trkpt>
+      <trkpt lat="46.842037" lon="9.195054">
+        <ele>2328.0</ele>
+      </trkpt>
+      <trkpt lat="46.842027" lon="9.194995">
+        <ele>2328.5</ele>
+      </trkpt>
+      <trkpt lat="46.841997" lon="9.194951">
+        <ele>2328.6</ele>
+      </trkpt>
+      <trkpt lat="46.841936" lon="9.194864">
+        <ele>2329.7</ele>
+      </trkpt>
+      <trkpt lat="46.841914" lon="9.194805">
+        <ele>2330.6</ele>
+      </trkpt>
+      <trkpt lat="46.841889" lon="9.19471">
+        <ele>2330.9</ele>
+      </trkpt>
+      <trkpt lat="46.841874" lon="9.194621">
+        <ele>2331.2</ele>
+      </trkpt>
+      <trkpt lat="46.841845" lon="9.194363">
+        <ele>2333.2</ele>
+      </trkpt>
+      <trkpt lat="46.841813" lon="9.194089">
+        <ele>2336.1</ele>
+      </trkpt>
+      <trkpt lat="46.841749" lon="9.193805">
+        <ele>2340.2</ele>
+      </trkpt>
+      <trkpt lat="46.841651" lon="9.193489">
+        <ele>2344.0</ele>
+      </trkpt>
+      <trkpt lat="46.841612" lon="9.193285">
+        <ele>2346.2</ele>
+      </trkpt>
+      <trkpt lat="46.841605" lon="9.19317">
+        <ele>2347.0</ele>
+      </trkpt>
+      <trkpt lat="46.841608" lon="9.192937">
+        <ele>2348.7</ele>
+      </trkpt>
+      <trkpt lat="46.841619" lon="9.192787">
+        <ele>2349.8</ele>
+      </trkpt>
+      <trkpt lat="46.841657" lon="9.192642">
+        <ele>2350.8</ele>
+      </trkpt>
+      <trkpt lat="46.841722" lon="9.192483">
+        <ele>2351.5</ele>
+      </trkpt>
+      <trkpt lat="46.8418" lon="9.192352">
+        <ele>2353.0</ele>
+      </trkpt>
+      <trkpt lat="46.841873" lon="9.192266">
+        <ele>2354.8</ele>
+      </trkpt>
+      <trkpt lat="46.84191" lon="9.192221">
+        <ele>2355.9</ele>
+      </trkpt>
+      <trkpt lat="46.842" lon="9.192192">
+        <ele>2357.1</ele>
+      </trkpt>
+      <trkpt lat="46.84207" lon="9.192138">
+        <ele>2358.6</ele>
+      </trkpt>
+      <trkpt lat="46.842106" lon="9.192028">
+        <ele>2360.1</ele>
+      </trkpt>
+      <trkpt lat="46.842129" lon="9.191853">
+        <ele>2361.8</ele>
+      </trkpt>
+      <trkpt lat="46.842129" lon="9.191689">
+        <ele>2363.1</ele>
+      </trkpt>
+      <trkpt lat="46.842111" lon="9.191434">
+        <ele>2365.0</ele>
+      </trkpt>
+      <trkpt lat="46.842136" lon="9.191267">
+        <ele>2366.6</ele>
+      </trkpt>
+      <trkpt lat="46.84218" lon="9.190994">
+        <ele>2367.9</ele>
+      </trkpt>
+      <trkpt lat="46.842221" lon="9.190746">
+        <ele>2369.6</ele>
+      </trkpt>
+      <trkpt lat="46.842255" lon="9.190485">
+        <ele>2371.3</ele>
+      </trkpt>
+      <trkpt lat="46.842259" lon="9.190206">
+        <ele>2372.3</ele>
+      </trkpt>
+      <trkpt lat="46.842242" lon="9.190078">
+        <ele>2373.3</ele>
+      </trkpt>
+      <trkpt lat="46.842239" lon="9.189926">
+        <ele>2374.0</ele>
+      </trkpt>
+      <trkpt lat="46.842241" lon="9.189662">
+        <ele>2375.3</ele>
+      </trkpt>
+      <trkpt lat="46.842229" lon="9.189512">
+        <ele>2375.7</ele>
+      </trkpt>
+      <trkpt lat="46.842242" lon="9.189273">
+        <ele>2376.9</ele>
+      </trkpt>
+      <trkpt lat="46.842244" lon="9.18914">
+        <ele>2378.0</ele>
+      </trkpt>
+      <trkpt lat="46.842202" lon="9.188942">
+        <ele>2379.3</ele>
+      </trkpt>
+      <trkpt lat="46.84219" lon="9.188777">
+        <ele>2381.4</ele>
+      </trkpt>
+      <trkpt lat="46.842181" lon="9.188568">
+        <ele>2385.0</ele>
+      </trkpt>
+      <trkpt lat="46.842185" lon="9.188302">
+        <ele>2389.6</ele>
+      </trkpt>
+      <trkpt lat="46.842184" lon="9.188051">
+        <ele>2392.0</ele>
+      </trkpt>
+      <trkpt lat="46.842219" lon="9.187737">
+        <ele>2395.7</ele>
+      </trkpt>
+      <trkpt lat="46.842225" lon="9.187475">
+        <ele>2398.4</ele>
+      </trkpt>
+      <trkpt lat="46.842221" lon="9.187299">
+        <ele>2399.5</ele>
+      </trkpt>
+      <trkpt lat="46.842207" lon="9.187065">
+        <ele>2400.2</ele>
+      </trkpt>
+      <trkpt lat="46.842233" lon="9.186836">
+        <ele>2402.1</ele>
+      </trkpt>
+      <trkpt lat="46.842249" lon="9.186603">
+        <ele>2404.2</ele>
+      </trkpt>
+      <trkpt lat="46.842243" lon="9.18634">
+        <ele>2406.7</ele>
+      </trkpt>
+      <trkpt lat="46.842239" lon="9.186">
+        <ele>2410.3</ele>
+      </trkpt>
+      <trkpt lat="46.842253" lon="9.185746">
+        <ele>2413.3</ele>
+      </trkpt>
+      <trkpt lat="46.842261" lon="9.185509">
+        <ele>2414.8</ele>
+      </trkpt>
+      <trkpt lat="46.842261" lon="9.185075">
+        <ele>2416.9</ele>
+      </trkpt>
+      <trkpt lat="46.842232" lon="9.184684">
+        <ele>2418.7</ele>
+      </trkpt>
+      <trkpt lat="46.842243" lon="9.184463">
+        <ele>2420.8</ele>
+      </trkpt>
+      <trkpt lat="46.842254" lon="9.184234">
+        <ele>2422.7</ele>
+      </trkpt>
+      <trkpt lat="46.842305" lon="9.184015">
+        <ele>2423.8</ele>
+      </trkpt>
+      <trkpt lat="46.842342" lon="9.183832">
+        <ele>2425.0</ele>
+      </trkpt>
+      <trkpt lat="46.842363" lon="9.183611">
+        <ele>2426.1</ele>
+      </trkpt>
+      <trkpt lat="46.842352" lon="9.183369">
+        <ele>2427.3</ele>
+      </trkpt>
+      <trkpt lat="46.842317" lon="9.183204">
+        <ele>2428.0</ele>
+      </trkpt>
+      <trkpt lat="46.842258" lon="9.18305">
+        <ele>2429.1</ele>
+      </trkpt>
+      <trkpt lat="46.8422" lon="9.182884">
+        <ele>2430.6</ele>
+      </trkpt>
+      <trkpt lat="46.842185" lon="9.18281">
+        <ele>2431.8</ele>
+      </trkpt>
+      <trkpt lat="46.842185" lon="9.182685">
+        <ele>2433.9</ele>
+      </trkpt>
+      <trkpt lat="46.842202" lon="9.18249">
+        <ele>2436.7</ele>
+      </trkpt>
+      <trkpt lat="46.842223" lon="9.182306">
+        <ele>2439.0</ele>
+      </trkpt>
+      <trkpt lat="46.842242" lon="9.182047">
+        <ele>2443.2</ele>
+      </trkpt>
+      <trkpt lat="46.842248" lon="9.181826">
+        <ele>2447.0</ele>
+      </trkpt>
+      <trkpt lat="46.842263" lon="9.181597">
+        <ele>2451.5</ele>
+      </trkpt>
+      <trkpt lat="46.842262" lon="9.181448">
+        <ele>2454.4</ele>
+      </trkpt>
+      <trkpt lat="46.842274" lon="9.181194">
+        <ele>2458.9</ele>
+      </trkpt>
+      <trkpt lat="46.842282" lon="9.180934">
+        <ele>2463.6</ele>
+      </trkpt>
+      <trkpt lat="46.842273" lon="9.180804">
+        <ele>2465.7</ele>
+      </trkpt>
+      <trkpt lat="46.842222" lon="9.180654">
+        <ele>2467.2</ele>
+      </trkpt>
+      <trkpt lat="46.842185" lon="9.180588">
+        <ele>2468.1</ele>
+      </trkpt>
+      <trkpt lat="46.842133" lon="9.180543">
+        <ele>2468.2</ele>
+      </trkpt>
+      <trkpt lat="46.842072" lon="9.1805">
+        <ele>2467.4</ele>
+      </trkpt>
+      <trkpt lat="46.842019" lon="9.180458">
+        <ele>2465.6</ele>
+      </trkpt>
+      <trkpt lat="46.842005" lon="9.180442">
+        <ele>2465.4</ele>
+      </trkpt>
+      <trkpt lat="46.84199" lon="9.18047">
+        <ele>2465.08921</ele>
+        <name>Stn. Crap Masegn, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.84193" lon="9.18026">
+        <ele>2465.458</ele>
+      </trkpt>
+      <trkpt lat="46.84181" lon="9.18025">
+        <ele>2459.48852</ele>
+      </trkpt>
+      <trkpt lat="46.84066" lon="9.18046">
+        <ele>2451.8703</ele>
+      </trkpt>
+      <trkpt lat="46.83963" lon="9.18122">
+        <ele>2432.00571</ele>
+      </trkpt>
+      <trkpt lat="46.83865" lon="9.18227">
+        <ele>2411.84906</ele>
+      </trkpt>
+      <trkpt lat="46.83836" lon="9.18224">
+        <ele>2404.60267</ele>
+      </trkpt>
+      <trkpt lat="46.83805" lon="9.18241">
+        <ele>2397.88404</ele>
+      </trkpt>
+      <trkpt lat="46.83765" lon="9.18241">
+        <ele>2394.14432</ele>
+      </trkpt>
+      <trkpt lat="46.8375" lon="9.18219">
+        <ele>2390.30853</ele>
+        <name>Crest da Tiarms, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.8375" lon="9.18208">
+        <ele>2389.59192</ele>
+      </trkpt>
+      <trkpt lat="46.83731" lon="9.1819">
+        <ele>2384.0166</ele>
+      </trkpt>
+      <trkpt lat="46.83697" lon="9.18184">
+        <ele>2375.99198</ele>
+      </trkpt>
+      <trkpt lat="46.83633" lon="9.18204">
+        <ele>2367.78871</ele>
+      </trkpt>
+      <trkpt lat="46.83596" lon="9.18192">
+        <ele>2365.46336</ele>
+      </trkpt>
+      <trkpt lat="46.8357" lon="9.18199">
+        <ele>2365.07587</ele>
+      </trkpt>
+      <trkpt lat="46.83508" lon="9.1827">
+        <ele>2364.88264</ele>
+      </trkpt>
+      <trkpt lat="46.83495" lon="9.18295">
+        <ele>2366.67822</ele>
+      </trkpt>
+      <trkpt lat="46.8347" lon="9.18307">
+        <ele>2375.39414</ele>
+      </trkpt>
+      <trkpt lat="46.83428" lon="9.18349">
+        <ele>2390.01433</ele>
+      </trkpt>
+      <trkpt lat="46.83416" lon="9.18352">
+        <ele>2394.39624</ele>
+      </trkpt>
+      <trkpt lat="46.83416" lon="9.18337">
+        <ele>2396.08608</ele>
+      </trkpt>
+      <trkpt lat="46.83409" lon="9.18333">
+        <ele>2395.38895</ele>
+      </trkpt>
+      <trkpt lat="46.83401" lon="9.18352">
+        <ele>2400.105</ele>
+      </trkpt>
+      <trkpt lat="46.8336" lon="9.18375">
+        <ele>2396.82358</ele>
+        <name>Treis Palas - Crap Masegn, Falera</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.83284" lon="9.18418">
+        <ele>2400.06744</ele>
+      </trkpt>
+      <trkpt lat="46.83257" lon="9.18377">
+        <ele>2398.66204</ele>
+      </trkpt>
+      <trkpt lat="46.83225" lon="9.18373">
+        <ele>2388.15717</ele>
+      </trkpt>
+      <trkpt lat="46.83196" lon="9.18355">
+        <ele>2380.10674</ele>
+      </trkpt>
+      <trkpt lat="46.83131" lon="9.18291">
+        <ele>2350.23043</ele>
+      </trkpt>
+      <trkpt lat="46.83114" lon="9.18285">
+        <ele>2346.44365</ele>
+      </trkpt>
+      <trkpt lat="46.83092" lon="9.18294">
+        <ele>2341.22468</ele>
+      </trkpt>
+      <trkpt lat="46.83082" lon="9.18335">
+        <ele>2335.46797</ele>
+      </trkpt>
+      <trkpt lat="46.83058" lon="9.18305">
+        <ele>2331.57613</ele>
+      </trkpt>
+      <trkpt lat="46.83009" lon="9.18295">
+        <ele>2319.21563</ele>
+      </trkpt>
+      <trkpt lat="46.8299" lon="9.18316">
+        <ele>2315.10887</ele>
+      </trkpt>
+      <trkpt lat="46.82955" lon="9.18302">
+        <ele>2311.03256</ele>
+      </trkpt>
+      <trkpt lat="46.82937" lon="9.18278">
+        <ele>2303.1518</ele>
+      </trkpt>
+      <trkpt lat="46.82908" lon="9.18262">
+        <ele>2294.48356</ele>
+      </trkpt>
+      <trkpt lat="46.82868" lon="9.1826">
+        <ele>2290.7836</ele>
+      </trkpt>
+      <trkpt lat="46.82778" lon="9.18216">
+        <ele>2286.12695</ele>
+      </trkpt>
+      <trkpt lat="46.82758" lon="9.18214">
+        <ele>2284.98781</ele>
+      </trkpt>
+      <trkpt lat="46.8274" lon="9.18227">
+        <ele>2282.3782</ele>
+      </trkpt>
+      <trkpt lat="46.82694" lon="9.18212">
+        <ele>2274.47183</ele>
+      </trkpt>
+      <trkpt lat="46.82666" lon="9.18244">
+        <ele>2265.93603</ele>
+      </trkpt>
+      <trkpt lat="46.82597" lon="9.18254">
+        <ele>2259.14675</ele>
+      </trkpt>
+      <trkpt lat="46.82564" lon="9.18245">
+        <ele>2256.54247</ele>
+      </trkpt>
+      <trkpt lat="46.82551" lon="9.1826">
+        <ele>2251.88957</ele>
+      </trkpt>
+      <trkpt lat="46.82531" lon="9.18212">
+        <ele>2242.22298</ele>
+      </trkpt>
+      <trkpt lat="46.8251" lon="9.18221">
+        <ele>2238.75138</ele>
+      </trkpt>
+      <trkpt lat="46.82494" lon="9.18173">
+        <ele>2229.22737</ele>
+      </trkpt>
+      <trkpt lat="46.82478" lon="9.18202">
+        <ele>2222.37485</ele>
+      </trkpt>
+      <trkpt lat="46.82437" lon="9.18221">
+        <ele>2209.97953</ele>
+      </trkpt>
+      <trkpt lat="46.82422" lon="9.18261">
+        <ele>2204.28401</ele>
+      </trkpt>
+      <trkpt lat="46.82415" lon="9.18262">
+        <ele>2201.47933</ele>
+      </trkpt>
+      <trkpt lat="46.82407" lon="9.18242">
+        <ele>2198.11905</ele>
+        <name>Via Alp da Schnaus, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.82384" lon="9.18231">
+        <ele>2197.6352</ele>
+      </trkpt>
+      <trkpt lat="46.82334" lon="9.18167">
+        <ele>2186.92589</ele>
+      </trkpt>
+      <trkpt lat="46.82337" lon="9.18019">
+        <ele>2163.95859</ele>
+      </trkpt>
+      <trkpt lat="46.82352" lon="9.17933">
+        <ele>2149.13748</ele>
+      </trkpt>
+      <trkpt lat="46.82341" lon="9.17909">
+        <ele>2142.15725</ele>
+      </trkpt>
+      <trkpt lat="46.82348" lon="9.1789">
+        <ele>2138.70625</ele>
+      </trkpt>
+      <trkpt lat="46.82364" lon="9.17877">
+        <ele>2133.09328</ele>
+      </trkpt>
+      <trkpt lat="46.82363" lon="9.17865">
+        <ele>2130.19493</ele>
+      </trkpt>
+      <trkpt lat="46.82316" lon="9.17846">
+        <ele>2121.14552</ele>
+      </trkpt>
+      <trkpt lat="46.82341" lon="9.17804">
+        <ele>2113.89831</ele>
+      </trkpt>
+      <trkpt lat="46.8234" lon="9.17792">
+        <ele>2111.57093</ele>
+      </trkpt>
+      <trkpt lat="46.82316" lon="9.17785">
+        <ele>2106.72105</ele>
+        <name>Via Alp da Schnaus, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.82309" lon="9.17777">
+        <ele>2103.92367</ele>
+      </trkpt>
+      <trkpt lat="46.82228" lon="9.17793">
+        <ele>2085.94368</ele>
+      </trkpt>
+      <trkpt lat="46.82214" lon="9.1782">
+        <ele>2082.20241</ele>
+      </trkpt>
+      <trkpt lat="46.82193" lon="9.17837">
+        <ele>2074.14081</ele>
+      </trkpt>
+      <trkpt lat="46.82178" lon="9.17907">
+        <ele>2065.89583</ele>
+      </trkpt>
+      <trkpt lat="46.8214" lon="9.18018">
+        <ele>2059.40929</ele>
+      </trkpt>
+      <trkpt lat="46.82129" lon="9.18085">
+        <ele>2055.68119</ele>
+      </trkpt>
+      <trkpt lat="46.82121" lon="9.18094">
+        <ele>2054.88128</ele>
+      </trkpt>
+      <trkpt lat="46.821208" lon="9.180921">
+        <ele>2054.4</ele>
+        <name>Senda Alp da Schnaus, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>routingNode</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>16</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.821151" lon="9.180933">
+        <ele>2054.3</ele>
+      </trkpt>
+      <trkpt lat="46.821058" lon="9.18093">
+        <ele>2053.2</ele>
+      </trkpt>
+      <trkpt lat="46.820975" lon="9.180951">
+        <ele>2052.5</ele>
+      </trkpt>
+      <trkpt lat="46.820918" lon="9.18098">
+        <ele>2051.7</ele>
+      </trkpt>
+      <trkpt lat="46.820838" lon="9.181055">
+        <ele>2050.4</ele>
+      </trkpt>
+      <trkpt lat="46.820808" lon="9.181068">
+        <ele>2050.3</ele>
+      </trkpt>
+      <trkpt lat="46.820784" lon="9.181074">
+        <ele>2050.2</ele>
+      </trkpt>
+      <trkpt lat="46.820768" lon="9.181068">
+        <ele>2050.3</ele>
+      </trkpt>
+      <trkpt lat="46.820737" lon="9.181049">
+        <ele>2050.4</ele>
+      </trkpt>
+      <trkpt lat="46.820695" lon="9.181024">
+        <ele>2049.9</ele>
+      </trkpt>
+      <trkpt lat="46.82065" lon="9.180977">
+        <ele>2049.4</ele>
+      </trkpt>
+      <trkpt lat="46.820606" lon="9.180944">
+        <ele>2049.0</ele>
+      </trkpt>
+      <trkpt lat="46.820564" lon="9.180914">
+        <ele>2048.6</ele>
+      </trkpt>
+      <trkpt lat="46.820538" lon="9.180902">
+        <ele>2048.8</ele>
+      </trkpt>
+      <trkpt lat="46.820506" lon="9.180889">
+        <ele>2048.4</ele>
+      </trkpt>
+      <trkpt lat="46.820464" lon="9.180881">
+        <ele>2048.0</ele>
+      </trkpt>
+      <trkpt lat="46.820411" lon="9.180892">
+        <ele>2047.4</ele>
+      </trkpt>
+      <trkpt lat="46.820319" lon="9.180904">
+        <ele>2046.3</ele>
+      </trkpt>
+      <trkpt lat="46.820228" lon="9.180928">
+        <ele>2044.8</ele>
+      </trkpt>
+      <trkpt lat="46.82013" lon="9.180965">
+        <ele>2042.6</ele>
+      </trkpt>
+      <trkpt lat="46.820064" lon="9.180992">
+        <ele>2041.4</ele>
+      </trkpt>
+      <trkpt lat="46.820034" lon="9.180994">
+        <ele>2040.8</ele>
+      </trkpt>
+      <trkpt lat="46.819935" lon="9.180988">
+        <ele>2038.2</ele>
+      </trkpt>
+      <trkpt lat="46.819873" lon="9.180988">
+        <ele>2036.6</ele>
+      </trkpt>
+      <trkpt lat="46.819815" lon="9.181">
+        <ele>2035.0</ele>
+      </trkpt>
+      <trkpt lat="46.81963" lon="9.181085">
+        <ele>2032.2</ele>
+      </trkpt>
+      <trkpt lat="46.819578" lon="9.181118">
+        <ele>2032.0</ele>
+      </trkpt>
+      <trkpt lat="46.819536" lon="9.181154">
+        <ele>2031.6</ele>
+      </trkpt>
+      <trkpt lat="46.819457" lon="9.181232">
+        <ele>2029.6</ele>
+      </trkpt>
+      <trkpt lat="46.819382" lon="9.181313">
+        <ele>2027.7</ele>
+      </trkpt>
+      <trkpt lat="46.81931" lon="9.181394">
+        <ele>2026.2</ele>
+      </trkpt>
+      <trkpt lat="46.819223" lon="9.181521">
+        <ele>2024.9</ele>
+      </trkpt>
+      <trkpt lat="46.819148" lon="9.18163">
+        <ele>2024.1</ele>
+      </trkpt>
+      <trkpt lat="46.81911" lon="9.181698">
+        <ele>2023.2</ele>
+      </trkpt>
+      <trkpt lat="46.819087" lon="9.181744">
+        <ele>2022.5</ele>
+      </trkpt>
+      <trkpt lat="46.819037" lon="9.181822">
+        <ele>2021.6</ele>
+      </trkpt>
+      <trkpt lat="46.819009" lon="9.181861">
+        <ele>2021.1</ele>
+      </trkpt>
+      <trkpt lat="46.818994" lon="9.181888">
+        <ele>2020.8</ele>
+      </trkpt>
+      <trkpt lat="46.818986" lon="9.181902">
+        <ele>2020.6</ele>
+      </trkpt>
+      <trkpt lat="46.818941" lon="9.181997">
+        <ele>2019.9</ele>
+      </trkpt>
+      <trkpt lat="46.818878" lon="9.182097">
+        <ele>2020.0</ele>
+      </trkpt>
+      <trkpt lat="46.818823" lon="9.182167">
+        <ele>2019.3</ele>
+      </trkpt>
+      <trkpt lat="46.818809" lon="9.182196">
+        <ele>2019.3</ele>
+      </trkpt>
+      <trkpt lat="46.818775" lon="9.182226">
+        <ele>2019.4</ele>
+      </trkpt>
+      <trkpt lat="46.81871" lon="9.182307">
+        <ele>2019.0</ele>
+      </trkpt>
+      <trkpt lat="46.818632" lon="9.182395">
+        <ele>2018.7</ele>
+      </trkpt>
+      <trkpt lat="46.818541" lon="9.182515">
+        <ele>2018.0</ele>
+      </trkpt>
+      <trkpt lat="46.818517" lon="9.182554">
+        <ele>2017.7</ele>
+      </trkpt>
+      <trkpt lat="46.818503" lon="9.182577">
+        <ele>2017.3</ele>
+      </trkpt>
+      <trkpt lat="46.81847" lon="9.182646">
+        <ele>2016.3</ele>
+      </trkpt>
+      <trkpt lat="46.818466" lon="9.182653">
+        <ele>2016.3</ele>
+      </trkpt>
+      <trkpt lat="46.818429" lon="9.182725">
+        <ele>2015.4</ele>
+      </trkpt>
+      <trkpt lat="46.818396" lon="9.182784">
+        <ele>2014.6</ele>
+      </trkpt>
+      <trkpt lat="46.818393" lon="9.182789">
+        <ele>2014.5</ele>
+        <name>46.818393,9.182789</name>
+        <extensions>
+          <oa:locType>routingNode</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>18</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.818366" lon="9.182854">
+        <ele>2014.0</ele>
+      </trkpt>
+      <trkpt lat="46.818339" lon="9.182925">
+        <ele>2013.6</ele>
+      </trkpt>
+      <trkpt lat="46.81831" lon="9.182985">
+        <ele>2012.8</ele>
+      </trkpt>
+      <trkpt lat="46.818258" lon="9.183069">
+        <ele>2011.7</ele>
+      </trkpt>
+      <trkpt lat="46.818217" lon="9.183147">
+        <ele>2011.1</ele>
+      </trkpt>
+      <trkpt lat="46.818184" lon="9.183187">
+        <ele>2010.7</ele>
+      </trkpt>
+      <trkpt lat="46.818125" lon="9.183229">
+        <ele>2010.1</ele>
+      </trkpt>
+      <trkpt lat="46.818016" lon="9.183298">
+        <ele>2009.3</ele>
+      </trkpt>
+      <trkpt lat="46.817927" lon="9.183358">
+        <ele>2009.7</ele>
+      </trkpt>
+      <trkpt lat="46.817838" lon="9.183463">
+        <ele>2009.0</ele>
+      </trkpt>
+      <trkpt lat="46.817741" lon="9.183543">
+        <ele>2007.0</ele>
+      </trkpt>
+      <trkpt lat="46.817637" lon="9.183649">
+        <ele>2004.4</ele>
+      </trkpt>
+      <trkpt lat="46.817581" lon="9.183722">
+        <ele>2002.9</ele>
+      </trkpt>
+      <trkpt lat="46.81749" lon="9.183924">
+        <ele>2000.3</ele>
+      </trkpt>
+      <trkpt lat="46.817466" lon="9.183983">
+        <ele>1999.7</ele>
+      </trkpt>
+      <trkpt lat="46.817452" lon="9.184034">
+        <ele>1998.8</ele>
+      </trkpt>
+      <trkpt lat="46.817441" lon="9.184081">
+        <ele>1998.2</ele>
+      </trkpt>
+      <trkpt lat="46.817433" lon="9.184144">
+        <ele>1997.7</ele>
+      </trkpt>
+      <trkpt lat="46.817422" lon="9.184193">
+        <ele>1997.2</ele>
+      </trkpt>
+      <trkpt lat="46.817405" lon="9.184236">
+        <ele>1996.8</ele>
+      </trkpt>
+      <trkpt lat="46.817383" lon="9.18428">
+        <ele>1996.1</ele>
+      </trkpt>
+      <trkpt lat="46.817372" lon="9.184294">
+        <ele>1995.7</ele>
+      </trkpt>
+      <trkpt lat="46.817343" lon="9.18432">
+        <ele>1994.7</ele>
+      </trkpt>
+      <trkpt lat="46.817315" lon="9.184319">
+        <ele>1994.1</ele>
+      </trkpt>
+      <trkpt lat="46.81729" lon="9.184313">
+        <ele>1993.7</ele>
+      </trkpt>
+      <trkpt lat="46.81727" lon="9.184295">
+        <ele>1993.3</ele>
+      </trkpt>
+      <trkpt lat="46.817231" lon="9.184248">
+        <ele>1992.5</ele>
+      </trkpt>
+      <trkpt lat="46.817166" lon="9.184156">
+        <ele>1991.0</ele>
+      </trkpt>
+      <trkpt lat="46.817136" lon="9.184115">
+        <ele>1989.9</ele>
+      </trkpt>
+      <trkpt lat="46.817104" lon="9.184094">
+        <ele>1989.2</ele>
+      </trkpt>
+      <trkpt lat="46.817048" lon="9.184072">
+        <ele>1988.3</ele>
+      </trkpt>
+      <trkpt lat="46.816991" lon="9.184045">
+        <ele>1987.4</ele>
+      </trkpt>
+      <trkpt lat="46.81694" lon="9.184014">
+        <ele>1986.0</ele>
+      </trkpt>
+      <trkpt lat="46.816905" lon="9.183991">
+        <ele>1985.2</ele>
+      </trkpt>
+      <trkpt lat="46.816888" lon="9.183981">
+        <ele>1984.8</ele>
+      </trkpt>
+      <trkpt lat="46.816858" lon="9.183978">
+        <ele>1984.0</ele>
+      </trkpt>
+      <trkpt lat="46.816829" lon="9.183997">
+        <ele>1983.4</ele>
+      </trkpt>
+      <trkpt lat="46.81681" lon="9.184043">
+        <ele>1983.0</ele>
+      </trkpt>
+      <trkpt lat="46.81677" lon="9.184185">
+        <ele>1980.8</ele>
+      </trkpt>
+      <trkpt lat="46.816748" lon="9.18427">
+        <ele>1979.7</ele>
+      </trkpt>
+      <trkpt lat="46.816702" lon="9.18441">
+        <ele>1977.5</ele>
+      </trkpt>
+      <trkpt lat="46.816662" lon="9.184504">
+        <ele>1975.9</ele>
+      </trkpt>
+      <trkpt lat="46.81661" lon="9.184608">
+        <ele>1974.3</ele>
+      </trkpt>
+      <trkpt lat="46.816588" lon="9.184703">
+        <ele>1973.3</ele>
+      </trkpt>
+      <trkpt lat="46.816572" lon="9.184768">
+        <ele>1972.7</ele>
+      </trkpt>
+      <trkpt lat="46.816558" lon="9.184795">
+        <ele>1972.2</ele>
+      </trkpt>
+      <trkpt lat="46.816543" lon="9.184801">
+        <ele>1971.9</ele>
+      </trkpt>
+      <trkpt lat="46.816517" lon="9.184801">
+        <ele>1971.6</ele>
+      </trkpt>
+      <trkpt lat="46.816506" lon="9.184792">
+        <ele>1971.4</ele>
+      </trkpt>
+      <trkpt lat="46.816485" lon="9.18472">
+        <ele>1971.0</ele>
+      </trkpt>
+      <trkpt lat="46.816455" lon="9.18465">
+        <ele>1969.8</ele>
+      </trkpt>
+      <trkpt lat="46.816426" lon="9.184574">
+        <ele>1968.8</ele>
+      </trkpt>
+      <trkpt lat="46.816398" lon="9.184493">
+        <ele>1967.9</ele>
+      </trkpt>
+      <trkpt lat="46.816374" lon="9.184421">
+        <ele>1967.0</ele>
+      </trkpt>
+      <trkpt lat="46.816345" lon="9.184267">
+        <ele>1965.8</ele>
+      </trkpt>
+      <trkpt lat="46.816332" lon="9.184113">
+        <ele>1965.0</ele>
+      </trkpt>
+      <trkpt lat="46.81628" lon="9.183872">
+        <ele>1964.7</ele>
+      </trkpt>
+      <trkpt lat="46.816224" lon="9.18359">
+        <ele>1963.3</ele>
+      </trkpt>
+      <trkpt lat="46.816186" lon="9.183434">
+        <ele>1960.9</ele>
+      </trkpt>
+      <trkpt lat="46.816137" lon="9.183327">
+        <ele>1958.8</ele>
+      </trkpt>
+      <trkpt lat="46.816081" lon="9.183218">
+        <ele>1957.1</ele>
+      </trkpt>
+      <trkpt lat="46.816053" lon="9.183171">
+        <ele>1956.0</ele>
+      </trkpt>
+      <trkpt lat="46.816033" lon="9.183159">
+        <ele>1955.4</ele>
+      </trkpt>
+      <trkpt lat="46.815996" lon="9.18316">
+        <ele>1954.2</ele>
+      </trkpt>
+      <trkpt lat="46.815926" lon="9.183176">
+        <ele>1952.4</ele>
+      </trkpt>
+      <trkpt lat="46.81584" lon="9.183197">
+        <ele>1950.6</ele>
+      </trkpt>
+      <trkpt lat="46.815663" lon="9.183301">
+        <ele>1948.0</ele>
+      </trkpt>
+      <trkpt lat="46.815526" lon="9.183355">
+        <ele>1946.8</ele>
+      </trkpt>
+      <trkpt lat="46.815447" lon="9.183366">
+        <ele>1946.2</ele>
+      </trkpt>
+      <trkpt lat="46.81539" lon="9.183338">
+        <ele>1945.67111</ele>
+        <name>Alp da Schnaus, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.815223" lon="9.183028">
+        <ele>1942.50458</ele>
+      </trkpt>
+      <trkpt lat="46.815091" lon="9.182355">
+        <ele>1940.343</ele>
+      </trkpt>
+      <trkpt lat="46.814963" lon="9.180957">
+        <ele>1927.67223</ele>
+      </trkpt>
+      <trkpt lat="46.81505" lon="9.180738">
+        <ele>1925.65428</ele>
+        <name>Via Alp da Schnaus, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.81533" lon="9.180566">
+        <ele>1918.09514</ele>
+      </trkpt>
+      <trkpt lat="46.81542" lon="9.180373">
+        <ele>1913.21492</ele>
+      </trkpt>
+      <trkpt lat="46.815632" lon="9.180466">
+        <ele>1907.81807</ele>
+      </trkpt>
+      <trkpt lat="46.815789" lon="9.180238">
+        <ele>1904.42804</ele>
+      </trkpt>
+      <trkpt lat="46.81617" lon="9.180025">
+        <ele>1900.72293</ele>
+      </trkpt>
+      <trkpt lat="46.816431" lon="9.180005">
+        <ele>1895.23679</ele>
+      </trkpt>
+      <trkpt lat="46.81714" lon="9.178197">
+        <ele>1891.63615</ele>
+      </trkpt>
+      <trkpt lat="46.817568" lon="9.177895">
+        <ele>1889.6576</ele>
+      </trkpt>
+      <trkpt lat="46.817529" lon="9.177313">
+        <ele>1881.17511</ele>
+      </trkpt>
+      <trkpt lat="46.817672" lon="9.176238">
+        <ele>1863.16156</ele>
+      </trkpt>
+      <trkpt lat="46.817614" lon="9.175729">
+        <ele>1853.90441</ele>
+      </trkpt>
+      <trkpt lat="46.817731" lon="9.174894">
+        <ele>1840.55835</ele>
+      </trkpt>
+      <trkpt lat="46.817589" lon="9.174652">
+        <ele>1834.11036</ele>
+      </trkpt>
+      <trkpt lat="46.817316" lon="9.174534">
+        <ele>1826.16889</ele>
+      </trkpt>
+      <trkpt lat="46.817145" lon="9.174831">
+        <ele>1822.63877</ele>
+      </trkpt>
+      <trkpt lat="46.816564" lon="9.174996">
+        <ele>1813.14095</ele>
+      </trkpt>
+      <trkpt lat="46.81568" lon="9.176229">
+        <ele>1794.91764</ele>
+        <name>Via Alp da Ruschein, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.81516" lon="9.176338">
+        <ele>1788.74202</ele>
+      </trkpt>
+      <trkpt lat="46.814752" lon="9.176651">
+        <ele>1782.37471</ele>
+      </trkpt>
+      <trkpt lat="46.814301" lon="9.176248">
+        <ele>1774.35648</ele>
+      </trkpt>
+      <trkpt lat="46.814001" lon="9.175744">
+        <ele>1768.11457</ele>
+      </trkpt>
+      <trkpt lat="46.813666" lon="9.175513">
+        <ele>1763.27988</ele>
+      </trkpt>
+      <trkpt lat="46.813385" lon="9.175141">
+        <ele>1758.78607</ele>
+      </trkpt>
+      <trkpt lat="46.81232" lon="9.175262">
+        <ele>1749.91564</ele>
+      </trkpt>
+      <trkpt lat="46.811136" lon="9.175202">
+        <ele>1731.75302</ele>
+        <name>Via Alp da Ruschein, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.81098" lon="9.17532">
+        <ele>1729.05399</ele>
+      </trkpt>
+      <trkpt lat="46.810887" lon="9.17527">
+        <ele>1727.73321</ele>
+      </trkpt>
+      <trkpt lat="46.810913" lon="9.175147">
+        <ele>1726.89961</ele>
+      </trkpt>
+      <trkpt lat="46.811462" lon="9.17459">
+        <ele>1718.2069</ele>
+      </trkpt>
+      <trkpt lat="46.812041" lon="9.174554">
+        <ele>1711.27445</ele>
+      </trkpt>
+      <trkpt lat="46.812349" lon="9.174405">
+        <ele>1709.70496</ele>
+      </trkpt>
+      <trkpt lat="46.812966" lon="9.173656">
+        <ele>1702.66999</ele>
+      </trkpt>
+      <trkpt lat="46.813571" lon="9.173484">
+        <ele>1696.19443</ele>
+      </trkpt>
+      <trkpt lat="46.813775" lon="9.173608">
+        <ele>1693.62236</ele>
+      </trkpt>
+      <trkpt lat="46.813796" lon="9.173445">
+        <ele>1691.81025</ele>
+      </trkpt>
+      <trkpt lat="46.813699" lon="9.173301">
+        <ele>1689.64319</ele>
+      </trkpt>
+      <trkpt lat="46.813363" lon="9.173289">
+        <ele>1684.57182</ele>
+      </trkpt>
+      <trkpt lat="46.81334" lon="9.173171">
+        <ele>1683.2855</ele>
+      </trkpt>
+      <trkpt lat="46.814181" lon="9.172498">
+        <ele>1669.63597</ele>
+      </trkpt>
+      <trkpt lat="46.814465" lon="9.17249">
+        <ele>1670.98546</ele>
+      </trkpt>
+      <trkpt lat="46.814847" lon="9.172926">
+        <ele>1671.23772</ele>
+      </trkpt>
+      <trkpt lat="46.815206" lon="9.17275">
+        <ele>1671.34251</ele>
+      </trkpt>
+      <trkpt lat="46.815511" lon="9.172022">
+        <ele>1672.881</ele>
+      </trkpt>
+      <trkpt lat="46.815557" lon="9.171559">
+        <ele>1673.00806</ele>
+      </trkpt>
+      <trkpt lat="46.815999" lon="9.17114">
+        <ele>1673.70346</ele>
+      </trkpt>
+      <trkpt lat="46.816126" lon="9.170704">
+        <ele>1673.74498</ele>
+      </trkpt>
+      <trkpt lat="46.816746" lon="9.170373">
+        <ele>1674.91167</ele>
+      </trkpt>
+      <trkpt lat="46.816943" lon="9.170375">
+        <ele>1675.11552</ele>
+        <name>Praugreina, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.817192" lon="9.170423">
+        <ele>1674.68028</ele>
+      </trkpt>
+      <trkpt lat="46.81761" lon="9.17004">
+        <ele>1673.87461</ele>
+      </trkpt>
+      <trkpt lat="46.817942" lon="9.169891">
+        <ele>1673.58145</ele>
+      </trkpt>
+      <trkpt lat="46.818344" lon="9.169904">
+        <ele>1673.50284</ele>
+      </trkpt>
+      <trkpt lat="46.819174" lon="9.17024">
+        <ele>1672.61373</ele>
+      </trkpt>
+      <trkpt lat="46.819865" lon="9.170142">
+        <ele>1673.10654</ele>
+      </trkpt>
+      <trkpt lat="46.820412" lon="9.169749">
+        <ele>1673.60603</ele>
+      </trkpt>
+      <trkpt lat="46.820446" lon="9.169575">
+        <ele>1667.36563</ele>
+      </trkpt>
+      <trkpt lat="46.820173" lon="9.169435">
+        <ele>1653.19913</ele>
+      </trkpt>
+      <trkpt lat="46.820261" lon="9.16932">
+        <ele>1651.50984</ele>
+      </trkpt>
+      <trkpt lat="46.820019" lon="9.169227">
+        <ele>1640.05334</ele>
+      </trkpt>
+      <trkpt lat="46.820046" lon="9.169129">
+        <ele>1636.16986</ele>
+      </trkpt>
+      <trkpt lat="46.819705" lon="9.169068">
+        <ele>1624.75694</ele>
+      </trkpt>
+      <trkpt lat="46.81905" lon="9.168262">
+        <ele>1610.84056</ele>
+      </trkpt>
+      <trkpt lat="46.819049" lon="9.168144">
+        <ele>1611.22468</ele>
+      </trkpt>
+      <trkpt lat="46.818221" lon="9.167818">
+        <ele>1607.63584</ele>
+      </trkpt>
+      <trkpt lat="46.817897" lon="9.167556">
+        <ele>1607.50536</ele>
+      </trkpt>
+      <trkpt lat="46.817393" lon="9.167582">
+        <ele>1599.00242</ele>
+      </trkpt>
+      <trkpt lat="46.816878" lon="9.167793">
+        <ele>1592.69588</ele>
+      </trkpt>
+      <trkpt lat="46.816378" lon="9.16872">
+        <ele>1583.7402</ele>
+      </trkpt>
+      <trkpt lat="46.815822" lon="9.168796">
+        <ele>1574.08494</ele>
+      </trkpt>
+      <trkpt lat="46.81494" lon="9.16918">
+        <ele>1558.32523</ele>
+      </trkpt>
+      <trkpt lat="46.81379" lon="9.169268">
+        <ele>1544.76749</ele>
+      </trkpt>
+      <trkpt lat="46.813519" lon="9.169459">
+        <ele>1546.74595</ele>
+      </trkpt>
+      <trkpt lat="46.813328" lon="9.16988">
+        <ele>1546.12004</ele>
+      </trkpt>
+      <trkpt lat="46.81305" lon="9.169965">
+        <ele>1543.74993</ele>
+      </trkpt>
+      <trkpt lat="46.81277" lon="9.170281">
+        <ele>1537.18138</ele>
+      </trkpt>
+      <trkpt lat="46.812119" lon="9.170599">
+        <ele>1521.35856</ele>
+      </trkpt>
+      <trkpt lat="46.811925" lon="9.170596">
+        <ele>1514.19839</ele>
+      </trkpt>
+      <trkpt lat="46.811895" lon="9.170318">
+        <ele>1507.80382</ele>
+      </trkpt>
+      <trkpt lat="46.811296" lon="9.170712">
+        <ele>1497.75004</ele>
+      </trkpt>
+      <trkpt lat="46.810907" lon="9.170669">
+        <ele>1491.53239</ele>
+      </trkpt>
+      <trkpt lat="46.810567" lon="9.170763">
+        <ele>1486.20845</ele>
+      </trkpt>
+      <trkpt lat="46.809819" lon="9.171164">
+        <ele>1473.1204</ele>
+      </trkpt>
+      <trkpt lat="46.809579" lon="9.171187">
+        <ele>1471.40441</ele>
+      </trkpt>
+      <trkpt lat="46.80915" lon="9.171079">
+        <ele>1464.15814</ele>
+      </trkpt>
+      <trkpt lat="46.808614" lon="9.170741">
+        <ele>1458.34051</ele>
+      </trkpt>
+      <trkpt lat="46.808279" lon="9.170777">
+        <ele>1453.71325</ele>
+      </trkpt>
+      <trkpt lat="46.807824" lon="9.171091">
+        <ele>1449.18766</ele>
+      </trkpt>
+      <trkpt lat="46.807568" lon="9.17113">
+        <ele>1447.26735</ele>
+      </trkpt>
+      <trkpt lat="46.807084" lon="9.170709">
+        <ele>1442.65709</ele>
+        <name>Ars, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.806427" lon="9.170433">
+        <ele>1435.70206</ele>
+      </trkpt>
+      <trkpt lat="46.806035" lon="9.170632">
+        <ele>1433.70568</ele>
+      </trkpt>
+      <trkpt lat="46.805247" lon="9.170811">
+        <ele>1427.39368</ele>
+      </trkpt>
+      <trkpt lat="46.804675" lon="9.171198">
+        <ele>1421.00951</ele>
+      </trkpt>
+      <trkpt lat="46.80413" lon="9.171934">
+        <ele>1413.95567</ele>
+      </trkpt>
+      <trkpt lat="46.803772" lon="9.171877">
+        <ele>1412.61028</ele>
+      </trkpt>
+      <trkpt lat="46.803388" lon="9.172074">
+        <ele>1407.38747</ele>
+      </trkpt>
+      <trkpt lat="46.802799" lon="9.172159">
+        <ele>1408.20624</ele>
+      </trkpt>
+      <trkpt lat="46.801373" lon="9.172801">
+        <ele>1408.78207</ele>
+      </trkpt>
+      <trkpt lat="46.800338" lon="9.173586">
+        <ele>1405.94865</ele>
+      </trkpt>
+      <trkpt lat="46.799405" lon="9.17379">
+        <ele>1403.3753</ele>
+      </trkpt>
+      <trkpt lat="46.797906" lon="9.174435">
+        <ele>1402.12965</ele>
+        <name>Via Muletg, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.797654" lon="9.174513">
+        <ele>1401.72344</ele>
+      </trkpt>
+      <trkpt lat="46.797298" lon="9.174803">
+        <ele>1398.81288</ele>
+      </trkpt>
+      <trkpt lat="46.796942" lon="9.174863">
+        <ele>1396.34919</ele>
+      </trkpt>
+      <trkpt lat="46.796653" lon="9.175154">
+        <ele>1392.0642</ele>
+      </trkpt>
+      <trkpt lat="46.79568" lon="9.175609">
+        <ele>1391.08879</ele>
+      </trkpt>
+      <trkpt lat="46.794852" lon="9.176562">
+        <ele>1385.64191</ele>
+      </trkpt>
+      <trkpt lat="46.79421" lon="9.177062">
+        <ele>1383.76783</ele>
+      </trkpt>
+      <trkpt lat="46.793794" lon="9.177513">
+        <ele>1379.68565</ele>
+      </trkpt>
+      <trkpt lat="46.792578" lon="9.178202">
+        <ele>1374.40706</ele>
+      </trkpt>
+      <trkpt lat="46.79192" lon="9.178816">
+        <ele>1374.4145</ele>
+      </trkpt>
+      <trkpt lat="46.791407" lon="9.179456">
+        <ele>1367.1307</ele>
+        <name>Via Plaun Martin, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.790096" lon="9.180125">
+        <ele>1330.96888</ele>
+      </trkpt>
+      <trkpt lat="46.78963" lon="9.180496">
+        <ele>1318.4376</ele>
+      </trkpt>
+      <trkpt lat="46.789166" lon="9.180998">
+        <ele>1310.39314</ele>
+      </trkpt>
+      <trkpt lat="46.788533" lon="9.181353">
+        <ele>1296.98756</ele>
+      </trkpt>
+      <trkpt lat="46.788237" lon="9.181765">
+        <ele>1288.70209</ele>
+      </trkpt>
+      <trkpt lat="46.787863" lon="9.182947">
+        <ele>1272.83981</ele>
+      </trkpt>
+      <trkpt lat="46.787079" lon="9.183908">
+        <ele>1255.12909</ele>
+      </trkpt>
+      <trkpt lat="46.786935" lon="9.184793">
+        <ele>1250.77978</ele>
+        <name>Via Grotta, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.786894" lon="9.186345">
+        <ele>1245.22803</ele>
+      </trkpt>
+      <trkpt lat="46.786732" lon="9.187689">
+        <ele>1226.85863</ele>
+      </trkpt>
+      <trkpt lat="46.78658" lon="9.18828">
+        <ele>1217.94412</ele>
+      </trkpt>
+      <trkpt lat="46.786218" lon="9.18898">
+        <ele>1201.81631</ele>
+      </trkpt>
+      <trkpt lat="46.78619" lon="9.1895">
+        <ele>1195.2494</ele>
+      </trkpt>
+      <trkpt lat="46.785987" lon="9.189274">
+        <ele>1192.90279</ele>
+      </trkpt>
+      <trkpt lat="46.786063" lon="9.190064">
+        <ele>1184.65349</ele>
+      </trkpt>
+      <trkpt lat="46.785903" lon="9.191319">
+        <ele>1170.59991</ele>
+      </trkpt>
+      <trkpt lat="46.785765" lon="9.191649">
+        <ele>1166.68898</ele>
+      </trkpt>
+      <trkpt lat="46.785614" lon="9.190038">
+        <ele>1168.17785</ele>
+      </trkpt>
+      <trkpt lat="46.785633" lon="9.188978">
+        <ele>1171.07215</ele>
+      </trkpt>
+      <trkpt lat="46.785389" lon="9.186974">
+        <ele>1170.62763</ele>
+        <name>Via Plaun Martin, Ruschein</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.785493" lon="9.185544">
+        <ele>1174.33079</ele>
+      </trkpt>
+      <trkpt lat="46.785439" lon="9.184589">
+        <ele>1171.36057</ele>
+      </trkpt>
+      <trkpt lat="46.785736" lon="9.183173">
+        <ele>1181.47706</ele>
+      </trkpt>
+      <trkpt lat="46.785993" lon="9.1827">
+        <ele>1186.94989</ele>
+      </trkpt>
+      <trkpt lat="46.78618" lon="9.182081">
+        <ele>1191.46531</ele>
+      </trkpt>
+      <trkpt lat="46.786569" lon="9.181585">
+        <ele>1196.18231</ele>
+      </trkpt>
+      <trkpt lat="46.78675" lon="9.18072">
+        <ele>1201.04956</ele>
+      </trkpt>
+      <trkpt lat="46.787094" lon="9.180554">
+        <ele>1201.44962</ele>
+      </trkpt>
+      <trkpt lat="46.787393" lon="9.180041">
+        <ele>1200.51655</ele>
+      </trkpt>
+      <trkpt lat="46.787802" lon="9.179724">
+        <ele>1197.11739</ele>
+      </trkpt>
+      <trkpt lat="46.7882" lon="9.179202">
+        <ele>1195.33821</ele>
+        <name>Via Grotta, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.788792" lon="9.178684">
+        <ele>1194.00829</ele>
+      </trkpt>
+      <trkpt lat="46.789226" lon="9.177913">
+        <ele>1197.43512</ele>
+      </trkpt>
+      <trkpt lat="46.790054" lon="9.177018">
+        <ele>1203.30785</ele>
+      </trkpt>
+      <trkpt lat="46.790715" lon="9.176416">
+        <ele>1209.18713</ele>
+      </trkpt>
+      <trkpt lat="46.791294" lon="9.175563">
+        <ele>1216.71842</ele>
+      </trkpt>
+      <trkpt lat="46.792238" lon="9.175037">
+        <ele>1225.47361</ele>
+      </trkpt>
+      <trkpt lat="46.792286" lon="9.174827">
+        <ele>1226.16348</ele>
+      </trkpt>
+      <trkpt lat="46.79217" lon="9.174674">
+        <ele>1222.97262</ele>
+        <name>Via Sogn Glieci, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.790927" lon="9.174275">
+        <ele>1228.0357</ele>
+      </trkpt>
+      <trkpt lat="46.790631" lon="9.173831">
+        <ele>1240.79698</ele>
+      </trkpt>
+      <trkpt lat="46.790614" lon="9.173549">
+        <ele>1249.03463</ele>
+      </trkpt>
+      <trkpt lat="46.790613" lon="9.173212">
+        <ele>1256.34873</ele>
+      </trkpt>
+      <trkpt lat="46.790629" lon="9.173062">
+        <ele>1258.24483</ele>
+      </trkpt>
+      <trkpt lat="46.79061" lon="9.172737">
+        <ele>1260.49839</ele>
+      </trkpt>
+      <trkpt lat="46.790716" lon="9.172377">
+        <ele>1262.88918</ele>
+      </trkpt>
+      <trkpt lat="46.790696" lon="9.171982">
+        <ele>1264.63818</ele>
+      </trkpt>
+      <trkpt lat="46.7908" lon="9.171498">
+        <ele>1271.91113</ele>
+      </trkpt>
+      <trkpt lat="46.79088" lon="9.171592">
+        <ele>1272.80747</ele>
+      </trkpt>
+      <trkpt lat="46.790945" lon="9.171519">
+        <ele>1273.00435</ele>
+      </trkpt>
+      <trkpt lat="46.790909" lon="9.171262">
+        <ele>1273.35277</ele>
+        <name>Via Plaun Martin, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.790852" lon="9.170515">
+        <ele>1278.84551</ele>
+      </trkpt>
+      <trkpt lat="46.790444" lon="9.168655">
+        <ele>1295.04605</ele>
+      </trkpt>
+      <trkpt lat="46.790253" lon="9.167046">
+        <ele>1312.7052</ele>
+      </trkpt>
+      <trkpt lat="46.790458" lon="9.166316">
+        <ele>1318.09194</ele>
+      </trkpt>
+      <trkpt lat="46.790549" lon="9.165558">
+        <ele>1317.21689</ele>
+      </trkpt>
+      <trkpt lat="46.790937" lon="9.164551">
+        <ele>1309.0493</ele>
+      </trkpt>
+      <trkpt lat="46.79097" lon="9.164194">
+        <ele>1303.47593</ele>
+      </trkpt>
+      <trkpt lat="46.791111" lon="9.163826">
+        <ele>1300.59528</ele>
+      </trkpt>
+      <trkpt lat="46.791099" lon="9.163193">
+        <ele>1302.76399</ele>
+        <name>Siat, vitg, Siat</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.790784" lon="9.162968">
+        <ele>1296.37325</ele>
+      </trkpt>
+      <trkpt lat="46.790335" lon="9.162368">
+        <ele>1286.14032</ele>
+      </trkpt>
+      <trkpt lat="46.790159" lon="9.162333">
+        <ele>1282.91013</ele>
+      </trkpt>
+      <trkpt lat="46.789955" lon="9.162056">
+        <ele>1277.83448</ele>
+      </trkpt>
+      <trkpt lat="46.789255" lon="9.160334">
+        <ele>1259.52619</ele>
+      </trkpt>
+      <trkpt lat="46.788789" lon="9.159635">
+        <ele>1250.13953</ele>
+      </trkpt>
+      <trkpt lat="46.78879" lon="9.159026">
+        <ele>1244.0893</ele>
+      </trkpt>
+      <trkpt lat="46.788481" lon="9.159552">
+        <ele>1232.09354</ele>
+      </trkpt>
+      <trkpt lat="46.788175" lon="9.159755">
+        <ele>1222.25778</ele>
+      </trkpt>
+      <trkpt lat="46.788277" lon="9.159115">
+        <ele>1214.33139</ele>
+      </trkpt>
+      <trkpt lat="46.788265" lon="9.158564">
+        <ele>1206.04912</ele>
+        <name>Siat, Bual, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.78787" lon="9.15886">
+        <ele>1196.87711</ele>
+      </trkpt>
+      <trkpt lat="46.78779" lon="9.15916">
+        <ele>1194.2547</ele>
+      </trkpt>
+      <trkpt lat="46.78765" lon="9.1593">
+        <ele>1189.96286</ele>
+      </trkpt>
+      <trkpt lat="46.78751" lon="9.15896">
+        <ele>1183.42485</ele>
+      </trkpt>
+      <trkpt lat="46.78732" lon="9.1588">
+        <ele>1176.29163</ele>
+      </trkpt>
+      <trkpt lat="46.78723" lon="9.15916">
+        <ele>1174.21864</ele>
+        <name>Via Glix Sura, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.78718" lon="9.1588">
+        <ele>1171.14938</ele>
+      </trkpt>
+      <trkpt lat="46.78704" lon="9.1587">
+        <ele>1165.52183</ele>
+      </trkpt>
+      <trkpt lat="46.78708" lon="9.15769">
+        <ele>1149.77093</ele>
+      </trkpt>
+      <trkpt lat="46.78719" lon="9.15727">
+        <ele>1143.6211</ele>
+      </trkpt>
+      <trkpt lat="46.78753" lon="9.15652">
+        <ele>1133.86021</ele>
+      </trkpt>
+      <trkpt lat="46.78728" lon="9.1566">
+        <ele>1127.4865</ele>
+      </trkpt>
+      <trkpt lat="46.7873" lon="9.15611">
+        <ele>1112.39476</ele>
+        <name>Via Prada Sura, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.78739" lon="9.15573">
+        <ele>1106.80522</ele>
+      </trkpt>
+      <trkpt lat="46.78735" lon="9.15566">
+        <ele>1105.10067</ele>
+      </trkpt>
+      <trkpt lat="46.78682" lon="9.15567">
+        <ele>1091.19711</ele>
+      </trkpt>
+      <trkpt lat="46.7862" lon="9.15547">
+        <ele>1072.28373</ele>
+        <name>Siat Trail, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.78595" lon="9.15525">
+        <ele>1066.93697</ele>
+      </trkpt>
+      <trkpt lat="46.78553" lon="9.15541">
+        <ele>1064.12596</ele>
+      </trkpt>
+      <trkpt lat="46.78541" lon="9.15526">
+        <ele>1059.7984</ele>
+      </trkpt>
+      <trkpt lat="46.78529" lon="9.15525">
+        <ele>1055.48091</ele>
+      </trkpt>
+      <trkpt lat="46.78472" lon="9.15563">
+        <ele>1052.77287</ele>
+      </trkpt>
+      <trkpt lat="46.78461" lon="9.15562">
+        <ele>1051.33228</ele>
+      </trkpt>
+      <trkpt lat="46.78451" lon="9.15537">
+        <ele>1042.44865</ele>
+      </trkpt>
+      <trkpt lat="46.78415" lon="9.15548">
+        <ele>1036.90211</ele>
+      </trkpt>
+      <trkpt lat="46.78372" lon="9.15511">
+        <ele>1022.61482</ele>
+      </trkpt>
+      <trkpt lat="46.78399" lon="9.15452">
+        <ele>1005.98416</ele>
+      </trkpt>
+      <trkpt lat="46.7831" lon="9.15455">
+        <ele>978.148</ele>
+      </trkpt>
+      <trkpt lat="46.78275" lon="9.15462">
+        <ele>965.04049</ele>
+      </trkpt>
+      <trkpt lat="46.78242" lon="9.15495">
+        <ele>955.72305</ele>
+      </trkpt>
+      <trkpt lat="46.78199" lon="9.15603">
+        <ele>956.40606</ele>
+      </trkpt>
+      <trkpt lat="46.78178" lon="9.15558">
+        <ele>939.78267</ele>
+      </trkpt>
+      <trkpt lat="46.78157" lon="9.15542">
+        <ele>925.29287</ele>
+      </trkpt>
+      <trkpt lat="46.78106" lon="9.15532">
+        <ele>900.54064</ele>
+      </trkpt>
+      <trkpt lat="46.78074" lon="9.15495">
+        <ele>883.77298</ele>
+      </trkpt>
+      <trkpt lat="46.78064" lon="9.15497">
+        <ele>876.63466</ele>
+      </trkpt>
+      <trkpt lat="46.78028" lon="9.15445">
+        <ele>860.52744</ele>
+        <name>Nal, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.7802" lon="9.15429">
+        <ele>857.81513</ele>
+      </trkpt>
+      <trkpt lat="46.78013" lon="9.15491">
+        <ele>855.67599</ele>
+      </trkpt>
+      <trkpt lat="46.77983" lon="9.15407">
+        <ele>842.24032</ele>
+      </trkpt>
+      <trkpt lat="46.77977" lon="9.15268">
+        <ele>833.12553</ele>
+      </trkpt>
+      <trkpt lat="46.77979" lon="9.15239">
+        <ele>830.56282</ele>
+      </trkpt>
+      <trkpt lat="46.78022" lon="9.15067">
+        <ele>821.92484</ele>
+      </trkpt>
+      <trkpt lat="46.78054" lon="9.15012">
+        <ele>816.04066</ele>
+        <name>Vegna, Rueun</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.78054" lon="9.14988">
+        <ele>814.08109</ele>
+      </trkpt>
+      <trkpt lat="46.78018" lon="9.14988">
+        <ele>808.33395</ele>
+      </trkpt>
+      <trkpt lat="46.77985" lon="9.14956">
+        <ele>804.35746</ele>
+      </trkpt>
+      <trkpt lat="46.77967" lon="9.14955">
+        <ele>801.83536</ele>
+        <name>Mehrzweckgebäude, Rueun</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.77939" lon="9.14984">
+        <ele>797.38625</ele>
+      </trkpt>
+      <trkpt lat="46.77925" lon="9.15036">
+        <ele>794.7399</ele>
+      </trkpt>
+      <trkpt lat="46.77877" lon="9.15059">
+        <ele>790.58571</ele>
+        <name>Via Principala, Rueun</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.77866" lon="9.15079">
+        <ele>789.27476</ele>
+      </trkpt>
+      <trkpt lat="46.77875" lon="9.15344">
+        <ele>778.90633</ele>
+      </trkpt>
+      <trkpt lat="46.77859" lon="9.15419">
+        <ele>774.07672</ele>
+      </trkpt>
+      <trkpt lat="46.77855" lon="9.15523">
+        <ele>766.50415</ele>
+      </trkpt>
+      <trkpt lat="46.77861" lon="9.15558">
+        <ele>769.11148</ele>
+      </trkpt>
+      <trkpt lat="46.77837" lon="9.15644">
+        <ele>772.76151</ele>
+      </trkpt>
+      <trkpt lat="46.77809" lon="9.15674">
+        <ele>773.27452</ele>
+      </trkpt>
+      <trkpt lat="46.77784" lon="9.15733">
+        <ele>773.78914</ele>
+      </trkpt>
+      <trkpt lat="46.77762" lon="9.15825">
+        <ele>774.75238</ele>
+      </trkpt>
+      <trkpt lat="46.77718" lon="9.15941">
+        <ele>774.81524</ele>
+      </trkpt>
+      <trkpt lat="46.77696" lon="9.1611">
+        <ele>771.87888</ele>
+      </trkpt>
+      <trkpt lat="46.77703" lon="9.16168">
+        <ele>770.92942</ele>
+        <name>46.777030,9.161680</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>16</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.7771" lon="9.16235">
+        <ele>772.54175</ele>
+      </trkpt>
+      <trkpt lat="46.777125" lon="9.163349">
+        <ele>767.2145</ele>
+      </trkpt>
+      <trkpt lat="46.777081" lon="9.166374">
+        <ele>761.93583</ele>
+      </trkpt>
+      <trkpt lat="46.77731" lon="9.16772">
+        <ele>764.39028</ele>
+      </trkpt>
+      <trkpt lat="46.77743" lon="9.1679">
+        <ele>767.84445</ele>
+      </trkpt>
+      <trkpt lat="46.7777" lon="9.16908">
+        <ele>763.15146</ele>
+      </trkpt>
+      <trkpt lat="46.77796" lon="9.16955">
+        <ele>768.29336</ele>
+      </trkpt>
+      <trkpt lat="46.77845" lon="9.17081">
+        <ele>773.46282</ele>
+      </trkpt>
+      <trkpt lat="46.77851" lon="9.17116">
+        <ele>774.62861</ele>
+      </trkpt>
+      <trkpt lat="46.77843" lon="9.17192">
+        <ele>771.09984</ele>
+      </trkpt>
+      <trkpt lat="46.77853" lon="9.1729">
+        <ele>778.23328</ele>
+      </trkpt>
+      <trkpt lat="46.77916" lon="9.17344">
+        <ele>773.16374</ele>
+      </trkpt>
+      <trkpt lat="46.77928" lon="9.17425">
+        <ele>771.78474</ele>
+      </trkpt>
+      <trkpt lat="46.77922" lon="9.17438">
+        <ele>771.22073</ele>
+      </trkpt>
+      <trkpt lat="46.77884" lon="9.1746">
+        <ele>774.73953</ele>
+      </trkpt>
+      <trkpt lat="46.77881" lon="9.17479">
+        <ele>772.13477</ele>
+      </trkpt>
+      <trkpt lat="46.7791" lon="9.17589">
+        <ele>775.95628</ele>
+      </trkpt>
+      <trkpt lat="46.77898" lon="9.17605">
+        <ele>773.16605</ele>
+        <name>Via Vitg, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.77817" lon="9.17693">
+        <ele>756.43881</ele>
+      </trkpt>
+      <trkpt lat="46.77798" lon="9.17752">
+        <ele>752.41669</ele>
+      </trkpt>
+      <trkpt lat="46.77719" lon="9.17908">
+        <ele>739.59918</ele>
+      </trkpt>
+      <trkpt lat="46.77708" lon="9.17981">
+        <ele>734.64218</ele>
+        <name>Casa Vreina, Schnaus</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.77713" lon="9.18049">
+        <ele>738.07356</ele>
+      </trkpt>
+      <trkpt lat="46.77694" lon="9.18182">
+        <ele>748.15278</ele>
+      </trkpt>
+      <trkpt lat="46.77696" lon="9.1824">
+        <ele>748.34621</ele>
+      </trkpt>
+      <trkpt lat="46.7768" lon="9.18361">
+        <ele>755.53394</ele>
+        <name>Via Vitg, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.77686" lon="9.18417">
+        <ele>760.78272</ele>
+      </trkpt>
+      <trkpt lat="46.7767" lon="9.18499">
+        <ele>761.717</ele>
+      </trkpt>
+      <trkpt lat="46.77653" lon="9.18668">
+        <ele>750.00943</ele>
+      </trkpt>
+      <trkpt lat="46.77673" lon="9.18745">
+        <ele>752.26734</ele>
+      </trkpt>
+      <trkpt lat="46.77641" lon="9.18895">
+        <ele>761.31636</ele>
+      </trkpt>
+      <trkpt lat="46.7762" lon="9.19131">
+        <ele>743.29432</ele>
+      </trkpt>
+      <trkpt lat="46.776" lon="9.19244">
+        <ele>741.66038</ele>
+      </trkpt>
+      <trkpt lat="46.77583" lon="9.19284">
+        <ele>736.996</ele>
+      </trkpt>
+      <trkpt lat="46.77601" lon="9.1938">
+        <ele>751.07922</ele>
+      </trkpt>
+      <trkpt lat="46.77587" lon="9.19452">
+        <ele>745.9211</ele>
+      </trkpt>
+      <trkpt lat="46.77545" lon="9.19524">
+        <ele>731.80873</ele>
+      </trkpt>
+      <trkpt lat="46.77545" lon="9.1963">
+        <ele>725.41699</ele>
+      </trkpt>
+      <trkpt lat="46.77565" lon="9.19711">
+        <ele>718.8641</ele>
+      </trkpt>
+      <trkpt lat="46.77544" lon="9.19857">
+        <ele>709.56786</ele>
+      </trkpt>
+      <trkpt lat="46.77542" lon="9.19949">
+        <ele>704.92677</ele>
+      </trkpt>
+      <trkpt lat="46.77537" lon="9.19955">
+        <ele>705.12584</ele>
+      </trkpt>
+      <trkpt lat="46.77541" lon="9.20011">
+        <ele>704.50205</ele>
+        <name>Via la Lutta, Ilanz</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.7753" lon="9.20026">
+        <ele>703.9591</ele>
+      </trkpt>
+      <trkpt lat="46.77553" lon="9.20132">
+        <ele>704.60984</ele>
+      </trkpt>
+      <trkpt lat="46.77559" lon="9.20215">
+        <ele>703.83275</ele>
+      </trkpt>
+      <trkpt lat="46.77587" lon="9.20292">
+        <ele>703.56268</ele>
+      </trkpt>
+      <trkpt lat="46.77605" lon="9.20374">
+        <ele>702.62771</ele>
+      </trkpt>
+      <trkpt lat="46.77607" lon="9.2045">
+        <ele>699.30875</ele>
+        <name>Via S. Clau Sura, Ilanz</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:locType>inputWayPoint</oa:locType>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.77595" lon="9.20461">
+        <ele>699.66296</ele>
+      </trkpt>
+      <trkpt lat="46.77524" lon="9.20461">
+        <ele>699.72386</ele>
+      </trkpt>
+      <trkpt lat="46.77526" lon="9.20692">
+        <ele>698.45606</ele>
+      </trkpt>
+      <trkpt lat="46.775178" lon="9.20764">
+        <ele>698.72005</ele>
+        <name>Ilanz, Ilanz/Glion</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>10</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

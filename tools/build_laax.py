@@ -41,7 +41,8 @@ TRAILS = [
     ("foppa", 801776376, "Foppa Trail", "gruen", "operator: green", (3.5, 0, 330)),
     ("gronda", None, "Gronda Trail", "blau", "operator: blue", None),
     ("alp_dadens", 801776324, "Alp Dadens Trail", "blau", "OA S1", (2.6, 0, 333)),
-    ("runca", 56205408, "Runca Trail", "rot", "operator: red", None),
+    ("runca_upper", 64989367, "Runca Trail Upper", "rot", "operator: red", (2.7, 0, 242)),
+    ("runca_lower", 64989419, "Runca Trail Lower", "rot", "operator: red", (3.1, 0, 262)),
     ("segnes", 65006536, "Segnes Trail", "rot", "operator: red", (3.8, 0, 482)),
     ("nagens", 64989761, "Nagens Trail", "rot", "operator: red", (5.2, 0, 583)),
     ("green_valley", 64989808, "Green Valley Trail", "rot", "operator: red", (2.1, 0, 248)),
@@ -50,20 +51,37 @@ TRAILS = [
     ("crest_la_siala", 65006309, "Crest la Siala Trail", "schwarz", "OA S4", (3.2, 0, 589)),
     ("laaxer_stoeckli", 806996596, "Laaxer Stöckli", "schwarz", "OA S4", (2.2, 0, 327)),
     ("crest_da_tiarms", 806994780, "Crest da Tiarms Trail", "schwarz", "OA S4", (4.7, 0, 614)),
+    # Added 2026-08-10 -- user-supplied GPX downloads (Material/Laax/neu/), not previously in this region.
+    # All S2 (-> rot) except Uaul da Mulin (S1 -> blau), per the shared OA S-scale shift. Several sit on the
+    # Vorab Trail Tour's own route (Crap Masegn: Crap Sogn Gion->Camona Vorab; Sogn Martin and Plaun Larisch
+    # continue the descent from Camona Vorab toward the valley) -- see the loop::laax_vorab_tour entry below.
+    ("crap_masegn", 64989881, "Crap Masegn Trail", "rot", "OA S2", (4.3, 58, 241)),
+    ("crap_tgietschen", 64990004, "Crap Tgietschen Trail", "rot", "OA S2", (1.8, 0, 110)),
+    ("fuorcla", 801776066, "Fuorcla Trail", "rot", "OA S2", (1.4, 2, 148)),
+    ("uaul_da_mulin", 806994996, "Uaul da Mulin", "blau", "OA S1", (1.1, 0, 166)),
+    ("sogn_martin", 810154468, "Sogn Martin Trail", "rot", "OA S2", (2.1, 0, 288)),
+    ("plaun_larisch", 65006355, "Plaun Larisch Trail", "rot", "OA S2", (2.0, 0, 347)),
 ]
 
-# Lifts: OSM's bike tag agrees with the operator here (FlemXpress, Arena Express and the Laax cable car),
-# so both point the same way. Sections are separate ways in OSM and stay separate lifts -- that is what they
-# are on the ground, and it is how Bike Kingdom's Chur sections are stored too.
+# Lifts: OSM's bike tag agrees with the operator here (FlemXpress and the Laax cable car), so both point the
+# same way. Sections are separate ways in OSM and stay separate lifts -- that is what they are on the ground,
+# and it is how Bike Kingdom's Chur sections are stored too.
+# CORRECTED 2026-08-10 (user research): the three "Arena Express" lifts (Flims-Plaun/Plaun-Scansinas/
+# Scansinas-Nagens), present in the original 2026-07-30 build, are REMOVED -- they are absent from
+# live.laax.com/de/anlagen's current facility list entirely, and the FlemX system's 5th/final section
+# (Segnes<->Cassons, opened Dec 2025 per Weisse Arena's own press release) appears to have superseded that
+# whole line. Segnes-Cassons itself is NOT added here -- Trailforks states explicitly "no bike transport on
+# the route Segnes-Cassons".
+# ADDED 2026-08-10 (user research, confirmed via laax.com/map's own "Biken" filter layer -- the operator's
+# own map marking it as a bike lift): "Falera - Curnius" (OSM way 29993418, chair_lift, no aerialway:bicycle
+# tag either way in OSM -- the operator's map is the source of truth here, not an OSM/operator conflict).
 LIFTS = [
     ("lift_laax_crap_sogn_gion", "Luftseilbahn LAAX – Crap Sogn Gion", "laax", r"^LAAX - Crap Sogn Gion$"),
     ("lift_laax_flemx_1", "FlemXpress Flims – Foppa", "flims", r"^FlemXpress Flims - Foppa$"),
     ("lift_laax_flemx_2", "FlemXpress Foppa – Startgels", "flims", r"^FlemXpress Foppa - Startgels$"),
     ("lift_laax_flemx_3", "FlemXpress Startgels – Segnes", "flims", r"^FlemXpress Startgels - Segnes$"),
     ("lift_laax_flemx_4", "FlemXpress Segnes – Nagens Sura", "flims", r"^FlemXpress Segnes - Nagens Sur"),
-    ("lift_laax_arena_1", "Arena Express Flims – Plaun", "flims", r"^Arena Express Flims - Plaun$"),
-    ("lift_laax_arena_2", "Arena Express Plaun – Scansinas", "flims", r"^Arena Express Plaun - Scansina"),
-    ("lift_laax_arena_3", "Arena Express Scansinas – Nagens", "flims", r"^Arena Express Scansinas - Nage"),
+    ("lift_laax_falera_curnius", "Sesselbahn Falera – Curnius", "flims", r"^Falera - Curnius$"),
 ]
 # Deliberately excluded: everything OSM marks without a bike tag, including the Vorab chain
 # (Crap Masegn / Fuorcla / Vorab). laax.com names a "Vorab cable car" for bike access in prose, but no
@@ -151,7 +169,8 @@ def main():
     # next to lifts that take no bikes, and against bike lifts only they came out 3-4 km from the wrong side's
     # gondola -- Vorab was assigned to Flims, which is the far side of the massif. The side of each lift comes
     # from its own name, which in this resort says plainly where it belongs.
-    FLIMS_LIFT = re.compile(r"FlemXpress|Arena Express|Crap da Flem|Cassons|Nagens|Segnes|Plaun|Scansinas")
+    FLIMS_LIFT = re.compile(r"FlemXpress|Arena Express|Crap da Flem|Cassons|Nagens|Segnes|Plaun|Scansinas"
+                            r"|Falera|Curnius|Larnags")
     for t in trails:
         start = geo[t["id"]][0]
         def d(w):

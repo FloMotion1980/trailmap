@@ -906,18 +906,42 @@ const REGION_CATALOG = {
     // Three things to know about this data:
     //  - "Never End Trail" is schwarz because the region itself grades it black; Outdooractive says S2, which
     //    would be rot. The operator's own grading of their own trail wins, and OSM's mtb:scale:imba=3 agrees.
-    //  - "Runca Trail" is 8.91 km here against the published 7.6 km: the only Outdooractive route that covers
-    //    it as one continuous line starts at the Startgels gravel road rather than at the trail head, so the
-    //    drawn line's own figures are used. The extra ~1.3 km is that approach.
+    //  - "Runca Trail" was originally one 8.91 km OA line starting at the Startgels gravel road rather than
+    //    the actual trail head. Corrected 2026-08-10 (user cross-checked laax.com/biking's own OA links):
+    //    the operator actually publishes it as two separate named trails/routes, "Runca Trail Upper"
+    //    (OA 64989367, Startgels -> Runca Hoehe, 2.7 km/242 Hm) and "Runca Trail Lower" (OA 64989419,
+    //    Runca Hoehe -> Promenada, 3.1 km/262 Hm) -- now built as two lineTrails entries matching that.
     //  - "Gronda Trail" has no Outdooractive route at all and comes from OSM (655 m, chained without gaps).
     //    Short enough to be suspect -- worth a look on the map.
+    //  - Six trails added 2026-08-10 from user-supplied GPX (Material/Laax/neu/): Crap Masegn, Crap
+    //    Tgietschen, Fuorcla, Sogn Martin, Plaun Larisch (all OA S2 -> rot) and Uaul da Mulin (OA S1 -> blau).
+    //    Several of these sit on the Vorab Trail Tour's own route (see next point).
+    //  - Five Tours added 2026-08-10 by tools/build_laax_tours.py (loop:true, reusing the classical
+    //    tour-vs-trail-and-lift matcher from tools/build_bikekingdom_tours.py -- see
+    //    docs/trailrunde-feature.md "Matching a tour against existing trails and lifts"): Vorab Trail Tour
+    //    and Crest la Siala Tour -- laax.com/biking's own card for each links to one of these Tours, not to
+    //    the standalone same-named trail already in this data, which is what the user originally noticed as
+    //    "doesn't match the website" -- plus Crap Masegn Tour, Vom Gletscher bis zum Rhein and Crest da
+    //    Tiarms: Vom Crap Sogn Gion bis nach Ilanz (the last two ride well outside the resort, down to Ilanz/
+    //    the Rhein valley -- most of their length is an honest unlabeled connector, not a data gap). None of
+    //    the five matched a lift ride: every one of their recorded GPX starts within ~30 m of a mountain
+    //    station, meaning the lift ascent itself was never tracked (no GPS signal in the cabin) -- so nothing
+    //    is invented for it, the drawn line simply starts where the recording does.
     // Sub-regions are the two sides of the resort, decided by which lift a trail's start sits next to.
-    // Lifts: FlemXpress (4 sections), Arena Express (3) and the Laax cable car, all carrying bikes per both
-    // the operator and OSM. The Vorab chain (Crap Masegn/Fuorcla/Vorab) is deliberately absent -- laax.com
-    // mentions a "Vorab cable car" for bike access in prose, but no OSM way in that chain carries a bike tag,
-    // and guessing which of four sections take bikes would be inventing operator policy.
-    countries: ["CH"], label: "Flims Laax Falera", file: "regions/laax.json", trailCount: 12,
-    bounds: [[46.81323, 9.17777], [46.88297, 9.28562]],
+    // Lifts: FlemXpress (4 sections), the Laax cable car, and (added 2026-08-10) the Falera-Curnius
+    // chairlift. The three "Arena Express" lifts from the original 2026-07-30 build were REMOVED the same
+    // day (user research): they are absent from live.laax.com/de/anlagen's current facility list entirely,
+    // apparently superseded by FlemX's 5th/final section (Segnes<->Cassons, opened Dec 2025) -- which is
+    // itself NOT added here, since Trailforks states it carries no bikes. Falera-Curnius has no OSM bike
+    // tag either way, so its inclusion rests on the operator's own laax.com/map "Biken" filter layer marking
+    // it as a bike lift (the user's own source) rather than on an OSM/operator agreement. The Vorab chain
+    // (Crap Masegn/Fuorcla/Vorab) is still deliberately absent as a LIFT -- confirmed 2026-08-10 (user
+    // checked laax.com/map's own "Biken" layer): only the Crap Sogn Gion cable car shows as bike-capable
+    // there, the rest of the way up to Vorab (2571 m) is FlemX to Nagens Sura followed by a gravel-road climb
+    // you pedal yourself, per the Vorab Trail Tour's own route description -- so there was never a missing
+    // lift here, the original exclusion was correct.
+    countries: ["CH"], label: "Flims Laax Falera", file: "regions/laax.json", trailCount: 24,
+    bounds: [[46.77518, 9.14955], [46.88297, 9.29903]],
     subRegions: {
       flims: { label: "Flims (FlemXpress)", color: "#2f7d95" },
       laax:  { label: "Laax (Crap Sogn Gion)", color: "#a3552a" }

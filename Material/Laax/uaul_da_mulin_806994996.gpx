@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Uaul da Mulin (Segment)</name>
+    <author>
+      <name>Johannes Schilder - Flims Laax</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/806994996"/>
+    <time>2026-04-20T15:16:03.944Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Uaul da Mulin (Segment)</name>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="46.820412" lon="9.169749">
+        <ele>1673.60603</ele>
+        <name>Praugreina, Ilanz/Glion</name>
+        <sym>waypointFlagComb</sym>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>13</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="46.820446" lon="9.169575">
+        <ele>1667.36563</ele>
+      </trkpt>
+      <trkpt lat="46.820173" lon="9.169435">
+        <ele>1653.19913</ele>
+      </trkpt>
+      <trkpt lat="46.820261" lon="9.16932">
+        <ele>1651.50984</ele>
+      </trkpt>
+      <trkpt lat="46.820019" lon="9.169227">
+        <ele>1640.05334</ele>
+      </trkpt>
+      <trkpt lat="46.820046" lon="9.169129">
+        <ele>1636.16986</ele>
+      </trkpt>
+      <trkpt lat="46.819705" lon="9.169068">
+        <ele>1624.75694</ele>
+      </trkpt>
+      <trkpt lat="46.81905" lon="9.168262">
+        <ele>1610.84056</ele>
+      </trkpt>
+      <trkpt lat="46.819049" lon="9.168144">
+        <ele>1611.22468</ele>
+      </trkpt>
+      <trkpt lat="46.818221" lon="9.167818">
+        <ele>1607.63584</ele>
+      </trkpt>
+      <trkpt lat="46.817897" lon="9.167556">
+        <ele>1607.50536</ele>
+      </trkpt>
+      <trkpt lat="46.817393" lon="9.167582">
+        <ele>1599.00242</ele>
+      </trkpt>
+      <trkpt lat="46.816878" lon="9.167793">
+        <ele>1592.69588</ele>
+      </trkpt>
+      <trkpt lat="46.816378" lon="9.16872">
+        <ele>1583.7402</ele>
+      </trkpt>
+      <trkpt lat="46.815822" lon="9.168796">
+        <ele>1574.08494</ele>
+      </trkpt>
+      <trkpt lat="46.81494" lon="9.16918">
+        <ele>1558.32523</ele>
+      </trkpt>
+      <trkpt lat="46.81379" lon="9.169268">
+        <ele>1544.76749</ele>
+      </trkpt>
+      <trkpt lat="46.813519" lon="9.169459">
+        <ele>1546.74595</ele>
+      </trkpt>
+      <trkpt lat="46.813328" lon="9.16988">
+        <ele>1546.12004</ele>
+      </trkpt>
+      <trkpt lat="46.81305" lon="9.169965">
+        <ele>1543.74993</ele>
+      </trkpt>
+      <trkpt lat="46.81277" lon="9.170281">
+        <ele>1537.18138</ele>
+      </trkpt>
+      <trkpt lat="46.812119" lon="9.170599">
+        <ele>1521.35856</ele>
+      </trkpt>
+      <trkpt lat="46.811925" lon="9.170596">
+        <ele>1514.19839</ele>
+      </trkpt>
+      <trkpt lat="46.811895" lon="9.170318">
+        <ele>1507.80382</ele>
+        <name>46.811895,9.170318</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>13</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
