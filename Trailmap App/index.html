@@ -461,12 +461,31 @@ const REGION_CATALOG = {
   // raw GPX track against each individual trail's raw track by proximity (~20m threshold, then
   // smoothing short gaps) -- a one-off script, not yet a repo-tracked tool. Foundation for a future
   // "build your own Trailrunde" feature (not implemented yet, per the user 2026-07-22).
+  // 2026-08-10: cross-checked against Trailforks' "Donnersbergkreis" region table (35 rows). 4 rows were
+  // discarded outright -- BadWildBad, KH Downhill, Milows Claw/TrailOrado, OCHSEN-RITT TRAIL -- their
+  // geometry decodes to Thuringia/Saxony-Anhalt (50.9-51.0N), not Rhineland-Palatinate; Trailforks'
+  // region-membership query appears to confuse "Eisenberg" (a second town of that name in Thuringia) with
+  // the real Donnersbergkreis Eisenberg. 3 more (Adler Trail, Eschbachtrail, Lucy 900) turned out to be
+  // the SAME physical trail as an existing donnersberg_gipfel entry under its OSM name (Adlerbogentrail,
+  // Abfahrt Bastenhaus, Grauer-Turm-Weg respectively) -- endpoints matched to ~15m, a nice cross-validation
+  // of the existing OSM-sourced batch. The remaining 24 genuinely new trails were added via Trailforks'
+  // embedded-polyline extraction (see memory note trailforks-anonymous-polyline-extraction), grouped into
+  // 2 new sub-regions by where they actually cluster (not by Trailforks' own scattered "riding area" tags):
+  // "winnweiler" (11 trails around Winnweiler, a distinct local trail network from the branded "MTB
+  // Donnersberger Land" 4) and "donnersbergkreis_ost" (4 trails near Eisenberg/RLP, outside the old bounds,
+  // hence the bounds' lon max moving 7.97392 -> 8.06). 9 more went straight into the existing
+  // donnersberg_gipfel (on/near the summit already covered by that sub-region). Length for each new trail
+  // is GPX-derived (Trailforks' own table rounds anything >=1km to a bare integer, too coarse to trust as
+  // "official"); climb/descent came from that same table where given in exact metres, elevation profiles
+  // backfilled via OpenTopoData mapzen same as the original 4. Build script: tools/build_donnersberg_expansion.py.
   donnersberg: {
-    countries: ["DE"], label: "Donnersberger Land", file: "regions/donnersberg.json", trailCount: 27,
-    bounds: [[49.53555, 7.85592], [49.63851, 7.97392]],
+    countries: ["DE"], label: "Donnersberger Land", file: "regions/donnersberg.json", trailCount: 51,
+    bounds: [[49.53555, 7.85592], [49.63851, 8.06]],
     subRegions: {
       donnersberger_land: { label: "MTB Donnersberger Land", color: "#8a6a2f" },
-      donnersberg_gipfel: { label: "Donnersberg", color: "#4a6d8c" }
+      donnersberg_gipfel: { label: "Donnersberg", color: "#4a6d8c" },
+      winnweiler: { label: "Winnweiler", color: "#3f7d5c" },
+      donnersbergkreis_ost: { label: "Donnersbergkreis Ost", color: "#a3452f" }
     }
   },
   // Source: https://www.mountainbikepark-pfaelzerwald.de/touren.html -- all 20 official signposted
