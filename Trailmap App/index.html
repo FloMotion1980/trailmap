@@ -1140,53 +1140,39 @@ const REGION_CATALOG = {
       hattgenstein: { label: "Hattgenstein", color: "#8a6a2f" }
     }
   },
-  // Built 2026-08-10. Source: Saarpfalz-Touristik's own site (saarpfalz-touristik.de), two "Die PUR"
-  // long-distance touring loops around St. Ingbert/Bliesgau -- clean operator GPX (mein.toubiz export,
-  // proper <trkpt lat/lon> pairs, one unbroken <trkseg> each, start point == end point) with NO embedded
-  // <ele> at all, so elevation came entirely from ElevationLookup (OpenTopoData). Official length/climb
-  // (53.7km/1016m for Rund um St. Ingbert, 42.3km/988m for Nord-West-Schleife) taken from the site;
-  // sanity-checked against the raw GPX's own computed length (53.64km / 42.23km) as a smoke test that the
-  // right track was parsed -- both within 0.1km. Both pages state difficulty "schwer" with no colour/tier
-  // shown, same situation as RadLust Waldmeister -- mapped here to schwarz per the same standard German
-  // 3-tier convention (leicht/mittel/schwer <-> blau/rot/schwarz), not confirmed by an explicit colour on
-  // the source page. `loop: true` on both (each is a closed circular route back to its own start), but
-  // NOT a Trailrunde assembled from component trails -- a single continuous GPX each, so no
-  // `trailSegments` entry, unlike Donnersberg's "Wasser & Holz". One shared sub-region: the two routes'
-  // own bounding boxes overlap substantially (both span roughly lat 49.24-49.31, lon 7.075-7.20), both
-  // touring the same St. Ingbert/Bliesgau area from a shared trailhead region, not two separate hubs.
-  saarpfalzpur: {
-    countries: ["DE"], label: "Die PUR (Saarpfalz)", file: "regions/saarpfalzpur.json", trailCount: 2,
-    bounds: [[49.23945, 7.07506], [49.31084, 7.2013]],
-    subRegions: {
-      st_ingbert: { label: "St. Ingbert / Bliesgau", color: "#6b4c9a" }
-    }
-  },
-  // Built 2026-08-10. Source: mv-sb.de/trails/ (Mountainbikeverein Saarbrücken e.V.'s own trail-network
-  // page), which links each of its 20 trails out to its own Trailforks page rather than publishing GPX
-  // itself -- geometry and difficulty both came from there via the logged-in-Chrome embedded-polyline
-  // technique (see memory note trailforks-anonymous-polyline-extraction; no hard_regwall hit across all 20
-  // pages in one sitting). Trailforks' own difficulty tiers here are literally green/blue/red/black, the
-  // same 4-tier ski-slope scale this app already uses, so no S-scale-style shift was needed -- Blue/Red/
-  // Black Rate mapped straight to blau/rot/schwarz. One trail ("Jump line") is rated "Proline Rate" (a
-  // freestyle jump line, not on the usual scale at all) -- mapped to schwarz per the same rule already
-  // applied to Portes du Soleil's "pds_airlines". Every trail's own stated distance matched a fresh
-  // haversine sum of its decoded polyline to within ~1%, so len/up/down are the operator's own Trailforks
-  // numbers, not GPX-derived estimates. Elevation was not embedded in the polyline (lat/lng only) and was
-  // backfilled per-point via OpenTopoData, same as Donnersberg/Naheland. Two sub-regions: "saarbruecken"
-  // (17 trails; the network is legally spread across several municipalities -- St. Johann, Bischmisheim,
-  // Sengscheid/Sankt Ingbert, Neuweiler/Sulzbach -- but is one connected legal trail network with no
-  // official zone split) and "homburg" (the 3 "Flow am Homburg" trails, a distinct, tightly-clustered spot
-  // in Dudweiler ~2.5km from the nearest other trail -- kept separate per the operator's own naming, even
-  // though "Homburg" here is a local hill name, not the town of Homburg further east). No lifts (none
-  // published) and no Touren (mv-sb.de publishes no loop routes combining these trails) -- both
-  // consciously ruled out, not missing. Places are the municipalities/villages nearest the two clusters,
-  // from OSM node[place] within the trail network's bounding box.
-  saarbruecken: {
-    countries: ["DE"], label: "Trailnetz Saarbrücken", file: "regions/saarbruecken.json", trailCount: 20,
-    bounds: [[49.23972, 7.01973], [49.27844, 7.09425]],
+  // Built 2026-08-10, merged into one group 2026-08-11 (user: Saarbrücken and the PUR tours sit right next
+  // to each other geographically, no reason for two separate groups -- and Saarbrücken itself didn't need
+  // a 2nd sub-region either). Two sources: mv-sb.de/trails/ (Mountainbikeverein Saarbrücken e.V.'s own
+  // trail-network page, 20 trails, none publishing GPX itself -- geometry and difficulty came from each
+  // trail's own Trailforks page via the logged-in-Chrome embedded-polyline technique, see memory note
+  // trailforks-anonymous-polyline-extraction; no hard_regwall hit across all 20 pages in one sitting), and
+  // Saarpfalz-Touristik's own site (saarpfalz-touristik.de) for the two "Die PUR" long-distance touring
+  // loops around St. Ingbert/Bliesgau (clean operator GPX, mein.toubiz export). Trailforks' own difficulty
+  // tiers here are literally green/blue/red/black, the same 4-tier scale this app already uses, so no
+  // S-scale-style shift was needed -- Blue/Red/Black Rate mapped straight to blau/rot/schwarz; one trail
+  // ("Jump line") is rated "Proline Rate" (freestyle jump line, off the usual scale) -- mapped to schwarz
+  // per the same rule already applied to Portes du Soleil's "pds_airlines". Every mv-sb.de trail's own
+  // stated distance matched a fresh haversine sum of its decoded polyline to within ~1%, so len/up/down
+  // are the operator's own Trailforks numbers, not GPX-derived. Both PUR routes' GPX had NO embedded <ele>
+  // at all, so their elevation came entirely from ElevationLookup (OpenTopoData); official length/climb
+  // (53.7km/1016m, 42.3km/988m) taken from the site, sanity-checked against the raw GPX's own computed
+  // length (53.64km/42.23km) within 0.1km. Both PUR pages state difficulty "schwer" with no colour/tier
+  // shown -- mapped to schwarz per the standard German 3-tier convention (leicht/mittel/schwer <->
+  // blau/rot/schwarz), not confirmed by an explicit colour on the source page. `loop: true` on both PUR
+  // routes (closed circular routes back to their own start) but NOT a Trailrunde assembled from component
+  // trails -- a single continuous GPX each, no `trailSegments`, unlike Donnersberg's "Wasser & Holz". Two
+  // sub-regions: "saarbruecken" (all 20 mv-sb.de trails, incl. the "Flow am Homburg" trio -- folded into
+  // the same sub-region as the rest since the network has no official zone split and the geographic
+  // separation didn't warrant a 2nd sub-region on its own) and "st_ingbert" (the two PUR tours). No lifts
+  // (none published for either source) and no separate Touren beyond the PUR entries themselves. Places
+  // are the municipalities/villages nearest either cluster, from OSM node[place], deduped by name across
+  // both original sources.
+  saarland: {
+    countries: ["DE"], label: "Saarland", file: "regions/saarland.json", trailCount: 22,
+    bounds: [[49.23945, 7.01973], [49.31084, 7.2013]],
     subRegions: {
       saarbruecken: { label: "Saarbrücken", color: "#a35c1f" },
-      homburg: { label: "Flow am Homburg", color: "#1f7a9a" }
+      st_ingbert: { label: "St. Ingbert / Bliesgau", color: "#6b4c9a" }
     }
   }
 };
