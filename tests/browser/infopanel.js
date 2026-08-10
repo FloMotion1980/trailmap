@@ -1,7 +1,7 @@
 // @suite   infopanel
 // @area    Info panel: trail, lift, Tour segments, reverse, GPX, elevation chart
 // @files   Trailmap App/index.html
-// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart
+// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight
 // @needs   region=bikekingdom, builder=off
 //
 // The panel is a custom div rather than a Leaflet popup so nothing covers the trail, which means every piece
@@ -322,6 +322,51 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   T.ok("panel closed", !panel().classList.contains("visible"), false, false);
   T.ok("the card is deselected too", !openCard.classList.contains("selected"), openCard.className, "not selected");
   T.eq("and the outline left the map", TM.map.selectionOutlines(), 0);
+
+  T.test("deselecting on a TOUCH tap (no mouseout) also resets a bold line back to normal width");
+  // Reported 2026-08-10, on a phone only: tapping a trail bolds its line (setHover(true), fired from inside
+  // the hit-line's own click handler -- see the "drive a tap ourselves" note above). Tapping empty map space
+  // afterwards dropped the yellow selection outline but left the line fat. Root cause: touch has no mouseout,
+  // so setHover(false) -- the thing that would otherwise shrink the line back down -- never ran, and
+  // closeInfoPanelAndDeselect's clearSelection() only ever removed the yellow outline, never the width. Not
+  // reproducible with a real mouse: a desktop click always physically passes over other map area first,
+  // firing a genuine mouseout on the way -- which is exactly why the user saw this only on a phone. Needs a
+  // scripted, no-movement touch tap to reproduce at all, same technique as the down/up-mismatch case above.
+  const overlayWeights = () => TM.map.overlay()
+    .filter((p) => parseFloat(p.getAttribute("stroke-width") || 0) < 14)   // exclude every invisible hit-line
+    .map((p) => parseFloat(p.getAttribute("stroke-width") || 0));
+  const mapBox2 = TM.$("#map").getBoundingClientRect();
+  let hitEl = null, hx = 0, hy = 0;
+  outer2:
+  for (let y = Math.round(mapBox2.top) + 20; y < mapBox2.bottom - 20; y += 6) {
+    for (let x = Math.round(mapBox2.left) + 8; x < mapBox2.right - 8; x += 6) {
+      const el = document.elementFromPoint(x, y);
+      // stroke-width 22 is specifically a trail/Tour hit-line (buildTrailLayer) -- a lift's is 20, a Tour
+      // segment's own per-stretch hit-line is 18 (see docs/trailrunde-feature.md), neither of which this
+      // case is about.
+      if (el && el.tagName === "path" && el.classList.contains("leaflet-interactive") &&
+          el.getAttribute("stroke-width") === "22") { hitEl = el; hx = x; hy = y; break outer2; }
+    }
+  }
+  if (!hitEl) {
+    T.skip("no trail/Tour hit-line found on screen to tap");
+  } else {
+    panel().classList.remove("visible");
+    const mapEl2 = TM.$("#map");
+    const tt1 = new Touch({ identifier: 30, target: hitEl, clientX: hx, clientY: hy });
+    mapEl2.dispatchEvent(new TouchEvent("touchstart", { bubbles: true, cancelable: true, touches: [tt1], targetTouches: [tt1], changedTouches: [tt1] }));
+    await TM.wait(30);
+    const tt2 = new Touch({ identifier: 30, target: hitEl, clientX: hx, clientY: hy });   // same point: a tap, not a drag
+    mapEl2.dispatchEvent(new TouchEvent("touchend", { bubbles: true, cancelable: true, touches: [], targetTouches: [], changedTouches: [tt2] }));
+    await TM.wait(300);
+    T.eq("the tap selected something", TM.map.selectionOutlines(), 1);
+    T.ok("and bolded its line", overlayWeights().some((w) => w > 4), overlayWeights(), "some weight > 4");
+
+    closeInfoPanelAndDeselect();   // what a tap on EMPTY map space calls next
+    await TM.wait(300);
+    T.eq("the outline is gone", TM.map.selectionOutlines(), 0);
+    T.ok("and no line is left stuck bold", !overlayWeights().some((w) => w > 4), overlayWeights(), "none > 4");
+  }
 
   T.test("all four actions are one unbreakable row of equal-sized buttons");
   // The layout the user asked for: the group sits behind the name when the name's last line leaves room and drops

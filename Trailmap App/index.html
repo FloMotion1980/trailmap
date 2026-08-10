@@ -4012,6 +4012,12 @@ function closeInfoPanelAndDeselect(){
   clearSolo();
   clearSelection();
   hideAllLiftEndpoints();
+  // Force any stuck "fat" line back to normal width/opacity (2026-08-10, reported on a phone): a touch tap
+  // on empty map space fires no mouseout on the previously-selected trail's hitline, so its setHover(false)
+  // -- the thing that would otherwise shrink it back down -- never runs. clearSelection() above only drops
+  // the yellow outline, which is why the line looked "deselected" (no highlight) but stayed bold. Same fix
+  // pattern already used in setHover(true) itself for the analogous hover-side case.
+  resetAllHoverStyles();
 }
 map.on("click", closeInfoPanelAndDeselect);
 
