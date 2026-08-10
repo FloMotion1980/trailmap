@@ -90,8 +90,7 @@ LIFTS = [
 
 # OSM's own node for the village is named "Laax GR" (the canton suffix); our label drops it, since nobody
 # calls it that. The rest match their OSM names exactly.
-PLACES = [("Flims", "Flims"), ("Laax", "Laax GR"), ("Falera", "Falera"),
-          ("Sagogn", "Sagogn"), ("Schluein", "Schluein")]
+PLACES = [("Flims", "Flims"), ("Laax", "Laax GR"), ("Falera", "Falera")]
 
 
 def osm_named(name_regex, highway=r"path|track|footway|cycleway"):
