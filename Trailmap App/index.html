@@ -1097,6 +1097,39 @@ const REGION_CATALOG = {
       albisola: { label: "Albisola Superiore", color: "#c94f6f" },
       cogoleto: { label: "Cogoleto", color: "#2e9e9e" }
     }
+  },
+  // Built 2026-08-10. Source: mtb-kh.de/trails (Naheland-Trails e.V., Bad Kreuznach) -- 10 direct-download
+  // operator GPX (BRouter-Web recordings, real elevation, no backfill needed). Difficulty read from each
+  // trail's own emoji marker in the page HTML (red circle/blue circle/black circle before the trail's
+  // number+name), NOT guessed from the descriptive text -- confirmed: Granaten-Trail red ("einfacher bis
+  // mittelschwerer"), Corona red ("mittelschwerer Endurotrail"), Lower Flak + Worldcup black ("schwerer
+  // Trail"), the other 6 blue. Two sub-regions per the site's own grouping (Bad Kreuznach Süd / Bad
+  // Kreuznach Nord-Rotenfelsmassiv). No official length/up/down is published (only descriptive text), so
+  // all three are GPX-derived, per the pipeline's documented fallback. No lifts, no published tours; place
+  // labels are Bad Kreuznach itself and the Rotenfels landmark for the Nord cluster.
+  naheland: {
+    countries: ["DE"], label: "Naheland Trails", file: "regions/naheland.json", trailCount: 10,
+    bounds: [[49.79211, 7.8289], [49.83139, 7.87495]],
+    subRegions: {
+      bad_kreuznach_sued: { label: "Bad Kreuznach Süd", color: "#8a6a2f" },
+      bad_kreuznach_nord: { label: "Bad Kreuznach Nord", color: "#4a6d8c" }
+    }
+  },
+  // Built 2026-08-10. Source: wildganz.com's own GPX download for "RadLust MTB-Trail Waldmeister"
+  // (Hattgenstein/Birkenfeld, Hunsrück) -- a single continuous 31.2km loop from Rothenburghütte, real
+  // embedded elevation throughout. Its own page states difficulty "schwer" with no colour/tier shown
+  // alongside it (unlike Naheland's emoji markers) -- mapped here to schwarz per the standard German
+  // 3-tier outdoor convention (leicht/mittel/schwer <-> blau/rot/schwarz), NOT confirmed by an explicit
+  // colour on the source page, so worth rechecking if a second source ever shows otherwise. Kept as its
+  // own region group rather than a 3rd Naheland sub-region: Hattgenstein sits ~50km from Bad Kreuznach,
+  // too far for one shared bounding box/fly-to target. Official length/up/down (31.2/722/700) taken from
+  // the source page, matching the raw GPX's own computed length (31.20km) almost exactly.
+  waldmeister: {
+    countries: ["DE"], label: "RadLust Waldmeister", file: "regions/waldmeister.json", trailCount: 1,
+    bounds: [[49.68249, 7.1402], [49.71818, 7.19273]],
+    subRegions: {
+      hattgenstein: { label: "Hattgenstein", color: "#8a6a2f" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- track-length = 494 filtered ascend = 1 plain-ascend = -123 cost=9678 energy=0.0kwh time=43s -->
+<gpx 
+ xmlns="http://www.topografix.com/GPX/1/1" 
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+ xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" 
+ version="1.1" 
+ creator="BRouter-Web 0.18.1">
+ <trk>
+  <name>NLT-Woldcup-10</name>
+  <trkseg>
+   <trkpt lat="49.823207" lon="7.840807"><ele>281.25</ele></trkpt>
+   <trkpt lat="49.823206" lon="7.840775"><ele>282</ele></trkpt>
+   <trkpt lat="49.823333" lon="7.840846"><ele>282.5</ele></trkpt>
+   <trkpt lat="49.823419" lon="7.840884"><ele>280.25</ele></trkpt>
+   <trkpt lat="49.823509" lon="7.84104"><ele>275.5</ele></trkpt>
+   <trkpt lat="49.823541" lon="7.841222"><ele>271.75</ele></trkpt>
+   <trkpt lat="49.82362" lon="7.841313"><ele>269</ele></trkpt>
+   <trkpt lat="49.823682" lon="7.841501"><ele>265.25</ele></trkpt>
+   <trkpt lat="49.823748" lon="7.84163"><ele>262.5</ele></trkpt>
+   <trkpt lat="49.823835" lon="7.841699"><ele>260.25</ele></trkpt>
+   <trkpt lat="49.823887" lon="7.841812"><ele>256.5</ele></trkpt>
+   <trkpt lat="49.823911" lon="7.841887"><ele>254.25</ele></trkpt>
+   <trkpt lat="49.824001" lon="7.84193"><ele>252.75</ele></trkpt>
+   <trkpt lat="49.824108" lon="7.841903"><ele>252.75</ele></trkpt>
+   <trkpt lat="49.824122" lon="7.842043"><ele>249.5</ele></trkpt>
+   <trkpt lat="49.824098" lon="7.84215"><ele>247</ele></trkpt>
+   <trkpt lat="49.824039" lon="7.842209"><ele>245.5</ele></trkpt>
+   <trkpt lat="49.82397" lon="7.84223"><ele>245</ele></trkpt>
+   <trkpt lat="49.824084" lon="7.842499"><ele>238.5</ele></trkpt>
+   <trkpt lat="49.824125" lon="7.842638"><ele>234.25</ele></trkpt>
+   <trkpt lat="49.824253" lon="7.842681"><ele>231.5</ele></trkpt>
+   <trkpt lat="49.824343" lon="7.84267"><ele>230.25</ele></trkpt>
+   <trkpt lat="49.824527" lon="7.842831"><ele>222.75</ele></trkpt>
+   <trkpt lat="49.824624" lon="7.842847"><ele>221</ele></trkpt>
+   <trkpt lat="49.824741" lon="7.842896"><ele>218.25</ele></trkpt>
+   <trkpt lat="49.824797" lon="7.842874"><ele>218</ele></trkpt>
+   <trkpt lat="49.824863" lon="7.842944"><ele>215.75</ele></trkpt>
+   <trkpt lat="49.824928" lon="7.843089"><ele>212.5</ele></trkpt>
+   <trkpt lat="49.824914" lon="7.843475"><ele>205.5</ele></trkpt>
+   <trkpt lat="49.824973" lon="7.843561"><ele>203.5</ele></trkpt>
+   <trkpt lat="49.825029" lon="7.84362"><ele>202</ele></trkpt>
+   <trkpt lat="49.825008" lon="7.843743"><ele>200</ele></trkpt>
+   <trkpt lat="49.825043" lon="7.84391"><ele>196.25</ele></trkpt>
+   <trkpt lat="49.825074" lon="7.844054"><ele>193</ele></trkpt>
+   <trkpt lat="49.825205" lon="7.844344"><ele>184.75</ele></trkpt>
+   <trkpt lat="49.825235" lon="7.844508"><ele>180</ele></trkpt>
+   <trkpt lat="49.825254" lon="7.84458"><ele>178</ele></trkpt>
+   <trkpt lat="49.825349" lon="7.844703"><ele>173.5</ele></trkpt>
+   <trkpt lat="49.825439" lon="7.844881"><ele>167.75</ele></trkpt>
+   <trkpt lat="49.825534" lon="7.845033"><ele>162.5</ele></trkpt>
+   <trkpt lat="49.825628" lon="7.845202"><ele>157.75</ele></trkpt>
+  </trkseg>
+ </trk>
+</gpx>

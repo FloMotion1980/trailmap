@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- track-length = 343 filtered ascend = 1 plain-ascend = -12 cost=2198 energy=0.0kwh time=42s -->
+<gpx 
+ xmlns="http://www.topografix.com/GPX/1/1" 
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+ xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" 
+ version="1.1" 
+ creator="BRouter-Web 0.18.1">
+ <trk>
+  <name>NLT-Rodelbahn-21</name>
+  <trkseg>
+   <trkpt lat="49.812202" lon="7.856477"><ele>303.25</ele></trkpt>
+   <trkpt lat="49.812204" lon="7.856483"><ele>303.25</ele></trkpt>
+   <trkpt lat="49.812055" lon="7.856576"><ele>299.5</ele></trkpt>
+   <trkpt lat="49.812043" lon="7.856716"><ele>298.25</ele></trkpt>
+   <trkpt lat="49.811952" lon="7.856835"><ele>296</ele></trkpt>
+   <trkpt lat="49.811872" lon="7.857007"><ele>293.75</ele></trkpt>
+   <trkpt lat="49.811747" lon="7.857055"><ele>290</ele></trkpt>
+   <trkpt lat="49.81167" lon="7.857086"><ele>290</ele></trkpt>
+   <trkpt lat="49.811582" lon="7.857228"><ele>288.25</ele></trkpt>
+   <trkpt lat="49.811336" lon="7.857447"><ele>285.25</ele></trkpt>
+   <trkpt lat="49.811123" lon="7.857565"><ele>283.25</ele></trkpt>
+   <trkpt lat="49.810975" lon="7.857411"><ele>281</ele></trkpt>
+   <trkpt lat="49.810847" lon="7.857317"><ele>278.75</ele></trkpt>
+   <trkpt lat="49.810646" lon="7.857245"><ele>279.5</ele></trkpt>
+   <trkpt lat="49.81031" lon="7.857143"><ele>281</ele></trkpt>
+   <trkpt lat="49.809955" lon="7.857258"><ele>284.5</ele></trkpt>
+   <trkpt lat="49.80981" lon="7.857264"><ele>285.75</ele></trkpt>
+   <trkpt lat="49.809683" lon="7.857302"><ele>287</ele></trkpt>
+   <trkpt lat="49.809632" lon="7.857351"><ele>287.75</ele></trkpt>
+   <trkpt lat="49.80958" lon="7.857465"><ele>289</ele></trkpt>
+   <trkpt lat="49.809546" lon="7.857561"><ele>290</ele></trkpt>
+  </trkseg>
+ </trk>
+</gpx>

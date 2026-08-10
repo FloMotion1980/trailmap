@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- track-length = 198 filtered ascend = 0 plain-ascend = -7 cost=1193 energy=0.0kwh time=25s -->
+<gpx 
+ xmlns="http://www.topografix.com/GPX/1/1" 
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+ xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd" 
+ version="1.1" 
+ creator="BRouter-Web 0.18.1">
+ <trk>
+  <name>NLT-Freilauberline-40</name>
+  <trkseg>
+   <trkpt lat="49.807098" lon="7.873865"><ele>293.25</ele></trkpt>
+   <trkpt lat="49.807083" lon="7.8739"><ele>293.5</ele></trkpt>
+   <trkpt lat="49.806919" lon="7.873941"><ele>293.25</ele></trkpt>
+   <trkpt lat="49.806728" lon="7.873967"><ele>293</ele></trkpt>
+   <trkpt lat="49.80651" lon="7.874116"><ele>291.75</ele></trkpt>
+   <trkpt lat="49.806452" lon="7.87427"><ele>291.5</ele></trkpt>
+   <trkpt lat="49.806453" lon="7.874581"><ele>291.75</ele></trkpt>
+   <trkpt lat="49.806314" lon="7.874797"><ele>290</ele></trkpt>
+   <trkpt lat="49.806192" lon="7.874934"><ele>288.5</ele></trkpt>
+   <trkpt lat="49.806051" lon="7.874951"><ele>286.75</ele></trkpt>
+   <trkpt lat="49.805949" lon="7.874899"><ele>285.5</ele></trkpt>
+   <trkpt lat="49.805797" lon="7.874887"><ele>283.5</ele></trkpt>
+   <trkpt lat="49.805721" lon="7.874917"><ele>282.5</ele></trkpt>
+   <trkpt lat="49.805721" lon="7.874927"><ele>285.25</ele></trkpt>
+  </trkseg>
+ </trk>
+</gpx>
