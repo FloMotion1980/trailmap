@@ -1130,6 +1130,27 @@ const REGION_CATALOG = {
     subRegions: {
       hattgenstein: { label: "Hattgenstein", color: "#8a6a2f" }
     }
+  },
+  // Built 2026-08-10. Source: Saarpfalz-Touristik's own site (saarpfalz-touristik.de), two "Die PUR"
+  // long-distance touring loops around St. Ingbert/Bliesgau -- clean operator GPX (mein.toubiz export,
+  // proper <trkpt lat/lon> pairs, one unbroken <trkseg> each, start point == end point) with NO embedded
+  // <ele> at all, so elevation came entirely from ElevationLookup (OpenTopoData). Official length/climb
+  // (53.7km/1016m for Rund um St. Ingbert, 42.3km/988m for Nord-West-Schleife) taken from the site;
+  // sanity-checked against the raw GPX's own computed length (53.64km / 42.23km) as a smoke test that the
+  // right track was parsed -- both within 0.1km. Both pages state difficulty "schwer" with no colour/tier
+  // shown, same situation as RadLust Waldmeister -- mapped here to schwarz per the same standard German
+  // 3-tier convention (leicht/mittel/schwer <-> blau/rot/schwarz), not confirmed by an explicit colour on
+  // the source page. `loop: true` on both (each is a closed circular route back to its own start), but
+  // NOT a Trailrunde assembled from component trails -- a single continuous GPX each, so no
+  // `trailSegments` entry, unlike Donnersberg's "Wasser & Holz". One shared sub-region: the two routes'
+  // own bounding boxes overlap substantially (both span roughly lat 49.24-49.31, lon 7.075-7.20), both
+  // touring the same St. Ingbert/Bliesgau area from a shared trailhead region, not two separate hubs.
+  saarpfalzpur: {
+    countries: ["DE"], label: "Die PUR (Saarpfalz)", file: "regions/saarpfalzpur.json", trailCount: 2,
+    bounds: [[49.23945, 7.07506], [49.31084, 7.2013]],
+    subRegions: {
+      st_ingbert: { label: "St. Ingbert / Bliesgau", color: "#6b4c9a" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;
