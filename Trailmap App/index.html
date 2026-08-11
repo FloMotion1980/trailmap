@@ -1111,11 +1111,25 @@ const REGION_CATALOG = {
   // access connector Zubringer -> blau, near the Rotenfels TV tower at Bad Münster am Stein -- flat lon/lat
   // uMap geometry, no elevation, backfilled via OpenTopoData). No official length/up/down published for
   // either source (only descriptive text), so all figures are GPX-derived, per the pipeline's documented
-  // fallback. No lifts, no published tours; place labels are Bad Kreuznach itself and the Rotenfels
-  // landmark.
+  // fallback. No lifts; place labels are Bad Kreuznach itself and the Rotenfels landmark.
+  // Three tours added 2026-08-11 (user, mtb-kh.de/touren, direct GPX): Flow-Tour (blau, 21km/400hm),
+  // Panorama-Tour (rot, 31km/800hm) and Enduro-Tour (schwarz, 32km/850hm) -- all built as segmented
+  // Trailrunden, matching stretches of each tour's own GPX against the existing Naheland/Haardt-Lines
+  // trails' own geometry (endpoint-anchored + full-corridor-average matching, per the Finale Ligure
+  // method) rather than left as flat lines. A real ambiguity turned up during matching: Upper Flak's
+  // own bottom trailhead junction is physically the same spot where Lower Flak and Corona also end, so
+  // a naive per-endpoint closest-point search occasionally locked onto the WRONG later visit to that
+  // same junction (the Enduro-Tour revisits it from a different direction ~4km later) -- fixed by
+  // requiring a contiguous, low-average-distance run across the WHOLE candidate trail rather than just
+  // its two endpoints (a single bad endpoint match doesn't get accepted just because it happens to sit
+  // near an unrelated but spatially-coincident junction). Several trails are only PARTIALLY ridden by a
+  // given tour (e.g. Enduro-Tour rides just the top half of Lower Flak, cov=50%, before peeling off) --
+  // accepted deliberately, clipped to the actually-ridden vertex range, since a tour genuinely entering
+  // and leaving a trail partway through is a real pattern, not a matching error (avg/max distance over
+  // the matched sub-range stayed under 2m in every such case, confirming it's real overlap, not noise).
   naheland: {
-    countries: ["DE"], label: "Bad Kreuznach", file: "regions/naheland.json", trailCount: 14,
-    bounds: [[49.79211, 7.82016], [49.83139, 7.87495]],
+    countries: ["DE"], label: "Bad Kreuznach", file: "regions/naheland.json", trailCount: 17,
+    bounds: [[49.78774, 7.81744], [49.83139, 7.88061]],
     subRegions: {
       naheland_trails: { label: "Naheland Trails", color: "#8a6a2f" },
       haardt_lines: { label: "Haardt Lines", color: "#a13d3d" }
