@@ -956,11 +956,17 @@ const REGION_CATALOG = {
   // and Hairy Cattle (new, Trailforks) -- plus a difficulty correction for 4 Carosello 3000 trails
   // whose diff had been read one tier too low (Coast to Coast, Roller Coaster, Bikers United, Blueberry
   // Line), found by re-checking every Carosello 3000 trail directly against its Trailforks dicon.
+  // Carosello 3000 split into two sub-regions 2026-08-11 (user): carosello3000.com's own trail-status
+  // table (my3000-live/trail-status) codes every trail "MTB<n>" or a bare number, and that code is the
+  // split -- MTB<n> -> carosello3000mtb, bare number -> carosello3000natur. Trails not on that table at
+  // all (Madonon, the Tutti Frutti tour) were put in carosello3000mtb as a judgement call, not confirmed
+  // against the table -- worth revisiting if that turns out wrong.
   livigno: {
     countries: ["IT"], label: "Livigno", file: "regions/livigno.json", trailCount: 30,
     bounds: [[46.49736, 10.07377], [46.55586, 10.16482]],
     subRegions: {
-      carosello3000: { label: "Carosello 3000", color: "#1c8ac2" },
+      carosello3000mtb: { label: "Carosello 3000 – MTB Trails", color: "#1c8ac2" },
+      carosello3000natur: { label: "Carosello 3000 – Natur-Trails", color: "#5a9e4a" },
       mottolino: { label: "Bikepark Mottolino", color: "#c2601c" }
     }
   },
