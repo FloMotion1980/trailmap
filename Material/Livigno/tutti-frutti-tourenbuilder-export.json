@@ -1,0 +1,205 @@
+{
+  "name": "Neue Tour",
+  "elements": [
+    {
+      "kind": "lift",
+      "id": "lift_livigno_livigno__tagliede",
+      "name": "Livigno – Tagliede",
+      "reversed": false,
+      "from": [46.543431, 10.136602],
+      "to": [46.545794, 10.128786],
+      "km": 0.653,
+      "iConnect": { "alt": 0, "of": 1, "gapM": 0 }
+    },
+    {
+      "kind": "lift",
+      "id": "lift_livigno_tagliede__costaccia",
+      "name": "Tagliede – Costaccia",
+      "reversed": false,
+      "from": [46.545794, 10.128786],
+      "to": [46.543049, 10.117567],
+      "km": 0.911,
+      "iConnect": { "off": true, "gapM": 78, "nearestM": 55 }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_roller_coaster",
+      "name": "Roller Coaster",
+      "reversed": false,
+      "from": [46.54246, 10.11701],
+      "to": [46.54567, 10.12878],
+      "km": 3.83,
+      "iConnect": { "alt": 0, "of": 2, "gapM": 14 }
+    },
+    {
+      "kind": "lift",
+      "id": "lift_livigno_tagliede__costaccia",
+      "name": "Tagliede – Costaccia",
+      "reversed": false,
+      "from": [46.545794, 10.128786],
+      "to": [46.543049, 10.117567],
+      "km": 0.911,
+      "iConnect": { "alt": 0, "of": 1, "gapM": 93 }
+    },
+    {
+      "kind": "lift",
+      "id": "lift_livigno_valandrea__vetta",
+      "name": "Valandrea – Vetta",
+      "reversed": false,
+      "from": [46.543042, 10.116338],
+      "to": [46.537179, 10.099089],
+      "km": 1.472,
+      "iConnect": { "alt": 0, "of": 1, "gapM": 156 }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_coast_to_coast",
+      "name": "Coast to Coast",
+      "reversed": false,
+      "from": [46.53622, 10.10059],
+      "to": [46.53617, 10.10601],
+      "km": 1.022,
+      "iConnect": { "alt": 0, "of": 2, "gapM": 0 }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_sway",
+      "name": "S-Way",
+      "reversed": false,
+      "from": [46.53617, 10.10601],
+      "to": [46.52562, 10.10676],
+      "km": 1.8,
+      "iConnect": { "alt": 0, "of": 2, "gapM": 40 }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_hdream",
+      "name": "H-Dream (Hutr)",
+      "reversed": false,
+      "from": [46.52598, 10.10674],
+      "to": [46.51993, 10.10968],
+      "km": 1.08,
+      "iConnect": { "alt": 0, "of": 2, "gapM": 60 }
+    },
+    {
+      "kind": "lift",
+      "id": "lift_livigno_baite_pel__carosello_3000",
+      "name": "Baite Pel – Carosello 3000",
+      "reversed": false,
+      "from": [46.519465, 10.110093],
+      "to": [46.516907, 10.087961],
+      "km": 1.718,
+      "iConnect": { "off": true, "gapM": 213, "nearestM": 212, "tooFar": true }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_bikers_united",
+      "name": "Bikers United",
+      "reversed": false,
+      "from": [46.51503, 10.08851],
+      "to": [46.52056, 10.10779],
+      "km": 3.884,
+      "iConnect": { "off": true, "gapM": 214, "nearestM": 174, "tooFar": true }
+    },
+    {
+      "kind": "lift",
+      "id": "lift_livigno_baite_pel__carosello_3000",
+      "name": "Baite Pel – Carosello 3000",
+      "reversed": false,
+      "from": [46.519465, 10.110093],
+      "to": [46.516907, 10.087961],
+      "km": 1.718,
+      "iConnect": { "off": true, "gapM": 183, "nearestM": 182, "tooFar": true }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_coast_to_coast",
+      "name": "Coast to Coast",
+      "reversed": false,
+      "from": [46.51854, 10.08824],
+      "to": [46.5299, 10.09876],
+      "km": 1.766,
+      "iConnect": { "alt": 0, "of": 1, "gapM": 5 }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_hdream",
+      "name": "H-Dream (Hutr)",
+      "reversed": false,
+      "from": [46.5299, 10.09869],
+      "to": [46.51993, 10.10968],
+      "km": 4.055,
+      "iConnect": { "alt": 0, "of": 1, "gapM": 0 }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_blueberry_line",
+      "name": "Blueberry Line",
+      "reversed": false,
+      "from": [46.51993, 10.10968],
+      "to": [46.52166, 10.11914],
+      "km": 2.022,
+      "iConnect": { "alt": 0, "of": 2, "gapM": 23 }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_sentiero_delle_tee",
+      "name": "Sentiero delle Tee (Panoramica)",
+      "reversed": false,
+      "from": [46.521797, 10.119364],
+      "to": [46.503068, 10.117811],
+      "km": 2.377,
+      "iConnect": { "off": true, "gapM": 1993, "nearestM": 244, "tooFar": true }
+    },
+    {
+      "kind": "lift",
+      "id": "lift_livigno_san_rocco__baite_pel",
+      "name": "San Rocco – Baite Pel",
+      "reversed": false,
+      "from": [46.520708, 10.122457],
+      "to": [46.519465, 10.110093],
+      "km": 0.957,
+      "iConnect": { "alt": 0, "of": 1, "gapM": 0 }
+    },
+    {
+      "kind": "lift",
+      "id": "lift_livigno_baite_pel__carosello_3000",
+      "name": "Baite Pel – Carosello 3000",
+      "reversed": false,
+      "from": [46.519465, 10.110093],
+      "to": [46.516907, 10.087961],
+      "km": 1.718,
+      "iConnect": { "alt": 0, "of": 1, "gapM": 44 }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_madonon",
+      "name": "Madonon",
+      "reversed": true,
+      "from": [46.51664, 10.08754],
+      "to": [46.49797, 10.09568],
+      "km": 3.097,
+      "iConnect": { "alt": 0, "of": 6, "gapM": 0 }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_madonon",
+      "name": "Madonon",
+      "reversed": false,
+      "from": [46.49797, 10.09568],
+      "to": [46.51597, 10.08805],
+      "km": 3.013,
+      "iConnect": { "alt": 0, "of": 1, "gapM": 56 }
+    },
+    {
+      "kind": "trail",
+      "id": "c3000_federia_single_trail",
+      "name": "Federia Single Trail",
+      "reversed": false,
+      "from": [46.51561, 10.08754],
+      "to": [46.52859, 10.07501],
+      "km": 3.019,
+      "iConnect": null
+    }
+  ]
+}

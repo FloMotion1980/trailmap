@@ -938,26 +938,29 @@ const REGION_CATALOG = {
   // left out rather than guessed. Mottolino's "D.H. 2005" (3, the former MTB World Championships DH
   // course) could not be found on Trailforks under any of several guessed slugs -- also left out.
   // "Tutti Frutti Epic MTB Tour" is built from the operator's own GPX (real elevation, 54km recorded
-  // vs. 50km published -- kept the real geometry-derived number). Segmented 2026-08-11 (user) using the
-  // contiguous-run matching from the Naheland tours ([[trailrunden-keep-segments]]): the original
-  // endpoint-anchored attempt failed because the day-tour revisits the same gondola-top hub many times,
-  // so two-point matching kept locking onto the wrong occurrence -- fixed by walking every point of
-  // each candidate trail against the tour and requiring one contiguous run, not just close endpoints.
-  // First pass used the same 20m/100m (distance/cum-jump) tolerances as Naheland and looked clean
-  // (9 trails, no overlaps) but the user immediately caught it as wrong: several trails matched far too
-  // short a stretch for what's actually ridden (Federia complete on the tour per the user, but only
-  // 17% of it matched). Root cause: switchbacks. A trail can wind back near its own earlier line, which
-  // makes the closest-point-on-tour search jump in CUMULATIVE POSITION for a moment even while the real
-  // DISTANCE to the tour stays small throughout -- the 100m jump-tolerance was breaking otherwise-clean
-  // runs right at these switchbacks. Loosened to 40m distance / 300m cum-jump (checked this doesn't
-  // reopen the original wrong-occurrence bug: junk candidates like The Snake, Lonely Planet, Enduro,
-  // Bike Academy, Hairy Cattle, The Bomb and Madonon Ridgeline still only ever matched a few metres of
-  // track, unchanged) and re-matched: 8 trails, still no overlaps, all with plausible near-complete
-  // coverage (Roller Coaster 70%, S-Way 100%, Bikers United 76%, Coast to Coast 35%, H-Dream 31%,
-  // Blueberry Line 72%, Sentiero delle Tee 46%, Federia 78%). The Snake stayed excluded either way
-  // (only ever a ~150m junction touch), matching the user's own confirmation that it isn't ridden on
-  // this tour. Max seam across all 17 segments: 37.3m (up from 17.7m in the first, too-conservative
-  // pass -- an expected trade-off of the looser cut-point tolerance, still small next to a 54km tour).
+  // vs. 50km published -- kept the real geometry-derived number). Segmented 2026-08-11, in three rounds:
+  // two algorithmic attempts (first with the Naheland tours' contiguous-run matching, then with loosened
+  // tolerances after the user caught the first as truncating real matches at switchbacks -- both writeups
+  // superseded, see git history) were STILL wrong by the user's own riding knowledge ("Immer noch nicht so
+  // dolle"), so the whole approach was replaced: the user rebuilt the ride by hand in the Tourenbuilder
+  // (`docs/tour-builder.md`) -- picking the real 20-element sequence of trails and lifts in ride order,
+  // with direction -- and handed over its JSON export. This is authoritative in a way no geometric
+  // matching against one recorded GPX can be: the export states which trail is ridden, not which one a
+  // distance threshold happened to associate with the track.
+  // Each element's own clipped stretch was resolved by nearest-point lookup against that trail's/lift's
+  // own stored geometry, using the export's `from`/`to` anchors (all resolved with 0.0m residual -- exact
+  // matches, since the app itself computed those anchors from this same geometry). 17 gaps remained
+  // between consecutive elements (Tourenbuilder deliberately leaves gaps open rather than guessing, per
+  // its own docs) plus the loop's own closure (Federia's end back to the start): the 6 largest/most
+  // structurally sensible ones (incl. the 1993m gap after Sentiero delle Tee and the ~5km final return
+  // to the start, both flagged by the user) were filled from the ORIGINAL 54km recorded GPX -- its own
+  // cumulative position jumps around relative to the new hand-built order (it recorded one specific
+  // day's ride, not necessarily in this sequence), so each candidate gap was checked for a short,
+  // geographically sensible arc before using it, rather than assuming order match. The other 8 gaps (all
+  // under ~215m, clustered around two lift-station hubs) are short straight connectors -- the pragmatic
+  // choice for a real but small service-road-scale gap where no single clean recorded arc existed.
+  // Max seam across all 35 segments (20 elements + 15 connectors): 62m, at the one point a long
+  // GPX-sourced connector meets a lift station's own stored coordinates -- still small next to 54km.
   // Lifts added 2026-08-11: 7 summer bike-carrying lifts (Carosello 3000's San Rocco/Baite Pel/
   // Carosello-3000-summit gondola in two OSM-mapped sections, the Livigno-Tagliede-Costaccia gondola
   // in two sections, and the Valandrea-Vetta chairlift; Mottolino's own cabinovia and the Yepi
