@@ -1138,9 +1138,32 @@ const REGION_CATALOG = {
   // standard German 3-tier convention (leicht/mittel/schwer <-> blau/rot/schwarz), unconfirmed by an
   // explicit colour. Kept as its own region group rather than a 3rd Bad Kreuznach sub-region: Hattgenstein
   // sits ~50km away, too far for one shared bounding box/fly-to target.
+  // Rebuilt as a Trailrunde 2026-08-11 (user: this is a touring route with high singletrack content, not one
+  // homogenous trail) -- 20 individual named trails harvested from Trailforks' own
+  // verbandsgemeinde-birkenfeld-40337 region (the municipality containing Hattgenstein), matched against the
+  // loop's own (densified-to-10m) track via the Finale Ligure endpoint-anchored method (both ends of a
+  // candidate trail must land within 100m of the loop, corridor proximity used only as a first-pass filter,
+  // never to decide the cut). 19 of 20 matched cleanly (endpoint distances mostly <15m, corridor <30m
+  // throughout) and became loop segments with the component trail's own geometry substituted in, cut at the
+  // literal closest point on the loop's original polyline (not just the nearest existing vertex) to keep
+  // every seam small -- max seam across all 33 segments is 11.7m. "Zum Steinbruch Trail" (20th candidate,
+  // also Trailforks-tagged part of Waldmeister) was built as its own standalone trail but deliberately left
+  // OUT of the segment substitution: ~40% of its middle section sits up to ~100m off the loop's own track
+  // (a real alternate line through what looks like its "Drop" TTF, not GPS noise), so per the project's
+  // standing "leave the honest gap" rule that stretch stayed a plain connector. ~48% of the loop's 25.6km is
+  // now attributed singletrack, the rest connector/access fireroad -- both entirely expected for a "hohem
+  // Trailanteil" touring route, not a red flag. All 19 matched trails plus Zum Steinbruch got their own
+  // lineTrails/trailGeo/elevationProfiles entries (real Trailforks geometry, official distance/climb/descent,
+  // missing elevation backfilled via OpenTopoData like every other OSM/Trailforks-sourced trail in this app);
+  // 4 of them (Laienberg Uphill, Rothenburg Uphill, Uphill nach Willi Wurzel Trail, Willi Wurzel Trail) are
+  // net-climbing and share Trailforks' own "Climb Difficulty" tag, flagged uphill:true. The loop's own
+  // TRAIL_GEO was rebuilt to the exact concatenation of the new segments per the critical Trailrunde
+  // invariant (25.56km vs. the original 25.49km -- the small difference is expected, since several stretches
+  // now use the component trails' own slightly different recorded lines instead of the loop's own coarser
+  // track); its elevationProfiles entry, len/up/down and diff were left untouched.
   waldmeister: {
-    countries: ["DE"], label: "RadLust Waldmeister", file: "regions/waldmeister.json", trailCount: 1,
-    bounds: [[49.68247, 7.14166], [49.71818, 7.19273]],
+    countries: ["DE"], label: "RadLust Waldmeister", file: "regions/waldmeister.json", trailCount: 21,
+    bounds: [[49.68251, 7.14167], [49.71818, 7.19273]],
     subRegions: {
       hattgenstein: { label: "Hattgenstein", color: "#8a6a2f" }
     }
