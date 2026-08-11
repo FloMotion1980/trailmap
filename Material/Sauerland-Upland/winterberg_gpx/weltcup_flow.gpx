@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>World Cup Flow</name>
+    <author>
+      <name>Timo Sommer - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/33151468"/>
+    <time>2026-06-22T14:42:46.541Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>World Cup Flow</name>
+    <desc>Banked turns, flowing changes of direction, and jumps - the entry can be tricky. </desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.192974" lon="8.509628">
+        <ele>737.36182</ele>
+      </trkpt>
+      <trkpt lat="51.193068" lon="8.510016">
+        <ele>732.67648</ele>
+      </trkpt>
+      <trkpt lat="51.193155" lon="8.510186">
+        <ele>729.41239</ele>
+      </trkpt>
+      <trkpt lat="51.193189" lon="8.510358">
+        <ele>725.96414</ele>
+      </trkpt>
+      <trkpt lat="51.193196" lon="8.510519">
+        <ele>722.79595</ele>
+      </trkpt>
+      <trkpt lat="51.193149" lon="8.510862">
+        <ele>717.02828</ele>
+      </trkpt>
+      <trkpt lat="51.193175" lon="8.511034">
+        <ele>714.32117</ele>
+      </trkpt>
+      <trkpt lat="51.193303" lon="8.511184">
+        <ele>711.41373</ele>
+      </trkpt>
+      <trkpt lat="51.193471" lon="8.511174">
+        <ele>709.62909</ele>
+      </trkpt>
+      <trkpt lat="51.193875" lon="8.510959">
+        <ele>706.4818</ele>
+      </trkpt>
+      <trkpt lat="51.193666" lon="8.511496">
+        <ele>702.02653</ele>
+      </trkpt>
+      <trkpt lat="51.193639" lon="8.511764">
+        <ele>697.43076</ele>
+      </trkpt>
+      <trkpt lat="51.193653" lon="8.51198">
+        <ele>693.04683</ele>
+      </trkpt>
+      <trkpt lat="51.193949" lon="8.51186">
+        <ele>691.8011</ele>
+      </trkpt>
+      <trkpt lat="51.194123" lon="8.511818">
+        <ele>690.6727</ele>
+      </trkpt>
+      <trkpt lat="51.194224" lon="8.511903">
+        <ele>688.14892</ele>
+      </trkpt>
+      <trkpt lat="51.194587" lon="8.51215">
+        <ele>680.57267</ele>
+      </trkpt>
+      <trkpt lat="51.194722" lon="8.51215">
+        <ele>679.73884</ele>
+      </trkpt>
+      <trkpt lat="51.194836" lon="8.512226">
+        <ele>677.56897</ele>
+      </trkpt>
+      <trkpt lat="51.19489" lon="8.512397">
+        <ele>673.52975</ele>
+      </trkpt>
+      <trkpt lat="51.195038" lon="8.512483">
+        <ele>670.59144</ele>
+      </trkpt>
+      <trkpt lat="51.195024" lon="8.512644">
+        <ele>666.55937</ele>
+      </trkpt>
+      <trkpt lat="51.195166" lon="8.512956">
+        <ele>658.50992</ele>
+      </trkpt>
+      <trkpt lat="51.195374" lon="8.512901">
+        <ele>657.81122</ele>
+      </trkpt>
+      <trkpt lat="51.195589" lon="8.512847">
+        <ele>656.56113</ele>
+      </trkpt>
+      <trkpt lat="51.195831" lon="8.512697">
+        <ele>655.1025</ele>
+      </trkpt>
+      <trkpt lat="51.196013" lon="8.512644">
+        <ele>652.71023</ele>
+      </trkpt>
+      <trkpt lat="51.196302" lon="8.512504">
+        <ele>650.26077</ele>
+        <extensions>
+          <oa:locType>routingNode</oa:locType>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

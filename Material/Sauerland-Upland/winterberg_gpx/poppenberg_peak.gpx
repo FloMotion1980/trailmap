@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Poppenberg Peak</name>
+    <author>
+      <name>Timo Sommer - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/33151994"/>
+    <time>2026-06-22T14:42:44.114Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Poppenberg Peak</name>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.192033" lon="8.508712">
+        <ele>739.3</ele>
+      </trkpt>
+      <trkpt lat="51.192133" lon="8.508277">
+        <ele>737.00373</ele>
+      </trkpt>
+      <trkpt lat="51.192072" lon="8.508165">
+        <ele>735.58226</ele>
+      </trkpt>
+      <trkpt lat="51.192009" lon="8.508074">
+        <ele>734.32147</ele>
+      </trkpt>
+      <trkpt lat="51.192018" lon="8.507934">
+        <ele>732.7951</ele>
+      </trkpt>
+      <trkpt lat="51.192116" lon="8.507896">
+        <ele>732.77148</ele>
+      </trkpt>
+      <trkpt lat="51.192002" lon="8.507816">
+        <ele>731.30279</ele>
+      </trkpt>
+      <trkpt lat="51.19177" lon="8.507837">
+        <ele>730.63197</ele>
+      </trkpt>
+      <trkpt lat="51.191655" lon="8.507741">
+        <ele>729.13527</ele>
+      </trkpt>
+      <trkpt lat="51.191605" lon="8.50766">
+        <ele>728.10351</ele>
+      </trkpt>
+      <trkpt lat="51.191396" lon="8.507515">
+        <ele>726.17065</ele>
+      </trkpt>
+      <trkpt lat="51.191309" lon="8.507542">
+        <ele>726.24707</ele>
+      </trkpt>
+      <trkpt lat="51.191067" lon="8.507467">
+        <ele>725.00429</ele>
+      </trkpt>
+      <trkpt lat="51.19099" lon="8.507301">
+        <ele>723.63653</ele>
+      </trkpt>
+      <trkpt lat="51.190869" lon="8.507215">
+        <ele>723.02384</ele>
+      </trkpt>
+      <trkpt lat="51.190768" lon="8.507301">
+        <ele>723.41823</ele>
+      </trkpt>
+      <trkpt lat="51.190671" lon="8.507312">
+        <ele>723.4268</ele>
+        <extensions>
+          <oa:locType>routingNode</oa:locType>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

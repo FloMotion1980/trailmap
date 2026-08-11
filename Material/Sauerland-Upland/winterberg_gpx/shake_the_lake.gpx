@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Shake the Lake</name>
+    <author>
+      <name>Timo Sommer - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/33152622"/>
+    <time>2026-06-22T14:42:49.471Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Shake the Lake</name>
+    <desc>Shake the Lake is a demanding trail that also requires quite a bit of muscle power.</desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.189965" lon="8.508341">
+        <ele>718.62101</ele>
+      </trkpt>
+      <trkpt lat="51.189868" lon="8.508321">
+        <ele>718.50209</ele>
+      </trkpt>
+      <trkpt lat="51.1898" lon="8.508407">
+        <ele>717.78927</ele>
+      </trkpt>
+      <trkpt lat="51.189673" lon="8.508396">
+        <ele>717.67028</ele>
+      </trkpt>
+      <trkpt lat="51.18937" lon="8.508224">
+        <ele>718.61136</ele>
+      </trkpt>
+      <trkpt lat="51.189249" lon="8.508257">
+        <ele>718.50665</ele>
+      </trkpt>
+      <trkpt lat="51.189269" lon="8.508396">
+        <ele>717.7854</ele>
+      </trkpt>
+      <trkpt lat="51.189128" lon="8.50831">
+        <ele>718.46238</ele>
+      </trkpt>
+      <trkpt lat="51.189383" lon="8.508643">
+        <ele>716.53225</ele>
+      </trkpt>
+      <trkpt lat="51.189417" lon="8.508793">
+        <ele>715.96934</ele>
+      </trkpt>
+      <trkpt lat="51.189552" lon="8.508997">
+        <ele>714.72609</ele>
+      </trkpt>
+      <trkpt lat="51.189686" lon="8.509233">
+        <ele>713.21228</ele>
+      </trkpt>
+      <trkpt lat="51.189518" lon="8.509147">
+        <ele>714.51797</ele>
+      </trkpt>
+      <trkpt lat="51.189679" lon="8.509598">
+        <ele>712.37277</ele>
+      </trkpt>
+      <trkpt lat="51.189982" lon="8.510274">
+        <ele>708.15867</ele>
+      </trkpt>
+      <trkpt lat="51.189861" lon="8.510306">
+        <ele>709.46721</ele>
+      </trkpt>
+      <trkpt lat="51.190069" lon="8.510638">
+        <ele>706.69837</ele>
+      </trkpt>
+      <trkpt lat="51.19021" lon="8.511089">
+        <ele>704.86931</ele>
+      </trkpt>
+      <trkpt lat="51.190271" lon="8.511357">
+        <ele>704.28721</ele>
+      </trkpt>
+      <trkpt lat="51.190251" lon="8.511422">
+        <ele>704.59099</ele>
+        <extensions>
+          <oa:locType>routingNode</oa:locType>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

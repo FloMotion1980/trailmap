@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Lebe Wild Trail</name>
+    <author>
+      <name>Timo Sommer - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/807107641"/>
+    <time>2026-06-22T14:42:47.155Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Lebe Wild Trail</name>
+    <desc>The most challenging trail in the trail park. Suitable for very advanced riders up to experts.</desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.192641" lon="8.509389">
+        <ele>745.34084</ele>
+        <name>Poppenberg, Winterberg</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>18</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="51.192718" lon="8.509404">
+        <ele>744.89687</ele>
+      </trkpt>
+      <trkpt lat="51.193001" lon="8.509125">
+        <ele>741.60041</ele>
+      </trkpt>
+      <trkpt lat="51.193823" lon="8.508726">
+        <ele>724.31087</ele>
+      </trkpt>
+      <trkpt lat="51.194186" lon="8.508855">
+        <ele>714.30758</ele>
+      </trkpt>
+      <trkpt lat="51.194259" lon="8.508606">
+        <ele>709.16671</ele>
+      </trkpt>
+      <trkpt lat="51.194532" lon="8.50901">
+        <ele>702.38546</ele>
+      </trkpt>
+      <trkpt lat="51.194621" lon="8.508848">
+        <ele>697.96232</ele>
+      </trkpt>
+      <trkpt lat="51.194896" lon="8.509105">
+        <ele>690.51836</ele>
+      </trkpt>
+      <trkpt lat="51.194994" lon="8.508924">
+        <ele>684.97168</ele>
+      </trkpt>
+      <trkpt lat="51.195184" lon="8.509286">
+        <ele>680.92474</ele>
+      </trkpt>
+      <trkpt lat="51.195286" lon="8.50879">
+        <ele>673.97087</ele>
+      </trkpt>
+      <trkpt lat="51.195189" lon="8.508335">
+        <ele>673.01176</ele>
+        <name>51.193171,8.506409</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

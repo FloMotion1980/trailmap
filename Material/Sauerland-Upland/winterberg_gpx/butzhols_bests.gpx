@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Butzhols Bests</name>
+    <author>
+      <name>Timo Sommer - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/33151624"/>
+    <time>2026-06-22T14:42:46.958Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Butzhols Bests</name>
+    <desc>Very tricky trail with steep sections.</desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.190512" lon="8.512681">
+        <ele>700.69538</ele>
+      </trkpt>
+      <trkpt lat="51.190533" lon="8.512908">
+        <ele>700.34959</ele>
+      </trkpt>
+      <trkpt lat="51.190528" lon="8.513084">
+        <ele>700.57709</ele>
+      </trkpt>
+      <trkpt lat="51.190377" lon="8.513513">
+        <ele>704.16205</ele>
+      </trkpt>
+      <trkpt lat="51.19031" lon="8.513631">
+        <ele>705.68418</ele>
+      </trkpt>
+      <trkpt lat="51.19027" lon="8.513824">
+        <ele>706.87556</ele>
+      </trkpt>
+      <trkpt lat="51.190317" lon="8.513969">
+        <ele>706.44668</ele>
+      </trkpt>
+      <trkpt lat="51.190431" lon="8.513975">
+        <ele>704.29762</ele>
+      </trkpt>
+      <trkpt lat="51.190549" lon="8.514023">
+        <ele>702.17244</ele>
+      </trkpt>
+      <trkpt lat="51.190639" lon="8.514103">
+        <ele>700.74652</ele>
+      </trkpt>
+      <trkpt lat="51.19069" lon="8.514248">
+        <ele>700.5996</ele>
+      </trkpt>
+      <trkpt lat="51.190784" lon="8.514329">
+        <ele>699.1794</ele>
+      </trkpt>
+      <trkpt lat="51.190902" lon="8.514286">
+        <ele>696.23061</ele>
+      </trkpt>
+      <trkpt lat="51.190942" lon="8.514136">
+        <ele>694.27917</ele>
+      </trkpt>
+      <trkpt lat="51.191009" lon="8.514039">
+        <ele>692.09297</ele>
+      </trkpt>
+      <trkpt lat="51.191117" lon="8.514082">
+        <ele>689.60612</ele>
+      </trkpt>
+      <trkpt lat="51.191278" lon="8.514393">
+        <ele>686.88337</ele>
+      </trkpt>
+      <trkpt lat="51.191372" lon="8.514356">
+        <ele>683.83008</ele>
+      </trkpt>
+      <trkpt lat="51.191399" lon="8.514184">
+        <ele>682.21326</ele>
+      </trkpt>
+      <trkpt lat="51.191483" lon="8.51413">
+        <ele>679.56133</ele>
+      </trkpt>
+      <trkpt lat="51.191577" lon="8.5142">
+        <ele>677.02053</ele>
+      </trkpt>
+      <trkpt lat="51.191695" lon="8.514517">
+        <ele>674.77614</ele>
+      </trkpt>
+      <trkpt lat="51.19176" lon="8.514372">
+        <ele>672.25978</ele>
+      </trkpt>
+      <trkpt lat="51.191834" lon="8.51404">
+        <ele>670.8335</ele>
+        <extensions>
+          <oa:locType>routingNode</oa:locType>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Sürenberg Sause</name>
+    <author>
+      <name>Timo Sommer - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/33092791"/>
+    <time>2026-06-22T14:42:44.210Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Sürenberg Sause</name>
+    <desc>The Sürenberg Sause is a blue trail that also offers optimal practice terrain for beginners and children.</desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.195778" lon="8.498408">
+        <ele>752.58375</ele>
+      </trkpt>
+      <trkpt lat="51.195818" lon="8.498697">
+        <ele>751.1632</ele>
+      </trkpt>
+      <trkpt lat="51.195805" lon="8.49888">
+        <ele>749.73359</ele>
+      </trkpt>
+      <trkpt lat="51.196067" lon="8.499266">
+        <ele>750.1087</ele>
+      </trkpt>
+      <trkpt lat="51.196141" lon="8.499695">
+        <ele>748.46193</ele>
+      </trkpt>
+      <trkpt lat="51.196248" lon="8.500146">
+        <ele>747.56564</ele>
+      </trkpt>
+      <trkpt lat="51.196437" lon="8.500639">
+        <ele>747.45246</ele>
+      </trkpt>
+      <trkpt lat="51.196531" lon="8.500822">
+        <ele>746.94962</ele>
+      </trkpt>
+      <trkpt lat="51.196732" lon="8.501444">
+        <ele>744.51469</ele>
+      </trkpt>
+      <trkpt lat="51.196759" lon="8.501637">
+        <ele>744.05442</ele>
+      </trkpt>
+      <trkpt lat="51.196853" lon="8.501862">
+        <ele>743.75836</ele>
+      </trkpt>
+      <trkpt lat="51.196934" lon="8.501927">
+        <ele>743.72829</ele>
+      </trkpt>
+      <trkpt lat="51.197109" lon="8.50227">
+        <ele>743.58306</ele>
+      </trkpt>
+      <trkpt lat="51.197304" lon="8.50271">
+        <ele>742.98667</ele>
+      </trkpt>
+      <trkpt lat="51.197331" lon="8.502882">
+        <ele>742.95058</ele>
+      </trkpt>
+      <trkpt lat="51.197338" lon="8.503096">
+        <ele>742.92971</ele>
+        <extensions>
+          <oa:locType>routingNode</oa:locType>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

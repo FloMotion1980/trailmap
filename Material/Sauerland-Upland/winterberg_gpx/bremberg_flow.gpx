@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Bremberg Flow</name>
+    <author>
+      <name>Timo Sommer - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/807102811"/>
+    <time>2026-06-22T14:42:46.337Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Bremberg Flow</name>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.190577" lon="8.496696">
+        <ele>803.44553</ele>
+        <name>51.190577,8.496696</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>18</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="51.190675" lon="8.496739">
+        <ele>803.62593</ele>
+      </trkpt>
+      <trkpt lat="51.190883" lon="8.496836">
+        <ele>803.46896</ele>
+      </trkpt>
+      <trkpt lat="51.190984" lon="8.496938">
+        <ele>803.509</ele>
+      </trkpt>
+      <trkpt lat="51.191061" lon="8.49702">
+        <ele>803.21022</ele>
+      </trkpt>
+      <trkpt lat="51.191199" lon="8.497365">
+        <ele>800.36152</ele>
+      </trkpt>
+      <trkpt lat="51.191283" lon="8.497543">
+        <ele>798.59295</ele>
+      </trkpt>
+      <trkpt lat="51.191346" lon="8.497669">
+        <ele>796.8632</ele>
+      </trkpt>
+      <trkpt lat="51.19137" lon="8.4977">
+        <ele>796.67824</ele>
+      </trkpt>
+      <trkpt lat="51.191534" lon="8.49775">
+        <ele>794.60632</ele>
+      </trkpt>
+      <trkpt lat="51.191542" lon="8.497889">
+        <ele>793.80592</ele>
+      </trkpt>
+      <trkpt lat="51.191584" lon="8.497956">
+        <ele>792.9515</ele>
+      </trkpt>
+      <trkpt lat="51.191745" lon="8.497928">
+        <ele>790.92379</ele>
+      </trkpt>
+      <trkpt lat="51.191847" lon="8.498014">
+        <ele>789.00654</ele>
+      </trkpt>
+      <trkpt lat="51.191903" lon="8.498104">
+        <ele>787.45162</ele>
+      </trkpt>
+      <trkpt lat="51.191936" lon="8.498215">
+        <ele>786.67282</ele>
+      </trkpt>
+      <trkpt lat="51.191952" lon="8.498442">
+        <ele>786.45451</ele>
+      </trkpt>
+      <trkpt lat="51.192024" lon="8.498541">
+        <ele>784.58081</ele>
+      </trkpt>
+      <trkpt lat="51.192087" lon="8.498578">
+        <ele>782.3515</ele>
+      </trkpt>
+      <trkpt lat="51.192128" lon="8.49857">
+        <ele>781.21506</ele>
+      </trkpt>
+      <trkpt lat="51.192241" lon="8.498429">
+        <ele>779.83865</ele>
+      </trkpt>
+      <trkpt lat="51.192274" lon="8.498435">
+        <ele>779.2866</ele>
+      </trkpt>
+      <trkpt lat="51.192312" lon="8.498476">
+        <ele>778.41147</ele>
+      </trkpt>
+      <trkpt lat="51.192368" lon="8.498605">
+        <ele>777.21829</ele>
+      </trkpt>
+      <trkpt lat="51.192405" lon="8.49875">
+        <ele>776.54954</ele>
+      </trkpt>
+      <trkpt lat="51.192451" lon="8.498745">
+        <ele>775.85606</ele>
+      </trkpt>
+      <trkpt lat="51.192533" lon="8.49868">
+        <ele>774.22018</ele>
+      </trkpt>
+      <trkpt lat="51.192637" lon="8.498933">
+        <ele>773.1264</ele>
+      </trkpt>
+      <trkpt lat="51.192704" lon="8.498938">
+        <ele>771.57841</ele>
+      </trkpt>
+      <trkpt lat="51.1928" lon="8.498902">
+        <ele>769.20392</ele>
+      </trkpt>
+      <trkpt lat="51.192844" lon="8.498915">
+        <ele>767.88242</ele>
+      </trkpt>
+      <trkpt lat="51.19291" lon="8.498987">
+        <ele>765.68543</ele>
+      </trkpt>
+      <trkpt lat="51.193045" lon="8.49902">
+        <ele>761.39671</ele>
+      </trkpt>
+      <trkpt lat="51.193126" lon="8.498982">
+        <ele>759.69213</ele>
+      </trkpt>
+      <trkpt lat="51.193215" lon="8.498981">
+        <ele>757.90996</ele>
+      </trkpt>
+      <trkpt lat="51.193332" lon="8.499062">
+        <ele>755.57979</ele>
+      </trkpt>
+      <trkpt lat="51.193443" lon="8.499206">
+        <ele>753.12983</ele>
+      </trkpt>
+      <trkpt lat="51.193451" lon="8.499244">
+        <ele>753.02489</ele>
+        <name>Büre Bremberg X-Press, Winterberg</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>18</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

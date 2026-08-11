@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Cross Over</name>
+    <author>
+      <name>Ronja Henke - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/33092523"/>
+    <time>2026-05-14T07:59:54.829Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Cross Over</name>
+    <desc>This trail runs almost horizontally and is also suitable for trail beginners.</desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.189538" lon="8.51316">
+        <ele>716.14683</ele>
+        <name>51.189538,8.513160</name>
+      </trkpt>
+      <trkpt lat="51.1898" lon="8.513106">
+        <ele>712.87093</ele>
+      </trkpt>
+      <trkpt lat="51.189928" lon="8.512999">
+        <ele>710.93332</ele>
+      </trkpt>
+      <trkpt lat="51.19011" lon="8.512977">
+        <ele>708.12052</ele>
+      </trkpt>
+      <trkpt lat="51.190412" lon="8.51272">
+        <ele>702.56157</ele>
+      </trkpt>
+      <trkpt lat="51.190345" lon="8.512065">
+        <ele>703.84547</ele>
+      </trkpt>
+      <trkpt lat="51.190089" lon="8.511325">
+        <ele>706.55301</ele>
+      </trkpt>
+      <trkpt lat="51.190083" lon="8.511121">
+        <ele>706.43339</ele>
+      </trkpt>
+      <trkpt lat="51.189975" lon="8.510778">
+        <ele>707.75248</ele>
+      </trkpt>
+      <trkpt lat="51.189861" lon="8.51052">
+        <ele>709.28272</ele>
+      </trkpt>
+      <trkpt lat="51.189868" lon="8.510338">
+        <ele>709.34278</ele>
+      </trkpt>
+      <trkpt lat="51.189673" lon="8.510113">
+        <ele>711.89315</ele>
+      </trkpt>
+      <trkpt lat="51.189639" lon="8.509898">
+        <ele>712.44355</ele>
+      </trkpt>
+      <trkpt lat="51.189464" lon="8.509651">
+        <ele>714.27293</ele>
+      </trkpt>
+      <trkpt lat="51.18937" lon="8.509362">
+        <ele>715.33535</ele>
+      </trkpt>
+      <trkpt lat="51.189235" lon="8.509179">
+        <ele>716.74398</ele>
+      </trkpt>
+      <trkpt lat="51.189054" lon="8.508825">
+        <ele>718.47763</ele>
+      </trkpt>
+      <trkpt lat="51.188825" lon="8.508546">
+        <ele>720.10787</ele>
+      </trkpt>
+      <trkpt lat="51.188516" lon="8.508321">
+        <ele>722.28522</ele>
+        <name>51.188516,8.508321</name>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

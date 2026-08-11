@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Möppis Mover (Uphill)</name>
+    <author>
+      <name>Timo Sommer - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/33151289"/>
+    <time>2026-06-22T14:42:48.133Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Möppis Mover (Uphill)</name>
+    <desc>Technical uphill trail.</desc>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.19528" lon="8.504984">
+        <ele>686.51458</ele>
+        <name>51.195280,8.504984</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="51.195294" lon="8.504609">
+        <ele>689.91192</ele>
+      </trkpt>
+      <trkpt lat="51.195448" lon="8.504738">
+        <ele>691.96185</ele>
+      </trkpt>
+      <trkpt lat="51.195428" lon="8.504856">
+        <ele>690.37152</ele>
+      </trkpt>
+      <trkpt lat="51.195637" lon="8.504909">
+        <ele>694.33104</ele>
+      </trkpt>
+      <trkpt lat="51.195825" lon="8.505092">
+        <ele>696.58617</ele>
+      </trkpt>
+      <trkpt lat="51.195932" lon="8.504984">
+        <ele>700.5</ele>
+      </trkpt>
+      <trkpt lat="51.196087" lon="8.505036">
+        <ele>703.84222</ele>
+      </trkpt>
+      <trkpt lat="51.196167" lon="8.505133">
+        <ele>704.81602</ele>
+      </trkpt>
+      <trkpt lat="51.196376" lon="8.505015">
+        <ele>711.9725</ele>
+      </trkpt>
+      <trkpt lat="51.196645" lon="8.505284">
+        <ele>715.77138</ele>
+      </trkpt>
+      <trkpt lat="51.196672" lon="8.505402">
+        <ele>714.97146</ele>
+      </trkpt>
+      <trkpt lat="51.196786" lon="8.505445">
+        <ele>717.24355</ele>
+      </trkpt>
+      <trkpt lat="51.196887" lon="8.505144">
+        <ele>723.19403</ele>
+      </trkpt>
+      <trkpt lat="51.196887" lon="8.504951">
+        <ele>725.38499</ele>
+      </trkpt>
+      <trkpt lat="51.196766" lon="8.504522">
+        <ele>727.50185</ele>
+      </trkpt>
+      <trkpt lat="51.197055" lon="8.504532">
+        <ele>732.94467</ele>
+      </trkpt>
+      <trkpt lat="51.196873" lon="8.503717">
+        <ele>736.8213</ele>
+      </trkpt>
+      <trkpt lat="51.197088" lon="8.503803">
+        <ele>739.13663</ele>
+      </trkpt>
+      <trkpt lat="51.197324" lon="8.503053">
+        <ele>742.98324</ele>
+        <name>51.197324,8.503053</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>17</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

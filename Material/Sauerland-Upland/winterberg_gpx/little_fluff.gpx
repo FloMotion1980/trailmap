@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Little Fluff</name>
+    <author>
+      <name>Timo Sommer - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/33152106"/>
+    <time>2026-06-22T14:42:44.214Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Little Fluff</name>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.190668" lon="8.507313">
+        <ele>723.42927</ele>
+      </trkpt>
+      <trkpt lat="51.190774" lon="8.507214">
+        <ele>723.03797</ele>
+      </trkpt>
+      <trkpt lat="51.190854" lon="8.507129">
+        <ele>722.5841</ele>
+      </trkpt>
+      <trkpt lat="51.190942" lon="8.507107">
+        <ele>722.41478</ele>
+      </trkpt>
+      <trkpt lat="51.191096" lon="8.507236">
+        <ele>723.29367</ele>
+      </trkpt>
+      <trkpt lat="51.191278" lon="8.506925">
+        <ele>720.89604</ele>
+      </trkpt>
+      <trkpt lat="51.191231" lon="8.506764">
+        <ele>719.99656</ele>
+      </trkpt>
+      <trkpt lat="51.191386" lon="8.506528">
+        <ele>718.05269</ele>
+      </trkpt>
+      <trkpt lat="51.191473" lon="8.506592">
+        <ele>717.71078</ele>
+      </trkpt>
+      <trkpt lat="51.19154" lon="8.506753">
+        <ele>718.50426</ele>
+      </trkpt>
+      <trkpt lat="51.191634" lon="8.506785">
+        <ele>718.28526</ele>
+      </trkpt>
+      <trkpt lat="51.191789" lon="8.506903">
+        <ele>718.90051</ele>
+      </trkpt>
+      <trkpt lat="51.191923" lon="8.506946">
+        <ele>718.91546</ele>
+      </trkpt>
+      <trkpt lat="51.192004" lon="8.506871">
+        <ele>717.37441</ele>
+      </trkpt>
+      <trkpt lat="51.192387" lon="8.506957">
+        <ele>716.90177</ele>
+      </trkpt>
+      <trkpt lat="51.192522" lon="8.507129">
+        <ele>718.64966</ele>
+      </trkpt>
+      <trkpt lat="51.192724" lon="8.507343">
+        <ele>719.71098</ele>
+      </trkpt>
+      <trkpt lat="51.192824" lon="8.507386">
+        <ele>718.93921</ele>
+      </trkpt>
+      <trkpt lat="51.192999" lon="8.507493">
+        <ele>718.08057</ele>
+      </trkpt>
+      <trkpt lat="51.193129" lon="8.507463">
+        <ele>715.10398</ele>
+      </trkpt>
+      <trkpt lat="51.193196" lon="8.507259">
+        <ele>709.58405</ele>
+      </trkpt>
+      <trkpt lat="51.193115" lon="8.506883">
+        <ele>703.64097</ele>
+      </trkpt>
+      <trkpt lat="51.193196" lon="8.506744">
+        <ele>699.2654</ele>
+      </trkpt>
+      <trkpt lat="51.193445" lon="8.506851">
+        <ele>696.31071</ele>
+      </trkpt>
+      <trkpt lat="51.193767" lon="8.506572">
+        <ele>686.12833</ele>
+        <extensions>
+          <oa:locType>routingNode</oa:locType>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>

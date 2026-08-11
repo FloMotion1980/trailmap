@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<gpx version="1.1" creator="outdooractive - http://www.outdooractive.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:oa="http://www.outdooractive.com/GPX/Extensions/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.outdooractive.com/GPX/Extensions/1 https://www.outdooractive.com/schema/gpx_extensions.xsd">
+  <metadata>
+    <name>Landal</name>
+    <author>
+      <name>Timo Sommer - Ferienwelt Winterberg</name>
+    </author>
+    <link href="https://www.outdooractive.com/r/807107326"/>
+    <time>2026-04-30T09:24:41.863Z</time>
+    <extensions>
+      <oa:oaCategory>mountainbiking</oa:oaCategory>
+    </extensions>
+  </metadata>
+  <trk>
+    <name>Landal</name>
+    <type>mountainbiking</type>
+    <trkseg>
+      <trkpt lat="51.197351" lon="8.5033">
+        <ele>745.70068</ele>
+        <name>Bergstation Sürenberg, Winterberg</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>18</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="51.197207" lon="8.503433">
+        <ele>744.05997</ele>
+      </trkpt>
+      <trkpt lat="51.197101" lon="8.503825">
+        <ele>741.31661</ele>
+      </trkpt>
+      <trkpt lat="51.196964" lon="8.503731">
+        <ele>740.1897</ele>
+      </trkpt>
+      <trkpt lat="51.196879" lon="8.503593">
+        <ele>739.88635</ele>
+      </trkpt>
+      <trkpt lat="51.196807" lon="8.503633">
+        <ele>738.27613</ele>
+      </trkpt>
+      <trkpt lat="51.196806" lon="8.503678">
+        <ele>737.83121</ele>
+      </trkpt>
+      <trkpt lat="51.19689" lon="8.503938">
+        <ele>737.14733</ele>
+      </trkpt>
+      <trkpt lat="51.196907" lon="8.50404">
+        <ele>736.39961</ele>
+      </trkpt>
+      <trkpt lat="51.196897" lon="8.504206">
+        <ele>734.46073</ele>
+      </trkpt>
+      <trkpt lat="51.196997" lon="8.50458">
+        <ele>731.76917</ele>
+      </trkpt>
+      <trkpt lat="51.197073" lon="8.504595">
+        <ele>732.97855</ele>
+      </trkpt>
+      <trkpt lat="51.197049" lon="8.504778">
+        <ele>730.40805</ele>
+      </trkpt>
+      <trkpt lat="51.196954" lon="8.50487">
+        <ele>728.18204</ele>
+      </trkpt>
+      <trkpt lat="51.19693" lon="8.505034">
+        <ele>725.96554</ele>
+      </trkpt>
+      <trkpt lat="51.19694" lon="8.50521">
+        <ele>724.1502</ele>
+      </trkpt>
+      <trkpt lat="51.196996" lon="8.505349">
+        <ele>723.29457</ele>
+      </trkpt>
+      <trkpt lat="51.196987" lon="8.505508">
+        <ele>721.24882</ele>
+      </trkpt>
+      <trkpt lat="51.196983" lon="8.505664">
+        <ele>719.31829</ele>
+      </trkpt>
+      <trkpt lat="51.196923" lon="8.505808">
+        <ele>716.12928</ele>
+      </trkpt>
+      <trkpt lat="51.196907" lon="8.506161">
+        <ele>711.34602</ele>
+      </trkpt>
+      <trkpt lat="51.196931" lon="8.506309">
+        <ele>709.79949</ele>
+      </trkpt>
+      <trkpt lat="51.19697" lon="8.506472">
+        <ele>708.7195</ele>
+      </trkpt>
+      <trkpt lat="51.196901" lon="8.506596">
+        <ele>705.59647</ele>
+      </trkpt>
+      <trkpt lat="51.196807" lon="8.506586">
+        <ele>703.51095</ele>
+      </trkpt>
+      <trkpt lat="51.196713" lon="8.506605">
+        <ele>700.86851</ele>
+      </trkpt>
+      <trkpt lat="51.196699" lon="8.506753">
+        <ele>698.17749</ele>
+      </trkpt>
+      <trkpt lat="51.196712" lon="8.506918">
+        <ele>695.93434</ele>
+      </trkpt>
+      <trkpt lat="51.196762" lon="8.507112">
+        <ele>694.13101</ele>
+      </trkpt>
+      <trkpt lat="51.196748" lon="8.507264">
+        <ele>691.30616</ele>
+      </trkpt>
+      <trkpt lat="51.196666" lon="8.507392">
+        <ele>687.11637</ele>
+      </trkpt>
+      <trkpt lat="51.196692" lon="8.507538">
+        <ele>685.36869</ele>
+      </trkpt>
+      <trkpt lat="51.196444" lon="8.507767">
+        <ele>676.15291</ele>
+        <name>51.196444,8.507767</name>
+        <extensions>
+          <oa:Extension>
+            <oa:mapZoom>16</oa:mapZoom>
+          </oa:Extension>
+        </extensions>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
