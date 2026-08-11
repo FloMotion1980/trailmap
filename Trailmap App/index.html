@@ -946,8 +946,18 @@ const REGION_CATALOG = {
   // the same gondola-top hub many times, and disentangling which occurrence is the "real" ride for
   // each trail would need more than single-nearest-point matching. Left as an honest flat connector
   // line rather than risk a wrong substitution.
+  // Lifts added 2026-08-11: 7 summer bike-carrying lifts (Carosello 3000's San Rocco/Baite Pel/
+  // Carosello-3000-summit gondola in two OSM-mapped sections, the Livigno-Tagliede-Costaccia gondola
+  // in two sections, and the Valandrea-Vetta chairlift; Mottolino's own cabinovia and the Yepi
+  // chairlift) -- all confirmed on carosello3000.com's/mottolino.com's own summer bike-pass pages,
+  // geometry from OSM matched by name. Also added 3 previously-skipped/missing trails: Sentiero delle
+  // Tee (the original "Panoramica" skip, confirmed via carosello3000.com's own alt-name + OSM's "Troi
+  // da li Tea" relation), Downhill World Championship 2005 (the original "D.H. 2005" skip, Trailforks),
+  // and Hairy Cattle (new, Trailforks) -- plus a difficulty correction for 4 Carosello 3000 trails
+  // whose diff had been read one tier too low (Coast to Coast, Roller Coaster, Bikers United, Blueberry
+  // Line), found by re-checking every Carosello 3000 trail directly against its Trailforks dicon.
   livigno: {
-    countries: ["IT"], label: "Livigno", file: "regions/livigno.json", trailCount: 26,
+    countries: ["IT"], label: "Livigno", file: "regions/livigno.json", trailCount: 29,
     bounds: [[46.49736, 10.07377], [46.55586, 10.16482]],
     subRegions: {
       carosello3000: { label: "Carosello 3000", color: "#1c8ac2" },
