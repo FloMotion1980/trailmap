@@ -938,13 +938,16 @@ const REGION_CATALOG = {
   // left out rather than guessed. Mottolino's "D.H. 2005" (3, the former MTB World Championships DH
   // course) could not be found on Trailforks under any of several guessed slugs -- also left out.
   // "Tutti Frutti Epic MTB Tour" is built from the operator's own GPX (real elevation, 54km recorded
-  // vs. 50km published -- kept the real geometry-derived number) but stayed a single flat `loop:true`
-  // line, NOT segmented into TRAIL_SEGMENTS: an endpoint-anchored match against every Carosello3000
-  // trail (per docs/finale-ligure.md's method) found 11 of 12 trails with both endpoints within 120m
-  // of the recorded track, but their matched windows overlap heavily and inconsistently (e.g. Bikers
-  // United's window sits fully inside both Enduro's and H-Dream's) -- the recorded day-tour revisits
-  // the same gondola-top hub many times, and disentangling which occurrence is the "real" ride for
-  // each trail would need more than single-nearest-point matching. Left as an honest flat connector
+  // vs. 50km published -- kept the real geometry-derived number). Segmented 2026-08-11 (user) using the
+  // improved contiguous-run matching from the Naheland tours ([[trailrunden-keep-segments]]): the
+  // original endpoint-anchored attempt failed because the day-tour revisits the same gondola-top hub
+  // many times, so two-point matching kept locking onto the wrong occurrence -- fixed by walking every
+  // point of each candidate trail against the tour and requiring one contiguous low-distance run (not
+  // just close endpoints). 9 of the 16 Carosello 3000 trails matched cleanly and non-overlappingly
+  // (S-Way, Bikers United, H-Dream, Blueberry Line, Sentiero delle Tee, Federia, Roller Coaster, Coast
+  // to Coast, Madonon); the rest (incl. The Snake, confirmed by the user as not actually ridden on this
+  // tour) only ever touched the track for a few metres at a junction -- real coincidental crossings, not
+  // rides, correctly rejected. Max seam across all 19 segments: 17.7m.
   // line rather than risk a wrong substitution.
   // Lifts added 2026-08-11: 7 summer bike-carrying lifts (Carosello 3000's San Rocco/Baite Pel/
   // Carosello-3000-summit gondola in two OSM-mapped sections, the Livigno-Tagliede-Costaccia gondola
