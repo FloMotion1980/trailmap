@@ -1,0 +1,212 @@
+# -*- coding: utf-8 -*-
+"""Regression harness for gpx_map_match.py, against tours this app has ALREADY built and
+(to varying degrees) verified -- a growing test bed for improving the matcher without having to
+re-litigate every case by hand each time. See tools/gpx_map_match.py's own docstring for the
+method and memory note gpx-map-matching-tool for why this exists.
+
+Ground-truth strength varies by case and is stated per case:
+- "tourenbuilder": the user hand-built the exact ride in the app's own Tourenbuilder and exported
+  it -- the strongest evidence available (Livigno's Tutti Frutti).
+- "region": the tour's CURRENT trailSegments in the live region file, built by matching + at least
+  one round of user-caught correction and a visual browser check -- trusted but not independently
+  authored. Do not over-index on small length/seam differences against this kind of ground truth;
+  a NEW result that disagrees is sometimes the matcher finding something the original build missed
+  (or a case worth a human look), not automatically a matcher bug.
+
+Run: python tools/test_gpx_map_match.py [case_name ...]  (omit args to run all cases)
+"""
+import json
+import os
+import re
+import sys
+
+sys.path.insert(0, r"D:\Trailmap\tools")
+from trailmap_pipeline import parse_gpx, cumulative_km, haversine_m
+from gpx_map_match import match_gpx_to_network, resolve_segments, closest_point_on_polyline
+
+ROOT = r"D:\Trailmap"
+
+
+def _region_path(key):
+    return os.path.join(ROOT, "Trailmap App", "regions", f"{key}.json")
+
+
+def _load_region(key):
+    return json.load(open(_region_path(key), encoding="utf-8"))
+
+
+def _candidates_from_region(region_data, exclude_ids=(), region_keys=None):
+    """All trails+lifts in the region file, optionally restricted to given sub-region keys.
+
+    ALWAYS excludes every `loop: true` entry (every Tour in this region file), not just the one
+    being tested -- a Tour is never itself a ridable "component", and a region with several Tours
+    (Bike Kingdom has 4, Naheland has 3) will otherwise silently offer one tour's own line as a
+    candidate for matching a DIFFERENT tour, since their routes often overlap in a shared resort.
+    Found via bk_tour_b2r_schwarz matching stretches of bk_tour_615_blau/616_rot/b2r_e_rot."""
+    exclude_ids = set(exclude_ids) | {t["id"] for t in region_data["lineTrails"] if t.get("loop")}
+    cands = {}
+    for t in region_data["lineTrails"]:
+        if t["id"] in exclude_ids:
+            continue
+        if region_keys and t["region"] not in region_keys:
+            continue
+        cands[t["id"]] = region_data["trailGeo"][t["id"]]
+    for l in region_data.get("lifts") or []:
+        if region_keys and l["region"] not in region_keys:
+            continue
+        cands[l["id"]] = l["coords"]
+    return cands
+
+
+def _ground_truth_from_region_segments(region_data, tour_id, candidates):
+    """Read the tour's CURRENT trailSegments as a trusted-but-not-authored reference sequence:
+    ordered (id, reversed) pairs, connectors dropped, consecutive dupes of the same id collapsed."""
+    segs = region_data["trailSegments"][tour_id]
+    seq = []
+    for s in segs:
+        cid = s.get("trailId") or s.get("liftId")
+        if cid is None:
+            continue
+        cgeo = candidates.get(cid)
+        reversed_ = False
+        if cgeo and len(s["coords"]) >= 2:
+            d0, _, _ = closest_point_on_polyline(cgeo, s["coords"][0])
+            d_start_is_geo_start = haversine_m(cgeo[0], s["coords"][0])
+            d_start_is_geo_end = haversine_m(cgeo[-1], s["coords"][0])
+            reversed_ = d_start_is_geo_end < d_start_is_geo_start
+        if seq and seq[-1][0] == cid:
+            continue
+        seq.append((cid, reversed_))
+    return seq
+
+
+def _extract_waldmeister_gpx(json_path):
+    """Waldmeister's own source isn't a GPX file -- it's Outdooractive's trackinfo API response,
+    saved raw. Same extraction as the original build (segments[].routes[].features[].geometry)."""
+    data = json.load(open(json_path, encoding="utf-8"))
+    track = data["answer"]["contents"][0]["track"]
+    pts = []
+    for seg in track["segments"]:
+        for route in seg.get("routes") or []:
+            for feat in route.get("features") or []:
+                geom = feat.get("geometry") or {}
+                if geom.get("type") != "LineString":
+                    continue
+                for c in geom["coordinates"]:
+                    lon, lat = c[0], c[1]
+                    pt = [lat, lon]
+                    if pts and pts[-1] == pt:
+                        continue
+                    pts.append(pt)
+    return pts
+
+
+def _compare(name, ground_truth, resolved):
+    print(f"\n=== {name} ===")
+    print(f"ground truth: {len(ground_truth)} elements, matcher: {len(resolved)} segments")
+    n = min(len(ground_truth), len(resolved))
+    id_order_ok = 0
+    dir_ok = 0
+    len_ok = 0
+    for i in range(n):
+        gt_id, gt_rev = ground_truth[i]
+        r = resolved[i]
+        id_match = (gt_id == r["id"])
+        dir_match = id_match and (gt_rev == r["reversed"])
+        id_order_ok += id_match
+        dir_ok += dir_match
+        marker = "OK" if id_match else ".."
+        print(f"  {marker} [{i:2d}] gt={gt_id or '-':38s} rev={gt_rev!s:5s} | "
+              f"auto={r['id']:38s} rev={r['reversed']!s:5s}")
+    if len(ground_truth) != len(resolved):
+        print(f"  ** length mismatch: {len(ground_truth)} ground-truth elements vs "
+              f"{len(resolved)} matcher segments -- alignment above may drift after the first gap")
+    print(f"  summary: id+order match {id_order_ok}/{len(ground_truth)}, "
+          f"direction match {dir_ok}/{len(ground_truth)}")
+    return id_order_ok, dir_ok, len(ground_truth)
+
+
+def case_livigno_tutti_frutti():
+    d = _load_region("livigno")
+    candidates = _candidates_from_region(d, exclude_ids={"c3000_tutti_frutti"},
+                                          region_keys={"carosello3000mtb", "carosello3000natur"})
+    gpx = parse_gpx(open(os.path.join(ROOT, "Material", "Livigno", "tutti-frutti-original.gpx"),
+                          encoding="utf-8", errors="replace").read())
+    builder = json.load(open(os.path.join(ROOT, "Material", "Livigno",
+                                           "tutti-frutti-tourenbuilder-export.json"), encoding="utf-8"))
+    ground_truth = [(el["id"], el["reversed"]) for el in builder["elements"]]
+    segs = match_gpx_to_network(gpx, candidates)
+    resolved = resolve_segments(gpx, candidates, segs)
+    return "Livigno Tutti Frutti (ground truth: tourenbuilder)", ground_truth, resolved
+
+
+def case_waldmeister():
+    d = _load_region("waldmeister")
+    tour_id = "wm_radlust_waldmeister"
+    candidates = _candidates_from_region(d, exclude_ids={tour_id})
+    gpx = _extract_waldmeister_gpx(os.path.join(ROOT, "Material", "Waldmeister",
+                                                 "outdooractive-trackinfo-42450801.json"))
+    ground_truth = _ground_truth_from_region_segments(d, tour_id, candidates)
+    segs = match_gpx_to_network(gpx, candidates)
+    resolved = resolve_segments(gpx, candidates, segs)
+    return "RadLust Waldmeister (ground truth: region build)", ground_truth, resolved
+
+
+def case_naheland(tour_id, gpx_filename):
+    d = _load_region("naheland")
+    candidates = _candidates_from_region(d, exclude_ids={tour_id})
+    gpx = parse_gpx(open(os.path.join(ROOT, "Material", "Naheland", "tours", gpx_filename),
+                          encoding="utf-8", errors="replace").read())
+    ground_truth = _ground_truth_from_region_segments(d, tour_id, candidates)
+    segs = match_gpx_to_network(gpx, candidates)
+    resolved = resolve_segments(gpx, candidates, segs)
+    return f"Naheland {tour_id} (ground truth: region build)", ground_truth, resolved
+
+
+def case_bikekingdom(tour_id, gpx_filename):
+    d = _load_region("bikekingdom")
+    candidates = _candidates_from_region(d, exclude_ids={tour_id})
+    gpx = parse_gpx(open(os.path.join(ROOT, "Material", "BikeKingdom", gpx_filename),
+                          encoding="utf-8", errors="replace").read())
+    ground_truth = _ground_truth_from_region_segments(d, tour_id, candidates)
+    segs = match_gpx_to_network(gpx, candidates)
+    resolved = resolve_segments(gpx, candidates, segs)
+    return f"Bike Kingdom {tour_id} (ground truth: region build)", ground_truth, resolved
+
+
+def case_portesdusoleil():
+    d = _load_region("portesdusoleil")
+    tour_id = "pds_tour_vtt_2025"
+    candidates = _candidates_from_region(d, exclude_ids={tour_id})
+    gpx = parse_gpx(open(os.path.join(ROOT, "Material", "Portes du Soleil",
+                                       "Portes Du Soleil MTB Tour .gpx"), encoding="utf-8", errors="replace").read())
+    ground_truth = _ground_truth_from_region_segments(d, tour_id, candidates)
+    segs = match_gpx_to_network(gpx, candidates)
+    resolved = resolve_segments(gpx, candidates, segs)
+    return "Portes du Soleil Tour VTT (ground truth: region build)", ground_truth, resolved
+
+
+CASES = {
+    "livigno": case_livigno_tutti_frutti,
+    "waldmeister": case_waldmeister,
+    "naheland_flow": lambda: case_naheland("nlt_flow_tour", "flow-tour.gpx"),
+    "naheland_panorama": lambda: case_naheland("nlt_panorama_tour", "panorama-tour.gpx"),
+    "naheland_enduro": lambda: case_naheland("nlt_enduro_tour", "enduro-tour.gpx"),
+    "bk_615": lambda: case_bikekingdom("bk_tour_615_blau", "t2805733_615 biketicket to ride.gpx"),
+    "bk_616": lambda: case_bikekingdom("bk_tour_616_rot", "t2811055_616 biketicket to ride red.gpx"),
+    "bk_b2r_schwarz": lambda: case_bikekingdom("bk_tour_b2r_schwarz", "t3508125_biketicket 2 ride black.gpx"),
+    "bk_b2r_e_rot": lambda: case_bikekingdom("bk_tour_b2r_e_rot", "t37756137_e-biketicket 2 ride red.gpx"),
+    "pds": case_portesdusoleil,
+}
+
+if __name__ == "__main__":
+    names = sys.argv[1:] or list(CASES.keys())
+    totals = [0, 0, 0]
+    for name in names:
+        title, gt, resolved = CASES[name]()
+        a, b, c = _compare(title, gt, resolved)
+        totals[0] += a
+        totals[1] += b
+        totals[2] += c
+    print(f"\n=== TOTAL across {len(names)} case(s): "
+          f"id+order {totals[0]}/{totals[2]}, direction {totals[1]}/{totals[2]} ===")

@@ -196,7 +196,7 @@ def _run_length_encode(labels):
     return runs
 
 
-def _split_direction_reversals(gpx_points, candidates, runs, min_segment_pts=15, min_segment_km=0.1):
+def _split_direction_reversals(gpx_points, candidates, runs, min_segment_m=150.0, min_segment_km=0.1):
     """A trail ridden out-and-back (Livigno's Madonon: down one way, then back up the same line)
     produces ONE consolidated run, since id and time are both contiguous -- but it is really two
     separate rides. Detect this: project every point of the run onto the candidate's own
@@ -204,6 +204,7 @@ def _split_direction_reversals(gpx_points, candidates, runs, min_segment_pts=15,
     extreme then falling back (or vice versa), not monotonic start-to-end. Split at that extreme
     when both halves are substantial, so an "epic" tour that revisits a trail immediately gets two
     segments, matching how a human (or the Tourenbuilder) would describe the ride."""
+    min_segment_pts = max(2, round(min_segment_m / _avg_spacing_m(gpx_points)))
     out = []
     for cid, a, b in runs:
         cgeo = candidates[cid]
@@ -234,9 +235,17 @@ def _split_direction_reversals(gpx_points, candidates, runs, min_segment_pts=15,
     return out
 
 
-def _consolidate(runs, gap_merge_pts, min_run_pts):
+def _consolidate(runs, gap_merge_pts, min_run_pts, candidate_lengths_pts=None, min_run_fraction=0.5):
     """Merge same-id runs separated by a short gap (noise/brief GPS wobble, not a real
-    revisit), then drop whatever is still too short to be a real ride."""
+    revisit), then drop whatever is still too short to be a real ride.
+
+    The min-run floor is capped at a fraction of the candidate's OWN length when
+    `candidate_lengths_pts` is given (id -> that candidate's point-count-equivalent length).
+    Needed because a single global floor can't serve both a short trail (215m) and a tightly
+    clustered network (Livigno's lift-station revisits, which need a HIGH floor to reject noise) --
+    see gpx-map-matching-tool memory / this module's own docstring for the measured trade-off. A
+    215m trail only needs to clear ~50% of its own length to register as a real ride; a 4km trail
+    can and should still be held to the full global floor."""
     named = [r for r in runs if r[0] is not None]
     consolidated = []
     for cid, a, b in named:
@@ -244,15 +253,41 @@ def _consolidate(runs, gap_merge_pts, min_run_pts):
             consolidated[-1][2] = b
         else:
             consolidated.append([cid, a, b])
-    return [c for c in consolidated if (c[2] - c[1] + 1) >= min_run_pts]
+
+    out = []
+    for cid, a, b in consolidated:
+        floor = min_run_pts
+        if candidate_lengths_pts and cid in candidate_lengths_pts:
+            floor = min(min_run_pts, candidate_lengths_pts[cid] * min_run_fraction)
+        if (b - a + 1) >= floor:
+            out.append([cid, a, b])
+    return out
+
+
+def _avg_spacing_m(gpx_points):
+    """Metres per GPX point, used to convert the distance-based parameters below into point
+    counts. NECESSARY, not cosmetic: a recording's own point density varies a lot between sources
+    (Livigno's own GPX: ~13m/point; Waldmeister's Outdooractive track: ~21m/point) and every
+    internal threshold here used to be a raw point count -- tuned against Livigno, it silently
+    smoothed a 215m Waldmeister trail ("Am Fels Runter") out of existence, because an 11-point
+    window was ~150m at Livigno's density but ~230m at Waldmeister's, wider than the trail itself.
+    Found by test_gpx_map_match.py, which is exactly why that harness exists."""
+    total_km = cumulative_km(gpx_points)[-1]
+    n = len(gpx_points)
+    return (total_km * 1000 / n) if n > 1 else 1.0
 
 
 def match_gpx_to_network(gpx_points, candidates, strict_thresh_m=15.0, loose_thresh_m=35.0,
-                          smooth_window=11, gap_merge_pts=50, min_run_pts=20, min_gap_pts_for_pass2=60):
+                          smooth_window_m=150.0, gap_merge_m=670.0, min_run_m=268.0,
+                          min_gap_m_for_pass2=804.0, min_run_fraction=0.5):
     """Reconstruct the ride order of a recorded tour against a network of known trails/lifts.
 
     `candidates`: {id: [[lat,lon], ...]} -- MUST include lifts, not just trails, or every real
     lift ride in the tour silently becomes an unattributed connector.
+
+    All non-distance parameters are given in METRES and converted internally to point counts
+    using this recording's own average point spacing (`_avg_spacing_m`) -- never pass a raw point
+    count across recordings of different density, see that function's docstring for why.
 
     Two passes:
     1. Strict-threshold sequential labelling + majority-vote smoothing + run consolidation. Finds
@@ -268,9 +303,19 @@ def match_gpx_to_network(gpx_points, candidates, strict_thresh_m=15.0, loose_thr
     are the caller's responsibility -- see module docstring.
     """
     n = len(gpx_points)
+    spacing = _avg_spacing_m(gpx_points)
+    smooth_window = max(3, round(smooth_window_m / spacing))
+    if smooth_window % 2 == 0:
+        smooth_window += 1
+    gap_merge_pts = max(1, round(gap_merge_m / spacing))
+    min_run_pts = max(2, round(min_run_m / spacing))
+    min_gap_pts_for_pass2 = max(1, round(min_gap_m_for_pass2 / spacing))
+    candidate_lengths_pts = {cid: cumulative_km(cgeo)[-1] * 1000 / spacing
+                              for cid, cgeo in candidates.items() if len(cgeo) > 1}
 
     pass1_labels = _smooth_mode(_label_points(gpx_points, candidates, strict_thresh_m), smooth_window)
-    pass1_runs = _consolidate(_run_length_encode(pass1_labels), gap_merge_pts, min_run_pts)
+    pass1_runs = _consolidate(_run_length_encode(pass1_labels), gap_merge_pts, min_run_pts,
+                               candidate_lengths_pts, min_run_fraction)
 
     covered = [False] * n
     for _, a, b in pass1_runs:
@@ -296,7 +341,8 @@ def match_gpx_to_network(gpx_points, candidates, strict_thresh_m=15.0, loose_thr
             pass2_labels[k] = loose[k]
 
     pass2_smoothed = _smooth_mode(pass2_labels, smooth_window)
-    final_runs = _consolidate(_run_length_encode(pass2_smoothed), gap_merge_pts, min_run_pts)
+    final_runs = _consolidate(_run_length_encode(pass2_smoothed), gap_merge_pts, min_run_pts,
+                               candidate_lengths_pts, min_run_fraction)
     final_runs = _split_direction_reversals(gpx_points, candidates, final_runs)
 
     return [{"id": cid, "start_idx": a, "end_idx": b} for cid, a, b in final_runs]
