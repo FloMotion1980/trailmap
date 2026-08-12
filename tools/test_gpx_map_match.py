@@ -101,28 +101,65 @@ def _extract_waldmeister_gpx(json_path):
     return pts
 
 
+def _lcs_align(a_ids, b_ids):
+    """Longest-common-subsequence alignment on id sequences only (ignores direction/length) --
+    a single early miss (a lift the matcher dropped, say) must not cascade into looking like every
+    later element is also wrong, which is exactly what naive positional i==i comparison does.
+    Returns the list of (i, j) index pairs that align, in order."""
+    n, m = len(a_ids), len(b_ids)
+    dp = [[0] * (m + 1) for _ in range(n + 1)]
+    for i in range(n - 1, -1, -1):
+        for j in range(m - 1, -1, -1):
+            if a_ids[i] == b_ids[j]:
+                dp[i][j] = 1 + dp[i + 1][j + 1]
+            else:
+                dp[i][j] = max(dp[i + 1][j], dp[i][j + 1])
+    pairs = []
+    i = j = 0
+    while i < n and j < m:
+        if a_ids[i] == b_ids[j]:
+            pairs.append((i, j))
+            i += 1
+            j += 1
+        elif dp[i + 1][j] >= dp[i][j + 1]:
+            i += 1
+        else:
+            j += 1
+    return pairs
+
+
 def _compare(name, ground_truth, resolved):
     print(f"\n=== {name} ===")
     print(f"ground truth: {len(ground_truth)} elements, matcher: {len(resolved)} segments")
-    n = min(len(ground_truth), len(resolved))
-    id_order_ok = 0
-    dir_ok = 0
-    len_ok = 0
-    for i in range(n):
-        gt_id, gt_rev = ground_truth[i]
-        r = resolved[i]
-        id_match = (gt_id == r["id"])
-        dir_match = id_match and (gt_rev == r["reversed"])
-        id_order_ok += id_match
-        dir_ok += dir_match
-        marker = "OK" if id_match else ".."
-        print(f"  {marker} [{i:2d}] gt={gt_id or '-':38s} rev={gt_rev!s:5s} | "
-              f"auto={r['id']:38s} rev={r['reversed']!s:5s}")
-    if len(ground_truth) != len(resolved):
-        print(f"  ** length mismatch: {len(ground_truth)} ground-truth elements vs "
-              f"{len(resolved)} matcher segments -- alignment above may drift after the first gap")
-    print(f"  summary: id+order match {id_order_ok}/{len(ground_truth)}, "
-          f"direction match {dir_ok}/{len(ground_truth)}")
+    gt_ids = [g[0] for g in ground_truth]
+    auto_ids = [r["id"] for r in resolved]
+    pairs = _lcs_align(gt_ids, auto_ids)
+    aligned_gt = {i for i, j in pairs}
+    aligned_auto = {j for i, j in pairs}
+    dir_ok = sum(1 for i, j in pairs if ground_truth[i][1] == resolved[j]["reversed"])
+
+    gi = ai = 0
+    for i, j in pairs + [(len(ground_truth), len(resolved))]:
+        while gi < i:
+            print(f"  MISS  gt[{gi:2d}]  {ground_truth[gi][0]:38s} rev={ground_truth[gi][1]!s:5s}  "
+                  f"(matcher never found this)")
+            gi += 1
+        while ai < j:
+            print(f"  EXTRA         auto[{ai:2d}] {resolved[ai]['id']:38s} rev={resolved[ai]['reversed']!s:5s}  "
+                  f"(matcher found this, not in ground truth)")
+            ai += 1
+        if i < len(ground_truth):
+            gt_id, gt_rev = ground_truth[i]
+            r = resolved[j]
+            dmark = "" if gt_rev == r["reversed"] else " (DIR MISMATCH)"
+            print(f"  OK    gt[{i:2d}]=auto[{j:2d}] {gt_id:38s} rev={gt_rev!s:5s}{dmark}")
+            gi = i + 1
+            ai = j + 1
+
+    id_order_ok = len(pairs)
+    print(f"  summary: {id_order_ok}/{len(ground_truth)} ground-truth elements found (LCS-aligned, "
+          f"order-preserving), {len(ground_truth) - id_order_ok} missed, "
+          f"{len(resolved) - id_order_ok} extra; direction correct on {dir_ok}/{id_order_ok} of the aligned ones")
     return id_order_ok, dir_ok, len(ground_truth)
 
 
