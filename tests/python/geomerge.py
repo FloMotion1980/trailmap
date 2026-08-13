@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 @suite   geomerge
-@area    Joining split trail/lift sections, and measuring a line against the OSM ways the base map draws
-@files   tools/build_harz.py, tools/add_harz_lifts_places.py, tools/check_geo_vs_osm.py
-@touches chain, chain_sections, _key, _seg_distance_m, nearest_m, MAX_JOINT_M, WIDE_JOINTS
+@area    Joining split trail/lift sections, comparing two sources' lines, measuring against OSM's own ways
+@files   tools/build_harz.py, tools/add_harz_lifts_places.py, tools/check_geo_vs_osm.py, tools/pfaelzerwald_containment.py
+@touches chain, chain_sections, _key, _seg_distance_m, nearest_m, MAX_JOINT_M, WIDE_JOINTS, profile_shape, dist_profile, bbox_overlaps
 
 Both halves of this suite exist because both shipped a bug first, and both bugs looked like success.
 
@@ -23,6 +23,15 @@ road, so a point-to-NODE distance calls a trail lying exactly on that road 100 m
 `cos(lat)` case below is here because writing it is what FOUND the third bug: the segment distance divided
 its already-scaled result by cos(lat) a second time, inflating every east-west offset by 1.6x at Harz
 latitudes, so the first agreement run reported distances that much too large.
+
+**Duplicate-vs-junction shape.** `profile_shape` decides whether an existing Pfälzerwald trail is deleted
+in favour of an incoming Trailforks one, so a wrong answer either removes a trail that genuinely exists or
+leaves two entries on one piece of ground. The aggregate containment fraction cannot separate the two cases
+-- an endpoint check on Donnersberg found only 3 of its 10 real duplicates -- and the distinguishing signal
+is the SHAPE of the per-point distance sequence, which is what the cases below pin: near-zero throughout or
+at both ends is `subsumed`, near-zero at one end followed by monotonically growing divergence is a
+`junction` (shared trailhead, both stay), and anything else is `unclear` and goes to the user rather than
+being decided.
 
 Verified by mutation (2026-08-13), all four produce exactly one failure:
 
@@ -199,6 +208,57 @@ def run(t):
     off_end = osmchk._seg_distance_m([51.8000, 10.5100], a2, b2)
     t.ok("clamped to the endpoint distance", abs(off_end - haversine_m([51.8000, 10.5100], b2)) < 8,
          (round(off_end), round(haversine_m([51.8000, 10.5100], b2))), "within 8 m of each other")
+
+    # ---- duplicate vs junction, the shape that decides a deletion --------------------------------
+    cont = _load("pfaelzerwald_containment")
+
+    t.case("a fully contained line reads as subsumed")
+    t.eq("all near", cont.profile_shape([1, 2, 1, 3, 2, 1, 2, 1]), "subsumed")
+
+    t.case("near in the middle with both ends drifting off is still subsumed")
+    # A real duplicate from a second source typically diverges at the ends under GPS/simplification noise.
+    t.eq("ends only", cont.profile_shape([70, 30, 4, 2, 1, 3, 2, 5, 28, 66]), "subsumed")
+
+    t.case("a shared trailhead that then parts is a junction, not a duplicate")
+    # This is the Eiserner Mann pair: near-zero for the first stretch, then a clean monotone walk away.
+    t.eq("monotone divergence from one end",
+         cont.profile_shape([1, 2, 1, 3, 2, 18, 40, 75, 130, 210, 320, 420]), "junction")
+
+    t.case("and the same shape mirrored, sharing the OTHER end")
+    t.eq("monotone divergence from the far end",
+         cont.profile_shape([420, 320, 210, 130, 75, 40, 18, 2, 3, 1, 2, 1]), "junction")
+
+    t.case("a growing tail that never gets far is NOT a junction")
+    # Divergence has to be real; a 60 m drift is simplification noise on the same trail, not a fork.
+    t.eq("small drift stays subsumed",
+         cont.profile_shape([1, 2, 1, 3, 2, 8, 14, 22, 30, 38, 44, 52]), "subsumed")
+
+    t.case("alternating near and far is unclear, and must not be decided")
+    t.eq("no coherent shape", cont.profile_shape([1, 90, 2, 120, 3, 150, 2, 110]), "unclear")
+
+    t.case("a short line sticking out both ends of its match is unclear, not subsumed")
+    t.eq("near only in the middle, far beyond both ends",
+         cont.profile_shape([300, 200, 2, 1, 2, 210, 340]), "unclear")
+
+    t.case("a sequence too short to have a shape is unclear rather than guessed")
+    t.eq("three points", cont.profile_shape([1, 2, 400]), "unclear")
+
+    t.case("dist_profile measures to the segment, so sparse reference nodes do not inflate it")
+    ref = [[49.20, 7.80], [49.20, 7.804]]          # one ~290 m segment, two nodes
+    on_it = [[49.20001, 7.8010], [49.20001, 7.8020], [49.20001, 7.8030]]
+    prof = cont.dist_profile(on_it, ref)
+    t.ok("every point reads as on the line", max(prof) < 12, [round(x) for x in prof], "all < 12 m")
+
+    t.case("bbox_overlaps rejects a pair that cannot possibly be contained")
+    a = cont.bbox([[49.20, 7.80], [49.21, 7.81]], cont.BBOX_PAD_DEG)
+    near = cont.bbox([[49.205, 7.805], [49.212, 7.812]])
+    far = cont.bbox([[49.40, 8.10], [49.41, 8.11]])
+    t.eq("an overlapping neighbour passes the prefilter", cont.bbox_overlaps(a, near), True)
+    t.eq("a distant trail is filtered out", cont.bbox_overlaps(a, far), False)
+
+    t.case("naturtrail_deidesheim is excluded from the comparison outright")
+    # The user's instruction: those three are real MTB trails with their own difficulty and are correct.
+    t.eq("excluded", "naturtrail_deidesheim" in cont.EXCLUDE_SUBREGIONS, True)
 
     t.case("nearest_m finds a way in a neighbouring cell, not only its own")
     grid = {}

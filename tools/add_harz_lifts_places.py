@@ -35,8 +35,6 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from trailmap_pipeline import (ElevationLookup, cumulative_km, haversine_m, osm_aerialway_survey,
                                overpass, write_region)
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGION = os.path.join(ROOT, "Trailmap App", "regions", "harz.json")
 ELEV_CACHE = os.path.join(ROOT, "Material", "elevation_cache.json")
@@ -90,6 +88,17 @@ PLACE_NAMES = ["Ilsenburg (Harz)", "Darlingerode", "Drübeck", "Hahnenklee", "Th
                "Schulenberg", "Sankt Andreasberg", "Braunlage"]
 
 
+def _utf8_stdout():
+    """Force UTF-8 output, but only when run as a script.
+
+    Doing this at import time breaks any importer: the test runner imports these tools to check their
+    logic, the wrapper it installs replaces the runner's own stdout, and when that wrapper is collected it
+    closes the underlying buffer -- the runner then dies with "I/O operation on closed file" AFTER its
+    cases have already passed, which reads like a test failure rather than an import side effect.
+    """
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+
+
 def chain_sections(lift_id, parts, ele):
     """Join a lift's OSM sections into one bottom-to-top line, verifying the result actually climbs.
 
@@ -125,6 +134,7 @@ def chain_sections(lift_id, parts, ele):
 
 
 def main():
+    _utf8_stdout()
     data = json.load(open(REGION, encoding="utf-8"))
     rows = {r["name"]: r for r in osm_aerialway_survey(BBOX, min_len_m=150)}
     ele = ElevationLookup(ELEV_CACHE)

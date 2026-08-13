@@ -32,11 +32,20 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from trailmap_pipeline import haversine_m
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGION = os.path.join(ROOT, "Trailmap App", "regions", "pfaelzerwald.json")
 DIFFS = ["gruen", "blau", "rot", "schwarz"]
+
+
+def _utf8_stdout():
+    """Force UTF-8 output, but only when run as a script.
+
+    Doing this at import time breaks any importer: the test runner imports these tools to check their
+    logic, the wrapper it installs replaces the runner's own stdout, and when that wrapper is collected it
+    closes the underlying buffer -- the runner then dies with "I/O operation on closed file" AFTER its
+    cases have already passed, which reads like a test failure rather than an import side effect.
+    """
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 
 def line_len_m(coords):
@@ -157,6 +166,7 @@ def diff(before, after):
 
 
 def main():
+    _utf8_stdout()
     ap = argparse.ArgumentParser()
     ap.add_argument("--out")
     ap.add_argument("--diff", metavar="BASELINE_JSON")

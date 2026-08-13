@@ -46,8 +46,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from trailmap_pipeline import haversine_m
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGION = os.path.join(ROOT, "Trailmap App", "regions", "pfaelzerwald.json")
 
@@ -56,6 +54,17 @@ BBOX_PAD_DEG = 0.004         # ~300-450 m; a pair further apart than this cannot
 SURE_REPLACE = 0.70          # >= this fraction contained -> replace, no shape question asked
 MAYBE_LOW = 0.30             # below this -> keep, no question asked
 EXCLUDE_SUBREGIONS = {"naturtrail_deidesheim"}
+
+
+def _utf8_stdout():
+    """Force UTF-8 output, but only when run as a script.
+
+    Doing this at import time breaks any importer: the test runner imports these tools to check their
+    logic, the wrapper it installs replaces the runner's own stdout, and when that wrapper is collected it
+    closes the underlying buffer -- the runner then dies with "I/O operation on closed file" AFTER its
+    cases have already passed, which reads like a test failure rather than an import side effect.
+    """
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 
 def line_len_m(c):
@@ -127,6 +136,13 @@ def profile_shape(prof, tol=TOL_M):
     near = [d <= tol for d in prof]
     if all(near):
         return "subsumed"
+    # Magnitude before shape. A line that never gets further than a few tens of metres away is the same
+    # line, whatever its distance sequence looks like -- that is simplification and survey noise between
+    # two sources, not a fork. Without this, a gentle 1->52 m drift over twelve points fell through every
+    # shape branch and came out "unclear" purely because its near-run was 58% of the points instead of 60%,
+    # i.e. it was being decided by a run-length threshold rather than by anything meaningful.
+    if max(prof) <= tol * 3:
+        return "subsumed"
     # A junction diverges from ONE end and never comes back: find the longest near-run, and require it to
     # start at an end, with everything after it growing away more or less monotonically.
     best_len, best_start = 0, 0
@@ -154,13 +170,19 @@ def profile_shape(prof, tol=TOL_M):
             return "junction"
     if touches_start and touches_end:
         return "subsumed"
-    # near in the middle, far at both ends -> the short trail sticks out either side: not contained
     if not touches_start and not touches_end:
-        return "unclear"
+        # Near in the MIDDLE, away at both ends. Two very different things look like this and only the
+        # magnitude of the two excursions tells them apart: a duplicate whose ends wander off by a few tens
+        # of metres (noise, still the same trail), versus a short line that genuinely runs out past both
+        # ends of its match (a different trail crossing it). Judging by shape alone called the first one
+        # "unclear" and left a real duplicate for the user to decide by hand.
+        excursion = max(prof[:best_start] + prof[best_start + best_len:])
+        return "subsumed" if excursion <= tol * 4 else "unclear"
     return "subsumed" if best_len / n >= 0.6 else "unclear"
 
 
 def main():
+    _utf8_stdout()
     ap = argparse.ArgumentParser()
     ap.add_argument("--new", required=True,
                     help='JSON {slug: [[lat,lon],...]} of the incoming Trailforks geometry')
