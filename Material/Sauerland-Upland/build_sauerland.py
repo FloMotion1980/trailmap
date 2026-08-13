@@ -84,10 +84,16 @@ look (flagged for follow-up rather than guessed):
     for now), Blackline 1.0 vs "Black Line" (OSM's unnumbered "Black Line" sits ~114-128 m off BOTH
     of Blackline 1.0's own endpoints -- may actually correspond to Blackline 2.0 instead, or be its
     own thing; not reassigned without checking), iXS Downhill (OSM ~19% longer than the Trailforks-
-    sourced build, endpoints ~34-52 m off -- plausible but not confident enough yet), Schwalbe Loose
-    Lee vs "Pinball" (OSM's "Pinball" is ~78% LONGER with one endpoint 78 m off -- likely a different,
-    longer feature that happens to share the "Pinball" name, not simply a better trace of the same
-    trail). Jolli Jumper, Rocky Waldboa, Fly By, Jump Line: no OSM match found under any obvious name.
+    sourced build, endpoints ~34-52 m off -- plausible but not confident enough yet). Jolli Jumper,
+    Rocky Waldboa, Fly By, Jump Line: no OSM match found under any obvious name.
+
+Schwalbe Loose Lee (Pinball) switched to OSM's "Pinball" way after all (2026-08-14) -- flagged above
+as risky (78% longer, one endpoint 78 m off) purely on the numbers, but the user looked at it on the
+map and it visibly reads as the better line; the length/endpoint mismatch was this trail genuinely
+extending further than the Trailforks-widget-sourced build had it, not OSM tracing a different
+feature. Same lesson as Canadian Tuxedo's missing piece in Green Hill: a length/endpoint mismatch by
+itself is a reason to look closer, not a verdict -- worth checking the map before ruling out the rest
+of this list on numbers alone.
   - Also spotted on OSM, unclaimed by anything built so far: "Woodpecker", "Herrloh Blitz", "Monkey
     Island" -- possibly more undiscovered Bikepark Winterberg trails, not investigated yet.
 
@@ -271,37 +277,7 @@ add_from_points("tm_ixs_downhill", "iXS Downhill", "bikepark_winterberg", "schwa
     [51.18175, 8.51548, 636], [51.18185, 8.51554, 626], [51.18206, 8.51552, 626], [51.18222, 8.51553, 616],
     [51.18247, 8.51551, 609],
 ])
-add_from_points("tm_schwalbe_loose_lee", "Schwalbe Loose Lee (Pinball)", "bikepark_winterberg", "rot", [
-    [51.18147, 8.50974, 760], [51.18152, 8.50975, 760], [51.18155, 8.5098, 758], [51.18154, 8.50987, 758],
-    [51.18154, 8.50994, 758], [51.1816, 8.50998, 758], [51.18167, 8.51, 758], [51.18176, 8.50993, 758],
-    [51.18184, 8.5099, 752], [51.18193, 8.50981, 752], [51.18197, 8.50974, 752], [51.18229, 8.50944, 756],
-    [51.18232, 8.50938, 756], [51.18235, 8.50941, 756], [51.18238, 8.50948, 750], [51.18236, 8.50953, 756],
-    [51.18228, 8.50962, 756], [51.18222, 8.50972, 756], [51.18219, 8.50988, 747], [51.18222, 8.5099, 747],
-    [51.18224, 8.50989, 747], [51.18232, 8.50967, 756], [51.18241, 8.50969, 750], [51.18243, 8.50982, 742],
-    [51.18242, 8.50986, 742], [51.18236, 8.50996, 747], [51.18227, 8.51002, 747], [51.18225, 8.51007, 747],
-    [51.18227, 8.51013, 747], [51.18232, 8.51013, 747], [51.18236, 8.5101, 747], [51.18242, 8.51, 742],
-    [51.18246, 8.51, 742], [51.18248, 8.51003, 742], [51.18249, 8.51009, 742], [51.18243, 8.51019, 742],
-    [51.18239, 8.51022, 742], [51.18239, 8.51028, 732], [51.1824, 8.51031, 732], [51.18243, 8.51033, 732],
-    [51.18257, 8.51033, 732], [51.18256, 8.51041, 732], [51.18242, 8.5105, 732], [51.18241, 8.51055, 732],
-    [51.18242, 8.51063, 732], [51.18251, 8.51063, 732], [51.18264, 8.5105, 723], [51.18268, 8.51055, 723],
-    [51.18265, 8.51065, 723], [51.18262, 8.51065, 732], [51.18253, 8.51076, 732], [51.18257, 8.51082, 732],
-    [51.18264, 8.51083, 723], [51.18266, 8.51089, 708], [51.18265, 8.51093, 708], [51.18263, 8.51092, 720],
-    [51.18261, 8.51096, 720], [51.18259, 8.51104, 720], [51.1826, 8.51112, 720], [51.18268, 8.51112, 708],
-    [51.18271, 8.51122, 708], [51.18263, 8.51139, 705], [51.18263, 8.51145, 705], [51.18264, 8.51148, 696],
-    [51.18272, 8.51154, 696], [51.18281, 8.51152, 696], [51.18288, 8.51165, 696], [51.18278, 8.51182, 696],
-    [51.18279, 8.51195, 685], [51.18281, 8.51199, 685], [51.18284, 8.51199, 685], [51.18287, 8.51193, 696],
-    [51.18294, 8.51191, 688], [51.18298, 8.51193, 688], [51.18299, 8.51198, 678], [51.1829, 8.51242, 685],
-    [51.18291, 8.51253, 672], [51.18293, 8.51254, 667], [51.18306, 8.51251, 667], [51.18315, 8.51246, 678],
-    [51.18316, 8.51249, 678], [51.18311, 8.51268, 667], [51.18295, 8.51309, 655], [51.18295, 8.51317, 655],
-    [51.18297, 8.51321, 655], [51.1831, 8.51319, 655], [51.18318, 8.51318, 655], [51.18325, 8.51316, 648],
-    [51.18328, 8.51325, 648], [51.18323, 8.51338, 648], [51.18319, 8.51341, 655], [51.18312, 8.51347, 655],
-    [51.18309, 8.51353, 655], [51.18311, 8.51358, 655], [51.18314, 8.51361, 655], [51.18323, 8.51361, 648],
-    [51.18329, 8.51363, 632], [51.18323, 8.51383, 632], [51.18316, 8.51403, 637], [51.18316, 8.51409, 637],
-    [51.1832, 8.5141, 632], [51.18326, 8.51413, 632], [51.18327, 8.5142, 619], [51.18322, 8.51427, 619],
-    [51.18317, 8.5143, 620], [51.18313, 8.51433, 620], [51.18312, 8.51437, 620], [51.18313, 8.5144, 620],
-    [51.18316, 8.51441, 620], [51.18323, 8.51438, 619], [51.18327, 8.51441, 619], [51.18326, 8.51447, 619],
-    [51.18315, 8.51461, 620], [51.18311, 8.51479, 612],
-])
+add_osm("tm_schwalbe_loose_lee", "Schwalbe Loose Lee (Pinball)", "bikepark_winterberg", "rot")
 
 # ---------------------------------------------------------------------------------------------------
 # Willingen sub-region: Green Trails Willingen's two long touring loops (official numbers). Kept
