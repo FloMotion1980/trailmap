@@ -66,3 +66,11 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   in order, including repeats) gained a test harness and a density-sensitivity fix; used to fill a missing
   Tgantieni lift ride and, the day before, to reconstruct Tutti Frutti's real component-trail segments
   from a hand-authored Tourenbuilder export.
+- **Added CHANGELOG.md itself** (this file).
+- **The info panel heading now shows a trail's/Tour's difficulty** as the same colored dot the sidebar
+  card and map label already use, with a hover tooltip (Sehr leicht/Leicht/Mittel/Schwer) — previously
+  only implied by the elevation chart's line color.
+- **The desktop info panel is wider (340px, up from 280px) and its elevation chart taller (72px, up from
+  46px)**, to make the profile easier to read; touch/mobile unchanged. Checked live whether the existing
+  profile data (100–200 points per trail, resampled by length) would look blocky stretched into the bigger
+  chart — it doesn't, so no pipeline/data change was needed this round.

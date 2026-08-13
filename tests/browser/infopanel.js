@@ -1,7 +1,7 @@
 // @suite   infopanel
 // @area    Info panel: trail, lift, Tour segments, reverse, GPX, elevation chart
 // @files   Trailmap App/index.html
-// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight
+// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight, DIFF_LABEL
 // @needs   region=bikekingdom, builder=off
 //
 // The panel is a custom div rather than a Leaflet popup so nothing covers the trail, which means every piece
@@ -32,6 +32,17 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
     T.ok("has " + sel, !!content().querySelector(sel), !!content().querySelector(sel), true);
   }
   T.ok("and an elevation chart", !!content().querySelector("svg.ele-chart, svg"), true, true);
+  // Added 2026-08-13, per the user: the heading carries the same difficulty dot the sidebar card and the
+  // map label already use (`.badge <diff>`, see makeTrailCard/trailLabelHtml), so the difficulty is
+  // visible without having to already know the trail or read the elevation chart's own line color.
+  const cardDiffClass = [...card.querySelector(".badge").classList].find((c) => c !== "badge");
+  const panelBadge = content().querySelector("h3 .badge");
+  T.ok("the heading has a difficulty badge", !!panelBadge, !!panelBadge, true);
+  T.ok("matching the card's own difficulty", panelBadge && panelBadge.classList.contains(cardDiffClass),
+       panelBadge && [...panelBadge.classList], "contains " + cardDiffClass);
+  T.ok("with a readable title (Sehr leicht/Leicht/Mittel/Schwer)",
+       panelBadge && /^(Sehr leicht|Leicht|Mittel|Schwer)$/.test(panelBadge.getAttribute("title")),
+       panelBadge && panelBadge.getAttribute("title"), "one of the four German difficulty labels");
 
   T.test("the reverse button swaps the numbers, mirrors the profile and moves the markers");
   const readUpDown = () => {

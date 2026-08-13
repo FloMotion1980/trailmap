@@ -631,7 +631,11 @@ html.landscape-compact .search-overlay-summary{
 #infoPanel{
   position:absolute;
   top:60px; right:16px;
-  width: 280px;
+  /* Desktop only -- the touch layout has its own fixed width further down (deliberately fixed, not
+     max-content, see that rule's own comment), unaffected by this. Widened from 280px (2026-08-13, per
+     the user) specifically so the elevation chart -- which is width:100% of the panel, see .ele-chart --
+     gets more room; its height was bumped in the same change, desktop-only there too. */
+  width: 340px;
   max-height: calc(100% - 76px);
   overflow-y:auto;
   background: rgba(255,255,255,0.97);
@@ -696,7 +700,11 @@ html.landscape-compact .search-overlay-summary{
    gives one number to tune. The ⬆️/⬇️ already say which figure is which, so the punctuation was carrying
    nothing. */
 #infoPanel .ip-trail .ip-gap{ display:inline-block; width:15px; }
-.ele-chart{ display:block; width:100%; height:46px; margin:4px 0 0; }
+/* 72px on desktop (bumped from 46px, 2026-08-13, per the user, alongside the wider panel above) -- width
+   already tracked the panel via 100%, so only height needed a number here. Touch/landscape-compact
+   override this back down further below, unaffected: mobile screen height is the one thing this app has
+   never had room to spare. */
+.ele-chart{ display:block; width:100%; height:72px; margin:4px 0 0; }
 .ele-chart .ele-label{ font-size:7px; fill:#4c574d; font-family:Arial, sans-serif; }
 /* non-scaling-stroke because this SVG is stretched non-uniformly (see the ellipse in buildElevationSvg): without
    it the white halo comes out thicker on the sides than on top, which on a 4.5px dot is visible. The radii
@@ -1203,6 +1211,10 @@ html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
     width:min(92vw, 360px);
     max-height:min(38vh, 300px);
   }
+  /* Keeps the touch chart at its original size -- the desktop-only bump to 72px (see the base rule) would
+     otherwise apply here too, and a phone's vertical space is the one thing this app has never had room
+     to spare (2026-08-13). */
+  .ele-chart{ height:46px; }
   /* Touch-only; the layout itself is in the base rule. It has to name the same display type as that rule --
      as `grid` it silently overrode a flex column and stretched the control container to the width of the
      widest sibling: 232px instead of 44px, measured. */

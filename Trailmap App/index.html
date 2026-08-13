@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=163" />
+<link rel="stylesheet" href="style.css?v=164" />
 </head>
 <body>
 <div id="fatalError">
@@ -5157,7 +5157,7 @@ function buildInfoPanelHtml(t){
   // string: writing a field name in code quotes here silently broke the whole script block, and with it the
   // fatal-error panel, which lives in that same block and so could not report it.
   return `
-    <h3>${t.name}${uphillBadge}${loopBadge} <span class="ip-btns">
+    <h3><span class="badge ${t.diff}" title="${DIFF_LABEL[t.diff]}"></span>${t.name}${uphillBadge}${loopBadge} <span class="ip-btns">
       <button class="locate-btn" data-id="${t.id}" title="Zum Trail springen">📍</button>
       <button class="solo-btn${isSolo ? " active" : ""}" data-id="${t.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button>
       <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">⏪</button>
@@ -6957,7 +6957,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v163"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v164"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
