@@ -11,11 +11,13 @@ Three sub-regions, purely geographic bracket (user decision 2026-07-26):
                 cross-checking trail names/lift names/location text, not a duplicate. Split into two
                 sub-regions 2026-08-13 (originally lumped into one "winterberg" sub-region) per the
                 user, matching how Willingen/Green Hill are already split out.
-  willingen   - Willingen/Ettelsberg. MTB Zone Bikepark Willingen's 12 named descents have NO GPX
-                source (confirmed: mtbzone-bikepark.com page has names/difficulty only) and are left
-                OUT rather than fabricated. Willingen Greentrails' two long touring loops (Gipfel-Runde
-                Hoppecke, Ruthenaar-Double) DO have direct GPX via willingen.de's destination-data-proxy
-                endpoint and are the only Willingen trails built.
+  willingen   - Green Trails Willingen's two long touring loops (Gipfel-Runde Hoppecke,
+                Ruthenaar-Double), via willingen.de's destination-data-proxy GPX endpoint.
+  mtbzone_willingen - MTB Zone Willingen (the bikepark), added 2026-08-14 -- this file used to record
+                it as having no GPX source anywhere; the user found its 8 main trails on Trailforks
+                instead, kept as its own sub-region rather than merged into `willingen` above (two
+                distinct networks sharing a town, same reasoning as the two Winterberg sub-regions).
+                See the sub-region's own section further down for the sourcing detail.
   greenhill   - Green Hill Bikepark (Schmallenberg-Gellinghausen), harvested from Trailforks via the
                 lighter /widgets/trail/?trailid=..&elevation=1&basic=1 embed, which still embeds a plain
                 points[] array (lat/lng/elevation) in an inline <script> -- unlike the main trail page,
@@ -47,6 +49,48 @@ Seven more trails added 2026-08-13, all sourced from Trailforks' own `/widgets/t
     rather than mixing two sourcing rules within one sub-region. GPX-derived is the only option anyway
     for the three Trailpark additions, which have no official numbers published anywhere.
 
+## OSM pass, 2026-08-14
+
+Per the user (after doing the same for Green Hill): checked both Winterberg sub-regions against OSM
+too, cached raw ways+nodes in winterberg_osm_raw.json, processed results in winterberg_osm_final.json
+(both next to this script, same reasoning as Green Hill's own cache files). OSM's own name for a
+trail here is sometimes different from ours (dropped a version suffix, different capitalisation,
+"-Uphill" left out) -- matched by geometry/endpoint proximity, not name alone, exactly the caution
+the user asked for.
+
+Switched (name matched with confidence -- length within ~5-20% and both endpoints within ~50 m of
+the existing trail, or a clean two-connected-component join the same way Green Hill's Groomer/Save
+Wimmons needed):
+  - Trailpark Winterberg: Poppenberg Peak, Weltcup Flow, Uphill-Trail, Möppis Mover (reversed --
+    forward endpoints didn't match, reversed did), Endless Trees, Sürenberg Sause, Poppies Track,
+    Little Fluff (two components, B then A, joined across a 37 m real gap), Bremberg Blues, Biathlon
+    Sprinter (two components, A then B, joined across a 3 m gap -- closes the gap the very first
+    Trailforks-sourced build of this trail left open), Snowwhite and the red trail.
+  - Bikepark Winterberg: North Shore, SRAM Flow Country.
+
+Found on OSM but NOT switched -- length and/or endpoint mismatch too large to trust without a closer
+look (flagged for follow-up rather than guessed):
+  - Trailpark Winterberg: Cross Over (OSM "Cross Over" AND a separate "Cross Over Trail" both miss
+    badly, neither is obviously the same line), Bremberg Flow (OSM ~18% short, its start 99 m from
+    the known start -- may be missing a piece the same way Canadian Tuxedo's OSM way did in Green
+    Hill), Shake the Lake (~24% short, one endpoint matches well), Popp Top Track (~36% LONGER, not
+    just short -- may have picked up an unrelated stretch), Butzhols Bests (~23% short, one endpoint
+    66 m off), Landal/Lolo Wahle Schanze/Lebe Wild Trail (no OSM match found under any obvious name).
+  - Bikepark Winterberg: Kyrhill (OSM way is ~48% shorter), Schneewittchen Trail and Fairy Trail
+    (OSM's own "Schneewittchen Trail / Fairy Trail" combined entry suggests the two share pavement,
+    but each name's own components fall ~25% short with one endpoint 300-390 m off), Forrest Stump
+    (~51% shorter), Shreddy Mörphy (OSM ~48% LONGER, one endpoint 294 m off -- likely a different
+    or extended feature under the same name), Freeride (~11% short, moderate endpoint match, kept
+    for now), Blackline 1.0 vs "Black Line" (OSM's unnumbered "Black Line" sits ~114-128 m off BOTH
+    of Blackline 1.0's own endpoints -- may actually correspond to Blackline 2.0 instead, or be its
+    own thing; not reassigned without checking), iXS Downhill (OSM ~19% longer than the Trailforks-
+    sourced build, endpoints ~34-52 m off -- plausible but not confident enough yet), Schwalbe Loose
+    Lee vs "Pinball" (OSM's "Pinball" is ~78% LONGER with one endpoint 78 m off -- likely a different,
+    longer feature that happens to share the "Pinball" name, not simply a better trace of the same
+    trail). Jolli Jumper, Rocky Waldboa, Fly By, Jump Line: no OSM match found under any obvious name.
+  - Also spotted on OSM, unclaimed by anything built so far: "Woodpecker", "Herrloh Blitz", "Monkey
+    Island" -- possibly more undiscovered Bikepark Winterberg trails, not investigated yet.
+
 Difficulty mappings used, since no source here speaks the app's gruen/blau/rot/schwarz directly:
   - Trailpark Winterberg (winterberg.de) publishes a 3-tier LEICHT/MITTEL/SCHWER "Schwierigkeit" field
     (not a 4-tier ski-style scale) -- mapped the same way German hiking/tourism sites conventionally map
@@ -76,8 +120,11 @@ from trailmap_pipeline import build_trail, write_region, region_summary, parse_g
 
 MAT = r"D:\Trailmap\Material\Sauerland-Upland"
 OUT = r"D:\Trailmap\Trailmap App\regions\sauerland.json"
+ELEV_CACHE = r"D:\Trailmap\Material\elevation_cache.json"
 
 trails, geo, profs = [], {}, {}
+elevation = ElevationLookup(ELEV_CACHE)
+winterberg_osm = json.load(open(os.path.join(MAT, "winterberg_osm_final.json"), encoding="utf-8"))
 
 
 def add_from_gpx(tid, name, region, diff, gpx_path, *, official=None, uphill=False, descend=True):
@@ -95,6 +142,16 @@ def add_from_points(tid, name, region, diff, pts, *, uphill=False, descend=True)
     trails.append(entry); geo[tid] = coords; profs[tid] = prof
 
 
+def add_osm(tid, name, region, diff, *, uphill=False, descend=True):
+    """OSM-sourced (winterberg_osm_final.json, no elevation of its own -- ElevationLookup fills it
+    in, same cache Green Hill and add_lifts.py already share). GPX-derived length/up/down, same
+    reasoning as build_greenhill.py's own add_osm()."""
+    pts = winterberg_osm[tid]
+    entry, coords, prof = build_trail(tid, name, region, diff, pts, uphill=uphill, descend=descend,
+                                       elevation=elevation)
+    trails.append(entry); geo[tid] = coords; profs[tid] = prof
+
+
 # ---------------------------------------------------------------------------------------------------
 # Sub-region 1: Trailpark Winterberg (winterberg.de) -- 16 trails, operator numbers. Free, no lift --
 # LEICHT -> blau, MITTEL -> rot, SCHWER -> schwarz (see module docstring). Split into its own
@@ -103,28 +160,20 @@ def add_from_points(tid, name, region, diff, pts, *, uphill=False, descend=True)
 # how Willingen/Green Hill are already split out).
 # ---------------------------------------------------------------------------------------------------
 WB = os.path.join(MAT, "winterberg_gpx")
-add_from_gpx("wb_poppenberg_peak", "Poppenberg Peak", "trailpark_winterberg", "rot",
-             os.path.join(WB, "poppenberg_peak.gpx"), official=(0.3, 0, 16))
-add_from_gpx("wb_weltcup_flow", "Weltcup Flow", "trailpark_winterberg", "schwarz",
-             os.path.join(WB, "weltcup_flow.gpx"), official=(0.6, 0, 87))
-add_from_gpx("wb_uphill_trail", "Uphill-Trail", "trailpark_winterberg", "blau",
-             os.path.join(WB, "uphill_trail.gpx"), official=(1.2, 51, 5), uphill=True, descend=False)
-add_from_gpx("wb_moeppis_mover", "Möppis Mover (Uphill)", "trailpark_winterberg", "rot",
-             os.path.join(WB, "moeppis_mover.gpx"), official=(0.5, 56, 0), uphill=True, descend=False)
-add_from_gpx("wb_endless_trees", "Endless Trees", "trailpark_winterberg", "rot",
-             os.path.join(WB, "endless_trees.gpx"), official=(0.8, 0, 71))
+add_osm("wb_poppenberg_peak", "Poppenberg Peak", "trailpark_winterberg", "rot")
+add_osm("wb_weltcup_flow", "Weltcup Flow", "trailpark_winterberg", "schwarz")
+add_osm("wb_uphill_trail", "Uphill-Trail", "trailpark_winterberg", "blau", uphill=True, descend=False)
+add_osm("wb_moeppis_mover", "Möppis Mover (Uphill)", "trailpark_winterberg", "rot", uphill=True, descend=False)
+add_osm("wb_endless_trees", "Endless Trees", "trailpark_winterberg", "rot")
 add_from_gpx("wb_popp_top_track", "Popp Top Track", "trailpark_winterberg", "rot",
              os.path.join(WB, "popp_top_track.gpx"), official=(0.2, 1, 41))
-add_from_gpx("wb_suerenberg_sause", "Sürenberg Sause", "trailpark_winterberg", "blau",
-             os.path.join(WB, "suerenberg_sause.gpx"), official=(0.4, 0, 10))
+add_osm("wb_suerenberg_sause", "Sürenberg Sause", "trailpark_winterberg", "blau")
 add_from_gpx("wb_butzhols_bests", "Butzhols Bests", "trailpark_winterberg", "schwarz",
              os.path.join(WB, "butzhols_bests.gpx"), official=(0.3, 7, 36))
-add_from_gpx("wb_little_fluff", "Little Fluff", "trailpark_winterberg", "rot",
-             os.path.join(WB, "little_fluff.gpx"), official=(0.5, 0, 37))
+add_osm("wb_little_fluff", "Little Fluff", "trailpark_winterberg", "rot")
 add_from_gpx("wb_shake_the_lake", "Shake the Lake", "trailpark_winterberg", "schwarz",
              os.path.join(WB, "shake_the_lake.gpx"), official=(0.4, 0, 14))
-add_from_gpx("wb_poppies_track", "Poppies Track", "trailpark_winterberg", "rot",
-             os.path.join(WB, "poppies_track.gpx"), official=(0.4, 1, 31))
+add_osm("wb_poppies_track", "Poppies Track", "trailpark_winterberg", "rot")
 add_from_gpx("wb_landal", "Landal", "trailpark_winterberg", "schwarz",
              os.path.join(WB, "landal.gpx"), official=(0.4, 0, 70))
 add_from_gpx("wb_bremberg_flow", "Bremberg Flow", "trailpark_winterberg", "schwarz",
@@ -137,56 +186,10 @@ add_from_gpx("wb_cross_over", "Cross Over", "trailpark_winterberg", "blau",
              os.path.join(WB, "cross_over.gpx"), official=(0.5, 20, 14))
 
 # Three more Trailpark Winterberg trails (2026-08-13), not on winterberg.de's own 16-trail list --
-# found by the user on Trailforks. GPX-derived (no official numbers exist for these anywhere).
-add_from_points("wb_bremberg_blues", "Bremberg Blues", "trailpark_winterberg", "gruen", [
-    [51.18842, 8.49846, 782], [51.18844, 8.49851, 782], [51.18846, 8.49853, 782], [51.18848, 8.49856, 783],
-    [51.18849, 8.49858, 783], [51.18851, 8.49863, 778], [51.18855, 8.49867, 778], [51.18867, 8.49876, 778],
-    [51.18877, 8.49892, 782], [51.18881, 8.49907, 782], [51.18884, 8.49919, 779], [51.18886, 8.4993, 779],
-    [51.18891, 8.4994, 779], [51.18899, 8.49953, 779], [51.18907, 8.49963, 781], [51.18912, 8.49974, 777],
-    [51.18917, 8.49987, 777], [51.18919, 8.50001, 777], [51.18922, 8.50017, 777], [51.18928, 8.50027, 777],
-    [51.18936, 8.5004, 776], [51.1893, 8.50043, 774], [51.18918, 8.50039, 774], [51.18907, 8.50035, 774],
-    [51.18902, 8.50037, 774], [51.18894, 8.50042, 774], [51.18892, 8.50064, 774], [51.18893, 8.50084, 772],
-    [51.189, 8.50109, 772], [51.18907, 8.50135, 773], [51.18912, 8.50149, 771], [51.18918, 8.50159, 771],
-    [51.18922, 8.50167, 771], [51.18928, 8.50184, 771], [51.1893, 8.50199, 768], [51.18927, 8.50218, 768],
-    [51.18921, 8.50223, 768], [51.18913, 8.50223, 768], [51.18902, 8.5022, 765], [51.18886, 8.50227, 765],
-    [51.18887, 8.50251, 764], [51.1889, 8.50261, 764], [51.18894, 8.50276, 764], [51.18895, 8.50284, 764],
-    [51.18889, 8.50286, 764], [51.1888, 8.50287, 764], [51.18874, 8.50293, 763], [51.18862, 8.50302, 763],
-    [51.18857, 8.50312, 759], [51.18851, 8.50321, 759], [51.18849, 8.50331, 759],
-])
-add_from_points("wb_biathlon_sprinter", "Biathlon Sprinter", "trailpark_winterberg", "blau", [
-    [51.19019, 8.49667, 804.5], [51.19009, 8.49666, 805], [51.18997, 8.49668, 804.8], [51.18985, 8.49666, 804.1],
-    [51.18978, 8.49668, 803.3], [51.18974, 8.49667, 802.6], [51.18961, 8.49676, 800.5], [51.18948, 8.4968, 799.2],
-    [51.18943, 8.49685, 799.2], [51.18936, 8.49697, 799.1], [51.18937, 8.49729, 800.9], [51.18943, 8.49745, 802.7],
-    [51.18951, 8.49763, 803.7], [51.18965, 8.49785, 803.9], [51.1897, 8.49786, 804.2], [51.18966, 8.49789, 803.5],
-    [51.1896, 8.49787, 803], [51.18958, 8.49782, 803.2], [51.18953, 8.49776, 802.8], [51.18948, 8.49776, 802.1],
-    [51.18946, 8.49783, 800.9], [51.18948, 8.49798, 800.6], [51.18957, 8.49808, 801.1], [51.18961, 8.49817, 800.9],
-    [51.18972, 8.49829, 801.4], [51.18955, 8.49831, 798.8], [51.18952, 8.49842, 797.2], [51.18953, 8.49854, 796.4],
-    [51.18962, 8.49886, 795.2], [51.18966, 8.49895, 794.8], [51.1896, 8.49901, 794.8], [51.18941, 8.499, 792.4],
-    [51.18924, 8.49907, 789.6], [51.18919, 8.49905, 789.5], [51.18913, 8.49905, 789.2], [51.18908, 8.4991, 788.4],
-    [51.18906, 8.49914, 787.7], [51.18905, 8.49921, 786.9], [51.1891, 8.49939, 785.6], [51.18915, 8.49947, 785.4],
-    [51.18933, 8.49966, 785.5], [51.18943, 8.4997, 786.2], [51.18957, 8.49981, 786.5], [51.18969, 8.49997, 785.8],
-    [51.18972, 8.50009, 784.9], [51.18972, 8.5003, 782.7], [51.18969, 8.50035, 781.7], [51.1896, 8.50047, 778.7],
-    [51.18952, 8.5007, 771.5], [51.1895, 8.5008, 771.1], [51.18948, 8.50111, 770.1], [51.18956, 8.50149, 769],
-    [51.18961, 8.50162, 768.7], [51.18962, 8.50169, 768.2], [51.1896, 8.50192, 766.2], [51.18962, 8.50199, 765.9],
-    [51.1897, 8.50216, 765.2], [51.18986, 8.50232, 765.2], [51.18992, 8.50235, 765.4], [51.19005, 8.50251, 765.1],
-    [51.19006, 8.50256, 764.8], [51.19, 8.50264, 763.8], [51.18997, 8.50275, 762.8], [51.18991, 8.5028, 762],
-    [51.18986, 8.50288, 761.1], [51.18982, 8.5029, 760.7], [51.18979, 8.50288, 760.7], [51.18973, 8.50288, 760.3],
-    [51.1897, 8.50294, 759.8], [51.18966, 8.50295, 759.4], [51.18966, 8.50299, 759.2], [51.18963, 8.50305, 758.2],
-    [51.18958, 8.50307, 757], [51.18953, 8.50307, 756],
-])
-add_from_points("wb_snowwhite_red_trail", "Snowwhite and the red trail", "trailpark_winterberg", "gruen", [
-    [51.18849, 8.50331, 759], [51.1885, 8.50332, 759], [51.18852, 8.50339, 759], [51.18854, 8.50348, 759],
-    [51.18856, 8.50357, 759], [51.18859, 8.50367, 757], [51.18862, 8.50377, 757], [51.18865, 8.50384, 757],
-    [51.18868, 8.50391, 757], [51.18871, 8.50398, 757], [51.18873, 8.50405, 757], [51.18873, 8.50413, 757],
-    [51.18872, 8.50419, 752], [51.1887, 8.50424, 752], [51.18868, 8.50429, 752], [51.18867, 8.50434, 752],
-    [51.18866, 8.5044, 752], [51.18864, 8.50447, 752], [51.18863, 8.50455, 752], [51.18863, 8.50462, 752],
-    [51.18864, 8.50469, 752], [51.18866, 8.50474, 747], [51.18868, 8.50478, 747], [51.1887, 8.50485, 747],
-    [51.18871, 8.5049, 747], [51.18872, 8.50495, 747], [51.18872, 8.505, 747], [51.18872, 8.50507, 747],
-    [51.18871, 8.50513, 747], [51.18871, 8.5052, 747], [51.18871, 8.50528, 745], [51.18872, 8.50533, 745],
-    [51.18873, 8.50537, 745], [51.18875, 8.50543, 747], [51.18876, 8.50547, 747], [51.18877, 8.50551, 747],
-    [51.18878, 8.50554, 747], [51.18878, 8.50558, 747], [51.18877, 8.50564, 747], [51.18875, 8.50569, 747],
-    [51.18872, 8.50577, 745],
-])
+# found by the user on Trailforks, later found on OSM too (see module docstring) and switched.
+add_osm("wb_bremberg_blues", "Bremberg Blues", "trailpark_winterberg", "gruen")
+add_osm("wb_biathlon_sprinter", "Biathlon Sprinter", "trailpark_winterberg", "blau")
+add_osm("wb_snowwhite_red_trail", "Snowwhite and the red trail", "trailpark_winterberg", "gruen")
 
 # ---------------------------------------------------------------------------------------------------
 # Sub-region 2: "The Mother" / Bikepark Winterberg (Erlebnisberg Kappe) -- 12 of 18 trails with real
@@ -198,11 +201,10 @@ add_from_points("wb_snowwhite_red_trail", "Snowwhite and the red trail", "trailp
 TM = os.path.join(MAT, "themother_gpx")
 add_from_gpx("tm_kyrhill", "Kyrhill", "bikepark_winterberg", "blau", os.path.join(TM, "kyrhill.gpx"))
 add_from_gpx("tm_jolli_jumper", "Jolli Jumper", "bikepark_winterberg", "rot", os.path.join(TM, "jolli_jumper.gpx"))
-add_from_gpx("tm_north_shore", "North Shore", "bikepark_winterberg", "rot", os.path.join(TM, "north_shore.gpx"))
+add_osm("tm_north_shore", "North Shore", "bikepark_winterberg", "rot")
 add_from_gpx("tm_freeride", "Freeride", "bikepark_winterberg", "rot", os.path.join(TM, "freeride.gpx"))
 add_from_gpx("tm_blackline_1", "Blackline 1.0", "bikepark_winterberg", "schwarz", os.path.join(TM, "blackline_1.gpx"))
-add_from_gpx("tm_sram_flow_country", "SRAM Flow Country", "bikepark_winterberg", "blau",
-             os.path.join(TM, "sram_flow_country.gpx"))
+add_osm("tm_sram_flow_country", "SRAM Flow Country", "bikepark_winterberg", "blau")
 add_from_gpx("tm_schneewittchen_trail", "Schneewittchen-Trail", "bikepark_winterberg", "gruen",
              os.path.join(TM, "schneewittchen_trail.gpx"))
 add_from_gpx("tm_fairy_trail", "Fairy-Trail", "bikepark_winterberg", "gruen", os.path.join(TM, "fairy_trail.gpx"))
@@ -302,9 +304,9 @@ add_from_points("tm_schwalbe_loose_lee", "Schwalbe Loose Lee (Pinball)", "bikepa
 ])
 
 # ---------------------------------------------------------------------------------------------------
-# Willingen sub-region: Green Trails Willingen's two long touring loops (official numbers).
-# MTB Zone Bikepark Willingen's 12 named descents have no GPX source anywhere and are NOT built --
-# see the module docstring and the final report for this gap.
+# Willingen sub-region: Green Trails Willingen's two long touring loops (official numbers). Kept
+# separate from the MTB Zone Willingen sub-region below per the user (2026-08-14) -- two distinct
+# networks sharing a town, same pattern as the two Winterberg sub-regions.
 # ---------------------------------------------------------------------------------------------------
 WG = os.path.join(MAT, "willingen_gpx")
 add_from_gpx("wi_gipfel_runde_hoppecke", "Green Trails Willingen Gipfel-Runde Hoppecke (GRU)",
@@ -313,6 +315,43 @@ add_from_gpx("wi_gipfel_runde_hoppecke", "Green Trails Willingen Gipfel-Runde Ho
 add_from_gpx("wi_ruthenaar_double", "Green Trails Willingen Ruthenaar-Double (RUD)",
              "willingen", "blau", os.path.join(WG, "ruthenaar_double.gpx"),
              official=(6.11, 255, 255))
+
+# ---------------------------------------------------------------------------------------------------
+# MTB Zone Willingen sub-region (2026-08-14) -- the bikepark this app's own docs previously recorded
+# as "no GPX source anywhere". The user found it on Trailforks (region "willingen-2012") via the
+# same /widgets/trail/ embed technique used for Green Hill/Winterberg -- both trail names AND
+# difficulties, per the user, are sourced from there. Points already carry real elevation from
+# Trailforks' own data, same as every other Trailforks-sourced trail in this app -- no
+# ElevationLookup needed here.
+#
+# Difficulty conflict, resolved by the user: mtbzone-bikepark.com's own trail pages rate "Enduro"
+# and "Downhill" both schwer/schwarz; Trailforks rates "Enduro-Line"/"Willingen Downhill" as
+# Difficult/Red. The user chose the operator's own rating (schwarz) for both.
+#
+# Length/up/down: the operator's own published Länge/Höhendifferenz where it exists and reads as a
+# real, trail-specific measurement (Freeride: 1590 m/190 m; Willingen Downhill: 1600 m/250 m).
+# NOT used for Flowtrail/Flow Country Trail/Enduro-Line/Pump Track: the operator's own page states
+# "2900 Meter" for BOTH Flow Trail and Flow Country Trail -- an identical figure for two different
+# trails reads as a copied placeholder rather than two independent measurements (their own drawn
+# geometry differs from that number by ~20% either way and from each other by 2 m), so GPX-derived
+# is trusted more here. Freeride Lower/Enduro-Line Lower have no operator page at all -- Trailforks'
+# own stat line for both matches their own geometry's length exactly, so used as official.
+WI2 = json.load(open(os.path.join(MAT, "willingen_mtbzone_pts.json"), encoding="utf-8"))
+
+
+def add_wi2(tid, name, diff, key, *, official=None):
+    entry, coords, prof = build_trail(tid, name, "mtbzone_willingen", diff, WI2[key], official=official)
+    trails.append(entry); geo[tid] = coords; profs[tid] = prof
+
+
+add_wi2("wiz_freeride", "Freeride", "blau", "freeride", official=(1.59, 0, 190))
+add_wi2("wiz_flowtrail", "Flowtrail", "gruen", "flowtrail")
+add_wi2("wiz_flow_country", "Flow Country Trail", "gruen", "flow_country")
+add_wi2("wiz_enduro_line", "Enduro-Line", "schwarz", "enduro_line")
+add_wi2("wiz_downhill", "Willingen Downhill", "schwarz", "willingen_downhill", official=(1.6, 0, 250))
+add_wi2("wiz_pump_track", "Pump Track", "gruen", "pump_track")
+add_wi2("wiz_freeride_lower", "Freeride Lower", "blau", "freeride_lower", official=(0.354, 1, 30))
+add_wi2("wiz_enduro_line_lower", "Enduro-Line Lower", "rot", "enduro_line_lower", official=(0.117, 0, 13))
 
 # ---------------------------------------------------------------------------------------------------
 # Green Hill sub-region: import the already-built 16 trails from build_greenhill.py's output.
