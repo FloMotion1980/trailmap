@@ -387,16 +387,15 @@ add_wi2("wiz_pump_track", "Pump Track", "blau", "pump_track")
 add_wi2("wiz_freeride_lower", "Freeride Lower", "rot", "freeride_lower", official=(0.354, 1, 30))
 add_wi2("wiz_enduro_line_lower", "Enduro-Line Lower", "schwarz", "enduro_line_lower", official=(0.117, 0, 13))
 
-# Four Cross (2026-08-14): new. OSM tags the whole "Mountainbike-Fun-Parcours" area (where Downhill
-# and Four Cross run side by side, per the user -- "im unteren Bereich schließt die Strecke an die
-# Downhill an" on the operator's own 4X page matches exactly) as ONE closed loop way with no
-# left/right distinction; the user identified which of the two parallel strands is Four Cross by
-# looking at the actual map (the southern/lower one by average latitude, not the one this app's own
-# heuristics could tell apart from proximity to the existing Downhill line alone -- both strands
-# measured almost equally close to it). Official numbers from the operator's own 4X page (500 m,
-# 60 m); its own difficulty is a range, "mittel bis schwer" -- schwarz used, matching this
-# sub-region's general pattern of the operator's own wording underselling the real difficulty.
-add_wi2_osm("wiz_fourcross", "Four Cross", "schwarz", "fourcross", official=(0.5, 0, 60))
+# Four Cross (2026-08-14, corrected 2026-08-14): the way first used here (169824662) was wrong -- it
+# is the outer boundary polygon of the "Mountainbike-Fun-Parcours" sports_centre area, not a trail at
+# all. The user pointed out the actual line snakes alongside the Weltcup-Downhill-Strecke to the same
+# endpoint. Found it node-exact: way 336853512 (OSM name "Jumptrack", mtb:scale=1) shares its end node
+# (2883016585) exactly with the Downhill way's own end node -- confirming it's the parallel line the
+# user described, not the area boundary. Official numbers from the operator's own 4X page (500 m,
+# 60 m) kept, close enough to this way's own 388 m. Difficulty corrected to rot per the user (not
+# schwarz -- the operator's "mittel bis schwer" wording was overselling it, not underselling).
+add_wi2_osm("wiz_fourcross", "Four Cross", "rot", "fourcross", official=(0.5, 0, 60))
 
 # ---------------------------------------------------------------------------------------------------
 # Four more Willingen (Ettelsberg) downhill trails (2026-08-14), found by the user on Trailforks --
