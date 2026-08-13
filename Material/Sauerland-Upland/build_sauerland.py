@@ -133,18 +133,23 @@ elevation = ElevationLookup(ELEV_CACHE)
 winterberg_osm = json.load(open(os.path.join(MAT, "winterberg_osm_final.json"), encoding="utf-8"))
 
 
-def add_from_gpx(tid, name, region, diff, gpx_path, *, official=None, uphill=False, descend=True):
+def add_from_gpx(tid, name, region, diff, gpx_path, *, official=None, uphill=False, descend=True,
+                  loop=False):
     text = open(gpx_path, encoding="utf-8").read()
     pts = parse_gpx(text)
     entry, coords, prof = build_trail(tid, name, region, diff, pts, official=official,
                                        uphill=uphill, descend=descend)
+    if loop:
+        entry["loop"] = True
     trails.append(entry); geo[tid] = coords; profs[tid] = prof
 
 
-def add_from_points(tid, name, region, diff, pts, *, uphill=False, descend=True):
+def add_from_points(tid, name, region, diff, pts, *, uphill=False, descend=True, loop=False):
     """Same as add_from_gpx, for points harvested inline (Trailforks' widget embed) rather than a
     downloaded .gpx file -- see build_greenhill.py for the original use of this pattern."""
     entry, coords, prof = build_trail(tid, name, region, diff, pts, uphill=uphill, descend=descend)
+    if loop:
+        entry["loop"] = True
     trails.append(entry); geo[tid] = coords; profs[tid] = prof
 
 
@@ -280,17 +285,29 @@ add_from_points("tm_ixs_downhill", "iXS Downhill", "bikepark_winterberg", "schwa
 add_osm("tm_schwalbe_loose_lee", "Schwalbe Loose Lee (Pinball)", "bikepark_winterberg", "rot")
 
 # ---------------------------------------------------------------------------------------------------
-# Willingen sub-region: Green Trails Willingen's two long touring loops (official numbers). Kept
-# separate from the MTB Zone Willingen sub-region below per the user (2026-08-14) -- two distinct
-# networks sharing a town, same pattern as the two Winterberg sub-regions.
+# Willingen sub-region: Green Trails Willingen's two long touring loops. Kept separate from the MTB
+# Zone Willingen sub-region below per the user (2026-08-14) -- two distinct networks sharing a town,
+# same pattern as the two Winterberg sub-regions. Both marked loop=True per the user (2026-08-14) --
+# no TRAIL_SEGMENTS breakdown (neither is composed of this app's own named component trails), so
+# each renders the same way the Odenwald cluster's own unsegmented loops already do: the whole route
+# dashed grey, in the Touren list instead of Trails.
 # ---------------------------------------------------------------------------------------------------
 WG = os.path.join(MAT, "willingen_gpx")
 add_from_gpx("wi_gipfel_runde_hoppecke", "Green Trails Willingen Gipfel-Runde Hoppecke (GRU)",
              "willingen", "blau", os.path.join(WG, "gipfel_runde_hoppecke.gpx"),
-             official=(12.91, 314, 282))
-add_from_gpx("wi_ruthenaar_double", "Green Trails Willingen Ruthenaar-Double (RUD)",
-             "willingen", "blau", os.path.join(WG, "ruthenaar_double.gpx"),
-             official=(6.11, 255, 255))
+             official=(12.91, 314, 282), loop=True)
+
+# Ruthenaar-Double: the recorded GPX opens with an out-and-back into town (points 1-37 of 219,
+# 714 m) before the real loop starts -- found by the user riding it, confirmed in the raw track
+# itself (point 37 lands back on point 1, and points 18-20 sit on the exact same coordinate, the
+# turnaround). Trimmed here (point 0 + points 38 onward) rather than fixed at the source, since the
+# spur is a real recorded detour, not a mapping error. The official number (6.11 km) turns out to
+# already match the UNTRIMMED recording almost exactly (6110 m) -- i.e. it was seemingly derived
+# from this same recording including the detour, not an independent measurement -- so official is
+# dropped here in favour of GPX-derived, which now describes the trimmed line actually drawn.
+_rud_raw = parse_gpx(open(os.path.join(WG, "ruthenaar_double.gpx"), encoding="utf-8").read())
+add_from_points("wi_ruthenaar_double", "Green Trails Willingen Ruthenaar-Double (RUD)",
+                 "willingen", "blau", [_rud_raw[0]] + _rud_raw[38:], loop=True)
 
 # ---------------------------------------------------------------------------------------------------
 # MTB Zone Willingen sub-region (2026-08-14) -- the bikepark this app's own docs previously recorded
@@ -314,6 +331,8 @@ add_from_gpx("wi_ruthenaar_double", "Green Trails Willingen Ruthenaar-Double (RU
 # own stat line for both matches their own geometry's length exactly, so used as official.
 WI2 = json.load(open(os.path.join(MAT, "willingen_mtbzone_pts.json"), encoding="utf-8"))
 WI2_OSM = json.load(open(os.path.join(MAT, "willingen_osm_final2.json"), encoding="utf-8"))
+WI2_OSM["willingen_downhill"] = json.load(open(os.path.join(MAT, "willingen_downhill_osm.json"),
+                                                encoding="utf-8"))
 
 
 def add_wi2(tid, name, diff, key, *, official=None):
@@ -321,11 +340,11 @@ def add_wi2(tid, name, diff, key, *, official=None):
     trails.append(entry); geo[tid] = coords; profs[tid] = prof
 
 
-def add_wi2_osm(tid, name, diff, key):
+def add_wi2_osm(tid, name, diff, key, *, official=None):
     """OSM-sourced (willingen_osm_final2.json) -- plain Overpass nodes carry no elevation at all
     (unlike the Trailforks-widget-sourced ones above), so ElevationLookup fills it in."""
     entry, coords, prof = build_trail(tid, name, "mtbzone_willingen", diff, WI2_OSM[key],
-                                       elevation=elevation)
+                                       elevation=elevation, official=official)
     trails.append(entry); geo[tid] = coords; profs[tid] = prof
 
 
@@ -353,11 +372,31 @@ add_wi2_osm("wiz_old_freeride", "Old Freeride", "rot", "old_freeride")
 add_wi2_osm("wiz_flowtrail", "Flowtrail", "blau", "flowtrail")
 add_wi2_osm("wiz_flow_country", "Flow Country Trail", "blau", "flow_country")
 
-add_wi2("wiz_enduro_line", "Enduro-Line", "schwarz", "enduro_line")
-add_wi2("wiz_downhill", "Willingen Downhill", "schwarz", "willingen_downhill", official=(1.6, 0, 250))
+# Enduro-Line: last ~300 m corrected per the user ("das Ende geht auf OSM nochmal links ab") -- OSM
+# tags that final stretch as its own way (mtb:type=enduro), forking left off what this app's
+# original Trailforks-widget line drew as a straight continuation into the Freeride/Flow
+# Trail/Flow Country convergence point. Found node-exact: the Trailforks line's own point 69 (of
+# 88) sits 12 m from that OSM way's start. Spliced in points[:70] + the OSM way's own points.
+add_wi2("wiz_enduro_line", "Enduro-Line", "schwarz", "enduro_line_fixed")
+
+# Willingen Downhill: switched to OSM, which calls it "Weltcup-Downhill-Strecke" (the user's own
+# correction) -- three ways chained, ending 1469 m in, closer to the operator's own 1600 m than the
+# original Trailforks-widget line's 1285 m was.
+add_wi2_osm("wiz_downhill", "Willingen Downhill", "schwarz", "willingen_downhill")
 add_wi2("wiz_pump_track", "Pump Track", "blau", "pump_track")
 add_wi2("wiz_freeride_lower", "Freeride Lower", "rot", "freeride_lower", official=(0.354, 1, 30))
 add_wi2("wiz_enduro_line_lower", "Enduro-Line Lower", "schwarz", "enduro_line_lower", official=(0.117, 0, 13))
+
+# Four Cross (2026-08-14): new. OSM tags the whole "Mountainbike-Fun-Parcours" area (where Downhill
+# and Four Cross run side by side, per the user -- "im unteren Bereich schließt die Strecke an die
+# Downhill an" on the operator's own 4X page matches exactly) as ONE closed loop way with no
+# left/right distinction; the user identified which of the two parallel strands is Four Cross by
+# looking at the actual map (the southern/lower one by average latitude, not the one this app's own
+# heuristics could tell apart from proximity to the existing Downhill line alone -- both strands
+# measured almost equally close to it). Official numbers from the operator's own 4X page (500 m,
+# 60 m); its own difficulty is a range, "mittel bis schwer" -- schwarz used, matching this
+# sub-region's general pattern of the operator's own wording underselling the real difficulty.
+add_wi2_osm("wiz_fourcross", "Four Cross", "schwarz", "fourcross", official=(0.5, 0, 60))
 
 # ---------------------------------------------------------------------------------------------------
 # Four more Willingen (Ettelsberg) downhill trails (2026-08-14), found by the user on Trailforks --
