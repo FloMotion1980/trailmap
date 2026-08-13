@@ -17,6 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   second runs on top of the first's output and the first would otherwise drop the lifts and tours.
   The trail-map API answers 404 to any plain HTTP client, hence `tools/oa_harvest_server.py`.
 - `Material/Finale Ligure/` — source material for the Finale Ligure region (Italy, ~230 trails across ~12 hubs, being built out hub by hub — see the `finale` entry in `REGION_CATALOG` for current build progress/status). No single official brochure like Nauders' PDF; several partial/overlapping source files instead (2021 legend photo with stale trail numbers, a prose hub-naming guide, various scraped trail-list exports). **See `docs/finale-ligure.md` for the full source-file breakdown, GPX/difficulty sourcing method, and lessons learned** — read it before adding or correcting any Finale trail.
+- **`docs/region-backlog.md`** — which regions are already built vs. still pending, in the order the user asked for them, with sources/links for each unbuilt one. This mirrors the assistant's own local memory note of the same name, checked into the repo specifically so the plan survives switching to a different device (memory lives only on one machine; this file travels with `git clone`/`git pull`). Check it before starting a new region, and keep it updated when the backlog changes.
 
 ## Running / testing changes
 
