@@ -121,8 +121,13 @@ LIFTS = {
     #
     # OSM's own names differ from the operators' marketing names in three of five cases (kept as the
     # `name` here; `osm` matches OSM's shorter/different name).
+    #
+    # Green Hill Bikepark: two drag lifts, Hohe Lied 1 and Hohe Lied 2 (both aerialway:bicycle=yes,
+    # website=greenhill-bikepark.de -- confirmed as this park's own, not a coincidence of naming).
+    # Bbox widened to 8.343 on the west to reach Green Hill (~40 km from Winterberg/Willingen);
+    # re-checked for collisions across the whole widened area before relying on it.
     # ---------------------------------------------------------------------------------------------
-    "sauerland": dict(bbox="51.17,8.50,51.32,8.65", lifts=[
+    "sauerland": dict(bbox="51.17,8.343,51.32,8.65", lifts=[
         dict(id="lift_wb_panoramabahn", name="Panorama-Lift", region="bikepark_winterberg",
              osm=r"^Panoramabahn$", note="Hauptlift zum Gipfel"),
         dict(id="lift_wb_kappe", name="Kappe-Lift", region="bikepark_winterberg", osm=r"^Kappe$",
@@ -133,6 +138,10 @@ LIFTS = {
              osm=r"^Ettelsberg-Kabinenseilbahn$", note="Talstation-Kabinenseilbahn zum Ettelsberg"),
         dict(id="lift_wi_k1", name="K1 8er-Sesselbahn", region="willingen",
              osm=r"^Sesselbahn Köhlerhagen K1$", note="8er-Sesselbahn für die leichteren Trails"),
+        dict(id="lift_gh_hohe_lied_1", name="Hohe Lied 1", region="greenhill",
+             osm=r"^Hohe Lied 1$", note="Schlepplift"),
+        dict(id="lift_gh_hohe_lied_2", name="Hohe Lied 2", region="greenhill",
+             osm=r"^Hohe Lied 2$", note="Schlepplift"),
     ], excluded=[
         ("Rauher Busch, Bäre-Herrloh, Quick Jet, Kleine Bäre, Bäre Bremberg X-Press, Brembergkopf 1, "
          "Poppenberg 1, Poppenberg 2, Astenstraße, St Georg Schanze, Sürenberg, Landallift, "
