@@ -49,9 +49,18 @@ region needed a second, stricter signal too, because the two disagree in both di
 Per trail, in the order decided:
   - Beer Connector, Happy End: OSM has nothing under either name at all (confirmed by the user
     first) -- kept on Trailforks geometry, unchanged.
-  - Canadian Tuxedo, Thin Air, Time Shift, I Love Fidlock, Bounce & Blow, Moose Cruise: switched to
-    OSM. Node/hybrid-chained cleanly (0-2 unresolved fragments, each checked to sit far enough from
-    the main chain's ends to be a genuinely separate spur, not a piece of the real line).
+  - Thin Air, Time Shift, I Love Fidlock, Bounce & Blow, Moose Cruise: switched to OSM.
+    Node/hybrid-chained cleanly (0-2 unresolved fragments, each checked to sit far enough from the
+    main chain's ends to be a genuinely separate spur, not a piece of the real line).
+  - Canadian Tuxedo: same, but the first pass got the "genuinely separate spur" call wrong for its
+    own 2nd, smaller way (137 m) -- excluded for sitting 16 m past a 15 m attach tolerance, which
+    read as consistent at the time (the main way alone, 868 m, already matched the trail's known
+    Trailforks length of 874 m closely). The user caught it directly ("ein kleines Teilstück am
+    Ende fehlt") after the switch: that excluded fragment's own far end lines up with the trail's
+    real, previously-recorded end point, so it was the missing continuation, not a spur -- a 16 m
+    OSM mapping gap being slightly bigger than average is not the same as it being wrong. Included
+    now (1022 m total). Worth remembering: closely matching an old length is a good sign but not
+    proof that nothing was left off the end.
   - Groomer, Save Wimmons: switched to OSM -- two connected components each (see above), joined
     end-to-end across their one real, small gap.
   - Jonas + Pablo: OSM maps both as ONE way group, "Jonas & Pablo" -- and per the user (2026-08-13,
