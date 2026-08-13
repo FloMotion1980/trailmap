@@ -101,6 +101,52 @@ LIFTS = {
         ("Rastkopfbahn, Egghof Sun Jet, Thanellerbahn, Obere Karbahn I+II",
          "Berwang/Bichlbach winter lifts"),
     ]),
+
+    # ---------------------------------------------------------------------------------------------
+    # Sauerland/Upland. Bbox covers both Winterberg and Willingen (Ettelsberg), ~15 km apart -- checked
+    # for name collisions across the combined area before relying on it, since a duplicate elsewhere
+    # would otherwise "resolve" to the wrong way silently.
+    #
+    # bikepark-winterberg.de ("The Mother") names exactly three lifts as bringing riders up --
+    # Panorama-Lift (main, to the summit), Kappe-Lift (mid zone), Schneewittchen-Lift (beginner
+    # trails). All three carry OSM's own aerialway:bicycle=summer tag, confirming the operator's list
+    # independently. Trailpark Winterberg (the other Winterberg sub-region) is free and has no lift at
+    # all -- riders climb via the signed Uphill-Trail/Möppis Mover instead, so it gets no entry here.
+    #
+    # willingen.de: Green Trails Willingen's two touring loops are served by the Ettelsberg-Seilbahn
+    # (the valley gondola, bicycle=yes) and the K1 8er-Sesselbahn (bicycle=summer) -- both independently
+    # confirmed by OSM's own bike tag, same as the Winterberg three. MTB Zone Bikepark Willingen's own
+    # lift(s), if any, are moot here since none of its 12 named descents have a GPX source and are not
+    # built (see docs/sauerland-recherche.md) -- nothing to serve yet.
+    #
+    # OSM's own names differ from the operators' marketing names in three of five cases (kept as the
+    # `name` here; `osm` matches OSM's shorter/different name).
+    # ---------------------------------------------------------------------------------------------
+    "sauerland": dict(bbox="51.17,8.50,51.32,8.65", lifts=[
+        dict(id="lift_wb_panoramabahn", name="Panorama-Lift", region="bikepark_winterberg",
+             osm=r"^Panoramabahn$", note="Hauptlift zum Gipfel"),
+        dict(id="lift_wb_kappe", name="Kappe-Lift", region="bikepark_winterberg", osm=r"^Kappe$",
+             note="mittlere Zone"),
+        dict(id="lift_wb_schneewittchen", name="Schneewittchen-Lift", region="bikepark_winterberg",
+             osm=r"^Schneewittchenhang$", note="Einsteiger-Strecken"),
+        dict(id="lift_wi_ettelsberg", name="Ettelsberg-Seilbahn", region="willingen",
+             osm=r"^Ettelsberg-Kabinenseilbahn$", note="Talstation-Kabinenseilbahn zum Ettelsberg"),
+        dict(id="lift_wi_k1", name="K1 8er-Sesselbahn", region="willingen",
+             osm=r"^Sesselbahn Köhlerhagen K1$", note="8er-Sesselbahn für die leichteren Trails"),
+    ], excluded=[
+        ("Rauher Busch, Bäre-Herrloh, Quick Jet, Kleine Bäre, Bäre Bremberg X-Press, Brembergkopf 1, "
+         "Poppenberg 1, Poppenberg 2, Astenstraße, St Georg Schanze, Sürenberg, Landallift, "
+         "Rodellift Bremberg, Förderband Herrloh 1, Förderband Köppchen, Förderband Kinderland, "
+         "Übungslift Herrloh II, Übungslift Herrloh III",
+         "Winterberg winter/ski lifts and magic-carpets/rope-tows elsewhere on the same mountain -- "
+         "none carry OSM's aerialway:bicycle tag, and none are on the operator's own three-lift summer "
+         "list"),
+        ("Oberer Wilddieblift, Sonnenlift, Sesselbahn Ritzhagen, Ski- und Rodelförderband Ritzhagen, "
+         "Mittlerer Wilddieblift, Unterer Wilddieblift I/II, Förderband Dorfwiese 1/2, "
+         "R1 - Rodelpiste Dorfwiese, Rodel-/Skihanglift Sonnenhang",
+         "Willingen winter/ski/sledge lifts on the same mountain -- no bicycle tag, not part of Green "
+         "Trails Willingen's two lift-served loops"),
+    ]),
 }
 
 

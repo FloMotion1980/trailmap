@@ -2,10 +2,15 @@
 """Build regions/sauerland.json — Sauerland/Upland region group, 2026-08-11.
 
 Three sub-regions, purely geographic bracket (user decision 2026-07-26):
-  winterberg  - Trailpark Winterberg (winterberg.de, Outdooractive-hosted) + "The Mother" /
-                Bikepark Winterberg (bikepark-winterberg.de, Erlebnisberg Kappe). Two DISTINCT trail
-                networks on different hills of the same town -- confirmed by cross-checking trail
-                names/lift names/location text, not a duplicate. Both feed one sub-region per the task.
+  trailpark_winterberg - Trailpark Winterberg (winterberg.de, Outdooractive-hosted). Free, no lift --
+                riders climb via the signed Uphill-Trail/Möppis Mover or their own legs.
+  bikepark_winterberg  - "The Mother" / Bikepark Winterberg (bikepark-winterberg.de, Erlebnisberg
+                Kappe). Lift-served: Panorama-Lift (main, to the summit), Kappe-Lift (mid zone),
+                Schneewittchen-Lift (beginner trails) -- see tools/add_lifts.py's "sauerland" table.
+                Two DISTINCT trail networks on different hills of the same town -- confirmed by
+                cross-checking trail names/lift names/location text, not a duplicate. Split into two
+                sub-regions 2026-08-13 (originally lumped into one "winterberg" sub-region) per the
+                user, matching how Willingen/Green Hill are already split out.
   willingen   - Willingen/Ettelsberg. MTB Zone Bikepark Willingen's 12 named descents have NO GPX
                 source (confirmed: mtbzone-bikepark.com page has names/difficulty only) and are left
                 OUT rather than fabricated. Willingen Greentrails' two long touring loops (Gipfel-Runde
@@ -62,64 +67,69 @@ def add_from_gpx(tid, name, region, diff, gpx_path, *, official=None, uphill=Fal
 
 
 # ---------------------------------------------------------------------------------------------------
-# Winterberg sub-region, part 1: Trailpark Winterberg (winterberg.de) -- 16 trails, operator numbers.
-# LEICHT -> blau, MITTEL -> rot, SCHWER -> schwarz (see module docstring).
+# Sub-region 1: Trailpark Winterberg (winterberg.de) -- 16 trails, operator numbers. Free, no lift --
+# LEICHT -> blau, MITTEL -> rot, SCHWER -> schwarz (see module docstring). Split into its own
+# sub-region 2026-08-13 (was lumped into one "winterberg" sub-region with The Mother below, per the
+# user: two distinct networks on different hills of the same town deserve two sub-regions, matching
+# how Willingen/Green Hill are already split out).
 # ---------------------------------------------------------------------------------------------------
 WB = os.path.join(MAT, "winterberg_gpx")
-add_from_gpx("wb_poppenberg_peak", "Poppenberg Peak", "winterberg", "rot",
+add_from_gpx("wb_poppenberg_peak", "Poppenberg Peak", "trailpark_winterberg", "rot",
              os.path.join(WB, "poppenberg_peak.gpx"), official=(0.3, 0, 16))
-add_from_gpx("wb_weltcup_flow", "Weltcup Flow", "winterberg", "schwarz",
+add_from_gpx("wb_weltcup_flow", "Weltcup Flow", "trailpark_winterberg", "schwarz",
              os.path.join(WB, "weltcup_flow.gpx"), official=(0.6, 0, 87))
-add_from_gpx("wb_uphill_trail", "Uphill-Trail", "winterberg", "blau",
+add_from_gpx("wb_uphill_trail", "Uphill-Trail", "trailpark_winterberg", "blau",
              os.path.join(WB, "uphill_trail.gpx"), official=(1.2, 51, 5), uphill=True, descend=False)
-add_from_gpx("wb_moeppis_mover", "Möppis Mover (Uphill)", "winterberg", "rot",
+add_from_gpx("wb_moeppis_mover", "Möppis Mover (Uphill)", "trailpark_winterberg", "rot",
              os.path.join(WB, "moeppis_mover.gpx"), official=(0.5, 56, 0), uphill=True, descend=False)
-add_from_gpx("wb_endless_trees", "Endless Trees", "winterberg", "rot",
+add_from_gpx("wb_endless_trees", "Endless Trees", "trailpark_winterberg", "rot",
              os.path.join(WB, "endless_trees.gpx"), official=(0.8, 0, 71))
-add_from_gpx("wb_popp_top_track", "Popp Top Track", "winterberg", "rot",
+add_from_gpx("wb_popp_top_track", "Popp Top Track", "trailpark_winterberg", "rot",
              os.path.join(WB, "popp_top_track.gpx"), official=(0.2, 1, 41))
-add_from_gpx("wb_suerenberg_sause", "Sürenberg Sause", "winterberg", "blau",
+add_from_gpx("wb_suerenberg_sause", "Sürenberg Sause", "trailpark_winterberg", "blau",
              os.path.join(WB, "suerenberg_sause.gpx"), official=(0.4, 0, 10))
-add_from_gpx("wb_butzhols_bests", "Butzhols Bests", "winterberg", "schwarz",
+add_from_gpx("wb_butzhols_bests", "Butzhols Bests", "trailpark_winterberg", "schwarz",
              os.path.join(WB, "butzhols_bests.gpx"), official=(0.3, 7, 36))
-add_from_gpx("wb_little_fluff", "Little Fluff", "winterberg", "rot",
+add_from_gpx("wb_little_fluff", "Little Fluff", "trailpark_winterberg", "rot",
              os.path.join(WB, "little_fluff.gpx"), official=(0.5, 0, 37))
-add_from_gpx("wb_shake_the_lake", "Shake the Lake", "winterberg", "schwarz",
+add_from_gpx("wb_shake_the_lake", "Shake the Lake", "trailpark_winterberg", "schwarz",
              os.path.join(WB, "shake_the_lake.gpx"), official=(0.4, 0, 14))
-add_from_gpx("wb_poppies_track", "Poppies Track", "winterberg", "rot",
+add_from_gpx("wb_poppies_track", "Poppies Track", "trailpark_winterberg", "rot",
              os.path.join(WB, "poppies_track.gpx"), official=(0.4, 1, 31))
-add_from_gpx("wb_landal", "Landal", "winterberg", "schwarz",
+add_from_gpx("wb_landal", "Landal", "trailpark_winterberg", "schwarz",
              os.path.join(WB, "landal.gpx"), official=(0.4, 0, 70))
-add_from_gpx("wb_bremberg_flow", "Bremberg Flow", "winterberg", "schwarz",
+add_from_gpx("wb_bremberg_flow", "Bremberg Flow", "trailpark_winterberg", "schwarz",
              os.path.join(WB, "bremberg_flow.gpx"), official=(0.4, 0, 51))
-add_from_gpx("wb_lolo_wahle_schanze", "Lolo Wahle Schanze", "winterberg", "schwarz",
+add_from_gpx("wb_lolo_wahle_schanze", "Lolo Wahle Schanze", "trailpark_winterberg", "schwarz",
              os.path.join(WB, "lolo_wahle_schanze.gpx"), official=(0.8, 1, 78))
-add_from_gpx("wb_lebe_wild_trail", "Lebe Wild Trail", "winterberg", "schwarz",
+add_from_gpx("wb_lebe_wild_trail", "Lebe Wild Trail", "trailpark_winterberg", "schwarz",
              os.path.join(WB, "lebe_wild_trail.gpx"), official=(0.4, 0, 72))
-add_from_gpx("wb_cross_over", "Cross Over", "winterberg", "blau",
+add_from_gpx("wb_cross_over", "Cross Over", "trailpark_winterberg", "blau",
              os.path.join(WB, "cross_over.gpx"), official=(0.5, 20, 14))
 
 # ---------------------------------------------------------------------------------------------------
-# Winterberg sub-region, part 2: "The Mother" / Bikepark Winterberg (Erlebnisberg Kappe) -- 12 of 18
-# trails with real GPX. Kinderleicht->gruen, Leicht->blau, Mittel->rot, Schwierig->schwarz.
-# GPX-derived len/up/down (site's own aggregate numbers have a visible unit bug, see docstring).
+# Sub-region 2: "The Mother" / Bikepark Winterberg (Erlebnisberg Kappe) -- 12 of 18 trails with real
+# GPX. Kinderleicht->gruen, Leicht->blau, Mittel->rot, Schwierig->schwarz. GPX-derived len/up/down
+# (site's own aggregate numbers have a visible unit bug, see docstring). Its own sub-region since
+# 2026-08-13 (see note above) -- lift-served (Panorama-/Kappe-/Schneewittchen-Lift), unlike Trailpark
+# Winterberg above.
 # ---------------------------------------------------------------------------------------------------
 TM = os.path.join(MAT, "themother_gpx")
-add_from_gpx("tm_kyrhill", "Kyrhill", "winterberg", "blau", os.path.join(TM, "kyrhill.gpx"))
-add_from_gpx("tm_jolli_jumper", "Jolli Jumper", "winterberg", "rot", os.path.join(TM, "jolli_jumper.gpx"))
-add_from_gpx("tm_north_shore", "North Shore", "winterberg", "rot", os.path.join(TM, "north_shore.gpx"))
-add_from_gpx("tm_freeride", "Freeride", "winterberg", "rot", os.path.join(TM, "freeride.gpx"))
-add_from_gpx("tm_blackline_1", "Blackline 1.0", "winterberg", "schwarz", os.path.join(TM, "blackline_1.gpx"))
-add_from_gpx("tm_sram_flow_country", "SRAM Flow Country", "winterberg", "blau",
+add_from_gpx("tm_kyrhill", "Kyrhill", "bikepark_winterberg", "blau", os.path.join(TM, "kyrhill.gpx"))
+add_from_gpx("tm_jolli_jumper", "Jolli Jumper", "bikepark_winterberg", "rot", os.path.join(TM, "jolli_jumper.gpx"))
+add_from_gpx("tm_north_shore", "North Shore", "bikepark_winterberg", "rot", os.path.join(TM, "north_shore.gpx"))
+add_from_gpx("tm_freeride", "Freeride", "bikepark_winterberg", "rot", os.path.join(TM, "freeride.gpx"))
+add_from_gpx("tm_blackline_1", "Blackline 1.0", "bikepark_winterberg", "schwarz", os.path.join(TM, "blackline_1.gpx"))
+add_from_gpx("tm_sram_flow_country", "SRAM Flow Country", "bikepark_winterberg", "blau",
              os.path.join(TM, "sram_flow_country.gpx"))
-add_from_gpx("tm_schneewittchen_trail", "Schneewittchen-Trail", "winterberg", "gruen",
+add_from_gpx("tm_schneewittchen_trail", "Schneewittchen-Trail", "bikepark_winterberg", "gruen",
              os.path.join(TM, "schneewittchen_trail.gpx"))
-add_from_gpx("tm_fairy_trail", "Fairy-Trail", "winterberg", "gruen", os.path.join(TM, "fairy_trail.gpx"))
-add_from_gpx("tm_forrest_stump", "Forrest Stump", "winterberg", "rot", os.path.join(TM, "forrest_stump.gpx"))
-add_from_gpx("tm_rocky_waldboa", "Rocky Waldboa", "winterberg", "rot", os.path.join(TM, "rocky_waldboa.gpx"))
-add_from_gpx("tm_shreddy_moerphy", "Shreddy Mörphy", "winterberg", "rot",
+add_from_gpx("tm_fairy_trail", "Fairy-Trail", "bikepark_winterberg", "gruen", os.path.join(TM, "fairy_trail.gpx"))
+add_from_gpx("tm_forrest_stump", "Forrest Stump", "bikepark_winterberg", "rot", os.path.join(TM, "forrest_stump.gpx"))
+add_from_gpx("tm_rocky_waldboa", "Rocky Waldboa", "bikepark_winterberg", "rot", os.path.join(TM, "rocky_waldboa.gpx"))
+add_from_gpx("tm_shreddy_moerphy", "Shreddy Mörphy", "bikepark_winterberg", "rot",
              os.path.join(TM, "shreddy_moerphy.gpx"))
-add_from_gpx("tm_fly_by", "Fly By", "winterberg", "blau", os.path.join(TM, "fly_by.gpx"))
+add_from_gpx("tm_fly_by", "Fly By", "bikepark_winterberg", "blau", os.path.join(TM, "fly_by.gpx"))
 
 # ---------------------------------------------------------------------------------------------------
 # Willingen sub-region: Green Trails Willingen's two long touring loops (official numbers).
