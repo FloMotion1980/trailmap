@@ -23,7 +23,7 @@
 // rock, snow, roads, shadow -- regardless of shade), then the user asked for orange "überall" once they
 // liked it live there, then immediately found that SAME bright amber too pale against "Straße"/"Straße
 // hell"/"Relief"'s own light backgrounds and asked for a darker shade specifically THERE. So: osm/carto/
-// topo get a darker burnt-orange (#c9660a), sat keeps the original bright #ffb300 -- check the right one
+// topo get a darker burnt-orange (#e08a00), sat keeps the original bright #ffb300 -- check the right one
 // per basemap, never assume "connector = the same hex everywhere".
 //
 // HALO HISTORY, worth knowing before touching this again. A CSS `filter: drop-shadow` contrast halo shipped
@@ -69,22 +69,22 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   const schwarzOsm = strokeCount(overlay(), "#1c1c1c");
   T.ok("schwarz trails present, near-black", schwarzOsm > 0, schwarzOsm, "> 0");
   T.eq("no white halo on osm", strokeCount(overlay(), "#ffffff", 8.5), 0);
-  const connectorsOsm = strokeCount(overlay(), "#c9660a");
+  const connectorsOsm = strokeCount(overlay(), "#e08a00");
   T.ok("connectors present, the DARKER burnt-orange (not sat's bright amber)", connectorsOsm > 0, connectorsOsm, "> 0");
   T.eq("no bright sat amber leaking onto osm", strokeCount(overlay(), "#ffb300"), 0);
 
   T.test("carto and topo: same darker connector as osm, lift mask invisible (opacity 0, not removed)");
   await setBase("carto");
-  T.eq("carto connector matches osm's dark orange", strokeCount(overlay(), "#c9660a"), connectorsOsm);
+  T.eq("carto connector matches osm's dark orange", strokeCount(overlay(), "#e08a00"), connectorsOsm);
   T.eq("carto lift masks are transparent, same count as osm's opaque ones", strokeCountOp(band(), "#cfcfcf", 0), maskOsm);
   await setBase("topo");
-  T.eq("topo connector matches too", strokeCount(overlay(), "#c9660a"), connectorsOsm);
+  T.eq("topo connector matches too", strokeCount(overlay(), "#e08a00"), connectorsOsm);
   T.eq("topo lift masks are transparent too", strokeCountOp(band(), "#cfcfcf", 0), maskOsm);
   T.eq("topo gruen is the ORIGINAL unbrightened one, not osm's brightened gruen", strokeCount(overlay(), "#3f8a4c"), greenOsm);
 
   T.test("switching to Satellit: bright amber connector, schwarz stays near-black WITH a halo, lift mask invisible");
   await setBase("sat");
-  T.eq("no dark osm/carto/topo connector left", strokeCount(overlay(), "#c9660a"), 0);
+  T.eq("no dark osm/carto/topo connector left", strokeCount(overlay(), "#e08a00"), 0);
   T.eq("bright amber connector, same count", strokeCount(overlay(), "#ffb300"), connectorsOsm);
   T.eq("no old osm gruen", strokeCount(overlay(), "#4fa85e"), 0);
   T.eq("brighter sat gruen, same count", strokeCount(overlay(), "#5fdd7a"), greenOsm);
@@ -94,7 +94,38 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   T.eq("exactly that many white halos appear behind schwarz, at the fixed halo weight",
        strokeCount(overlay(), "#ffffff", 8.5), schwarzOsm);
   T.eq("lift masks transparent on Satellit too (it's a photo, nothing to cover)", strokeCountOp(band(), "#f2f2f2", 0), maskOsm);
-  T.eq("the lift symbol (hairline+dots) stays fully visible regardless of the mask", strokeCountOp(band(), "#111111", 1) > 0, true, true);
+  // Light grey (#d9d9d9), not the near-black #111111 every other basemap uses -- near-black hairline/
+  // dots read as almost nothing against Satellit's own dark terrain, the same "brighten it" fix schwarz
+  // trails got before they had a halo (2026-08-13, per the user).
+  T.eq("the lift symbol is light grey on Satellit, not near-black", strokeCountOp(band(), "#d9d9d9", 1) > 0, true, true);
+  T.eq("no near-black lift symbol left over from the osm/carto/topo color", strokeCountOp(band(), "#111111", 1), 0);
+
+  T.test("selecting a Tour that rides a lift must NOT force that lift's mask back to opaque");
+  // applyLiftSegmentOpacity() sets every lift segment's opacity to 1 when its OWN Tour is the soloed one
+  // (which selecting a Tour does) -- but `liftSegments` is a flat [mask, hairline, dots, ...] repeat, and
+  // the mask specifically must stay capped at LIFT_MASK_OPACITY regardless, or selecting/soloing a Tour
+  // riding a lift forces that lift's mask back to fully opaque on every basemap where it's supposed to be
+  // invisible. Reported by the user as "Lifte die in einer Tour verwendet werden haben weiterhin den
+  // grauen [weißen] Strich" -- specifically AFTER selecting the Tour, which is the tell: the mask was
+  // already correctly invisible before that, only selection forced it back.
+  {
+    const maskOpacities = () => new Set(band()
+      .filter((p) => p.getAttribute("stroke-width") === "7")
+      .map((p) => p.getAttribute("stroke-opacity") || "1"));
+    const before = maskOpacities();
+    T.ok("at rest, no lift mask is opaque on Satellit", ![...before].some((op) => parseFloat(op) > 0.5), [...before], "nothing > 0.5");
+    const tourRidingLift = TM.ui.tourCards().find((c) => /615|616|617|Biketicket/i.test(c.textContent));
+    if (!tourRidingLift) {
+      T.skip("no Tour riding a lift active right now");
+    } else {
+      tourRidingLift.click();
+      await TM.wait(500);
+      const during = maskOpacities();
+      T.ok("selecting it does not force any lift mask opaque", ![...during].some((op) => parseFloat(op) > 0.5), [...during], "nothing > 0.5");
+      closeInfoPanelAndDeselect();
+      await TM.wait(300);
+    }
+  }
 
   T.test("a schwarz trail's halo dims together with its own line under solo mode -- the Monte Corno bug");
   // applyLineWeight() only ever touched a trail's own styleTarget, never its casing -- so a solo-dimmed
@@ -193,7 +224,7 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   await setBase("osm");
   T.eq("gruen restored, same count", strokeCount(overlay(), "#4fa85e"), greenOsm);
   T.eq("no sat gruen left", strokeCount(overlay(), "#5fdd7a"), 0);
-  T.eq("connector back to the darker orange, same count", strokeCount(overlay(), "#c9660a"), connectorsOsm);
+  T.eq("connector back to the darker orange, same count", strokeCount(overlay(), "#e08a00"), connectorsOsm);
   T.eq("no bright sat amber left", strokeCount(overlay(), "#ffb300"), 0);
   T.eq("lift masks opaque again, same count", strokeCountOp(band(), "#cfcfcf", 1), maskOsm);
   T.eq("schwarz unchanged throughout (it was never lightened on osm)", strokeCount(overlay(), "#1c1c1c"), schwarzOsm);
@@ -205,7 +236,7 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   await setBase("sat");
   applyBasePalette("not-a-real-basemap-key");
   await TM.wait(50);
-  T.eq("colors fall back to osm's dark connector", strokeCount(overlay(), "#c9660a"), connectorsOsm);
+  T.eq("colors fall back to osm's dark connector", strokeCount(overlay(), "#e08a00"), connectorsOsm);
   T.eq("the halo falls back to off, not left on from sat", strokeCount(overlay(), "#ffffff", 8.5), 0);
   T.eq("the lift mask falls back to opaque, not left transparent from sat", strokeCountOp(band(), "#cfcfcf", 1), maskOsm);
   applyBasePalette("osm"); // leave state consistent with the chip UI, which still reads "sat" until re-clicked
