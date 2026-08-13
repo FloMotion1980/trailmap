@@ -3169,14 +3169,19 @@ function trailLabelHtml(t){
 // Was a neutral mid-grey (#5a5a5a) everywhere, deliberately far from every diffColor tone (especially
 // schwarz #1c1c1c, which the old #222222 was nearly indistinguishable from) -- a connector's dash
 // pattern alone wasn't a reliable-enough visual cue that it isn't a black-rated trail stretch
-// (2026-07-24, per the user). Switched to amber (#ffb300) on every basemap (2026-08-13): first added
-// only for Satellit, where grey turned out to collide with the imagery's own greyscale patches (rock,
-// snow, roads, shadow) regardless of shade -- then the user liked it enough on Satellit to ask for it
-// "überall" (everywhere), independent of that original bug. Also visually distinguishes a Tour's own
-// connector stretches from a plain schwarz trail on every basemap now, not just Satellit.
+// (2026-07-24, per the user). Switched to orange on every basemap (2026-08-13): first added as bright
+// amber (#ffb300) for Satellit only, where grey turned out to collide with the imagery's own greyscale
+// patches (rock, snow, roads, shadow) regardless of shade -- then the user liked the idea enough on
+// Satellit to ask for orange "überall" (everywhere), then immediately found the same bright #ffb300 too
+// pale against "Straße"/"Straße hell"/"Relief"'s own light backgrounds and asked for a darker shade
+// there specifically. This initial value is "Straße"'s own darker `#c9660a` -- it must stay byte-for-
+// byte identical to `BASE_PALETTES.osm.connector`, same invariant as `diffColor` above, since `boot()`
+// never calls `applyBasePalette` itself; Satellit keeps the original bright `#ffb300` (see its own
+// palette entry for why darker doesn't apply there). Also visually distinguishes a Tour's own connector
+// stretches from a plain schwarz trail on every basemap now, not just Satellit.
 // `let`, not `const` -- applyBasePalette() reassigns this (and the two LIFT_* colors below) when the
 // base layer changes, since a plain string can't be mutated in place the way the diffColor object is.
-let CONNECTOR_COLOR = "#ffb300"; // non-trail (fireroad/access) portion of a Trailrunde, see TRAIL_SEGMENTS
+let CONNECTOR_COLOR = "#c9660a"; // non-trail (fireroad/access) portion of a Trailrunde, see TRAIL_SEGMENTS
 
 // ---- Bike lift rendering ----
 // Styled after OSM's own aerialway rendering, which the user picked as the model: a THIN line with
@@ -3200,6 +3205,15 @@ let CONNECTOR_COLOR = "#ffb300"; // non-trail (fireroad/access) portion of a Tra
 // trail stretch: a group setStyle({weight, opacity}) call leaves colour and dash untouched.
 let LIFT_MASK_COLOR = "#cfcfcf";   // clearly lighter than CONNECTOR_COLOR (#5a5a5a) so it can't read as a connector
 const LIFT_MASK_WEIGHT = 7;          // must cover the tile's aerialway line *including* its tick marks (~5-6px)
+// Only "Straße" (osm) needs the mask at all -- it exists purely to cover OSM's OWN vector rendering of the
+// aerialway line, and the user pointed out (2026-08-13) that the other three basemaps never needed it: a
+// satellite PHOTO draws no vector aerialway line to begin with, and Straße hell/Relief were judged fine
+// without it once actually seen live. `let`, reassigned by applyBasePalette() like the other basemap-
+// dependent values above; 1 = mask visible (its usual opaque cover), 0 = invisible (symbol drawn directly
+// over the tile, nothing to cover on that basemap). Kept as an opacity toggle rather than not building the
+// mask layer at all -- far simpler than the halo's add/remove dance, since a lift's mask always existed
+// and this only ever needs a per-basemap on/off, never per-lift.
+let LIFT_MASK_OPACITY = 1;
 let LIFT_LINE_COLOR = "#000000";
 // The symbol is TWO strokes, not one dash-dot stroke (2026-07-26, per the user: "Dicke Punkte wie jetzt
 // sind OK aber die Linie ganz fein"). A single dashed stroke can only have one width, so fat dots and a
@@ -3289,23 +3303,46 @@ const BASE_PALETTES = {
   // means "no halo" or "forgot to migrate this palette" -- see HALO_ACTIVE_KINDS for how a null-only
   // entry costs nothing at runtime (buildTrailLayer never even creates a casing layer for a kind no
   // basemap ever wants).
-  osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#ffb300", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
-  carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#ffb300", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
-  topo:  { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#ffb300", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  // `connector` is a darker burnt-orange (#c9660a) on these three, not the bright amber Satellit uses
+  // (2026-08-13, per the user, after seeing the bright version live on all four basemaps: "Da muss das
+  // orange dunker sein" for Straße/Straße hell, "Orange kaum Sichtbar. Auch dunkler" for Relief). Bright
+  // amber (#ffb300) reads fine against Satellit's photographic imagery but is too pale against these
+  // three basemaps' own light backgrounds -- the opposite problem from the one amber was invented to
+  // solve on Satellit (grey blending into grey terrain), so it needs the opposite fix here: darker, not a
+  // different hue. `liftMaskOpacity: 0` on all three (see LIFT_MASK_OPACITY's own comment) -- the mask
+  // only ever existed to cover OSM's ("Straße") own vector aerialway rendering, and the user judged all
+  // three fine without it once seen live (Straße hell/Relief render their own aerialway differently or
+  // faintly enough not to need covering, and Satellit -- a photo, not a vector map -- never draws one at
+  // all, see the sat entry's own note).
+  osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#c9660a", liftMask:"#cfcfcf", liftMaskOpacity:1, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#c9660a", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  topo:  { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#c9660a", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
   sat:   {
-    diff: { gruen:"#5fdd7a", blau:"#4fabff", rot:"#ff6a52", schwarz:"#5c5c5c" },
-    // connector was #e7e7e7 (near-white) at first, reasoning Satellit is dark everywhere -- wrong, and the
-    // user caught it: satellite imagery has plenty of BRIGHT patches too (snow, rock, sand, roads,
-    // sun-glare), and a near-white dashed line disappears into every one of them (2026-08-13). A grey/
-    // near-white connector can never work reliably there, since rock/snow/roads/shadow are themselves
+    // schwarz is back to the plain near-black (#1c1c1c) every other basemap uses, not the #5c5c5c
+    // "lightened" compromise from earlier the same day (2026-08-13, per the user: "mit der weißen Linie
+    // kann man die schwarzen Trails auch wieder schwarz darstellen") -- now that the white halo below
+    // carries schwarz's contrast on Satellit, lightening the trail color itself is no longer needed and
+    // was only ever a workaround for not having a halo yet.
+    diff: { gruen:"#5fdd7a", blau:"#4fabff", rot:"#ff6a52", schwarz:"#1c1c1c" },
+    // The bright amber connector still fits HERE (unlike the three basemaps above): it was invented for
+    // Satellit specifically, to fix grey blending into grey/dark terrain, and that reasoning still holds.
+    // #e7e7e7 (near-white) was the very first version, reasoning Satellit is dark everywhere -- wrong,
+    // and the user caught it live: satellite imagery has plenty of BRIGHT patches too (snow, rock, sand,
+    // roads, sun-glare), and a near-white dashed line disappears into every one of them. A grey/near-
+    // white connector can never work reliably there, since rock/snow/roads/shadow are themselves
     // greyscale -- any shade of grey collides with SOME real terrain. Amber has no natural equivalent in
-    // typical trail terrain and reads against both dark and bright patches alike, which is the actual
-    // property needed here (not "dark" or "light", but "a hue nothing else on the map has"). liftMask/
-    // liftLine are unaffected by this specific bug: the mask is drawn at opacity 1 and fully covers the
-    // tile underneath it, so the dots/hairline on top of it contrast against the mask's OWN fixed color,
-    // never against whatever terrain happens to sit under that pixel -- which is also why `lift` stays
-    // null in `halo` below: a lift never needed a halo, only schwarz trails did.
-    connector: "#ffb300", liftMask: "#f2f2f2", liftLine: "#111111", selectYellow: "#fff200",
+    // typical trail terrain and reads against both dark and bright patches alike -- EXCEPT the very
+    // brightest ones (snow, bright rock): a loop with no TRAIL_SEGMENTS data (drawn thin and at 0.85
+    // opacity, same style as a connector -- see buildTrailLayer's own comment on this) can still all but
+    // disappear there, which is the "Monte Corno ist komplett weiß" report on a schwarz-rated but
+    // unsegmented Dolomiti Paganella loop -- not a bug, the same contrast problem in its worst case.
+    // liftMask/liftLine are unaffected by the original grey-connector bug: the mask is drawn at opacity 1
+    // and fully covers the tile underneath it, so the dots/hairline on top of it contrast against the
+    // mask's own fixed color, never against whatever terrain happens to sit under that pixel -- which is
+    // also why `lift` stays null in `halo` below: a lift never needed a halo, only schwarz trails did.
+    // liftMaskOpacity is 0 here for an unrelated reason (see LIFT_MASK_OPACITY's own comment): Satellit
+    // is a photograph, not a vector map, so there is no aerialway line drawn by the tile to cover at all.
+    connector: "#ffb300", liftMask: "#f2f2f2", liftMaskOpacity: 0, liftLine: "#111111", selectYellow: "#fff200",
     halo: { gruen:null, blau:null, rot:null, schwarz:"#ffffff", connector:null, lift:null },
   },
 };
@@ -3369,14 +3406,14 @@ function repaintLineColors(){
     }
     const liftSegs = layer.liftSegments || [];
     for (let i = 0; i < liftSegs.length; i += 3) {
-      liftSegs[i].setStyle({ color: LIFT_MASK_COLOR });
+      liftSegs[i].setStyle({ color: LIFT_MASK_COLOR, opacity: LIFT_MASK_OPACITY });
       liftSegs[i + 1].setStyle({ color: LIFT_LINE_COLOR });
       liftSegs[i + 2].setStyle({ color: LIFT_LINE_COLOR });
     }
     if (layer.directionArrowLayer) layer.directionArrowLayer.setStyle({ color: diffColor[t.diff] });
   });
   Object.values(liftLayers).forEach(layer => {
-    layer.mask.setStyle({ color: LIFT_MASK_COLOR });
+    layer.mask.setStyle({ color: LIFT_MASK_COLOR, opacity: LIFT_MASK_OPACITY });
     layer.hairline.setStyle({ color: LIFT_LINE_COLOR });
     layer.dots.setStyle({ color: LIFT_LINE_COLOR });
   });
@@ -3392,6 +3429,7 @@ function applyBasePalette(key){
   Object.assign(diffColor, p.diff);
   CONNECTOR_COLOR = p.connector;
   LIFT_MASK_COLOR = p.liftMask;
+  LIFT_MASK_OPACITY = p.liftMaskOpacity;
   LIFT_LINE_COLOR = p.liftLine;
   SELECT_YELLOW = p.selectYellow;
   HALO = p.halo || {};
@@ -4253,7 +4291,7 @@ function openTourRidingLift(liftId){
 
 function buildLiftLayer(l){
   const mask = L.polyline(l.coords, {
-    pane: LIFT_BAND_PANE, color: LIFT_MASK_COLOR, weight: LIFT_MASK_WEIGHT, opacity: 1,
+    pane: LIFT_BAND_PANE, color: LIFT_MASK_COLOR, weight: LIFT_MASK_WEIGHT, opacity: LIFT_MASK_OPACITY,
     lineCap: "round", lineJoin: "round", interactive: false, bubblingMouseEvents: false
   }).addTo(map);
   const hairline = L.polyline(l.coords, {
@@ -5309,7 +5347,7 @@ function buildTrailLayer(t){
           // lifts follow the same filter rules as trails, and without its own mask a Tour's lift stretch
           // would let the tile's aerialway line show through under the symbol. Own pane, so it stays BELOW
           // the trails and cannot tint a trail crossing it -- the reason LIFT_BAND_PANE exists.
-          const liftMask = L.polyline(seg.coords, { pane: LIFT_BAND_PANE, color: LIFT_MASK_COLOR, weight: LIFT_MASK_WEIGHT, opacity: 1, lineCap:"round", lineJoin:"round", bubblingMouseEvents:false, interactive:false });
+          const liftMask = L.polyline(seg.coords, { pane: LIFT_BAND_PANE, color: LIFT_MASK_COLOR, weight: LIFT_MASK_WEIGHT, opacity: LIFT_MASK_OPACITY, lineCap:"round", lineJoin:"round", bubblingMouseEvents:false, interactive:false });
           const liftHairline = L.polyline(seg.coords, { color: LIFT_LINE_COLOR, weight: LIFT_HAIRLINE_WEIGHT, opacity: 1, bubblingMouseEvents:false, interactive:false });
           liftDots = L.polyline(seg.coords, { color: LIFT_LINE_COLOR, weight: LIFT_DOT_WEIGHT, opacity: 1, dashArray: LIFT_DOT_DASH, lineCap:"round", bubblingMouseEvents:false, interactive:false });
           // segmentLayers only, never styleableLayers: all three are width/opacity-defined, so a group-wide
