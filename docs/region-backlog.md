@@ -47,18 +47,66 @@ Added to the list later the same day (no order given beyond "also on the list"):
    segment-matching against the region's own trails, per `docs/trailrunde-feature.md`); 3 "The Mother"
    trails with no published GPX (Jump Line, iXS Downhill, Blackline 2.0); Willingen's 12 MTB Zone named
    descents have no GPX anywhere.
-9. **Harz** (5 bike parks) — added 2026-08-11, **explicitly flagged by the user as having NO GPX
-   anywhere** ("Leider komplett ohne gpx"), so this one needs the OSM+elevation-API fallback path (or a
-   headless-Chromium Trailforks/embedded-map check per park before assuming OSM is the only option)
-   rather than the usual operator-GPX-first approach. Not grouped into sub-regions/one-region yet —
-   five separate physical locations, decide when picked up whether they share a region group at all
-   (spread across the whole Harz, not one valley like Portes du Soleil/Livigno). Sources:
-   - https://www.bikepark-andreasberg.de/trails — Bikepark St. Andreasberg.
-   - https://www.bikepark-hahnenklee.de/bikepark — Bikepark Hahnenklee.
-   - https://bikepark-bodetal.de/ — Bikepark Bodetal.
-   - https://www.outdoorwerkstatt.eu/ — Racepark Schulenberg.
-   - https://www.wurmberg-seilbahn.de/sommer.html — Wurmberg-Seilbahn summer/bike offering.
-   Not yet researched beyond the links themselves.
+9. ~~**Harz**~~ — **built 2026-08-13**: one region `harz`, **42 trails, 6 lifts, 9 places, 6 sub-regions**
+   (Trailpark Ilsenburg 5, Hahnenklee 11, Bodetal/Rosstrappe 6, Schulenberg 7, St. Andreasberg 8,
+   Braunlage/Wurmberg 5). The user's call was one region with the parks as sub-regions, a purely
+   geographic bracket like Sauerland/Upland — no shared ticket, no tours spanning them. **A sixth park
+   turned up that was not on the original list: Trailpark Harz** (Ilsenburg, self-shuttle, no lift and no
+   entry fee), which is why five of six sub-regions have a lift and it does not.
+   - The "no GPX anywhere" note above was right about the operators but **the geometry problem was solved
+     a different way**: the user supplied a Trailforks region URL per park, and all 67 sections came out of
+     Trailforks' own embedded `encodedpath` — see `trailforks-anonymous-polyline-extraction` and, for a
+     much faster harvesting method found here, the note at the end of this entry.
+   - **Trailforks splits these parks into "upper/middle/lower" sections** (21 rows for Hahnenklee's 11
+     real trails, 13 for Bodetal's 6) and the user asked for them to be merged. Which sections belong
+     together is verified by measuring the actual endpoint joints, not read off the names — see
+     `tools/build_harz.py`. Two joints the names get wrong: `harzer-roller-3` is the stretch
+     **Brunhildenritt and Harzer Roller physically share** (which is why Trailforks has no "Brunhildenritt
+     3"; the user knew this independently), and `senduro-entry` is Wildpig Enduro's entry despite sharing
+     no word with it.
+   - **Difficulty is Trailforks' own per-trail rating throughout**, the rule the user set for Finale
+     Ligure. Where an operator's own word disagrees it is noted inline in the build script — St.
+     Andreasberg's Freeride (4) and Downhill Trail (6) are "schwer" officially and Difficult/Red on
+     Trailforks, so they are `rot` here, not `schwarz`. Say so if the operator scale is ever preferred.
+   - **Names**: St. Andreasberg resolved completely — Trailforks carries the park's own #1–#6/#9 numbers
+     and `msbx-6`'s description confirms it ("#6 is the easiest of the steep routes, options to cross to
+     #4 and #5"), so all eight carry their official names. Bodetal keeps the operator's 01–05 numbering.
+     Schulenberg uses outdoorwerkstatt.eu's names. Hahnenklee keeps Trailforks' names (the operator names
+     only two trails in prose). **"Alberti-Lift" is the operator company (Alberti-Lift GmbH), not a
+     lift** — the Matthias-Schmidt-Berg has two parallel double chairlifts, both with bike holders, and
+     both are in.
+   - **Known gaps, left honest rather than guessed** — worth picking up if the user wants them closed:
+     * **Trailpark Harz's names do not line up with its own site.** trailparkharz.de lists Waldbad /
+       Moosklippe / Mönchsgraben / Jack the Ripper / Wassertal / Kammweg. Only Jack the Ripper and
+       Wassertal map with certainty (descents agree to the metre: −227 m, −231 m). `Eselsstieg` and
+       `Stumpfrücken-Trail` keep their Trailforks names rather than being guessed onto Kammweg/Waldbad.
+       Moosklippe and Mönchsgraben are officially **closed** and have no Trailforks geometry. Trailforks'
+       `pahnberg` was excluded: no `encodedpath` at all and its own description reads "Trail existiert
+       erstmal …".
+     * **Braunlage's three "Downhill" sections keep the Trailforks name.** The operator publishes
+       Freeride / Snakebite / Evil Rock's / Enduro and has no "Downhill"; calling them Snakebite would be
+       a guess. Also **Trailforks is missing over a kilometre of Freeride** (operator ~3 400 m against our
+       2 034 m of line) and its upper/lower halves have a real **83 m gap at the gondola mid-station**,
+       stitched straight and recorded in `WIDE_JOINTS`.
+     * **Missing trails with no geometry anywhere**: Bodetal's `05 Schwarze Köhlerliesel`, Schulenberg's
+       `OnAir` (Pro Jumpline), St. Andreasberg's `7 Super Enduro` and `8 Kids Trail Harz`.
+     * `Loam Line` (St. Andreasberg) carries no Trailforks number and does not match the operator's
+       unnumbered #7 by length, so it keeps its Trailforks name.
+     * **No Touren/Trailrunden** — none of the six operators publishes a combination route.
+   - Sources used: the five operator pages listed in the original note above, plus
+     https://trailparkharz.de/ (the sixth park), https://www.harz-bikepark.de/ (an aggregator covering all
+     six — useful for cross-checking, but it renamed several Schulenberg trails, so the operator page
+     wins), and the six Trailforks regions `trailpark-harz-39447`, `bikeparkhahnenklee`,
+     `bikepark-bodetal-rosstrappe`, `racepark-schulenberg`, `msbxtrail-26002`, `bikepark-braunlage`
+     (the last one found here — the user gave no link for Wurmberg).
+   - **Method note worth reusing: harvesting a whole Trailforks region takes ~3 tool calls, not ~100.**
+     From an already-loaded trailforks.com page in the user's logged-in Chrome, `fetch()` is same-origin
+     and carries the session, so every trail page can be pulled in ONE background loop
+     (`fetch` → regex the `encodedpath` → decode in page) instead of navigating per trail. Getting the
+     result out without retyping it: build a Blob and `a.click()` it, i.e. let Chrome **download** the
+     JSON into `~/Downloads` and read it from disk. That also sidesteps the backslash-escaping trap
+     entirely. All 67 Harz sections came out this way and every decoded length matched Trailforks' own
+     stated distance to within 2 m.
 10. **Geißkopf / Freiburg / Todtnau** — added 2026-08-11, links only, not researched. Geißkopf
     (Bodenmais, Bayerischer Wald) is geographically separate from Freiburg/Todtnau (both Schwarzwald)
     — do NOT assume these three form one region group like Sauerland/Upland; decide the grouping when
@@ -92,6 +140,11 @@ Added to the list later the same day (no order given beyond "also on the list"):
 lift for the pre-2026-08 regions live in `tools/add_lifts.py` — use that script's pattern for the next
 region rather than writing the query again. Odenwald, Pfälzerwald, Donnersberg and Finale have no
 lifts by nature. Newer regions (Sauerland/Upland, Livigno initially) still have lift gaps noted above.
+Harz brought its own six on 2026-08-13 via `tools/add_harz_lifts_places.py` rather than `add_lifts.py` --
+same rules, but it needed one extra guard worth copying: **two parallel lifts up the same hill look exactly
+like two sections of one lift to an endpoint-distance check** (St. Andreasberg's two chairlifts have top
+stations 36 m apart, and joining them produced an 850 m "lift" climbing 14 m). Orient each section
+bottom-first by elevation and require the join to keep climbing.
 
 Sourcing order for each of these: **try the operator's own site for direct per-trail GPX before
 falling back to OSM + a rate-limited elevation API.** Austrian/Swiss resort sites in particular have

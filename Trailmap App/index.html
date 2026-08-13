@@ -1313,13 +1313,19 @@ const REGION_CATALOG = {
   harz: {
     countries: ["DE"], label: "Harz", file: "regions/harz.json", trailCount: 42,
     bounds: [[51.70199, 10.31842], [51.86673, 11.03772]],
+    // Labels are place names with the "Bikepark"/"Racepark" prefix dropped, and that is a layout decision as
+    // much as a naming one: the first version used each park's full title ("Bikepark Bodetal (Rosstrappe)",
+    // "St. Andreasberg (MSB-X-Trail)") and NOT ONE pair fitted on a line, so the region's box came out six
+    // chips tall while Bike Kingdom's nine pack into five rows. Inside a group already called "Harz" the
+    // prefix carries no information anyway -- every one of these is unambiguous as a place. The one that
+    // keeps a word is Ilsenburg, because "Trailpark" is what actually distinguishes it: no lift, no ticket.
     subRegions: {
-      trailpark_harz: { label: "Trailpark Harz (Ilsenburg)", color: "#c1440e" },
-      hahnenklee: { label: "Bikepark Hahnenklee", color: "#7d3ac1" },
-      bodetal: { label: "Bikepark Bodetal (Rosstrappe)", color: "#2a7f9e" },
-      schulenberg: { label: "Racepark Schulenberg", color: "#a83279" },
-      andreasberg: { label: "St. Andreasberg (MSB-X-Trail)", color: "#5a8f3c" },
-      braunlage: { label: "Bikepark Braunlage (Wurmberg)", color: "#b8860b" }
+      trailpark_harz: { label: "Trailpark Ilsenburg", color: "#c1440e" },
+      hahnenklee: { label: "Hahnenklee", color: "#7d3ac1" },
+      bodetal: { label: "Bodetal/Rosstrappe", color: "#2a7f9e" },
+      schulenberg: { label: "Schulenberg", color: "#a83279" },
+      andreasberg: { label: "St. Andreasberg", color: "#5a8f3c" },
+      braunlage: { label: "Braunlage/Wurmberg", color: "#b8860b" }
     }
   }
 };
