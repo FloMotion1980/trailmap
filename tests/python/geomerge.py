@@ -41,6 +41,10 @@ Verified by mutation (2026-08-13), all four produce exactly one failure:
 | `if e[-1] <= elevs[-1] + 20:` -> `if False:` in `chain_sections` | the climb requirement |
 | `MAX_JOINT_M = 55.0` -> `5000.0` | WIDE_JOINTS lets exactly one joint through |
 | `_key` integer floor -> `round(lat, 3), round(lon, 3)` | grid keys are integers (+ aborts the suite) |
+| `cursor = b + 1` -> `cursor = b` in `fill_connectors` | 3 partition cases at once |
+| the `a - cursor == 1` absorption -> `if False:` | a one-point gap is absorbed |
+| the one-point-TAIL absorption -> `if False:` | a one-point TAIL is absorbed |
+| `if max(prof) <= tol * 3:` -> `if False:` in `profile_shape` | a growing tail that never gets far |
 """
 import importlib.util
 import os
@@ -259,6 +263,52 @@ def run(t):
     t.case("naturtrail_deidesheim is excluded from the comparison outright")
     # The user's instruction: those three are real MTB trails with their own difficulty and are correct.
     t.eq("excluded", "naturtrail_deidesheim" in cont.EXCLUDE_SUBREGIONS, True)
+
+    # ---- a re-derived loop must partition its own line, not resample it -------------------------
+    red = _load("pfaelzerwald_rederive_loops")
+    loop = [[49.30 + i * 0.0005, 7.90 + i * 0.0004] for i in range(40)]
+
+    t.case("segments concatenate back to the loop's own line exactly")
+    # The invariant validate_region.py checks, and the reason this rework can promise the drawn line does
+    # not move. The first version sliced [cursor:a+1] and [a:b+1], which shares index a -- every joint
+    # silently duplicated a point and the whole loop was rejected as invalid.
+    segs = red.fill_connectors(loop, [{"id": "t1", "start_idx": 5, "end_idx": 12},
+                                      {"id": "t2", "start_idx": 20, "end_idx": 31}])
+    t.eq("byte-identical concatenation", red.concat_ok(loop, segs), True)
+    t.eq("connector / trail / connector / trail / connector",
+         [s["trailId"] for s in segs], [None, "t1", None, "t2", None])
+    t.eq("no segment is degenerate", min(len(s["coords"]) for s in segs) >= 2, True)
+
+    t.case("a match touching both ends produces no empty leading or trailing connector")
+    segs = red.fill_connectors(loop, [{"id": "t1", "start_idx": 0, "end_idx": 39}])
+    t.eq("one segment, the whole line", [s["trailId"] for s in segs], ["t1"])
+    t.eq("still exact", red.concat_ok(loop, segs), True)
+
+    t.case("overlapping runs still partition, the earlier one keeping the shared part")
+    segs = red.fill_connectors(loop, [{"id": "t1", "start_idx": 4, "end_idx": 20},
+                                      {"id": "t2", "start_idx": 15, "end_idx": 30}])
+    t.eq("exact", red.concat_ok(loop, segs), True)
+    t.eq("both trails survive", [s["trailId"] for s in segs if s["trailId"]], ["t1", "t2"])
+
+    t.case("a one-point gap is absorbed rather than dropped or left degenerate")
+    # Dropping it would punch a hole in the partition; keeping it would draw nothing.
+    segs = red.fill_connectors(loop, [{"id": "t1", "start_idx": 0, "end_idx": 10},
+                                      {"id": "t2", "start_idx": 12, "end_idx": 39}])
+    t.eq("exact", red.concat_ok(loop, segs), True)
+    t.eq("no degenerate piece", min(len(s["coords"]) for s in segs) >= 2, True)
+
+    t.case("a one-point TAIL is absorbed into the last segment, not left dangling")
+    # A run ending one point short of the line's end leaves a single trailing point. Emitting it as its own
+    # segment would draw nothing and would show up as a phantom connector in the report's share maths.
+    segs = red.fill_connectors(loop, [{"id": "t1", "start_idx": 5, "end_idx": 38}])
+    t.eq("exact", red.concat_ok(loop, segs), True)
+    t.eq("no degenerate piece", min(len(s["coords"]) for s in segs) >= 2, True)
+    t.eq("and no phantom trailing connector", [s["trailId"] for s in segs], [None, "t1"])
+
+    t.case("named_share counts length, not segment count")
+    t.near("half the line named",
+           red.named_share([{"coords": loop[:20], "trailId": "t1"},
+                            {"coords": loop[20:], "trailId": None}]), 0.5, 0.02)
 
     t.case("nearest_m finds a way in a neighbouring cell, not only its own")
     grid = {}

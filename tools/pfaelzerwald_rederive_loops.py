@@ -42,7 +42,14 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from gpx_map_match import match_gpx_to_network, resolve_segments
+# resolve_segments() is deliberately NOT used here, and the reason is the whole point of this script.
+# It returns each matched candidate's OWN stored geometry, clipped and oriented -- right for BUILDING a
+# tour line out of its components (what tools/build_bikekingdom_tours.py does), and wrong here: it would
+# replace the loop's drawn line with a stitched-together one. This rework must leave the line untouched and
+# change only the attribution, so the segments have to be slices of the loop's own coordinate list, which
+# is what match_gpx_to_network()'s start_idx/end_idx already give. Keeping the line identical is also what
+# makes the concatenation invariant hold by construction rather than by luck.
+from gpx_map_match import match_gpx_to_network
 from trailmap_pipeline import haversine_m, write_region
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -85,21 +92,29 @@ def fill_connectors(loop_coords, matched):
     invariant `validate_region.py` checks, and it is what lets the drawn line stay byte-identical.
     """
     segs = []
-    cursor = 0
+    cursor = 0                                  # first index not yet assigned to a segment
     for m in sorted(matched, key=lambda x: x["start_idx"]):
         a, b = m["start_idx"], m["end_idx"]
-        if a < cursor:                      # overlapping runs: keep the earlier one whole
+        if a < cursor:                          # overlapping runs: the earlier one keeps the shared part
             a = cursor
-            if a > b:
-                continue
-        if a > cursor:
-            segs.append({"coords": loop_coords[cursor:a + 1], "trailId": None})
+        if a > b or b < cursor:
+            continue
+        if a - cursor == 1:
+            # A single leftover point would be a segment that draws nothing, and dropping it instead
+            # would punch a hole in the partition. Absorb it into the stretch that follows.
+            a = cursor
+        elif a > cursor:
+            segs.append({"coords": loop_coords[cursor:a], "trailId": None})
         segs.append({"coords": loop_coords[a:b + 1], "trailId": m["id"]})
-        cursor = b
-    if cursor < len(loop_coords) - 1:
-        segs.append({"coords": loop_coords[cursor:], "trailId": None})
-    # Drop degenerate one-point pieces, which would break the concatenation check.
-    return [s for s in segs if len(s["coords"]) >= 2]
+        cursor = b + 1                          # HALF-OPEN: slices must not share an endpoint, or the
+                                                # concatenation gains a duplicated point per joint
+    if cursor < len(loop_coords):
+        tail = loop_coords[cursor:]
+        if len(tail) == 1 and segs:             # same absorption at the end of the line
+            segs[-1]["coords"] = segs[-1]["coords"] + tail
+        else:
+            segs.append({"coords": tail, "trailId": None})
+    return segs
 
 
 def concat_ok(loop_coords, segs):
@@ -149,8 +164,7 @@ def main():
         best = None
         for params in (SWEEP if args.sweep else SWEEP[:1]):
             matched = match_gpx_to_network(coords, candidates, **params)
-            resolved = resolve_segments(coords, candidates, matched)
-            segs = fill_connectors(coords, resolved)
+            segs = fill_connectors(coords, matched)
             if not concat_ok(coords, segs):
                 if args.verbose:
                     print("     %s: Verkettung verletzt, verworfen" % params)
