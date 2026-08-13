@@ -83,7 +83,7 @@ Two properties this buys, both deliberate:
 | `geometry` | every pure helper: distance, interpolation, profiles, arrows, chart SVG | no DOM state, fastest suite |
 | `filters` | `trailPassesFilters` / `liftPassesFilters` / `liftHiddenBySolo` and all four counts | the categories are mutually exclusive on purpose |
 | `lists` | the three list sections: grouping, sorting, cards, selection | found two real bugs on its first run |
-| `palette` | per-basemap trail/lift/connector/selection colors, the Satellit casing halo, unknown-key fallback | reads the map's own SVG strokes, same rule as `lifts`/`solo` — `diffColor` etc. are unreachable from here too |
+| `palette` | per-basemap trail/lift/connector/selection colors, the schwarz-only Satellit halo, unknown-key fallback | reads the map's own SVG strokes (stroke + stroke-width for the halo), same rule as `lifts`/`solo` — `diffColor`/`HALO` etc. are unreachable from here too |
 | `solo` | solo for a trail, a Tour and a lift | three separate causes, checked separately — see below |
 | `labels` | trail/segment/lift name labels, hover marking, place labels | Leaflet *fades* tooltips out; poll, never sleep |
 | `infopanel` | panel contents, reverse, Tour segments, elevation chart + hover sync | reverse is checked on the **map** too, not only in the numbers |

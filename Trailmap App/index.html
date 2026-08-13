@@ -1303,6 +1303,24 @@ const REGION_CATALOG = {
       mtbzone_willingen: { label: "MTB Zone Willingen", color: "#a83279" },
       greenhill: { label: "Green Hill Bikepark", color: "#5a8f3c" }
     }
+  },
+  // Harz (2026-08-13). Six bike parks spread across the whole massif rather than one valley -- the user's
+  // call was one region with the parks as sub-regions, same purely-geographic bracket as Sauerland/Upland
+  // (no shared ticket, no tours spanning them). Geometry is Trailforks' own per-trail line; names and
+  // difficulties are cross-checked against each operator's site, with the reasoning per park in
+  // tools/build_harz.py. Trailpark Harz is the odd one out and deliberately so: no lift, no entry fee,
+  // self-shuttle, which is why five of the six sub-regions have a lift and it does not.
+  harz: {
+    countries: ["DE"], label: "Harz", file: "regions/harz.json", trailCount: 42,
+    bounds: [[51.70199, 10.31842], [51.86673, 11.03772]],
+    subRegions: {
+      trailpark_harz: { label: "Trailpark Harz (Ilsenburg)", color: "#c1440e" },
+      hahnenklee: { label: "Bikepark Hahnenklee", color: "#7d3ac1" },
+      bodetal: { label: "Bikepark Bodetal (Rosstrappe)", color: "#2a7f9e" },
+      schulenberg: { label: "Racepark Schulenberg", color: "#a83279" },
+      andreasberg: { label: "St. Andreasberg (MSB-X-Trail)", color: "#5a8f3c" },
+      braunlage: { label: "Bikepark Braunlage (Wurmberg)", color: "#b8860b" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;
@@ -3133,6 +3151,13 @@ const CONNECTOR_WEIGHT = 2.2;
 // solid grey line -- the gaps all but disappear (user, 2026-08-04). +0.8 keeps them legible as dashes while the
 // stretch still visibly reacts to being marked.
 const CONNECTOR_HOVER_DELTA = 0.8;
+// A per-kind (diff/connector/lift) halo behind a line -- see BASE_PALETTES' `halo` field and
+// repaintLineColors() for how it's kept in sync with the current basemap. Fixed, not tied to the
+// hovered/base weight distinction: sized to cover a trail even at HOVER_WEIGHT so it never has to be
+// resized from setHover()/applyLineWeight() (which would mean touching every call site that changes a
+// line's weight, for a halo that's supposed to be a static ring, not something that grows with hover).
+const HALO_WEIGHT_TRAIL = HOVER_WEIGHT + 2;
+const HALO_OPACITY = 0.9;
 // Map labels for a trail carry its difficulty as a coloured dot in front of the name, the same way lift
 // labels start with 🚡 — the user's own analogy (2026-07-28). Worth it because the labels are the one place
 // the map named a trail without saying anything about how hard it is, and the line's own colour is often
@@ -3141,13 +3166,17 @@ const CONNECTOR_HOVER_DELTA = 0.8;
 function trailLabelHtml(t){
   return `<span class="tl-diff" style="background:${diffColor[t.diff]}"></span>${t.name}`;
 }
-// Neutral mid-grey, deliberately far from every diffColor tone (especially schwarz #1c1c1c, which
-// the old #222222 was nearly indistinguishable from on the map and the elevation chart) -- a
-// connector's dash pattern alone wasn't a reliable-enough visual cue that it isn't a black-rated
-// trail stretch (2026-07-24, per the user).
+// Was a neutral mid-grey (#5a5a5a) everywhere, deliberately far from every diffColor tone (especially
+// schwarz #1c1c1c, which the old #222222 was nearly indistinguishable from) -- a connector's dash
+// pattern alone wasn't a reliable-enough visual cue that it isn't a black-rated trail stretch
+// (2026-07-24, per the user). Switched to amber (#ffb300) on every basemap (2026-08-13): first added
+// only for Satellit, where grey turned out to collide with the imagery's own greyscale patches (rock,
+// snow, roads, shadow) regardless of shade -- then the user liked it enough on Satellit to ask for it
+// "überall" (everywhere), independent of that original bug. Also visually distinguishes a Tour's own
+// connector stretches from a plain schwarz trail on every basemap now, not just Satellit.
 // `let`, not `const` -- applyBasePalette() reassigns this (and the two LIFT_* colors below) when the
 // base layer changes, since a plain string can't be mutated in place the way the diffColor object is.
-let CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a Trailrunde, see TRAIL_SEGMENTS
+let CONNECTOR_COLOR = "#ffb300"; // non-trail (fireroad/access) portion of a Trailrunde, see TRAIL_SEGMENTS
 
 // ---- Bike lift rendering ----
 // Styled after OSM's own aerialway rendering, which the user picked as the model: a THIN line with
@@ -3219,41 +3248,50 @@ const liftSelectionOutline = L.polyline([], {
 // ---- Per-basemap color palette (2026-08-13) ----
 // The trail/lift/selection colors above were tuned against OSM's own fairly light tiles. On Satellit
 // (Esri World Imagery), which is dark and low-contrast almost everywhere, the same colors -- especially
-// schwarz (#1c1c1c) and the grey lift mask -- nearly disappear into the imagery (user report). "osm",
-// "carto" and "topo" keep the original diff colors; "carto" ("Straße hell") and "topo" ("Relief") stay
-// completely untouched (the user, in order: "Strasse hell ist gut so", and -- after a first attempt
-// copied Satellit's bright colors onto Relief and the user found that unhelpful, since Relief's actual
-// problem is HUE COLLISION with OpenTopoMap's own green forest fill and orange/brown contour lines, not
-// darkness -- "Nur echten Halo, Farben wie Original lassen", then a real geometry halo was rejected too
-// on performance grounds (leaflet-rotate repaints every vector path's viewBox per degree turned; a second
-// polyline behind every trail/connector would double that per-frame path count) -- so Relief ends up
-// pixel-identical to "osm"/"carto" for now, unsolved, rather than "fixed" with the wrong kind of fix).
-// "sat" keeps the brighter gruen/blau/rot from the same conversation, an amber (not grey) connector (see
-// its own comment below for why), and a lightened schwarz (`#5c5c5c`, a medium grey rather than near-
-// black) -- the halo that was meant to carry schwarz's contrast is gone (both the CSS drop-shadow version,
-// broken on iOS Safari -- see below -- and the rejected geometry version), so schwarz needed a color of
-// its own instead of relying on an outline effect.
+// schwarz (#1c1c1c) and the grey lift mask -- nearly disappear into the imagery (user report). "carto"
+// ("Straße hell") and "topo" ("Relief") stay completely untouched -- the user, in order: "Strasse hell
+// ist gut so", and -- after a first attempt copied Satellit's bright colors onto Relief and the user
+// found that unhelpful, since Relief's actual problem is HUE COLLISION with OpenTopoMap's own green
+// forest fill and orange/brown contour lines, not darkness -- "Nur echten Halo, Farben wie Original
+// lassen" for Relief specifically, and a real halo there was rejected on performance grounds at the time
+// (see the halo history below for why that verdict later changed for schwarz specifically). Relief is
+// therefore pixel-identical to "osm"/"carto" for its diff colors, unsolved, rather than "fixed" with the
+// wrong kind of fix. "osm" ("Straße") got gruen/blau/rot brightened a little. The connector color is
+// amber (`#ffb300`) on EVERY basemap now, not just Satellit -- first added only there (see its own
+// comment for the grey-collision bug that motivated it), then the user liked it enough to ask for it
+// "überall" once they saw it live, independent of that original bug.
 //
-// HALO HISTORY, worth knowing before reintroducing anything like it: the first version added a CSS
-// `filter: drop-shadow(...)` halo (`tm-casing-light` body class) around every vector path on Satellit.
-// This looked right in a desktop browser but broke on the user's iPhone in Safari two different ways at
-// once -- trails showed NO glow at all, and lifts got an opaque WHITE background instead of a transparent
-// halo. Both are the same root cause: WebKit has long-standing bugs combining CSS `filter` with an
-// ancestor `transform` (Leaflet positions every pane via CSS transform, and leaflet-rotate's rotatePane
-// adds a `rotate()` on top of that), which can clip the filter's blur to too tight a region (no visible
-// glow) or make the filter's own compositing surface opaque instead of transparent (the white box) --
-// this is a compositing bug, not a matter of tuning the filter's parameters, so don't re-attempt a CSS
-// filter halo without testing on real iOS Safari first. A geometry-based halo (a second, wider polyline
-// in the halo color behind each trail/connector -- the same technique `selectionOutline` already uses
-// for its yellow ring) WOULD render identically on every browser, no compositing bugs -- but was rejected
-// on performance grounds before being built (see above), not because it doesn't work.
+// HALO HISTORY. A CSS `filter: drop-shadow(...)` halo (`tm-casing-light` body class) shipped first,
+// around every vector path on Satellit. It looked right in a desktop browser but broke on the user's own
+// iPhone in Safari two different ways at once -- trails showed NO glow at all, and lifts got an opaque
+// WHITE background instead of a transparent halo. Both trace to the same root cause: WebKit has long-
+// standing bugs combining CSS `filter` with an ancestor `transform` (Leaflet positions every pane via CSS
+// transform, and leaflet-rotate's rotatePane adds a `rotate()` on top of that), which can clip the
+// filter's blur to too tight a region (no visible glow) or make the filter's own compositing surface
+// opaque instead of transparent (the white box) -- a compositing bug, not a matter of tuning the
+// filter's parameters, so don't re-attempt a CSS filter halo without testing on real iOS Safari first.
+// It was removed outright and schwarz was lightened to `#5c5c5c` (medium grey) as a color-only fix
+// instead. A geometry-based halo (a second, wider polyline in the halo color behind each line -- the
+// same technique `selectionOutline` already uses for its yellow ring) was then designed but rejected
+// FOR EVERY TRAIL/CONNECTOR on performance grounds: leaflet-rotate repaints every vector path's viewBox
+// per degree turned, and doubling every trail's path count would double that per-frame cost. It came
+// back the same day, scoped down: `halo` is a PER-KIND map (`{gruen, blau, rot, schwarz, connector,
+// lift}` -> hex color or null) inside each basemap's palette entry, and only `sat.schwarz` is actually
+// set right now -- schwarz is a small minority of trails in any region, so the extra-path cost this time
+// is small, unlike "every trail on the map". See `haloKindFor()`/`HALO_ACTIVE_KINDS` below for how a
+// casing layer is only ever built for a kind that SOME basemap's `halo` entry actually uses, so adding
+// another kind later is a one-line data change, not a new code path.
 const BASE_PALETTES = {
   // gruen/blau/rot match the brightened `diffColor` initial values above -- see that comment for why the
   // two must never drift apart. carto ("Straße hell") deliberately keeps the ORIGINAL, unbrightened trio
   // (the user, same message: "Strasse hell ist gut so") -- brighter was only ever wanted for "Straße".
-  osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200" },
-  carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200" },
-  topo:  { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200" },
+  // `halo` is present (all null) on every entry so a reader doesn't have to guess whether its absence
+  // means "no halo" or "forgot to migrate this palette" -- see HALO_ACTIVE_KINDS for how a null-only
+  // entry costs nothing at runtime (buildTrailLayer never even creates a casing layer for a kind no
+  // basemap ever wants).
+  osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#ffb300", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#ffb300", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  topo:  { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#ffb300", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
   sat:   {
     diff: { gruen:"#5fdd7a", blau:"#4fabff", rot:"#ff6a52", schwarz:"#5c5c5c" },
     // connector was #e7e7e7 (near-white) at first, reasoning Satellit is dark everywhere -- wrong, and the
@@ -3265,10 +3303,45 @@ const BASE_PALETTES = {
     // property needed here (not "dark" or "light", but "a hue nothing else on the map has"). liftMask/
     // liftLine are unaffected by this specific bug: the mask is drawn at opacity 1 and fully covers the
     // tile underneath it, so the dots/hairline on top of it contrast against the mask's OWN fixed color,
-    // never against whatever terrain happens to sit under that pixel.
+    // never against whatever terrain happens to sit under that pixel -- which is also why `lift` stays
+    // null in `halo` below: a lift never needed a halo, only schwarz trails did.
     connector: "#ffb300", liftMask: "#f2f2f2", liftLine: "#111111", selectYellow: "#fff200",
+    halo: { gruen:null, blau:null, rot:null, schwarz:"#ffffff", connector:null, lift:null },
   },
 };
+// The set of "kinds" (a diff name, "connector", or "lift") that ANY basemap's `halo` wants a casing
+// color for -- computed once, so buildTrailLayer only ever allocates a casing layer for schwarz trails
+// right now, not for every trail "just in case a future palette wants one". Extending `halo` with e.g.
+// `topo.rot` later needs no code change here: this set picks it up automatically the next time the page
+// loads (palettes are static data, not mutated at runtime).
+const HALO_ACTIVE_KINDS = new Set();
+Object.values(BASE_PALETTES).forEach(p => {
+  Object.entries(p.halo || {}).forEach(([kind, color]) => { if (color) HALO_ACTIVE_KINDS.add(kind); });
+});
+// `let`, reassigned by applyBasePalette() alongside the other basemap-dependent colors -- the current
+// basemap's `halo` map (kind -> hex color or null), read by buildTrailLayer (at creation) and
+// repaintLineColors (on every basemap switch) to decide whether a given casing layer should be visible.
+let HALO = {};
+
+// Adds/removes/recolors ONE casing layer against the current `HALO` map for its `kind` -- the single
+// place that decides whether a halo is visible, used both right after building a trail (buildTrailLayer,
+// for whichever palette happens to be active the moment a region loads) and on every later basemap
+// switch (repaintLineColors). `container` is whatever owns this casing's add/remove lifecycle -- `map`
+// itself for a non-segmented trail's casing, or the trail's own `line` featureGroup for a segment's
+// casing (both implement the same hasLayer/addLayer/removeLayer trio, so one function covers both).
+// No-op if `casing` is null/undefined (a trail whose kind never needs a halo never gets one built at
+// all, see HALO_ACTIVE_KINDS), so every call site can call this unconditionally.
+function syncHalo(container, casingLayer, kind){
+  if (!casingLayer) return;
+  const color = HALO[kind];
+  if (color) {
+    casingLayer.setStyle({ color });
+    if (!container.hasLayer(casingLayer)) container.addLayer(casingLayer);
+    casingLayer.bringToBack();
+  } else if (container.hasLayer(casingLayer)) {
+    container.removeLayer(casingLayer);
+  }
+}
 
 // Repaints every already-built layer's stroke color in place (no geometry rebuild, no add/remove) --
 // called after applyBasePalette() mutates diffColor/CONNECTOR_COLOR/etc. so trails/lifts/tours already
@@ -3289,8 +3362,10 @@ function repaintLineColors(){
         const refTrail = seg && seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
         lyr.setStyle({ color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR });
       });
+      (layer.segmentCasings || []).forEach(({ casing, kind }) => syncHalo(layer.line, casing, kind));
     } else if (layer.styleTarget) {
       layer.styleTarget.setStyle({ color: (t.loop && !segments) ? CONNECTOR_COLOR : diffColor[t.diff] });
+      syncHalo(map, layer.casing, layer.casingKind);
     }
     const liftSegs = layer.liftSegments || [];
     for (let i = 0; i < liftSegs.length; i += 3) {
@@ -3319,6 +3394,7 @@ function applyBasePalette(key){
   LIFT_MASK_COLOR = p.liftMask;
   LIFT_LINE_COLOR = p.liftLine;
   SELECT_YELLOW = p.selectYellow;
+  HALO = p.halo || {};
   repaintLineColors();
 }
 
@@ -5213,7 +5289,14 @@ function buildTrailLayer(t){
   const segmentLayers = [];      // all segments -> `line`
   const styleableLayers = [];    // non-lift segments -> `styleTarget`
   const liftSegmentLayers = [];  // the lift stretches' three strokes -> `liftSegments`, for solo only
+  // One casing polyline per non-lift segment WHOSE KIND some basemap's `halo` actually uses (right now
+  // just schwarz) -- see HALO_ACTIVE_KINDS. Deliberately never pushed into segmentLayers/styleableLayers:
+  // it needs no hover-weight tracking (HALO_WEIGHT_TRAIL is a fixed size that already covers a hovered
+  // line) and its own map/group membership is decided after `line` exists, by the same syncHalo() helper
+  // repaintLineColors() uses on every later basemap switch -- see the sync call after this loop.
+  const segmentCasings = []; // { casing, kind }
   let line, styleTarget;
+  let casing = null, casingKind = null; // the non-segmented branch's own single casing, see below
   if (segments) {
       segments.forEach(seg => {
         const refTrail = seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
@@ -5235,6 +5318,7 @@ function buildTrailLayer(t){
           segmentLayers.push(liftMask, liftHairline, liftDots);
           liftSegmentLayers.push(liftMask, liftHairline, liftDots);
         } else {
+          const segKind = refTrail ? refTrail.diff : "connector";
           visibleSeg = L.polyline(seg.coords, {
             color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR,
             dashArray: refTrail ? null : "6,6",
@@ -5243,6 +5327,12 @@ function buildTrailLayer(t){
           });
           // Read back by applyLineWeight, which restores per-layer widths rather than one group-wide value.
           visibleSeg._tmBaseWeight = refTrail ? BASE_WEIGHT : CONNECTOR_WEIGHT;
+          if (HALO_ACTIVE_KINDS.has(segKind)) {
+            segmentCasings.push({
+              casing: L.polyline(seg.coords, { color: HALO[segKind] || "#ffffff", weight: HALO_WEIGHT_TRAIL, opacity: HALO_OPACITY, lineCap:"round", interactive:false, bubblingMouseEvents:false }),
+              kind: segKind,
+            });
+          }
           segmentLayers.push(visibleSeg);
           styleableLayers.push(visibleSeg);
         }
@@ -5319,6 +5409,13 @@ function buildTrailLayer(t){
       });
     line = L.featureGroup(segmentLayers).addTo(map);
     styleTarget = L.featureGroup(styleableLayers); // not added to the map -- a styling handle only
+    // Casings are added to (or kept out of) the SAME featureGroup as their trail/connector segment, via
+    // the group's own addLayer/removeLayer -- L.LayerGroup supports both, so this is the exact same
+    // syncHalo() call repaintLineColors() makes on every later basemap switch, just run once up front for
+    // whichever palette happens to be active the moment this region loads. bringToBack() inside syncHalo
+    // still works correctly even though the casing is a group member -- it operates on the underlying
+    // SVG node's position in its renderer, not on Leaflet's own idea of group membership.
+    segmentCasings.forEach(({ casing, kind }) => syncHalo(line, casing, kind));
   } else {
     // A loop with no TRAIL_SEGMENTS data (no named-component-trail breakdown, e.g. the Odenwald
     // "grouped cluster" loops like Gorxheimertal/Hammelbach) has no real single difficulty of its
@@ -5326,11 +5423,19 @@ function buildTrailLayer(t){
     // in the same dashed neutral CONNECTOR_COLOR already used for "no specific trail info here"
     // elsewhere, rather than a solid diffColor that would misleadingly read as one uniform-difficulty
     // trail (found 2026-07-25, per the user, after noticing GO1 rendered as a plain solid blue line).
+    casingKind = t.loop ? "connector" : t.diff;
     line = L.polyline(coords, t.loop
         ? { color: CONNECTOR_COLOR, dashArray: "6,6", weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
         : { color: diffColor[t.diff], weight: BASE_WEIGHT, opacity: 0.85, bubblingMouseEvents:false, interactive:false }
       ).addTo(map);
     styleTarget = line; // no segments -> nothing to exempt
+    // Unlike the segmented branch above, there is no featureGroup here to hold a casing -- it goes
+    // straight on `map`, and destroyTrailLayer() removes it explicitly for exactly that reason (removing
+    // `line` alone would not take it with it, the way a featureGroup removal takes its members with it).
+    if (HALO_ACTIVE_KINDS.has(casingKind)) {
+      casing = L.polyline(coords, { color: HALO[casingKind] || "#ffffff", weight: HALO_WEIGHT_TRAIL, opacity: HALO_OPACITY, lineCap:"round", interactive:false, bubblingMouseEvents:false });
+      syncHalo(map, casing, casingKind);
+    }
   }
   // Invisible, much wider line laid over the visible one — makes tapping on touch screens far easier
   // without changing how thin the trail looks. All interaction happens on this one. Also carries the
@@ -5402,7 +5507,7 @@ function buildTrailLayer(t){
   endMarker.on("mouseover", () => setHover(true));
   endMarker.on("mouseout", () => setHover(false));
 
-  lineLayers[t.id] = { line, styleTarget, hitLine, segmentHitLines, segmentNameLabels, liftSegments: liftSegmentLayers, startDot, startMarker, endMarker, directionArrowLayer, bounds, setHover, midIdx, coords, card:null };
+  lineLayers[t.id] = { line, styleTarget, hitLine, segmentHitLines, segmentNameLabels, liftSegments: liftSegmentLayers, segmentCasings, casing, casingKind, startDot, startMarker, endMarker, directionArrowLayer, bounds, setHover, midIdx, coords, card:null };
 }
 
 // Undoes buildTrailLayer: removes every layer this trail owns from the map and forgets it.
@@ -5418,6 +5523,11 @@ function destroyTrailLayer(id){
   map.removeLayer(layer.startMarker);
   map.removeLayer(layer.endMarker);
   if (layer.directionArrowLayer) map.removeLayer(layer.directionArrowLayer);
+  // The non-segmented branch's casing lives directly on `map` (no featureGroup to take it with it) --
+  // remove it explicitly. A segmented loop's casings need no equivalent line here: whichever ones are
+  // currently attached are members of `layer.line` itself and go with it in the removeLayer call above;
+  // whichever aren't attached (current basemap has no halo for their kind) were never added anywhere.
+  if (layer.casing) map.removeLayer(layer.casing);
   delete lineLayers[id];
 }
 
