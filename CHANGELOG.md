@@ -14,6 +14,13 @@ This file starts 2026-08-13 — it is not a full backfill of the project's histo
 reading the diff; skip routine one-line data fixes (a single trail's difficulty, a name typo) unless
 they're part of a larger entry.
 
+**Any entry that adds/rebuilds trails, Tours or lifts must say where the data came from** — OSM Overpass,
+an operator's own GPX/API, Trailforks (and which extraction method — the anonymous-polyline page source,
+the `/widgets/trail/` embed, etc.), or sequential map-matching (`tools/gpx_map_match.py`) against an
+existing region's trails/lifts. One clause is usually enough ("Trailforks' own encodedpath, harvested via
+logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
+script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
+
 ## 2026-08-13
 
 - **Per-basemap map colors, several rounds of live iteration.** Trail/connector/lift colors were tuned
@@ -43,9 +50,19 @@ they're part of a larger entry.
   breakdown several commits earlier (an unrelated region-expansion commit rewrote the file without
   carrying the key forward) — noticed by the user, recovered from git history since the referenced
   component trails' geometry was unchanged.
-- Sauerland/Upland: Winterberg split into two sub-regions (Trailpark + MTB Zone Willingen), lifts added,
-  the four Trailpark loops built and iteratively corrected (geometry, difficulty, OSM-vs-other-source
-  swaps) across several follow-up commits the same day.
-- New region: **Harz** (6 bike parks, 42 trails, 6 lifts, 9 places).
-- `tools/gpx_map_match.py` gained a test harness and a density-sensitivity fix; used to fill a missing
-  Tgantieni lift ride and, the day before, to reconstruct Tutti Frutti's real component-trail segments.
+- Sauerland/Upland: Winterberg split into two sub-regions (Trailpark + MTB Zone Willingen), lifts added
+  (`tools/add_lifts.py`'s "sauerland" table). Several individual trails switched from their original
+  source to OSM geometry where OSM turned out more accurate (case-by-case, not a blanket rule). MTB Zone
+  Willingen's 8 trails sourced from Trailforks (no GPX endpoint exists for this sub-region). The four
+  Trailpark Winterberg loops (Bremberg/Family First/Poppenberg/Sürenberg) were built from each loop's own
+  recorded GPX (winterberg.de's Outdooractive-hosted API), with `tools/gpx_map_match.py` sequentially
+  matching which of the 16 already-built Trailpark trails each loop actually rides, in ride order —
+  connectors come from the loop's own recording, not a guess.
+- New region: **Harz** (6 bike parks, 42 trails, 6 lifts, 9 places) — geometry from Trailforks' own
+  `encodedpath`, harvested through the user's own logged-in Chrome and decoded in-browser (`tools/build_harz.py`);
+  names/difficulty from the operator where certain, Trailforks otherwise; elevation backfilled since
+  Trailforks embeds none.
+- `tools/gpx_map_match.py` (sequential map-matching: reconstructs which trails/lifts a recorded GPX rides,
+  in order, including repeats) gained a test harness and a density-sensitivity fix; used to fill a missing
+  Tgantieni lift ride and, the day before, to reconstruct Tutti Frutti's real component-trail segments
+  from a hand-authored Tourenbuilder export.
