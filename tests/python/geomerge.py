@@ -2,8 +2,8 @@
 """
 @suite   geomerge
 @area    Joining split trail/lift sections, comparing two sources' lines, measuring against OSM's own ways
-@files   tools/build_harz.py, tools/add_harz_lifts_places.py, tools/check_geo_vs_osm.py, tools/pfaelzerwald_containment.py
-@touches chain, chain_sections, _key, _seg_distance_m, nearest_m, MAX_JOINT_M, WIDE_JOINTS, profile_shape, dist_profile, bbox_overlaps
+@files   tools/build_harz.py, tools/add_harz_lifts_places.py, tools/check_geo_vs_osm.py, tools/pfaelzerwald_containment.py, tools/pfaelzerwald_rederive_loops.py
+@touches chain, chain_sections, _key, _seg_distance_m, nearest_m, MAX_JOINT_M, WIDE_JOINTS, profile_shape, dist_profile, bbox_overlaps, fill_connectors, concat_ok, named_share
 
 Both halves of this suite exist because both shipped a bug first, and both bugs looked like success.
 
@@ -33,7 +33,14 @@ at both ends is `subsumed`, near-zero at one end followed by monotonically growi
 `junction` (shared trailhead, both stay), and anything else is `unclear` and goes to the user rather than
 being decided.
 
-Verified by mutation (2026-08-13), all four produce exactly one failure:
+**Loop segment partition.** `fill_connectors` must slice a Trailrunde's own line into segments that
+concatenate back to it byte-for-byte -- that is `validate_region.py`'s loop invariant, and it is what lets
+this rework promise the drawn line never moves. Half-open slices, and single leftover points absorbed into a
+neighbour rather than dropped (a hole in the partition) or emitted (a segment that draws nothing).
+
+Verified by mutation (2026-08-13); each row produces a failure, and note the last three: two earlier
+attempts at these did NOT bite because the mutation was additive instead of removing the branch under test,
+which proves nothing about the test.
 
 | mutation | fails |
 |---|---|
