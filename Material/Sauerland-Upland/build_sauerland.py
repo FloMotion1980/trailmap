@@ -313,6 +313,7 @@ add_from_gpx("wi_ruthenaar_double", "Green Trails Willingen Ruthenaar-Double (RU
 # is trusted more here. Freeride Lower/Enduro-Line Lower have no operator page at all -- Trailforks'
 # own stat line for both matches their own geometry's length exactly, so used as official.
 WI2 = json.load(open(os.path.join(MAT, "willingen_mtbzone_pts.json"), encoding="utf-8"))
+WI2_OSM = json.load(open(os.path.join(MAT, "willingen_osm_final2.json"), encoding="utf-8"))
 
 
 def add_wi2(tid, name, diff, key, *, official=None):
@@ -320,14 +321,56 @@ def add_wi2(tid, name, diff, key, *, official=None):
     trails.append(entry); geo[tid] = coords; profs[tid] = prof
 
 
-add_wi2("wiz_freeride", "Freeride", "blau", "freeride", official=(1.59, 0, 190))
-add_wi2("wiz_flowtrail", "Flowtrail", "gruen", "flowtrail")
-add_wi2("wiz_flow_country", "Flow Country Trail", "gruen", "flow_country")
+def add_wi2_osm(tid, name, diff, key):
+    """OSM-sourced (willingen_osm_final2.json) -- plain Overpass nodes carry no elevation at all
+    (unlike the Trailforks-widget-sourced ones above), so ElevationLookup fills it in."""
+    entry, coords, prof = build_trail(tid, name, "mtbzone_willingen", diff, WI2_OSM[key],
+                                       elevation=elevation)
+    trails.append(entry); geo[tid] = coords; profs[tid] = prof
+
+
+# Freeride/Flowtrail/Flow Country Trail switched to OSM (2026-08-14, per the user: "sehen etwas
+# genauer aus"). This exposed a braided network the single Trailforks-widget lines didn't capture:
+# ~108 m into the ride, "Freeride" forks -- the OSM way used here (id 83468327) is the LEFT/main
+# line; a second, separately-tagged parallel line (mtb:type=enduro, same name "Freeride Trail" in
+# OSM) runs to its RIGHT, crosses a bridge (one of its own 3 fragments carries `bridge=yes` --
+# confirms the user's own description exactly), then swaps to the LEFT of the main line and rejoins
+# it ~7 m away, right where the user said it meets the Forstweg. Built as a new trail, "Old
+# Freeride" (the user's own name for it; OSM has no distinct name, same "Freeride Trail" tag with a
+# different mtb:type).
+#
+# Lower down, Freeride/Flow Trail/Flow Country Trail's own OSM lines all converge onto ONE shared
+# final stretch (OSM's own combined-name way, "Flow Trail / Flow Country Trail") before forking
+# again into Freeride Lower/Enduro-Line Lower -- confirmed node-exact: Freeride Lower's own start
+# point sits 1 m from a point partway along that combined way, Enduro-Line Lower's 3 m from another
+# point on it. Per the user, the shared stretch AND everything after (i.e. all the way past where
+# Freeride Lower/Enduro-Line Lower branch off, to the combined way's own end) counts as Flow Country
+# Trail -- not Flow Trail, not Freeride, not Old Freeride, even though all of them physically feed
+# into it. Flow Trail's own OSM line therefore stops at the convergence point, same as
+# Freeride/Old Freeride, so none of the four overlaps another's claimed geometry.
+add_wi2_osm("wiz_freeride", "Freeride", "rot", "freeride")
+add_wi2_osm("wiz_old_freeride", "Old Freeride", "rot", "old_freeride")
+add_wi2_osm("wiz_flowtrail", "Flowtrail", "blau", "flowtrail")
+add_wi2_osm("wiz_flow_country", "Flow Country Trail", "blau", "flow_country")
+
 add_wi2("wiz_enduro_line", "Enduro-Line", "schwarz", "enduro_line")
 add_wi2("wiz_downhill", "Willingen Downhill", "schwarz", "willingen_downhill", official=(1.6, 0, 250))
-add_wi2("wiz_pump_track", "Pump Track", "gruen", "pump_track")
-add_wi2("wiz_freeride_lower", "Freeride Lower", "blau", "freeride_lower", official=(0.354, 1, 30))
-add_wi2("wiz_enduro_line_lower", "Enduro-Line Lower", "rot", "enduro_line_lower", official=(0.117, 0, 13))
+add_wi2("wiz_pump_track", "Pump Track", "blau", "pump_track")
+add_wi2("wiz_freeride_lower", "Freeride Lower", "rot", "freeride_lower", official=(0.354, 1, 30))
+add_wi2("wiz_enduro_line_lower", "Enduro-Line Lower", "schwarz", "enduro_line_lower", official=(0.117, 0, 13))
+
+# ---------------------------------------------------------------------------------------------------
+# Four more Willingen (Ettelsberg) downhill trails (2026-08-14), found by the user on Trailforks --
+# kept in the `willingen` sub-region (Green Trails' own touring loops), not `mtbzone_willingen`,
+# per the user. Trailforks' own difficulty rating used directly (no operator-page conflict here,
+# unlike MTB Zone Willingen's Enduro-Line/Downhill). GPX-derived length/up/down -- no official
+# numbers published for any of these.
+# ---------------------------------------------------------------------------------------------------
+WI_DH = json.load(open(os.path.join(MAT, "willingen_greentrails_dh_pts.json"), encoding="utf-8"))
+add_from_points("wi_langenberg_dh", "Langenberg DH", "willingen", "rot", WI_DH["langenberg"])
+add_from_points("wi_ritzhagen_dh", "Ritzhagen DH", "willingen", "rot", WI_DH["ritzhagen"])
+add_from_points("wi_dreiskopf_downhill", "Dreiskopf Downhill", "willingen", "blau", WI_DH["dreiskopf"])
+add_from_points("wi_muehlenkopf_dh", "Mühlenkopf DH", "willingen", "rot", WI_DH["muehlenkopf"])
 
 # ---------------------------------------------------------------------------------------------------
 # Green Hill sub-region: import the already-built 16 trails from build_greenhill.py's output.
