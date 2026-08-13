@@ -62,6 +62,8 @@ current; a stale count is worse than none, because it looks like evidence.
 | `geometry` | make `metresPerPixel` ignore its `zoom` argument (always compute for a fixed zoom) | "built at a higher zoom, the chevron's real-world size shrinks (constant on-screen size)" fails -- the chevron built for zoom 19 comes out the same real-world size as the one built for zoom 17 instead of smaller, i.e. exactly the original zoom-scaling bug ("die Pfeile werden ja größer und kleiner, wenn ich zoome") this fix exists for |
 | `bearing` | same `metresPerPixel` mutation, exercised through the live map | "direction arrow chevrons keep a constant on-screen size across zoom" fails -- an arrow's on-screen `getBBox()` size roughly OCTUPLES between zoom 15 and zoom 18 (2³) instead of staying within the 60% band, since the same real-world metre size then covers proportionally more screen pixels the more you zoom in |
 
+| `palette` | drop the `repaintLineColors()` call from the end of `applyBasePalette` | 4 checks in "switching to Satellit repaints...": got 55 old-color gruen paths (want 0), 0 new-color ones (want 55), and the same pair for the 39 lift masks — i.e. exactly what a user would see: the chip switches, the casing halo comes on, but every trail/lift already on the map keeps its old-basemap color until re-built (a solo toggle, a filter change, anything that calls buildTrailLayer again) |
+
 ## Not yet mutation-checked
 
 `geometry`, `infopanel`, `lifts` and `builder`'s newer cases have not had a mutation applied. They pass, and

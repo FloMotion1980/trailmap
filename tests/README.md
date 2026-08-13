@@ -16,10 +16,10 @@ throttled to roughly one tick per minute, and every wait in the harness is a tim
 takes **~25 seconds** in a visible window and does not finish at all in a hidden one. A run that seems to
 hang part-way through is almost always this, not a failure.
 
-Current state, all green (measured 2026-08-05): **15 suites, 178 cases, 771 checks** — 126 cases / 583 checks
-in the browser bundle (bearing 17, controls 6, filters 10, geometry 17, infopanel 16, labels 9, lifts 8,
-lists 16, regions 17, solo 10), 33 cases / 91 checks in Python, and `builder` on its own with 19 cases /
-97 checks.
+Current state, all green (measured 2026-08-05, `palette` added 2026-08-13): **16 suites, 185 cases, 793 checks**
+— 133 cases / 605 checks in the browser bundle (bearing 17, controls 6, filters 10, geometry 17, infopanel 16,
+labels 9, lifts 8, lists 16, palette 7, regions 17, solo 10), 33 cases / 91 checks in Python, and `builder` on
+its own with 19 cases / 97 checks.
 
 ## Serve the repo root, not the app folder
 
@@ -83,6 +83,7 @@ Two properties this buys, both deliberate:
 | `geometry` | every pure helper: distance, interpolation, profiles, arrows, chart SVG | no DOM state, fastest suite |
 | `filters` | `trailPassesFilters` / `liftPassesFilters` / `liftHiddenBySolo` and all four counts | the categories are mutually exclusive on purpose |
 | `lists` | the three list sections: grouping, sorting, cards, selection | found two real bugs on its first run |
+| `palette` | per-basemap trail/lift/connector/selection colors, the Satellit casing halo, unknown-key fallback | reads the map's own SVG strokes, same rule as `lifts`/`solo` — `diffColor` etc. are unreachable from here too |
 | `solo` | solo for a trail, a Tour and a lift | three separate causes, checked separately — see below |
 | `labels` | trail/segment/lift name labels, hover marking, place labels | Leaflet *fades* tooltips out; poll, never sleep |
 | `infopanel` | panel contents, reverse, Tour segments, elevation chart + hover sync | reverse is checked on the **map** too, not only in the numbers |

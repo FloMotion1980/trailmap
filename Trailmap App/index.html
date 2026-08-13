@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=161" />
+<link rel="stylesheet" href="style.css?v=162" />
 </head>
 <body>
 <div id="fatalError">
@@ -2118,6 +2118,7 @@ document.querySelectorAll("#baseLayerControl .chip").forEach(btn => {
     currentBaseKey = key;
     document.querySelectorAll("#baseLayerControl .chip").forEach(b => b.classList.toggle("active", b === btn));
     layerWarningEl.classList.remove("visible");
+    applyBasePalette(key);
   });
 });
 
@@ -3111,6 +3112,9 @@ function applyPlaceVisibility(){
   }));
 }
 
+// Mutated in place by applyBasePalette() when the base layer changes -- object identity stays the
+// same so every `diffColor[t.diff]` read elsewhere (label dots, chart colors, etc.) picks up the
+// current basemap's values without needing to touch those call sites.
 const diffColor = { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" };
 const BASE_WEIGHT = 3.5;
 const HOVER_WEIGHT = 6.5;
@@ -3135,7 +3139,9 @@ function trailLabelHtml(t){
 // the old #222222 was nearly indistinguishable from on the map and the elevation chart) -- a
 // connector's dash pattern alone wasn't a reliable-enough visual cue that it isn't a black-rated
 // trail stretch (2026-07-24, per the user).
-const CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a Trailrunde, see TRAIL_SEGMENTS
+// `let`, not `const` -- applyBasePalette() reassigns this (and the two LIFT_* colors below) when the
+// base layer changes, since a plain string can't be mutated in place the way the diffColor object is.
+let CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a Trailrunde, see TRAIL_SEGMENTS
 
 // ---- Bike lift rendering ----
 // Styled after OSM's own aerialway rendering, which the user picked as the model: a THIN line with
@@ -3157,9 +3163,9 @@ const CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a T
 // Crucially the SYMBOL is defined by colour + dashArray only, never by width or opacity. That is what
 // lets a Tour render its own lift stretch as an ordinary featureGroup member, exactly like a component
 // trail stretch: a group setStyle({weight, opacity}) call leaves colour and dash untouched.
-const LIFT_MASK_COLOR = "#cfcfcf";   // clearly lighter than CONNECTOR_COLOR (#5a5a5a) so it can't read as a connector
+let LIFT_MASK_COLOR = "#cfcfcf";   // clearly lighter than CONNECTOR_COLOR (#5a5a5a) so it can't read as a connector
 const LIFT_MASK_WEIGHT = 7;          // must cover the tile's aerialway line *including* its tick marks (~5-6px)
-const LIFT_LINE_COLOR = "#000000";
+let LIFT_LINE_COLOR = "#000000";
 // The symbol is TWO strokes, not one dash-dot stroke (2026-07-26, per the user: "Dicke Punkte wie jetzt
 // sind OK aber die Linie ganz fein"). A single dashed stroke can only have one width, so fat dots and a
 // hairline between them are impossible that way.
@@ -3197,10 +3203,85 @@ map.createPane(LIFT_BAND_PANE, ROTATING_PANE()).style.zIndex = 350;
 // Opaque, like the trails' own selection outline. It sits behind the mask, so it shows as a yellow rim
 // around it -- there is nothing underneath left to preserve now that the mask deliberately covers the
 // tile's aerialway line.
+// `let`, reassigned by applyBasePalette() alongside the other basemap-dependent colors above.
+let SELECT_YELLOW = "#fff200";
 const liftSelectionOutline = L.polyline([], {
-  pane: LIFT_BAND_PANE, color: "#fff200", weight: LIFT_MASK_WEIGHT + 6, opacity: 1,
+  pane: LIFT_BAND_PANE, color: SELECT_YELLOW, weight: LIFT_MASK_WEIGHT + 6, opacity: 1,
   lineCap: "round", lineJoin: "round", interactive: false
 });
+
+// ---- Per-basemap color palette (2026-08-13) ----
+// The trail/lift/selection colors above were tuned against OSM's own fairly light tiles. On Satellit
+// (Esri World Imagery), which is dark and low-contrast almost everywhere, the same colors -- especially
+// schwarz (#1c1c1c) and the grey lift mask -- nearly disappear into the imagery (user report). "osm",
+// "carto" and "topo" keep the original values (the user: a light casing on an already-light basemap
+// like CARTO "bringt nichts"); "sat" gets brighter variants plus a light casing halo (a soft light
+// outline behind every vector line, added via CSS so it doesn't need a second polyline per trail/lift/
+// connector -- see the `tm-casing-*` rule in <style>). The user explicitly wants the casing direction
+// (light vs. dark) to depend on the basemap too, not always lighter -- `casing` is `"light"|"dark"|null`
+// per palette so a future dark-casing basemap (e.g. a very pale future layer) is just one more entry.
+const BASE_PALETTES = {
+  osm:   { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", casing: null },
+  carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", casing: null },
+  topo:  { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", casing: null },
+  sat:   { diff: { gruen:"#5fdd7a", blau:"#4fabff", rot:"#ff6a52", schwarz:"#1c1c1c" }, connector:"#e7e7e7", liftMask:"#f2f2f2", liftLine:"#111111", selectYellow:"#fff200", casing: "light" },
+};
+
+// Repaints every already-built layer's stroke color in place (no geometry rebuild, no add/remove) --
+// called after applyBasePalette() mutates diffColor/CONNECTOR_COLOR/etc. so trails/lifts/tours already
+// on the map pick up the new palette immediately, not just newly-built ones. Mirrors the exact
+// segment-ordering rules buildTrailLayer()/buildLiftLayer() build these layers with (see their own
+// comments): styleTarget's sub-layers line up 1:1 with `segments.filter(seg => !seg.liftId)`, and
+// liftSegments is a flat [mask, hairline, dots, mask, hairline, dots, ...] repeat, one triple per lift
+// stretch -- so no extra per-layer "what kind of line is this" tag is needed to repaint correctly.
+function repaintLineColors(){
+  Object.entries(lineLayers).forEach(([id, layer]) => {
+    const t = lineTrails.find(tr => tr.id === id);
+    if (!t) return;
+    const segments = TRAIL_SEGMENTS[id];
+    if (segments && layer.styleTarget && typeof layer.styleTarget.getLayers === "function") {
+      const nonLiftSegs = segments.filter(seg => !seg.liftId);
+      layer.styleTarget.getLayers().forEach((lyr, idx) => {
+        const seg = nonLiftSegs[idx];
+        const refTrail = seg && seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
+        lyr.setStyle({ color: refTrail ? diffColor[refTrail.diff] : CONNECTOR_COLOR });
+      });
+    } else if (layer.styleTarget) {
+      layer.styleTarget.setStyle({ color: (t.loop && !segments) ? CONNECTOR_COLOR : diffColor[t.diff] });
+    }
+    const liftSegs = layer.liftSegments || [];
+    for (let i = 0; i < liftSegs.length; i += 3) {
+      liftSegs[i].setStyle({ color: LIFT_MASK_COLOR });
+      liftSegs[i + 1].setStyle({ color: LIFT_LINE_COLOR });
+      liftSegs[i + 2].setStyle({ color: LIFT_LINE_COLOR });
+    }
+    if (layer.directionArrowLayer) layer.directionArrowLayer.setStyle({ color: diffColor[t.diff] });
+  });
+  Object.values(liftLayers).forEach(layer => {
+    layer.mask.setStyle({ color: LIFT_MASK_COLOR });
+    layer.hairline.setStyle({ color: LIFT_LINE_COLOR });
+    layer.dots.setStyle({ color: LIFT_LINE_COLOR });
+  });
+  selectionOutline.setStyle({ color: SELECT_YELLOW });
+  liftSelectionOutline.setStyle({ color: SELECT_YELLOW });
+}
+
+// Swaps the whole basemap-dependent palette in one go and repaints anything already on the map.
+// `diffColor` is mutated in place (object identity preserved, see its own comment); the three plain-
+// string colors are reassigned (they were switched from `const` to `let` for exactly this). The
+// `tm-casing-light`/`tm-casing-dark` body classes drive the CSS halo — see <style> for the rule.
+function applyBasePalette(key){
+  const p = BASE_PALETTES[key] || BASE_PALETTES.osm;
+  Object.assign(diffColor, p.diff);
+  CONNECTOR_COLOR = p.connector;
+  LIFT_MASK_COLOR = p.liftMask;
+  LIFT_LINE_COLOR = p.liftLine;
+  SELECT_YELLOW = p.selectYellow;
+  document.body.classList.toggle("tm-casing-light", p.casing === "light");
+  document.body.classList.toggle("tm-casing-dark", p.casing === "dark");
+  repaintLineColors();
+}
+
 // ---- Tourenbuilder (2026-07-26) ----
 // A scratch list of trails and lifts in ride order, assembled by clicking them. Explicitly a FIRST cut:
 // gaps between consecutive elements are left visible rather than resolved, per the user ("Es ist OK, dass
@@ -5797,7 +5878,7 @@ const tourCountEl = document.getElementById("tourCountLabel");
 let selectedCard = null;
 
 const selectionOutline = L.polyline([], {
-  color: "#fff200", weight: HOVER_WEIGHT + 3, opacity: 1, lineCap: "round", interactive: false
+  color: SELECT_YELLOW, weight: HOVER_WEIGHT + 3, opacity: 1, lineCap: "round", interactive: false
 });
 
 function highlightSelectedTrail(id){
@@ -6598,7 +6679,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v161"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v162"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

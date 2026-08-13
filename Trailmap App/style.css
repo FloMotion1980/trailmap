@@ -611,6 +611,24 @@ html.landscape-compact .search-overlay-summary{
    hitlines, whose bounding box can span a large area. Suppress the ring; nothing here relies on
    visible keyboard-focus styling. */
 .leaflet-interactive:focus{ outline:none; }
+/* Per-basemap contrast halo (2026-08-13): on Satellit the app's trail/lift/connector colors — tuned
+   against OSM's light tiles — nearly disappear into the dark imagery, schwarz trails worst of all.
+   applyBasePalette() toggles these body classes alongside swapping the actual line colors (see
+   BASE_PALETTES in index.html). A CSS filter halo is used instead of a second casing polyline per
+   trail/lift/connector — cheaper to add and it needs no changes to hover/opacity/solo-dim logic
+   elsewhere, at the cost of also lightly haloing the yellow selection outline and hitlines (invisible,
+   so no visible effect there). Two stacked drop-shadows approximate an even outline in every direction
+   (a single one is a diagonal-biased blur). Scoped to the two panes that actually carry colored trail/
+   lift geometry — leaflet-overlay-pane (trails, connectors, tours) and leaflet-liftBand-pane (lift
+   mask/hairline/dots) — not every pane, so labels/markers/UI chrome are untouched. */
+body.tm-casing-light .leaflet-overlay-pane path,
+body.tm-casing-light .leaflet-liftBand-pane path{
+  filter: drop-shadow(0 0 1.3px rgba(255,255,255,0.85)) drop-shadow(0 0 1.3px rgba(255,255,255,0.85));
+}
+body.tm-casing-dark .leaflet-overlay-pane path,
+body.tm-casing-dark .leaflet-liftBand-pane path{
+  filter: drop-shadow(0 0 1.3px rgba(0,0,0,0.55)) drop-shadow(0 0 1.3px rgba(0,0,0,0.55));
+}
 .approx-note{ font-family: Arial, sans-serif; font-size: 10.5px; color: var(--stone); padding: 8px 16px 12px;
   border-top: 1px solid #eceee4; line-height:1.4; }
 ::-webkit-scrollbar{ width:8px; }
