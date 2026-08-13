@@ -32,7 +32,7 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   await setBase("osm");
   T.eq("no light casing", document.body.classList.contains("tm-casing-light"), false);
   T.eq("no dark casing", document.body.classList.contains("tm-casing-dark"), false);
-  const greenOsm = strokeCount(overlay(), "#3f8a4c");
+  const greenOsm = strokeCount(overlay(), "#4fa85e");
   T.ok("at least one gruen trail is on the map to repaint", greenOsm > 0, greenOsm, "> 0");
   const maskOsm = strokeCount(band(), "#cfcfcf");
   T.ok("at least one lift mask is on the map to repaint", maskOsm > 0, maskOsm, "> 0");
@@ -42,7 +42,7 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   T.eq("the sat chip is now active", TM.$("#baseLayerControl [data-layer='sat']").classList.contains("active"), true);
   T.eq("light casing class is on", document.body.classList.contains("tm-casing-light"), true);
   T.eq("dark casing class is not", document.body.classList.contains("tm-casing-dark"), false);
-  T.eq("no path is still the old osm gruen", strokeCount(overlay(), "#3f8a4c"), 0);
+  T.eq("no path is still the old osm gruen", strokeCount(overlay(), "#4fa85e"), 0);
   T.eq("the same number of trails now carry the brighter sat gruen", strokeCount(overlay(), "#5fdd7a"), greenOsm);
   T.eq("no path is still the old osm lift mask", strokeCount(band(), "#cfcfcf"), 0);
   T.eq("the same number of lift masks now carry the lighter sat mask color", strokeCount(band(), "#f2f2f2"), maskOsm);
@@ -64,10 +64,18 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
     T.skip("no active Trailrunde has a plain connector stretch right now");
   } else {
     T.eq("no connector is still the old grey", strokeCount(overlay(), "#5a5a5a"), 0);
-    T.eq("the same number now carry the sat connector color", strokeCount(overlay(), "#e7e7e7"), connectorsOnOsm);
+    T.eq("the same number now carry the sat connector color", strokeCount(overlay(), "#ffb300"), connectorsOnOsm);
   }
 
+  T.test("Relief (topo) mirrors Satellit's palette exactly, per the user's own follow-up request");
+  await setBase("osm");
+  await setBase("topo");
+  T.eq("light casing is on for topo too", document.body.classList.contains("tm-casing-light"), true);
+  T.eq("no old osm gruen left", strokeCount(overlay(), "#4fa85e"), 0);
+  T.eq("topo gruen matches sat's brighter gruen exactly", strokeCount(overlay(), "#5fdd7a"), greenOsm);
+
   T.test("selection/lift-selection outlines keep using the current SELECT_YELLOW after a repaint");
+  await setBase("sat");
   // Both palettes currently share #fff200, so this is a regression guard for repaintLineColors() actually
   // calling setStyle on the two outlines, not a color-change assertion -- a future palette that changes
   // selectYellow would need a real color-difference check here instead.
@@ -81,7 +89,7 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   T.test("switching back to osm round-trips every color exactly, nothing left stuck on the sat palette");
   await setBase("osm");
   T.eq("light casing turns back off", document.body.classList.contains("tm-casing-light"), false);
-  T.eq("gruen trails are back to the original osm color, same count", strokeCount(overlay(), "#3f8a4c"), greenOsm);
+  T.eq("gruen trails are back to the original osm color, same count", strokeCount(overlay(), "#4fa85e"), greenOsm);
   T.eq("no trail is left on the sat gruen", strokeCount(overlay(), "#5fdd7a"), 0);
   T.eq("lift masks are back to the original osm color, same count", strokeCount(band(), "#cfcfcf"), maskOsm);
   T.eq("no lift mask is left on the sat color", strokeCount(band(), "#f2f2f2"), 0);
@@ -92,7 +100,7 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   await setBase("sat");
   applyBasePalette("not-a-real-basemap-key");
   await TM.wait(50);
-  T.eq("colors fall back to osm's", strokeCount(overlay(), "#3f8a4c"), greenOsm);
+  T.eq("colors fall back to osm's", strokeCount(overlay(), "#4fa85e"), greenOsm);
   T.eq("and the casing class is cleared, not left on from sat", document.body.classList.contains("tm-casing-light"), false);
   applyBasePalette("osm"); // leave state consistent with the chip UI, which still reads "sat" until re-clicked
   await setBase("osm");

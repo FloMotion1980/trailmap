@@ -3115,7 +3115,13 @@ function applyPlaceVisibility(){
 // Mutated in place by applyBasePalette() when the base layer changes -- object identity stays the
 // same so every `diffColor[t.diff]` read elsewhere (label dots, chart colors, etc.) picks up the
 // current basemap's values without needing to touch those call sites.
-const diffColor = { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" };
+// Brightened from the original #3f8a4c/#1f5f9e/#c23b30 (2026-08-13, user: "die Farben grün, blau und rot
+// etwas heller machen" for Straße/OSM specifically -- Straße hell/CARTO stays as it was, per the same
+// message). Must stay identical to BASE_PALETTES.osm.diff below -- boot() never calls applyBasePalette
+// at all (the app starts on "osm" and nothing repaints until a chip is actually clicked), so THIS object
+// is what a first-ever view of the map actually shows; drifting the two apart would make switching to a
+// different basemap and back change the colors even though "osm" was never touched.
+const diffColor = { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" };
 const BASE_WEIGHT = 3.5;
 const HOVER_WEIGHT = 6.5;
 // A Trailrunde's connector stretches (fireroad/access, no component trail) are drawn a little thinner than a
@@ -3213,18 +3219,40 @@ const liftSelectionOutline = L.polyline([], {
 // ---- Per-basemap color palette (2026-08-13) ----
 // The trail/lift/selection colors above were tuned against OSM's own fairly light tiles. On Satellit
 // (Esri World Imagery), which is dark and low-contrast almost everywhere, the same colors -- especially
-// schwarz (#1c1c1c) and the grey lift mask -- nearly disappear into the imagery (user report). "osm",
-// "carto" and "topo" keep the original values (the user: a light casing on an already-light basemap
-// like CARTO "bringt nichts"); "sat" gets brighter variants plus a light casing halo (a soft light
-// outline behind every vector line, added via CSS so it doesn't need a second polyline per trail/lift/
-// connector -- see the `tm-casing-*` rule in <style>). The user explicitly wants the casing direction
-// (light vs. dark) to depend on the basemap too, not always lighter -- `casing` is `"light"|"dark"|null`
-// per palette so a future dark-casing basemap (e.g. a very pale future layer) is just one more entry.
+// schwarz (#1c1c1c) and the grey lift mask -- nearly disappear into the imagery (user report). "osm" and
+// "carto" keep the original values (the user: a light casing on an already-light basemap like CARTO
+// "bringt nichts"); "topo" (Relief/OpenTopoMap, busy contour lines and muted earthy tones) uses the SAME
+// brighter scheme as "sat" -- the user's own request (2026-08-13), after the Satellit version proved out
+// -- built by spreading SAT_PALETTE rather than repeating its five fields, so the two can never drift
+// apart by accident. Each still gets its OWN plain object (not a shared reference) since applyBasePalette
+// reads `p.diff`/`p.connector`/etc. by value; sharing the same object across two keys would be harmless
+// today (nothing ever mutates a palette entry in place) but is not worth the risk if that ever changes.
+// A light casing halo (a soft light outline behind every vector line, added via CSS so it doesn't need a
+// second polyline per trail/lift/connector -- see the `tm-casing-*` rule in <style>) comes along with it.
+// The user explicitly wants the casing direction (light vs. dark) to depend on the basemap, not always
+// lighter -- `casing` is `"light"|"dark"|null` per palette so a future dark-casing basemap is one entry.
+const SAT_PALETTE = {
+  diff: { gruen:"#5fdd7a", blau:"#4fabff", rot:"#ff6a52", schwarz:"#1c1c1c" },
+  // connector was #e7e7e7 (near-white) at first, reasoning Satellit is dark everywhere -- wrong, and the
+  // user caught it: satellite imagery has plenty of BRIGHT patches too (snow, rock, sand, roads,
+  // sun-glare), and a near-white dashed line under the light casing halo disappears into every one of
+  // them (2026-08-13). A grey/near-white connector can never work reliably there, since rock/snow/roads/
+  // shadow are themselves greyscale -- any shade of grey collides with SOME real terrain. Amber has no
+  // natural equivalent in typical trail terrain and reads against both dark and bright patches alike,
+  // which is the actual property needed here (not "dark" or "light", but "a hue nothing else on the map
+  // has"). liftMask/liftLine are unaffected by this bug: the mask is drawn at opacity 1 and fully covers
+  // the tile underneath it, so the dots/hairline drawn on top of it contrast against the mask's OWN fixed
+  // color, never against whatever terrain happens to be under that pixel.
+  connector: "#ffb300", liftMask: "#f2f2f2", liftLine: "#111111", selectYellow: "#fff200", casing: "light",
+};
 const BASE_PALETTES = {
-  osm:   { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", casing: null },
+  // gruen/blau/rot match the brightened `diffColor` initial values above -- see that comment for why the
+  // two must never drift apart. carto ("Straße hell") deliberately keeps the ORIGINAL, unbrightened trio
+  // (the user, same message: "Strasse hell ist gut so") -- brighter was only ever wanted for "Straße".
+  osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", casing: null },
   carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", casing: null },
-  topo:  { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", casing: null },
-  sat:   { diff: { gruen:"#5fdd7a", blau:"#4fabff", rot:"#ff6a52", schwarz:"#1c1c1c" }, connector:"#e7e7e7", liftMask:"#f2f2f2", liftLine:"#111111", selectYellow:"#fff200", casing: "light" },
+  topo:  { ...SAT_PALETTE, diff: { ...SAT_PALETTE.diff } },
+  sat:   { ...SAT_PALETTE, diff: { ...SAT_PALETTE.diff } },
 };
 
 // Repaints every already-built layer's stroke color in place (no geometry rebuild, no add/remove) --
