@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=162" />
+<link rel="stylesheet" href="style.css?v=163" />
 </head>
 <body>
 <div id="fatalError">
@@ -3219,40 +3219,55 @@ const liftSelectionOutline = L.polyline([], {
 // ---- Per-basemap color palette (2026-08-13) ----
 // The trail/lift/selection colors above were tuned against OSM's own fairly light tiles. On Satellit
 // (Esri World Imagery), which is dark and low-contrast almost everywhere, the same colors -- especially
-// schwarz (#1c1c1c) and the grey lift mask -- nearly disappear into the imagery (user report). "osm" and
-// "carto" keep the original values (the user: a light casing on an already-light basemap like CARTO
-// "bringt nichts"); "topo" (Relief/OpenTopoMap, busy contour lines and muted earthy tones) uses the SAME
-// brighter scheme as "sat" -- the user's own request (2026-08-13), after the Satellit version proved out
-// -- built by spreading SAT_PALETTE rather than repeating its five fields, so the two can never drift
-// apart by accident. Each still gets its OWN plain object (not a shared reference) since applyBasePalette
-// reads `p.diff`/`p.connector`/etc. by value; sharing the same object across two keys would be harmless
-// today (nothing ever mutates a palette entry in place) but is not worth the risk if that ever changes.
-// A light casing halo (a soft light outline behind every vector line, added via CSS so it doesn't need a
-// second polyline per trail/lift/connector -- see the `tm-casing-*` rule in <style>) comes along with it.
-// The user explicitly wants the casing direction (light vs. dark) to depend on the basemap, not always
-// lighter -- `casing` is `"light"|"dark"|null` per palette so a future dark-casing basemap is one entry.
-const SAT_PALETTE = {
-  diff: { gruen:"#5fdd7a", blau:"#4fabff", rot:"#ff6a52", schwarz:"#1c1c1c" },
-  // connector was #e7e7e7 (near-white) at first, reasoning Satellit is dark everywhere -- wrong, and the
-  // user caught it: satellite imagery has plenty of BRIGHT patches too (snow, rock, sand, roads,
-  // sun-glare), and a near-white dashed line under the light casing halo disappears into every one of
-  // them (2026-08-13). A grey/near-white connector can never work reliably there, since rock/snow/roads/
-  // shadow are themselves greyscale -- any shade of grey collides with SOME real terrain. Amber has no
-  // natural equivalent in typical trail terrain and reads against both dark and bright patches alike,
-  // which is the actual property needed here (not "dark" or "light", but "a hue nothing else on the map
-  // has"). liftMask/liftLine are unaffected by this bug: the mask is drawn at opacity 1 and fully covers
-  // the tile underneath it, so the dots/hairline drawn on top of it contrast against the mask's OWN fixed
-  // color, never against whatever terrain happens to be under that pixel.
-  connector: "#ffb300", liftMask: "#f2f2f2", liftLine: "#111111", selectYellow: "#fff200", casing: "light",
-};
+// schwarz (#1c1c1c) and the grey lift mask -- nearly disappear into the imagery (user report). "osm",
+// "carto" and "topo" keep the original diff colors; "carto" ("Straße hell") and "topo" ("Relief") stay
+// completely untouched (the user, in order: "Strasse hell ist gut so", and -- after a first attempt
+// copied Satellit's bright colors onto Relief and the user found that unhelpful, since Relief's actual
+// problem is HUE COLLISION with OpenTopoMap's own green forest fill and orange/brown contour lines, not
+// darkness -- "Nur echten Halo, Farben wie Original lassen", then a real geometry halo was rejected too
+// on performance grounds (leaflet-rotate repaints every vector path's viewBox per degree turned; a second
+// polyline behind every trail/connector would double that per-frame path count) -- so Relief ends up
+// pixel-identical to "osm"/"carto" for now, unsolved, rather than "fixed" with the wrong kind of fix).
+// "sat" keeps the brighter gruen/blau/rot from the same conversation, an amber (not grey) connector (see
+// its own comment below for why), and a lightened schwarz (`#5c5c5c`, a medium grey rather than near-
+// black) -- the halo that was meant to carry schwarz's contrast is gone (both the CSS drop-shadow version,
+// broken on iOS Safari -- see below -- and the rejected geometry version), so schwarz needed a color of
+// its own instead of relying on an outline effect.
+//
+// HALO HISTORY, worth knowing before reintroducing anything like it: the first version added a CSS
+// `filter: drop-shadow(...)` halo (`tm-casing-light` body class) around every vector path on Satellit.
+// This looked right in a desktop browser but broke on the user's iPhone in Safari two different ways at
+// once -- trails showed NO glow at all, and lifts got an opaque WHITE background instead of a transparent
+// halo. Both are the same root cause: WebKit has long-standing bugs combining CSS `filter` with an
+// ancestor `transform` (Leaflet positions every pane via CSS transform, and leaflet-rotate's rotatePane
+// adds a `rotate()` on top of that), which can clip the filter's blur to too tight a region (no visible
+// glow) or make the filter's own compositing surface opaque instead of transparent (the white box) --
+// this is a compositing bug, not a matter of tuning the filter's parameters, so don't re-attempt a CSS
+// filter halo without testing on real iOS Safari first. A geometry-based halo (a second, wider polyline
+// in the halo color behind each trail/connector -- the same technique `selectionOutline` already uses
+// for its yellow ring) WOULD render identically on every browser, no compositing bugs -- but was rejected
+// on performance grounds before being built (see above), not because it doesn't work.
 const BASE_PALETTES = {
   // gruen/blau/rot match the brightened `diffColor` initial values above -- see that comment for why the
   // two must never drift apart. carto ("Straße hell") deliberately keeps the ORIGINAL, unbrightened trio
   // (the user, same message: "Strasse hell ist gut so") -- brighter was only ever wanted for "Straße".
-  osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", casing: null },
-  carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200", casing: null },
-  topo:  { ...SAT_PALETTE, diff: { ...SAT_PALETTE.diff } },
-  sat:   { ...SAT_PALETTE, diff: { ...SAT_PALETTE.diff } },
+  osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200" },
+  carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200" },
+  topo:  { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftLine:"#000000", selectYellow:"#fff200" },
+  sat:   {
+    diff: { gruen:"#5fdd7a", blau:"#4fabff", rot:"#ff6a52", schwarz:"#5c5c5c" },
+    // connector was #e7e7e7 (near-white) at first, reasoning Satellit is dark everywhere -- wrong, and the
+    // user caught it: satellite imagery has plenty of BRIGHT patches too (snow, rock, sand, roads,
+    // sun-glare), and a near-white dashed line disappears into every one of them (2026-08-13). A grey/
+    // near-white connector can never work reliably there, since rock/snow/roads/shadow are themselves
+    // greyscale -- any shade of grey collides with SOME real terrain. Amber has no natural equivalent in
+    // typical trail terrain and reads against both dark and bright patches alike, which is the actual
+    // property needed here (not "dark" or "light", but "a hue nothing else on the map has"). liftMask/
+    // liftLine are unaffected by this specific bug: the mask is drawn at opacity 1 and fully covers the
+    // tile underneath it, so the dots/hairline on top of it contrast against the mask's OWN fixed color,
+    // never against whatever terrain happens to sit under that pixel.
+    connector: "#ffb300", liftMask: "#f2f2f2", liftLine: "#111111", selectYellow: "#fff200",
+  },
 };
 
 // Repaints every already-built layer's stroke color in place (no geometry rebuild, no add/remove) --
@@ -3296,8 +3311,7 @@ function repaintLineColors(){
 
 // Swaps the whole basemap-dependent palette in one go and repaints anything already on the map.
 // `diffColor` is mutated in place (object identity preserved, see its own comment); the three plain-
-// string colors are reassigned (they were switched from `const` to `let` for exactly this). The
-// `tm-casing-light`/`tm-casing-dark` body classes drive the CSS halo — see <style> for the rule.
+// string colors are reassigned (they were switched from `const` to `let` for exactly this).
 function applyBasePalette(key){
   const p = BASE_PALETTES[key] || BASE_PALETTES.osm;
   Object.assign(diffColor, p.diff);
@@ -3305,8 +3319,6 @@ function applyBasePalette(key){
   LIFT_MASK_COLOR = p.liftMask;
   LIFT_LINE_COLOR = p.liftLine;
   SELECT_YELLOW = p.selectYellow;
-  document.body.classList.toggle("tm-casing-light", p.casing === "light");
-  document.body.classList.toggle("tm-casing-dark", p.casing === "dark");
   repaintLineColors();
 }
 
@@ -6707,7 +6719,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v162"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v163"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
