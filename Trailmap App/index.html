@@ -3163,7 +3163,15 @@ const CONNECTOR_HOVER_DELTA = 0.8;
 // resized from setHover()/applyLineWeight() (which would mean touching every call site that changes a
 // line's weight, for a halo that's supposed to be a static ring, not something that grows with hover).
 const HALO_WEIGHT_TRAIL = HOVER_WEIGHT + 2;
-const HALO_OPACITY = 0.9;
+// Only the construction-time DEFAULT, matching a trail's own resting 0.85 (also hardcoded at
+// construction, see visibleSeg/line above) -- opacity is never left at this constant afterward.
+// applySolo/clearSolo/setHover/resetAllHoverStyles all call applyHaloOpacity() to keep a casing's
+// opacity tracking its own trail's, the same way applyLineWeight already tracks weight -- without that,
+// a solo-dimmed trail's line faded to SOLO_DIM_OPACITY while its halo stayed at this constant, which is
+// exactly what "Monte Corno wird komplett weiß" on Satellit turned out to be (see applyHaloOpacity's own
+// comment): not Monte Corno's own halo (an unsegmented loop never gets one, see buildTrailLayer), but a
+// NEARBY schwarz trail's halo glowing at full strength while solo-dimmed to near-invisibility around it.
+const HALO_OPACITY = 0.85;
 // Map labels for a trail carry its difficulty as a coloured dot in front of the name, the same way lift
 // labels start with 🚡 — the user's own analogy (2026-07-28). Worth it because the labels are the one place
 // the map named a trail without saying anything about how hard it is, and the line's own colour is often
@@ -4454,12 +4462,21 @@ function applySolo(id){
   Object.entries(lineLayers).forEach(([lid, layer]) => {
     if (lid === id) {
       layer.styleTarget.setStyle({ opacity: 0.9 });
+      applyHaloOpacity(layer, 0.9);
       layer.startDot.setStyle({ opacity:1, fillOpacity:1 });
       layer.startMarker.setStyle({ opacity:1, fillOpacity:1 });
       layer.endMarker.setStyle({ opacity:1, fillOpacity:1 });
       setArrowOpacity(layer, 1);
     } else {
       layer.styleTarget.setStyle({ opacity: SOLO_DIM_OPACITY });
+      // Without this, a schwarz trail's white halo (see HALO_ACTIVE_KINDS) stayed at its own resting
+      // opacity while its actual line dimmed to SOLO_DIM_OPACITY around it -- glowing at full strength
+      // long after the line it was meant to outline had faded almost to nothing. Reported by the user as
+      // "Monte Corno wird komplett weiß" on Satellit once selected: Monte Corno itself never has a halo
+      // (an unsegmented loop, always drawn in the connector style regardless of its own `diff` -- see
+      // buildTrailLayer's own comment), but selecting it solos it, which dimmed a NEARBY schwarz trail's
+      // line while leaving that trail's halo untouched, right where Monte Corno itself runs.
+      applyHaloOpacity(layer, SOLO_DIM_OPACITY);
       layer.startDot.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
       layer.startMarker.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
       layer.endMarker.setStyle({ opacity: SOLO_DIM_OPACITY, fillOpacity: SOLO_DIM_OPACITY });
@@ -4475,6 +4492,7 @@ function applySolo(id){
 function clearSolo(){
   Object.values(lineLayers).forEach(layer => {
     layer.styleTarget.setStyle({ opacity: 0.85 });
+    applyHaloOpacity(layer, 0.85);
     layer.startDot.setStyle({ opacity:1, fillOpacity:1 });
     layer.startMarker.setStyle({ opacity:1, fillOpacity:1 });
     layer.endMarker.setStyle({ opacity:1, fillOpacity:1 });
@@ -5284,10 +5302,27 @@ function applyLineWeight(target, hover, opacity){
   if (target.eachLayer) target.eachLayer(apply); else apply(target);   // featureGroup vs. a single polyline
 }
 
+// Keeps a trail's halo (if it has one) fading/brightening together with its own line -- applyLineWeight
+// above only ever touches `styleTarget`, never a casing, so without this a solo-dimmed trail kept its
+// halo at full opacity while the trail itself faded to SOLO_DIM_OPACITY. That mismatch is exactly what
+// the user reported as "Monte Corno wird komplett weiß" on Satellit: Monte Corno itself never has a halo
+// (it's an unsegmented loop, always drawn in the connector style regardless of its own `diff` -- see
+// buildTrailLayer's own comment), but a NEARBY schwarz trail that DOES have one, once solo-dimmed by
+// selecting any nearby loop (selecting a NEW loop trail solos it, see the `t.loop` branch in
+// `selectTrail`), kept glowing at its resting opacity while the actual line underneath faded to 15% --
+// reading as "this whole area of the map went white", persisting for exactly as long as that solo/
+// selection stayed active, which matches "bleibt dann auch weiß" in the report precisely. Called
+// alongside applyLineWeight at every one of its call sites, never on its own.
+function applyHaloOpacity(layer, opacity){
+  if (layer.casing) layer.casing.setStyle({ opacity });
+  (layer.segmentCasings || []).forEach(({ casing }) => casing.setStyle({ opacity }));
+}
+
 function resetAllHoverStyles(exceptId){
   Object.entries(lineLayers).forEach(([lid, layer]) => {
     if (lid !== exceptId) {
       applyLineWeight(layer.styleTarget, false, baselineLineOpacity(lid));
+      applyHaloOpacity(layer, baselineLineOpacity(lid));
       if (layer.card) layer.card.classList.remove("hovered");
       if (currentSelectedId !== lid) hideEndpoints(lid);
       // Force-close a leftover hover-triggered name tooltip too, not just the line weight -- a touch tap
@@ -5514,6 +5549,7 @@ function buildTrailLayer(t){
   function setHover(on){
     if (on) resetAllHoverStyles(t.id); // force any stuck "fat" trail (common on touch, missed mouseout) back to normal first
     applyLineWeight(styleTarget, on, on ? 1 : baselineLineOpacity(t.id));
+    applyHaloOpacity(lineLayers[t.id], on ? 1 : baselineLineOpacity(t.id));
     const card = lineLayers[t.id].card;
     if (card) card.classList.toggle("hovered", on);
     // Stays marked while this trail is the selection, mirroring the same `currentSelectedId !== t.id` guard
@@ -6075,18 +6111,45 @@ const selectionOutline = L.polyline([], {
   color: SELECT_YELLOW, weight: HOVER_WEIGHT + 3, opacity: 1, lineCap: "round", interactive: false
 });
 
+// A selected trail doesn't need its own contrast halo any more -- the yellow selectionOutline already
+// makes it as prominent as the map gets, on every basemap, regardless of terrain. Suppressing the halo
+// (rather than fighting Leaflet z-order to make the wider yellow ring visually paint over the narrower
+// white one) sidesteps a real ordering problem: `layer.line.bringToFront()` in highlightSelectedTrail
+// below, for a segmented Trailrunde, brings its whole featureGroup -- including any currently-attached
+// segment casings -- forward together, which would drag the halo back in FRONT of the outline it was
+// supposed to hide behind. Removing the casing outright has no such problem, works identically for the
+// non-segmented case (a plain `map.removeLayer`) and the segmented case (`layer.line.removeLayer`,
+// leaving the trail/connector segment itself untouched), and `syncHalo()` already knows how to put it
+// back exactly as the current basemap wants it -- so `suppressed:false` is just "run the normal sync
+// again", not a special restore path (2026-08-13, per the user).
+function setSelectedTrailHaloSuppressed(id, suppressed){
+  const layer = lineLayers[id];
+  if (!layer) return;
+  if (layer.casing) {
+    if (suppressed) { if (map.hasLayer(layer.casing)) map.removeLayer(layer.casing); }
+    else syncHalo(map, layer.casing, layer.casingKind);
+  }
+  (layer.segmentCasings || []).forEach(({ casing, kind }) => {
+    if (suppressed) { if (layer.line.hasLayer(casing)) layer.line.removeLayer(casing); }
+    else syncHalo(layer.line, casing, kind);
+  });
+}
+
 function highlightSelectedTrail(id){
   const layer = lineLayers[id];
   clearLiftSelection(); // selecting a trail drops any lift highlight
   if (currentSelectedId && currentSelectedId !== id) {
     hideEndpoints(currentSelectedId);
     setLabelHovered(currentSelectedId, false);   // only one trail's label is ever marked as the selected one
+    setSelectedTrailHaloSuppressed(currentSelectedId, false); // give the previous selection its halo back
   }
   if (!layer) { if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline); currentSelectedId = null; return; }
   selectionOutline.setLatLngs(layer.coords);
   if (!map.hasLayer(selectionOutline)) selectionOutline.addTo(map);
   selectionOutline.bringToBack();
   layer.line.bringToFront();
+  setSelectedTrailHaloSuppressed(id, true); // after bringToFront, so a segmented loop's casing (dragged
+                                             // forward along with its featureGroup) is removed again
   showEndpoints(id);
   currentSelectedId = id;
   setLabelHovered(id, true);  // the selected trail keeps its label marked, hover or not
@@ -6096,7 +6159,12 @@ function highlightSelectedTrail(id){
 
 function clearSelection(){
   if (selectedCard) { selectedCard.classList.remove("selected"); selectedCard = null; }
-  if (currentSelectedId) { hideEndpoints(currentSelectedId); setLabelHovered(currentSelectedId, false); currentSelectedId = null; }
+  if (currentSelectedId) {
+    hideEndpoints(currentSelectedId);
+    setLabelHovered(currentSelectedId, false);
+    setSelectedTrailHaloSuppressed(currentSelectedId, false);
+    currentSelectedId = null;
+  }
   if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline);
   clearLiftSelection(); // a lift and a trail are never selected at the same time
 }

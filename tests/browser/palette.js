@@ -1,7 +1,7 @@
 // @suite   palette
 // @area    Per-basemap trail/lift/connector colors, the schwarz-only Satellit halo, the lift mask on/off
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches applyBasePalette, repaintLineColors, syncHalo, BASE_PALETTES, HALO, HALO_ACTIVE_KINDS, diffColor, CONNECTOR_COLOR, LIFT_LINE_COLOR, LIFT_MASK_COLOR, LIFT_MASK_OPACITY, SELECT_YELLOW, baseLayerControl
+// @touches applyBasePalette, repaintLineColors, syncHalo, applyHaloOpacity, applySolo, clearSolo, BASE_PALETTES, HALO, HALO_ACTIVE_KINDS, diffColor, CONNECTOR_COLOR, LIFT_LINE_COLOR, LIFT_MASK_COLOR, LIFT_MASK_OPACITY, SELECT_YELLOW, baseLayerControl
 // @needs   region=bikekingdom, builder=off
 //
 // Added 2026-08-13 per the user: on Satellit (Esri World Imagery, dark almost everywhere), the trail/lift/
@@ -95,6 +95,80 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
        strokeCount(overlay(), "#ffffff", 8.5), schwarzOsm);
   T.eq("lift masks transparent on Satellit too (it's a photo, nothing to cover)", strokeCountOp(band(), "#f2f2f2", 0), maskOsm);
   T.eq("the lift symbol (hairline+dots) stays fully visible regardless of the mask", strokeCountOp(band(), "#111111", 1) > 0, true, true);
+
+  T.test("a schwarz trail's halo dims together with its own line under solo mode -- the Monte Corno bug");
+  // applyLineWeight() only ever touched a trail's own styleTarget, never its casing -- so a solo-dimmed
+  // schwarz trail's line faded to SOLO_DIM_OPACITY while its white halo kept glowing at HALO_OPACITY,
+  // right where the actual line used to be. Reported by the user as "Monte Corno wird komplett weiß" on
+  // Satellit, and only once Monte Corno itself was selected: Monte Corno is an unsegmented loop and never
+  // has a halo of its own (see buildTrailLayer's own comment on why), but selecting ANY loop solos it,
+  // which dimmed a schwarz trail lying near/under Monte Corno's own path while leaving that trail's halo
+  // untouched. Needs at least one schwarz trail that ISN'T the soloed one to observe the dimming on.
+  {
+    const schwarzHaloOpacities = () => new Set(overlay()
+      .filter((p) => (p.getAttribute("stroke") || "").toLowerCase() === "#ffffff" && p.getAttribute("stroke-width") === "8.5")
+      .map((p) => p.getAttribute("stroke-opacity") || "1"));
+    T.eq("at rest, every schwarz halo is at the same (non-solo) opacity", schwarzHaloOpacities().size <= 1,
+         [...schwarzHaloOpacities()], "at most one distinct value");
+    const anyOtherTrail = TM.ui.trailCards().find((c) => !/Corno/i.test(c.textContent)) || TM.ui.trailCards()[0];
+    if (!anyOtherTrail) {
+      T.skip("no trail card available to solo");
+    } else {
+      anyOtherTrail.click();
+      await TM.wait(400);
+      const soloBtn = TM.$(".solo-btn.active") || TM.$("#ipContent .solo-btn");
+      if (soloBtn && !soloBtn.classList.contains("active")) soloBtn.click();
+      await TM.wait(400);
+      const dimmed = schwarzHaloOpacities();
+      T.ok("solo mode leaves at least one halo visibly dimmed, not stuck at the resting opacity",
+           [...dimmed].some((op) => parseFloat(op) < 0.5), [...dimmed], "includes something < 0.5");
+      clearSolo();
+      closeInfoPanelAndDeselect();
+      await TM.wait(300);
+      const restored = schwarzHaloOpacities();
+      T.ok("clearing solo brings every schwarz halo back to one shared resting opacity",
+           restored.size <= 1 && ![...restored].some((op) => parseFloat(op) < 0.5), [...restored], "no dimmed opacity left");
+    }
+  }
+
+  T.test("selecting a schwarz trail suppresses ITS OWN halo -- the yellow selection ring doesn't need it");
+  // The user's own follow-up, after the solo-dimming fix above: a selected trail is already as prominent
+  // as the map gets (the yellow selectionOutline), so its contrast halo is redundant while selected, and
+  // the two rings sitting almost exactly the same width apart (9.5 vs 8.5) looked cluttered together.
+  // Suppressing (removing) the halo rather than fighting Leaflet z-order to make the wider yellow ring
+  // paint over the narrower white one sidesteps a real ordering problem: `layer.line.bringToFront()`
+  // brings a segmented Trailrunde's whole featureGroup -- including any attached segment casings --
+  // forward together, which would drag a halo back in front of the outline it was meant to hide behind.
+  {
+    const haloCount = () => strokeCount(overlay(), "#ffffff", 8.5);
+    const before = haloCount();
+    const schwarzCard = TM.ui.trailCards().find((c) => c.querySelector(".badge.schwarz"));
+    if (!schwarzCard) {
+      T.skip("no standalone schwarz trail card to select");
+    } else {
+      schwarzCard.click();
+      await TM.wait(400);
+      T.eq("selecting it removes exactly its own halo, one fewer than before", haloCount(), before - 1);
+      closeInfoPanelAndDeselect();
+      await TM.wait(300);
+      T.eq("deselecting restores it", haloCount(), before);
+    }
+    // A Trailrunde with a schwarz COMPONENT SEGMENT exercises the featureGroup path instead of the plain
+    // `map`-attached one -- both need covering, since they're handled by different code paths in
+    // setSelectedTrailHaloSuppressed (layer.casing vs layer.segmentCasings).
+    const loopCard = TM.ui.tourCards().find((c) => /Bear Trails/i.test(c.textContent));
+    if (!loopCard) {
+      T.skip("no Trailrunde with a schwarz component segment active right now");
+    } else {
+      const before2 = haloCount();
+      loopCard.click();
+      await TM.wait(500);
+      T.ok("selecting a Trailrunde removes at least one segment halo too", haloCount() < before2, haloCount(), "< " + before2);
+      closeInfoPanelAndDeselect();
+      await TM.wait(300);
+      T.eq("and deselecting restores all of them", haloCount(), before2);
+    }
+  }
 
   T.test("a Trailrunde's own connector segments follow the same per-basemap rule, not just standalone lines");
   // Only meaningful if the active region has a loop with plain (non-trail, non-lift) connector stretches --
