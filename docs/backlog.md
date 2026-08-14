@@ -1,10 +1,52 @@
-# Region backlog
+# Backlog
+
+General, cross-topic backlog for Trailmap — ideas, pending features and open decisions that aren't
+tied to any single file. Mirrors the assistant's own local memory notes so the plan survives a switch
+to a different device (memory lives on one machine only; this file travels with `git clone`/`git
+pull`). Keep both roughly in sync when the backlog changes; if they ever drift, this file is the one
+to trust, since it's the one guaranteed to be current on whatever device is in use.
+
+Merged 2026-08-15 from the former standalone `docs/region-backlog.md` (regions) plus a new RIDE-Modus
+section — one general backlog covering all topics, per the user's own request, instead of a new
+per-topic file each time.
+
+## RIDE-Modus
+
+Follow-up ideas from the same day RIDE mode shipped and was confirmed working on the phone (see
+`CLAUDE.md`'s RIDE section for the feature itself). Not yet designed or scoped — clarify with the user
+before implementing any of these.
+
+- **Infobox (`#rideInfoPanel`) still needs work** — no specifics given yet; ask what exactly bothers
+  the user about it before touching it.
+- **A toggle button for map orientation, instead of driving it from the phone's own sensors.**
+  Currently "Blickrichtung oben" is compass-driven (`setHeadingUp`/`handleOrientation`) and is
+  auto-enabled when RIDE starts. The user wants a manual toggle instead — unclear yet whether this
+  means replacing the compass entirely (e.g. a button that flips between a couple of fixed
+  orientations) or just adding a manual on/off toggle *for* the existing compass-driven rotation
+  (which already sort of exists as `#bearingBtn`) — needs clarifying next time, don't assume.
+- **Possibly a record/stop icon instead of the mountain-bike emoji for the RIDE button** ("Aufnahme
+  Symbol und Stopp Button anstatt dem Mountainbiker") — a visual change to `#rideModeBtn`/`.ride-btn`
+  (🚵 → something like ⏺/⏹), tying into the next point.
+- **A separate "Tracking" concept in addition to RIDE mode** — the user explicitly said they don't yet
+  know whether this is its own mode or connected to RIDE ("Ob das ein eigener Modus ist oder
+  zusammenhängt weiß ich noch nicht"). Sounds like it could be about recording/saving a ridden track
+  (GPX-style), distinct from RIDE's existing live GPS-follow display — but this is a guess, not
+  confirmed. Needs a real discussion before any design/implementation, not just an assumption from the
+  name.
+- **Automated test coverage for RIDE mode is still thin and worth closing out.** What exists:
+  `tests/browser/bearing.js` (the merged position-button reattach path, the pinch-vs-drag detach fix)
+  and `tests/browser/controls.js` (the position cell's show/hide contract via
+  `is-detached`/`is-centred-following`). What's still MISSING and only ever verified by hand/
+  live-phone: `enterRideMode`/`exitRideMode` themselves (the `html.ride-mode` chrome-hiding, the RIDE
+  button's own toggle), `applyRideMapOffset`/`clearRideMapOffset` (the look-ahead placement math,
+  portrait AND landscape), and `updateRideInfoPanel`/`#rideInfoPanel`'s content updates. Add these once
+  the info panel redesign (above) settles, so the tests aren't written against a UI that's about to
+  change again.
+
+## Regionen
 
 Ordered list of bike regions the user has asked to add to Trailmap, in the order they were
-requested (as of 2026-07-26 unless noted). Mirrors the assistant's own local memory note of the
-same name so the plan survives a switch to a different device — the memory file only lives on one
-machine, this file travels with the repo. Keep both roughly in sync when the backlog changes;
-if they drift, this file is the one to trust.
+requested (as of 2026-07-26 unless noted).
 
 1. **Tiroler Zugspitz Arena** — source: https://zugspitzarena.com/de/aktivitaeten/biken/downhill-enduro
    Its own URL structure already reveals the sub-regions (`/trails/ehrwald-wetterstein/…`,

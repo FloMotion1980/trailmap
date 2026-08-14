@@ -22,6 +22,11 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-15
+- **Merged `docs/region-backlog.md` into a new general `docs/backlog.md`**, per the user's request for
+  one cross-topic backlog instead of a new per-topic file each time. Regions moved in as their own
+  section, unchanged; a new "RIDE-Modus" section holds the open follow-up ideas from the same day
+  (infobox rework, a manual orientation toggle, a possible record/stop icon, a separate tracking
+  concept, and the still-thin test coverage). `CLAUDE.md`'s own pointer updated to match.
 - **Fixed: a two-finger pinch never showed the position button, even while visibly moving the tracked
   position off-centre.** A pinch is handled entirely by leaflet-rotate's own `TouchGestures`, a different
   code path from Leaflet core's drag handler, which only fires "dragstart". Confirmed from the vendored
