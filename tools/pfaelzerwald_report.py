@@ -35,6 +35,8 @@ from trailmap_pipeline import haversine_m
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGION = os.path.join(ROOT, "Trailmap App", "regions", "pfaelzerwald.json")
 DIFFS = ["gruen", "blau", "rot", "schwarz"]
+#: Mirrors MAX_MATCH_MEDIAN_M in pfaelzerwald_rederive_loops.py -- see the calibration note there.
+CLEAN_MAX_MEDIAN_M = 25.0
 
 
 def _utf8_stdout():
@@ -50,6 +52,12 @@ def _utf8_stdout():
 
 def line_len_m(coords):
     return sum(haversine_m(coords[i - 1], coords[i]) for i in range(1, len(coords)))
+
+
+def seg_median_m(seg, cand):
+    """Median distance from a segment's points to the line it claims to be part of."""
+    ds = sorted(min(haversine_m(p, q) for q in cand) for p in seg)
+    return ds[len(ds) // 2] if ds else 1e9
 
 
 def measure(path=REGION):
@@ -72,19 +80,31 @@ def measure(path=REGION):
         total = line_len_m(geo[t["id"]])
         if not ss:
             loop_rows.append({"id": t["id"], "name": t["name"], "region": t["region"],
-                              "total_m": round(total), "named_m": 0, "share": 0.0,
+                              "total_m": round(total), "named_m": 0, "clean_m": 0,
+                              "share": 0.0, "share_clean": 0.0,
                               "components": 0, "segments": 0, "no_breakdown": True})
             continue
         named = sum(line_len_m(s["coords"]) for s in ss if s.get("trailId"))
+        # ...and the same again counting only attributions the named trail is actually NEAR. Measured
+        # 2026-08-14: of the 616 existing attributions, half sit exactly on their trail and 80% within
+        # 9.2 m, but the tail breaks down completely -- 95th percentile 181 m, worst 827 m. About a tenth
+        # claim ground their named trail is nowhere near. Counting those inflates the headline share, so
+        # any before/after comparison of this rework has to use the clean figure or it is measuring the
+        # wrong thing.
+        clean = sum(line_len_m(s["coords"]) for s in ss
+                    if s.get("trailId") and s["trailId"] in geo
+                    and seg_median_m(s["coords"], geo[s["trailId"]]) <= CLEAN_MAX_MEDIAN_M)
         comps = {s["trailId"] for s in ss if s.get("trailId")}
         loop_rows.append({"id": t["id"], "name": t["name"], "region": t["region"],
-                          "total_m": round(total), "named_m": round(named),
+                          "total_m": round(total), "named_m": round(named), "clean_m": round(clean),
                           "share": round(named / total, 4) if total else 0.0,
+                          "share_clean": round(clean / total, 4) if total else 0.0,
                           "components": len(comps), "segments": len(ss), "no_breakdown": False})
 
     with_bd = [r for r in loop_rows if not r["no_breakdown"]]
     tot_len = sum(r["total_m"] for r in with_bd)
     tot_named = sum(r["named_m"] for r in with_bd)
+    tot_clean = sum(r["clean_m"] for r in with_bd)
 
     # --- 2 + 3. inventory ----------------------------------------------------------------------
     plain = [t for t in trails if not t.get("loop")]
@@ -104,6 +124,8 @@ def measure(path=REGION):
         "components_referenced": len(referenced),
         "plain_trails_never_used_by_a_loop": len([t for t in plain if t["id"] not in referenced]),
         "attributed_share_overall": round(tot_named / tot_len, 4) if tot_len else 0.0,
+        "attributed_share_clean": round(tot_clean / tot_len, 4) if tot_len else 0.0,
+        "loop_km_clean": round(tot_clean / 1000, 1),
         "loop_km_total": round(tot_len / 1000, 1),
         "loop_km_named": round(tot_named / 1000, 1),
         "loops": loop_rows,
@@ -125,13 +147,16 @@ def show(m):
     print()
     print("   ZUGEORDNETER ANTEIL der Trailrunden: %.1f%%  (%.1f von %.1f km auf benannten Trails)"
           % (100 * m["attributed_share_overall"], m["loop_km_named"], m["loop_km_total"]))
+    print("   davon PLAUSIBEL (Trail hoechstens %.0f m entfernt): %.1f%%  (%.1f km)"
+          % (CLEAN_MAX_MEDIAN_M, 100 * m["attributed_share_clean"], m["loop_km_clean"]))
     print()
-    print("   %-38s %-22s %7s %7s %6s %5s" % ("Trailrunde", "Sub-Region", "km", "benannt", "Anteil", "Komp"))
+    print("   %-36s %-20s %7s %7s %6s %7s %4s"
+          % ("Trailrunde", "Sub-Region", "km", "benannt", "Anteil", "plausib", "Komp"))
     for r in m["loops"]:
         flag = "  <- keine Aufschlüsselung" if r["no_breakdown"] else ""
-        print("   %-38s %-22s %7.2f %7.2f %5.1f%% %5d%s"
-              % (r["name"][:38], r["region"], r["total_m"] / 1000, r["named_m"] / 1000,
-                 100 * r["share"], r["components"], flag))
+        print("   %-36s %-20s %7.2f %7.2f %5.1f%% %6.1f%% %4d%s"
+              % (r["name"][:36], r["region"], r["total_m"] / 1000, r["named_m"] / 1000,
+                 100 * r["share"], 100 * r["share_clean"], r["components"], flag))
 
 
 def diff(before, after):
@@ -140,7 +165,8 @@ def diff(before, after):
                             ("trails_plain", "Einzeltrails", False),
                             ("plain_trail_km", "Einzeltrail-km", False),
                             ("components_referenced", "referenzierte Komponenten", False),
-                            ("attributed_share_overall", "ZUGEORDNETER ANTEIL", True)]:
+                            ("attributed_share_overall", "ZUGEORDNETER ANTEIL", True),
+                            ("attributed_share_clean", "davon PLAUSIBEL", True)]:
         b, a = before[key], after[key]
         if pct:
             print("   %-28s %6.1f%% -> %6.1f%%   %+.1f Punkte"
@@ -157,8 +183,11 @@ def diff(before, after):
     worse = []
     for r in after["loops"]:
         b = bl.get(r["id"])
-        if b and r["share"] < b["share"] - 0.005:
-            worse.append((r["share"] - b["share"], r["name"], b["share"], r["share"]))
+        # Compare on the CLEAN share: the raw one counts the old data's wrong attributions, so a loop can
+        # look like a regression while actually having swapped nonsense for honest connector.
+        bs, as_ = b.get("share_clean", b["share"]) if b else 0, r["share_clean"]
+        if b and as_ < bs - 0.005:
+            worse.append((as_ - bs, r["name"], bs, as_))
     if not worse:
         print("      keine")
     for d_, name, bs, as_ in sorted(worse):

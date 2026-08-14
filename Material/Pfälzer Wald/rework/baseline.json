@@ -9,7 +9,9 @@
    "region": "fernwege_felsentouren",
    "total_m": 12649,
    "named_m": 0,
+   "clean_m": 0,
    "share": 0.0,
+   "share_clean": 0.0,
    "components": 0,
    "segments": 0,
    "no_breakdown": true
@@ -20,7 +22,9 @@
    "region": "fernwege_felsentouren",
    "total_m": 44166,
    "named_m": 10750,
+   "clean_m": 10750,
    "share": 0.2434,
+   "share_clean": 0.2434,
    "components": 27,
    "segments": 51,
    "no_breakdown": false
@@ -31,7 +35,9 @@
    "region": "fernwege_felsentouren",
    "total_m": 77163,
    "named_m": 15258,
+   "clean_m": 12205,
    "share": 0.1977,
+   "share_clean": 0.1582,
    "components": 28,
    "segments": 59,
    "no_breakdown": false
@@ -42,7 +48,9 @@
    "region": "fernwege_felsentouren",
    "total_m": 41736,
    "named_m": 7718,
+   "clean_m": 5189,
    "share": 0.1849,
+   "share_clean": 0.1243,
    "components": 16,
    "segments": 36,
    "no_breakdown": false
@@ -53,7 +61,9 @@
    "region": "fernwege_felsentouren",
    "total_m": 91062,
    "named_m": 12571,
+   "clean_m": 9536,
    "share": 0.138,
+   "share_clean": 0.1047,
    "components": 30,
    "segments": 63,
    "no_breakdown": false
@@ -64,7 +74,9 @@
    "region": "johanniskreuz",
    "total_m": 57134,
    "named_m": 7095,
+   "clean_m": 6395,
    "share": 0.1242,
+   "share_clean": 0.1119,
    "components": 15,
    "segments": 33,
    "no_breakdown": false
@@ -75,7 +87,9 @@
    "region": "johanniskreuz",
    "total_m": 53352,
    "named_m": 5835,
+   "clean_m": 3838,
    "share": 0.1094,
+   "share_clean": 0.0719,
    "components": 12,
    "segments": 33,
    "no_breakdown": false
@@ -86,7 +100,9 @@
    "region": "johanniskreuz",
    "total_m": 60751,
    "named_m": 10560,
+   "clean_m": 10201,
    "share": 0.1738,
+   "share_clean": 0.1679,
    "components": 19,
    "segments": 43,
    "no_breakdown": false
@@ -97,7 +113,9 @@
    "region": "johanniskreuz",
    "total_m": 63974,
    "named_m": 13904,
+   "clean_m": 13904,
    "share": 0.2173,
+   "share_clean": 0.2173,
    "components": 35,
    "segments": 80,
    "no_breakdown": false
@@ -108,7 +126,9 @@
    "region": "johanniskreuz",
    "total_m": 71230,
    "named_m": 9621,
+   "clean_m": 9621,
    "share": 0.1351,
+   "share_clean": 0.1351,
    "components": 21,
    "segments": 42,
    "no_breakdown": false
@@ -119,7 +139,9 @@
    "region": "johanniskreuz",
    "total_m": 45033,
    "named_m": 6965,
+   "clean_m": 4672,
    "share": 0.1547,
+   "share_clean": 0.1038,
    "components": 13,
    "segments": 34,
    "no_breakdown": false
@@ -130,7 +152,9 @@
    "region": "kurztouren",
    "total_m": 23650,
    "named_m": 2995,
+   "clean_m": 2597,
    "share": 0.1266,
+   "share_clean": 0.1098,
    "components": 7,
    "segments": 17,
    "no_breakdown": false
@@ -141,7 +165,9 @@
    "region": "kurztouren",
    "total_m": 32720,
    "named_m": 4139,
+   "clean_m": 3323,
    "share": 0.1265,
+   "share_clean": 0.1016,
    "components": 9,
    "segments": 21,
    "no_breakdown": false
@@ -152,7 +178,9 @@
    "region": "kurztouren",
    "total_m": 32623,
    "named_m": 4147,
+   "clean_m": 1794,
    "share": 0.1271,
+   "share_clean": 0.055,
    "components": 8,
    "segments": 17,
    "no_breakdown": false
@@ -163,7 +191,9 @@
    "region": "kurztouren",
    "total_m": 19902,
    "named_m": 4914,
+   "clean_m": 1048,
    "share": 0.2469,
+   "share_clean": 0.0527,
    "components": 7,
    "segments": 17,
    "no_breakdown": false
@@ -174,7 +204,9 @@
    "region": "kurztouren",
    "total_m": 30862,
    "named_m": 8130,
+   "clean_m": 7268,
    "share": 0.2634,
+   "share_clean": 0.2355,
    "components": 12,
    "segments": 29,
    "no_breakdown": false
@@ -185,7 +217,9 @@
    "region": "kurztouren",
    "total_m": 35324,
    "named_m": 5255,
+   "clean_m": 5255,
    "share": 0.1488,
+   "share_clean": 0.1488,
    "components": 8,
    "segments": 25,
    "no_breakdown": false
@@ -196,7 +230,9 @@
    "region": "kurztouren",
    "total_m": 23520,
    "named_m": 2997,
+   "clean_m": 2997,
    "share": 0.1274,
+   "share_clean": 0.1274,
    "components": 7,
    "segments": 17,
    "no_breakdown": false
@@ -207,7 +243,9 @@
    "region": "kurztouren",
    "total_m": 20633,
    "named_m": 1011,
+   "clean_m": 1011,
    "share": 0.049,
+   "share_clean": 0.049,
    "components": 3,
    "segments": 7,
    "no_breakdown": false
@@ -218,7 +256,9 @@
    "region": "kurztouren",
    "total_m": 10592,
    "named_m": 2790,
+   "clean_m": 2790,
    "share": 0.2635,
+   "share_clean": 0.2635,
    "components": 7,
    "segments": 15,
    "no_breakdown": false
@@ -229,7 +269,9 @@
    "region": "kurztouren",
    "total_m": 42857,
    "named_m": 5805,
+   "clean_m": 4715,
    "share": 0.1355,
+   "share_clean": 0.11,
    "components": 9,
    "segments": 19,
    "no_breakdown": false
@@ -240,7 +282,9 @@
    "region": "kurztouren",
    "total_m": 33349,
    "named_m": 5392,
+   "clean_m": 2883,
    "share": 0.1617,
+   "share_clean": 0.0865,
    "components": 11,
    "segments": 30,
    "no_breakdown": false
@@ -251,7 +295,9 @@
    "region": "kurztouren",
    "total_m": 18197,
    "named_m": 2166,
+   "clean_m": 2166,
    "share": 0.1191,
+   "share_clean": 0.1191,
    "components": 6,
    "segments": 13,
    "no_breakdown": false
@@ -262,7 +308,9 @@
    "region": "private_runden",
    "total_m": 35745,
    "named_m": 9546,
+   "clean_m": 7233,
    "share": 0.2671,
+   "share_clean": 0.2023,
    "components": 14,
    "segments": 32,
    "no_breakdown": false
@@ -273,7 +321,9 @@
    "region": "private_runden",
    "total_m": 33544,
    "named_m": 9854,
+   "clean_m": 9854,
    "share": 0.2938,
+   "share_clean": 0.2938,
    "components": 25,
    "segments": 46,
    "no_breakdown": false
@@ -284,7 +334,9 @@
    "region": "private_runden",
    "total_m": 38868,
    "named_m": 16584,
+   "clean_m": 16337,
    "share": 0.4267,
+   "share_clean": 0.4203,
    "components": 27,
    "segments": 58,
    "no_breakdown": false
@@ -295,7 +347,9 @@
    "region": "private_runden",
    "total_m": 23720,
    "named_m": 5647,
+   "clean_m": 5357,
    "share": 0.2381,
+   "share_clean": 0.2258,
    "components": 12,
    "segments": 26,
    "no_breakdown": false
@@ -306,7 +360,9 @@
    "region": "private_runden",
    "total_m": 35522,
    "named_m": 10724,
+   "clean_m": 10217,
    "share": 0.3019,
+   "share_clean": 0.2876,
    "components": 24,
    "segments": 49,
    "no_breakdown": false
@@ -317,7 +373,9 @@
    "region": "wasgau",
    "total_m": 35395,
    "named_m": 2628,
+   "clean_m": 2340,
    "share": 0.0743,
+   "share_clean": 0.0661,
    "components": 7,
    "segments": 17,
    "no_breakdown": false
@@ -328,7 +386,9 @@
    "region": "wasgau",
    "total_m": 39312,
    "named_m": 4307,
+   "clean_m": 3784,
    "share": 0.1096,
+   "share_clean": 0.0963,
    "components": 12,
    "segments": 28,
    "no_breakdown": false
@@ -339,7 +399,9 @@
    "region": "wasgau",
    "total_m": 80839,
    "named_m": 8873,
+   "clean_m": 8415,
    "share": 0.1098,
+   "share_clean": 0.1041,
    "components": 26,
    "segments": 54,
    "no_breakdown": false
@@ -350,7 +412,9 @@
    "region": "wasgau",
    "total_m": 26036,
    "named_m": 2951,
+   "clean_m": 2951,
    "share": 0.1133,
+   "share_clean": 0.1133,
    "components": 7,
    "segments": 15,
    "no_breakdown": false
@@ -361,7 +425,9 @@
    "region": "wasgau",
    "total_m": 29812,
    "named_m": 3259,
+   "clean_m": 3038,
    "share": 0.1093,
+   "share_clean": 0.1019,
    "components": 8,
    "segments": 19,
    "no_breakdown": false
@@ -372,7 +438,9 @@
    "region": "wasgau",
    "total_m": 38298,
    "named_m": 1728,
+   "clean_m": 1728,
    "share": 0.0451,
+   "share_clean": 0.0451,
    "components": 4,
    "segments": 9,
    "no_breakdown": false
@@ -383,7 +451,9 @@
    "region": "wasgau",
    "total_m": 60734,
    "named_m": 3249,
+   "clean_m": 3093,
    "share": 0.0535,
+   "share_clean": 0.0509,
    "components": 10,
    "segments": 23,
    "no_breakdown": false
@@ -394,7 +464,9 @@
    "region": "wasgau",
    "total_m": 46259,
    "named_m": 3403,
+   "clean_m": 3403,
    "share": 0.0736,
+   "share_clean": 0.0736,
    "components": 12,
    "segments": 22,
    "no_breakdown": false
@@ -405,7 +477,9 @@
    "region": "wasgau",
    "total_m": 24584,
    "named_m": 2225,
+   "clean_m": 2225,
    "share": 0.0905,
+   "share_clean": 0.0905,
    "components": 8,
    "segments": 17,
    "no_breakdown": false
@@ -416,7 +490,9 @@
    "region": "wasgau",
    "total_m": 58836,
    "named_m": 5160,
+   "clean_m": 5004,
    "share": 0.0877,
+   "share_clean": 0.085,
    "components": 16,
    "segments": 33,
    "no_breakdown": false
@@ -427,7 +503,9 @@
    "region": "weinstrasse",
    "total_m": 30752,
    "named_m": 4623,
+   "clean_m": 4429,
    "share": 0.1503,
+   "share_clean": 0.144,
    "components": 11,
    "segments": 25,
    "no_breakdown": false
@@ -438,7 +516,9 @@
    "region": "weinstrasse",
    "total_m": 32398,
    "named_m": 2965,
+   "clean_m": 2965,
    "share": 0.0915,
+   "share_clean": 0.0915,
    "components": 6,
    "segments": 13,
    "no_breakdown": false
@@ -449,7 +529,9 @@
    "region": "weinstrasse",
    "total_m": 52281,
    "named_m": 4295,
+   "clean_m": 4295,
    "share": 0.0821,
+   "share_clean": 0.0821,
    "components": 9,
    "segments": 21,
    "no_breakdown": false
@@ -460,7 +542,9 @@
    "region": "weinstrasse",
    "total_m": 42012,
    "named_m": 4775,
+   "clean_m": 4124,
    "share": 0.1136,
+   "share_clean": 0.0982,
    "components": 13,
    "segments": 31,
    "no_breakdown": false
@@ -493,6 +577,8 @@
  "components_referenced": 382,
  "plain_trails_never_used_by_a_loop": 13,
  "attributed_share_overall": 0.1515,
+ "attributed_share_clean": 0.1327,
+ "loop_km_clean": 224.9,
  "loop_km_total": 1694.8,
  "loop_km_named": 256.8,
  "places": 27

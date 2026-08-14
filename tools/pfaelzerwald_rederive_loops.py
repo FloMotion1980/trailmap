@@ -22,12 +22,19 @@ that repointing logic was never built. Re-deriving sidesteps it entirely: the se
 scratch against whatever trail set now exists.
 
 **Tuning is expected, not optional.** `gpx_map_match.py` has been validated against networks of 21
-(Livigno) to ~130 (Bike Kingdom) candidates. Here it faces several hundred packed far more closely, so
-cross-talk between adjacent trails is the risk and `strict_thresh_m` is the dial: lower it, and let pass 2
-recover what that costs. `--sweep` tries a small grid per loop and keeps the best by attributed share,
-which is the number `pfaelzerwald_report.py` measures -- an honest objective, since a wrong attribution
-adds length just as happily as a right one, so the sweep also records median match distance per candidate
-and refuses a result whose distance profile got worse while its share went up.
+(Livigno) to ~130 (Bike Kingdom) candidates. Here it faces 768 packed far more closely, so cross-talk
+between adjacent trails is the risk: a looser threshold does not just find more, it finds WRONG things, and
+a wrong attribution adds length to the share exactly as happily as a right one.
+
+**That is why attributed share cannot be the selection objective, and why `--sweep` is off by default.**
+The grid runs from a 15 m strict threshold down to 8 m, i.e. progressively stricter, so "keep whichever
+scores highest" would systematically pick the loosest setting and call cross-talk an improvement -- the
+opposite of the intent. The guard that actually works is per-segment and independent of the threshold:
+`MAX_MATCH_MEDIAN_M` drops any matched stretch whose points sit further from the claimed trail's own line
+than a real ride ever would, measured as a median so a few noisy points cannot condemn a good match nor a
+few good ones rescue a bad one. `--sweep` therefore selects on share only AFTER that filter has run, and
+the report records the median per loop so a suspicious result is visible rather than buried in a number
+that went up.
 
 **A connector stays a connector.** Where no candidate matches, the stretch is written with `trailId: null`
 exactly as today. The user's decision was to replace conservatively, so a loop losing attribution relative
@@ -75,8 +82,40 @@ def _utf8_stdout():
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
 
+#: A matched stretch whose points sit further than this from the claimed trail's own line, in the median,
+#: is cross-talk rather than a ride. The matcher labels individual points within its strict threshold, but
+#: smoothing and run consolidation deliberately pull neighbouring points into a run, so a run as a whole can
+#: drift well past that threshold -- which is exactly how a trail running parallel 30 m away gets claimed.
+#:
+#: Calibrated against the region's own 616 existing attributions, which turn out to be bimodal: 50% sit at
+#: 0.0 m and 80% within 9.2 m, then the tail breaks down completely -- the 95th percentile is 181 m and the
+#: worst is 827 m ("König-Albrecht-Wanderweg 1"). Roughly a tenth of the existing attributions are simply
+#: wrong, claiming ground the named trail is nowhere near. 25 m keeps everything plausible and drops 9.7%,
+#: i.e. almost exactly that broken tail. A first attempt at 12 m was miscalibrated in the other direction
+#: and discarded 16%, including components the old data had right.
+#:
+#: The consequence for judging this rework: the 15.2% baseline is INFLATED by those wrong attributions, so
+#: the honest comparison is against `attributed_share_clean` in pfaelzerwald_report.py, not the raw figure.
+MAX_MATCH_MEDIAN_M = 25.0
+
+
 def line_len_m(c):
     return sum(haversine_m(c[i - 1], c[i]) for i in range(1, len(c)))
+
+
+def match_median_m(loop_coords, m, candidates):
+    """Median distance from a matched stretch's own points to the candidate line it was matched to."""
+    cand = candidates[m["id"]]
+    ds = []
+    for p in loop_coords[m["start_idx"]:m["end_idx"] + 1]:
+        best = 1e9
+        for q in cand:
+            d = haversine_m(p, q)
+            if d < best:
+                best = d
+        ds.append(best)
+    ds.sort()
+    return ds[len(ds) // 2] if ds else 1e9
 
 
 def named_share(segments):
@@ -164,7 +203,13 @@ def main():
         best = None
         for params in (SWEEP if args.sweep else SWEEP[:1]):
             matched = match_gpx_to_network(coords, candidates, **params)
-            segs = fill_connectors(coords, matched)
+            meds = [(m, match_median_m(coords, m, candidates)) for m in matched]
+            kept = [m for m, md in meds if md <= MAX_MATCH_MEDIAN_M]
+            dropped = [(m["id"], round(md)) for m, md in meds if md > MAX_MATCH_MEDIAN_M]
+            if args.verbose and dropped:
+                print("     %s: %d Treffer wegen Abstand verworfen: %s"
+                      % (params, len(dropped), dropped[:6]))
+            segs = fill_connectors(coords, kept)
             if not concat_ok(coords, segs):
                 if args.verbose:
                     print("     %s: Verkettung verletzt, verworfen" % params)
@@ -172,7 +217,9 @@ def main():
             share = named_share(segs)
             if best is None or share > best["share"]:
                 best = {"share": share, "segs": segs, "params": params,
-                        "components": len({s["trailId"] for s in segs if s.get("trailId")})}
+                        "components": len({s["trailId"] for s in segs if s.get("trailId")}),
+                        "median_m": round(max([md for _, md in meds if md <= MAX_MATCH_MEDIAN_M] or [0]), 1),
+                        "dropped": len(dropped)}
         row = {"id": lid, "name": t["name"], "region": t["region"],
                "baseline_share": b_share, "secs": round(time.time() - t0, 1)}
         if best is None:
@@ -182,7 +229,8 @@ def main():
         else:
             new_segs[lid] = best["segs"]
             row.update(written=True, new_share=round(best["share"], 4),
-                       components=best["components"], params=best["params"])
+                       components=best["components"], params=best["params"],
+                       worst_median_m=best["median_m"], dropped_matches=best["dropped"])
         report.append(row)
         print("  [%2d/%2d] %-38s %s  %5.1f%% -> %5.1f%%  %4.0fs%s"
               % (i, len(loops), t["name"][:38], "ok " if row.get("written") else "SKIP",
