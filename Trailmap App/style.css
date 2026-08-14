@@ -876,21 +876,22 @@ html.landscape-compact #sidebarToggle .st-bars{
    container cannot carry (the pulse was a ring outside the button) -- and it no longer has to: the readout chip
    below carries a blinking dot whenever tracking is live, so the "is it actually following" signal is still
    there and is only in one place instead of two. */
-#locateBtn.active, #bearingBtn.active, #rideModeBtn.active{ background: var(--forest); color:#f2f3ec; }
+#bearingBtn.active, #rideModeBtn.active{ background: var(--forest); color:#f2f3ec; }
 /* Waiting for the one-shot fix. getCurrentPosition can take seconds under trees, and without this the tap
    looks like it did nothing at all. */
 #locateBtn.busy{ opacity:.55; }
-/* The re-centre cell exists only while following AND detached. display rather than opacity, so it takes no room
-   in the container when it is not there -- it is the LAST cell precisely so that appearing cannot displace a
-   cell you were aiming at. */
-/* Both selectors have to name the container: `#mapControls > button` sets `display:flex` on every cell and an
-   id alone loses to it on specificity, so a plain `#recenterBtn{ display:none }` never hid anything (measured --
-   the cell was visible while attached). */
-#mapControls > #recenterBtn{ display:none; background: var(--forest); color:#f2f3ec; }
-#locateCluster.is-detached #mapControls > #recenterBtn{ display:flex; }
+/* The position cell (2026-08-15, merged: see #locateBtn's own JS comment) is hidden entirely while
+   following AND centred -- nothing to tap there -- and takes on the old re-centre cell's filled look while
+   detached, since it is now doing that button's job. display rather than opacity, so a hidden cell takes no
+   room in the container; it is the LAST cell precisely so appearing/disappearing cannot displace a cell you
+   were aiming at. Both selectors have to name the container: `#mapControls > button` sets `display:flex` on
+   every cell and an id alone loses to it on specificity, so a plain `#locateBtn{ display:none }` would never
+   hide anything (measured, on the old #recenterBtn this replaced). */
+#locateCluster.is-centred-following #mapControls > #locateBtn{ display:none; }
+#locateCluster.is-detached #mapControls > #locateBtn{ background: var(--forest); color:#f2f3ec; }
 @media (hover: hover){
   #mapControls > button:hover{ background:#eff2e9; }
-  #locateBtn.active:hover, #bearingBtn.active:hover, #rideModeBtn.active:hover, #recenterBtn:hover{ background: var(--forest-dark); }
+  #bearingBtn.active:hover, #rideModeBtn.active:hover, #locateCluster.is-detached #mapControls > #locateBtn:hover{ background: var(--forest-dark); }
 }
 .geo-wrap{ position:relative; width:40px; height:40px; }
 .geo-cone{

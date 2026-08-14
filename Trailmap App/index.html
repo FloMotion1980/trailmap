@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=167" />
+<link rel="stylesheet" href="style.css?v=168" />
 </head>
 <body>
 <div id="fatalError">
@@ -270,23 +270,24 @@
              Buttons hängen übereinander" -- and the overlap is also what buried this readout's own fold
              handle: 14 of its 25px sat under #locateBtn, which carried the higher z-index, so
              elementFromPoint at the handle's centre returned the locate button.
-             Order matters: the re-centre cell is LAST because it is the only conditional one, so its
-             appearing cannot move a cell you were aiming at. -->
+             Order matters: the position cell is LAST because it is the only conditional one now (2026-08-15
+             -- it absorbed the old separate re-centre cell, see #locateBtn's own comment below), so its
+             appearing/disappearing cannot move a cell you were aiming at. -->
         <div id="mapControls">
-          <button id="locateBtn" title="Position zeigen">📍</button>
-          <!-- The north-up / heading-up switch. In this cluster at the user's request ("ein Button dort wo
-               auch der Zentrieren Button erscheint", 2026-08-01), and permanently visible unlike the
-               re-centre cell, since it is a mode and not a reaction to anything. -->
-          <button id="bearingBtn" title="Karte: Norden oben — tippen für Blickrichtung oben" aria-pressed="false">🧭</button>
-          <!-- RIDE mode (2026-08-14, replaces the old hold-to-follow gesture on #locateBtn entirely): one
-               explicit, discoverable button that starts full-screen riding -- GPS follow, auto rotation, and
-               (if a trail is open) an isolated solo view of it, with no yellow selection ring. Placed BEFORE
-               #recenterBtn on purpose: it is a permanent mode switch like #bearingBtn, not a conditional cell,
-               and the conditional one must stay last (see #recenterBtn's own comment). -->
+          <!-- RIDE mode (2026-08-14): one explicit, discoverable button that starts full-screen riding --
+               GPS follow, auto rotation, and (if a trail is open) an isolated solo view of it, with no
+               yellow selection ring. FIRST cell (2026-08-15, user's own reordering request) -- it is the
+               entry point into riding, so it leads the row; being a permanent mode switch like #bearingBtn,
+               not a conditional cell, it can sit anywhere except last (see #locateBtn's own comment). -->
           <button id="rideModeBtn" class="ride-btn" title="RIDE-Modus starten" aria-pressed="false">🚵</button>
-          <!-- Only while following AND detached (you panned the map away). Re-attaching is its own control on
-               purpose: the readout's job is to display, not to act. -->
-          <button id="recenterBtn" title="Zurück zur Position">◎</button>
+          <!-- The north-up / heading-up switch. In this cluster at the user's request ("ein Button dort wo
+               auch der Zentrieren Button erscheint", 2026-08-01), and permanently visible, since it is a
+               mode and not a reaction to anything. -->
+          <button id="bearingBtn" title="Karte: Norden oben — tippen für Blickrichtung oben" aria-pressed="false">🧭</button>
+          <!-- One button for both "show me where I am" AND "bring me back" (2026-08-15, merged from a
+               separate #recenterBtn -- see #locateBtn's own comment for the reasoning and exact visibility
+               rule). LAST cell precisely because it is the only conditional one. -->
+          <button id="locateBtn" title="Position zeigen">📍</button>
         </div>
         <!-- Reads out the live state of the tracking rather than just saying it is on. Since 2026-08-03 the
              CHIP is what is always shown -- the accuracy alone, which is the one field that is information
@@ -2999,17 +3000,22 @@ locateBtn.addEventListener("pointerdown", () => {
 // Without this a long press opens the platform's own callout on the emoji.
 locateBtn.addEventListener("contextmenu", (e) => e.preventDefault());
 
+// One button, two jobs, chosen by whether you're currently detached from following (2026-08-15, merged
+// from a separate #recenterBtn -- the user's own observation that both buttons ultimately mean "put my
+// position back where it belongs"). The cell is HIDDEN entirely while centred and following (nothing to
+// tap there), so there is no longer a "jump to true screen centre" override reachable during RIDE the way
+// there briefly was -- an accepted trade-off, the same idea as #recenterBtn only ever showing up when
+// there was something to do. See syncLocateChrome() for the exact visibility rule.
 locateBtn.addEventListener("click", () => {
   if (orientationHandler === null) requestOrientationPermission();
-  // During RIDE, this button is the deliberate "show me exactly where I am" override: it recentres on
-  // the REAL screen centre, ignoring the look-ahead placement, for the duration of this one fix.
-  // clearRideMapOffset() undoes the oversized/shifted #map (see enterRideMode()) so Leaflet's own,
-  // already-correct dead-centre applies for this one pan; applyRideMapOffset() puts the look-ahead
-  // placement back on the resulting pan's own moveend. The next follow-driven pan (if RIDE is still
-  // active) then simply crops the same, already-centred content through the shifted window again.
-  if (rideMode) {
-    clearRideMapOffset();
-    map.once("moveend", () => { if (rideMode) applyRideMapOffset(); });
+  if (followMode && followDetached) {
+    followDetached = false;
+    syncLocateChrome();
+    // Dead centre, same as every other pan to the position -- see the note in updateUserLocation. And the
+    // same size check: this is exactly what a rider taps right after turning the phone.
+    ensureMapSizeCurrent();
+    if (userLocationMarker) map.panTo(userLocationMarker.getLatLng(), { animate: true, duration: 0.4 });
+    return;
   }
   oneShotLocate();
 });
@@ -3039,15 +3045,6 @@ document.addEventListener("visibilitychange", () => {
   updateLiveStatus();
 });
 
-document.getElementById("recenterBtn").addEventListener("click", () => {
-  followDetached = false;
-  syncLocateChrome();
-  // Dead centre, same as every other pan to the position -- see the note in updateUserLocation. And the same
-  // size check: this button is exactly what a rider taps right after turning the phone.
-  ensureMapSizeCurrent();
-  if (userLocationMarker) map.panTo(userLocationMarker.getLatLng(), { animate: true, duration: 0.4 });
-});
-
 // Panning by hand drops out of chasing without ending the tracking -- the fix for "ich kann die Karte nicht
 // mehr bewegen, das Tracking holt sie immer zurück". `dragstart` is user-only; panTo's own animation fires
 // movestart, not dragstart, so this cannot detach itself.
@@ -3059,8 +3056,15 @@ map.on("dragstart", () => {
   if (followMode && !followDetached) { followDetached = true; syncLocateChrome(); }
 });
 
+// Visibility rule for the merged position cell (2026-08-15): hidden while actively following AND centred
+// (nothing to do there), shown while detached (tap to re-attach) OR not following at all (tap for a
+// one-shot locate) -- see #locateBtn's own click handler for what each case actually does.
 function syncLocateChrome(){
-  document.getElementById("locateCluster").classList.toggle("is-detached", followMode && followDetached);
+  const detached = followMode && followDetached;
+  const cluster = document.getElementById("locateCluster");
+  cluster.classList.toggle("is-detached", detached);
+  cluster.classList.toggle("is-centred-following", followMode && !detached);
+  locateBtn.title = detached ? "Zurück zur Position" : "Position zeigen";
 }
 
 // ---- RIDE mode (2026-08-14) -------------------------------------------------------------------------
@@ -7184,7 +7188,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v167"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v168"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

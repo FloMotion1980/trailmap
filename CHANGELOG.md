@@ -22,6 +22,18 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-15
+- **Merged the position button (📍) and the old separate re-centre button (◎) into one.** Both ultimately
+  meant "put my position back where it belongs" (the user's own observation). `#mapControls` order is now
+  RIDE, bearing, position (RIDE leads as the entry point into riding; position is last since it's the only
+  conditional cell now — hidden while centred and following, shown otherwise, taking over ◎'s old "tap to
+  reattach" job when detached). Traded away: the brief "tap 📍 during RIDE for the true screen centre"
+  override added earlier the same day has no reachable button once centred, since the cell hides then —
+  an accepted cost of not having two buttons for one job. Fixed two now-stale assumptions in
+  `tests/browser/bearing.js` while updating it for the merge: `followMode`/`followDetached` were never
+  actually reachable from a test script (a wrong assumption in an earlier edit that would have silently
+  no-opped), and a separate, unrelated case had been waiting on a `.active` class that stopped being set on
+  the position button back when RIDE took over triggering follow mode — its wait was quietly running out
+  its full timeout every run.
 - **RIDE mode, round two, after the first phone test: bottom info bar + a look-ahead position placement.**
   `#rideInfoPanel` now docks at the BOTTOM in portrait, flush with the real bottom edge (was top, and
   briefly left a gap above Leaflet's attribution strip before that too got fixed the same day) — modelled

@@ -1,7 +1,7 @@
 // @suite   controls
 // @area    The map control cluster: the segmented column, the readout chip, and what covers what
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches locateCluster, mapControls, liveStatusChip, liveStatusShort, applyLiveStatusOpen, liveStatusOpen, updateLiveStatus, is-detached, showFollowHint, hideFollowHint, followHint, FOLLOW_HINT_MS
+// @touches locateCluster, mapControls, liveStatusChip, liveStatusShort, applyLiveStatusOpen, liveStatusOpen, updateLiveStatus, is-detached, is-centred-following, syncLocateChrome, rideModeBtn
 // @needs   region=bikekingdom, builder=off
 //
 // This suite exists because of a bug that every other kind of check would have missed: the readout's fold handle
@@ -20,7 +20,10 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
 
   const $ = TM.$;
   const box = (el) => el.getBoundingClientRect();
-  const cellIds = ["locateBtn", "bearingBtn", "recenterBtn"];
+  // Order since 2026-08-15: RIDE first (the entry point into riding), bearing second (a permanent mode
+  // switch like RIDE), position last (the only conditional cell -- it absorbed the old separate
+  // #recenterBtn, see #locateBtn's own click handler and syncLocateChrome()).
+  const cellIds = ["rideModeBtn", "bearingBtn", "locateBtn"];
 
   // Everything below needs the cluster laid out. `visible` on the readout is what tracking would set; nothing
   // here starts the real GPS, which a test cannot do.
@@ -37,8 +40,7 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
   const restore = async () => {
     if (forced) { forced.remove(); forced = null; }
     $("#liveStatus").classList.remove("visible");
-    $("#locateCluster").classList.remove("is-detached");
-    $("#locateBtn").classList.remove("active");
+    $("#locateCluster").classList.remove("is-detached", "is-centred-following");
     await TM.wait(150);
   };
   // What is actually on top, which is the whole question. FIVE points, not just the centre: a 20px overlap on a
@@ -60,8 +62,9 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
   await showCluster();
 
   T.test("every control in the cluster can actually be tapped");
-  // The regression this suite was written for. It must hold in the detached state too, which is the only one
-  // where all three cells exist at once.
+  // The regression this suite was written for. Checked in the detached state too (the position cell's
+  // "filled" look), even though all three cells are already present without it since 2026-08-15 -- the
+  // position cell only ever HIDES via is-centred-following, not via the absence of is-detached.
   $("#locateCluster").classList.add("is-detached");
   await TM.wait(250);
   for (const id of cellIds.concat(["liveStatusChip"])) {
@@ -95,26 +98,27 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
        cellIds.every((id) => parseFloat(getComputedStyle($("#" + id)).borderTopWidth || 0) <= 1),
        cellIds.map((id) => getComputedStyle($("#" + id)).borderTopWidth), "hairlines at most");
 
-  T.test("the re-centre cell is the last one and only exists while detached");
-  // Last on purpose: it is the only conditional cell, so its appearing must not displace a cell you were
-  // reaching for. The check is that the cells ABOVE it do not move when it comes and goes.
-  $("#locateCluster").classList.remove("is-detached");
+  T.test("the position cell is the last one and only hides while centred and following");
+  // Last on purpose: it is the only conditional cell (2026-08-15: it absorbed the old separate #recenterBtn,
+  // since both ultimately meant "put my position back where it belongs"), so its disappearing must not
+  // displace a cell you were reaching for. The check is that the cells ABOVE it do not move when it goes.
+  $("#locateCluster").classList.remove("is-centred-following");
   await TM.wait(250);
-  const beforeShown = getComputedStyle($("#recenterBtn")).display;
-  const anchors = ["locateBtn", "bearingBtn"].map((id) => box($("#" + id)));
-  $("#locateCluster").classList.add("is-detached");
+  const beforeShown = getComputedStyle($("#locateBtn")).display;
+  const anchors = ["rideModeBtn", "bearingBtn"].map((id) => box($("#" + id)));
+  $("#locateCluster").classList.add("is-centred-following");
   await TM.wait(250);
-  const afterShown = getComputedStyle($("#recenterBtn")).display;
-  const moved = ["locateBtn", "bearingBtn"].map((id, i) =>
+  const afterShown = getComputedStyle($("#locateBtn")).display;
+  const moved = ["rideModeBtn", "bearingBtn"].map((id, i) =>
     Math.max(Math.abs(box($("#" + id)).top - anchors[i].top), Math.abs(box($("#" + id)).left - anchors[i].left)));
-  T.eq("hidden while attached", beforeShown, "none");
-  T.ok("shown while detached", afterShown !== "none", afterShown, "not none");
+  T.ok("shown while not centred-following", beforeShown !== "none", beforeShown, "not none");
+  T.eq("hidden while centred and following", afterShown, "none");
   T.ok("and the other cells did not move", Math.max(...moved) < 0.6, Math.round(Math.max(...moved)), "0px");
-  const r = box($("#recenterBtn")), l = box($("#locateBtn"));
-  T.ok("it is last in the stack", vertical ? r.top > l.top : r.left > l.left,
-       [Math.round(r.top), Math.round(l.top)], "after the locate cell");
-  $("#locateCluster").classList.remove("is-detached");
+  $("#locateCluster").classList.remove("is-centred-following");
   await TM.wait(200);
+  const r = box($("#locateBtn")), b = box($("#bearingBtn"));
+  T.ok("it is last in the stack", vertical ? r.top > b.top : r.left > b.left,
+       [Math.round(r.top), Math.round(b.top)], "after the bearing cell");
 
   T.test("the chip folds the details away and stays readable itself");
   const chip = $("#liveStatusChip");
@@ -158,43 +162,17 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
   T.ok("the compact form fits the cell without widening it",
        $("#liveStatusShort").scrollWidth <= 44, $("#liveStatusShort").scrollWidth, "<= 44px");
 
-  T.test("the hold hint comes with every tap, and never gets in the way");
-  // It teaches the one gesture that has no visible control of its own. The rule is deliberately unconditional --
-  // an earlier version showed it three times and then never again, which the user rejected: on a gesture you may
-  // go weeks without using, this is a reminder, not an onboarding step. So the check is that repetition does NOT
-  // wear off, which is the property that regressed once already.
-  {
-    const hint = $("#followHint");
-    const opacity = () => getComputedStyle(hint).opacity;
-    hideFollowHint();
-    await TM.wait(300);
-    T.eq("it is not on screen to begin with", opacity(), "0");
-    const shownTimes = [];
-    for (let i = 0; i < 4; i++) {
-      hideFollowHint();
-      await TM.wait(280);
-      showFollowHint();
-      await TM.wait(280);
-      shownTimes.push(opacity());
-    }
-    T.ok("four taps in a row all show it", shownTimes.every((o) => o === "1"), shownTimes, "all 1");
-    T.ok("it says what the gesture does", /[Hh]alten/.test(hint.textContent), hint.textContent.trim(), "mentions Halten");
-    T.ok("the locate cell shows the matching fill", $("#locateBtn").classList.contains("hinting"),
-         $("#locateBtn").className, "hinting");
-    // It sits over the map, so it must not be able to swallow anything -- neither a tap for the map nor one for
-    // the button it is pointing at.
-    T.eq("it cannot take a tap", getComputedStyle(hint).pointerEvents, "none");
-    const r = box(hint);
-    const under = document.elementFromPoint(Math.round(r.left + r.width / 2), Math.round(r.top + r.height / 2));
-    T.ok("so a tap on it reaches what is underneath", under !== hint && !hint.contains(under),
-         under ? (under.id || under.className || under.tagName) : "nothing", "not the hint");
-    T.ok("it clears the control column", r.right <= box($("#mapControls")).left + 1,
-         [Math.round(r.right), Math.round(box($("#mapControls")).left)], "left of the column");
-    T.ok("and it fits on one line", r.height < 36, Math.round(r.height), "< 36px");
-    hideFollowHint();
-    await TM.wait(300);
-    T.eq("hiding it works", opacity(), "0");
-  }
+  T.test("syncLocateChrome keeps the merged button's title honest");
+  // followMode/followDetached are module-scoped and not exposed to a test script (same limitation as
+  // lineLayers/soloId elsewhere -- see tests/README.md), so this can only exercise the function itself
+  // rather than drive both of its branches; the visibility CONTRACT (which is what actually matters, and
+  // what regressed once already when this was a separate #recenterBtn) is covered directly above via the
+  // is-detached/is-centred-following classes the function itself sets.
+  syncLocateChrome();
+  await TM.wait(50);
+  T.ok("the title is one of the two the merged button can show",
+       locateBtn.title === "Position zeigen" || locateBtn.title === "Zurück zur Position",
+       locateBtn.title, "Position zeigen | Zurück zur Position");
 
   await restore();
 });

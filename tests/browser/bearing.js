@@ -1,7 +1,7 @@
 // @suite   bearing
 // @area    Map orientation: "Norden oben" vs. "Blickrichtung oben"
 // @files   Trailmap App/index.html, Trailmap App/style.css, Trailmap App/leaflet-rotate.js
-// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, targetBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, buildDirectionArrowLayer, rescaleDirectionArrows, metresPerPixel, ARROW_MIN_ZOOM, canRotate, BEARING_MIN_DELTA_DEG, compassStillNeeded, stopFollowing, detachOrientationListener, bearingFrameSafety
+// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, targetBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, buildDirectionArrowLayer, rescaleDirectionArrows, metresPerPixel, ARROW_MIN_ZOOM, canRotate, BEARING_MIN_DELTA_DEG, compassStillNeeded, startFollowing, stopFollowing, detachOrientationListener, bearingFrameSafety, locateBtn
 // @needs   builder=off
 //
 // Rotation is the one feature here that is bolted on by a third-party file patching Leaflet's core, and its
@@ -248,51 +248,75 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     return { x: Math.round(b.left + b.width / 2), y: Math.round(b.top + b.height / 2) };
   };
   setHeadingUp(false);
-  updateUserLocation({ coords: { latitude: home.center.lat, longitude: home.center.lng, accuracy: 12, heading: null } }, false);
-  // Centre through the app's OWN path rather than a hand-written panTo: the re-centre button is what a rider
-  // taps, and its handler is the code under test. Its CSS makes it click-through only while detached, but the
-  // listener does not care.
-  TM.$("#recenterBtn").click();
-  await TM.settle(dotScreen, 3000);
-  const atNorth = dotScreen(), centre = mapCentreScreen();
-  T.ok("there is a dot to measure", !!atNorth, atNorth, "a position");
-  T.near("it is on the container centre, x", atNorth.x, centre.x, 2);
-  T.near("it is on the container centre, y", atNorth.y, centre.y, 2);
-  setHeadingUp(true);
-  const wander = [];
-  for (const deg of [45, 90, 180, 270, 315]) {
-    applyMapBearing(deg, true);
-    await TM.wait(120);
-    const d = dotScreen();
-    wander.push(Math.round(Math.hypot(d.x - atNorth.x, d.y - atNorth.y)));
-  }
-  T.eq("turning the map does not move it off that point", wander.filter((px) => px > 2), []);
-  await northAgain();
-  const back = dotScreen();
-  T.near("and switching back to north-up does not move it either",
-         Math.hypot(back.x - atNorth.x, back.y - atNorth.y), 0, 2);
+  // Centre through the app's OWN path rather than a hand-written panTo: #locateBtn is what a rider taps to
+  // reattach (merged from a separate #recenterBtn on 2026-08-15), and its handler is the code under test.
+  // followMode/followDetached are module-scoped and not reachable from here (see tests/README.md) -- so
+  // both are driven through real app code instead of poked directly: startFollowing() (with a stubbed
+  // watchPosition, same pattern the later "container that changes in steps" case already uses) sets
+  // followMode, and map.fire("dragstart") is exactly what a real drag would trigger to set followDetached.
+  const pivotRealWatch = navigator.geolocation.watchPosition;
+  const pivotRealClear = navigator.geolocation.clearWatch;
+  const pivotFixed = { latitude: home.center.lat, longitude: home.center.lng, accuracy: 12, heading: null };
+  navigator.geolocation.watchPosition = (ok) => { setTimeout(() => ok({ coords: pivotFixed }), 30); return 1; };
+  navigator.geolocation.clearWatch = () => {};
+  // Declared here, not inside the try below, since the assertions after the finally block (Leaflet holding
+  // the real size again, the pill reporting the heal) still need it.
+  let realSize;
+  try {
+    startFollowing();
+    await TM.until(() => TM.$("#liveStatus").classList.contains("live"), 3000);
+    await TM.settle(dotScreen, 3000);
+    map.fire("dragstart");                 // detach, as a real drag would
+    await TM.wait(50);
+    TM.$("#locateBtn").click();            // reattach through the app's own merged position button
+    await TM.settle(dotScreen, 3000);
+    const atNorth = dotScreen(), centre = mapCentreScreen();
+    T.ok("there is a dot to measure", !!atNorth, atNorth, "a position");
+    T.near("it is on the container centre, x", atNorth.x, centre.x, 2);
+    T.near("it is on the container centre, y", atNorth.y, centre.y, 2);
+    setHeadingUp(true);
+    const wander = [];
+    for (const deg of [45, 90, 180, 270, 315]) {
+      applyMapBearing(deg, true);
+      await TM.wait(120);
+      const d = dotScreen();
+      wander.push(Math.round(Math.hypot(d.x - atNorth.x, d.y - atNorth.y)));
+    }
+    T.eq("turning the map does not move it off that point", wander.filter((px) => px > 2), []);
+    await northAgain();
+    const back = dotScreen();
+    T.near("and switching back to north-up does not move it either",
+           Math.hypot(back.x - atNorth.x, back.y - atNorth.y), 0, 2);
 
-  T.test("centring survives a container whose size Leaflet has not noticed yet");
-  // The landscape half of the same report: after a portrait/landscape flip iOS settles the layout later than
-  // Leaflet's own debounced resize handler runs, so map.getSize() can still hold the previous orientation.
-  // Reproduced exactly here by putting a stale size back: with 375x757 cached against a real 768x320 container,
-  // panTo placed the position 58 px BELOW the bottom edge of the screen. The iOS timing is not reproducible;
-  // the stale size is, and it is the actual cause.
-  const realSize = L.point(TM.$("#map").clientWidth, TM.$("#map").clientHeight);
-  map._size = L.point(Math.round(realSize.y / 2), Math.round(realSize.x * 1.5));   // plausibly "the other orientation"
-  T.ok("the map is now holding a size that is not its container's",
-       map.getSize().y !== realSize.y, JSON.stringify(map.getSize()), "different from " + JSON.stringify(realSize));
-  TM.$("#recenterBtn").click();
-  // Wait out the settle BURST before measuring, not just for the pixels to stop moving. onViewportSettled is
-  // deliberately re-run at 150/400/900/1500 ms after a size change (iOS settles a flip in steps), so a reading
-  // taken between two of those checks can catch the view mid-repair — which is exactly what happened when this
-  // case was measured 96 px low in a combined run while passing on its own. The property under test is where the
-  // position ends up, so the measurement has to be after the last scheduled check.
-  await TM.wait(1700);
-  await TM.settle(dotScreen, 3000);
-  const healed = dotScreen(), c2 = mapCentreScreen();
-  T.near("the position still lands on the container centre, x", healed.x, c2.x, 2);
-  T.near("the position still lands on the container centre, y", healed.y, c2.y, 2);
+    T.test("centring survives a container whose size Leaflet has not noticed yet");
+    // The landscape half of the same report: after a portrait/landscape flip iOS settles the layout later than
+    // Leaflet's own debounced resize handler runs, so map.getSize() can still hold the previous orientation.
+    // Reproduced exactly here by putting a stale size back: with 375x757 cached against a real 768x320 container,
+    // panTo placed the position 58 px BELOW the bottom edge of the screen. The iOS timing is not reproducible;
+    // the stale size is, and it is the actual cause.
+    realSize = L.point(TM.$("#map").clientWidth, TM.$("#map").clientHeight);
+    map._size = L.point(Math.round(realSize.y / 2), Math.round(realSize.x * 1.5));   // plausibly "the other orientation"
+    T.ok("the map is now holding a size that is not its container's",
+         map.getSize().y !== realSize.y, JSON.stringify(map.getSize()), "different from " + JSON.stringify(realSize));
+    map.fire("dragstart");                 // detach again -- the earlier reattach reset this to false
+    await TM.wait(50);
+    TM.$("#locateBtn").click();
+    // Wait out the settle BURST before measuring, not just for the pixels to stop moving. onViewportSettled is
+    // deliberately re-run at 150/400/900/1500 ms after a size change (iOS settles a flip in steps), so a reading
+    // taken between two of those checks can catch the view mid-repair — which is exactly what happened when this
+    // case was measured 96 px low in a combined run while passing on its own. The property under test is where the
+    // position ends up, so the measurement has to be after the last scheduled check.
+    await TM.wait(1700);
+    await TM.settle(dotScreen, 3000);
+    const healed = dotScreen(), c2 = mapCentreScreen();
+    T.near("the position still lands on the container centre, x", healed.x, c2.x, 2);
+    T.near("the position still lands on the container centre, y", healed.y, c2.y, 2);
+  } finally {
+    if (typeof stopFollowing === "function") stopFollowing();
+    navigator.geolocation.watchPosition = pivotRealWatch;
+    navigator.geolocation.clearWatch = pivotRealClear;
+    await TM.wait(200);
+  }
   T.eq("and Leaflet is holding the real size again", JSON.stringify(map.getSize()), JSON.stringify(realSize));
   T.ok("the pill can report that it happened", /⇲/.test(TM.$("#liveStatusText").textContent),
        TM.$("#liveStatusText").textContent, "contains ⇲");
@@ -342,7 +366,10 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   const startHeight = mapEl.style.height;
   try {
     startFollowing();
-    await TM.until(() => TM.$("#locateBtn").classList.contains("active"), 3000);
+    // #locateBtn no longer carries an "active" class for this (removed 2026-08-14 when RIDE took over
+    // triggering follow mode) -- #liveStatus's own "live" class is startFollowing()'s own, still-current
+    // synchronous signal that following has actually started.
+    await TM.until(() => TM.$("#liveStatus").classList.contains("live"), 3000);
     map.setView(L.latLng(fixed.latitude, fixed.longitude), 15, { animate: false });
     await TM.wait(250);
     T.near("following starts with the position on the centre", dotScreen() ? Math.hypot(
