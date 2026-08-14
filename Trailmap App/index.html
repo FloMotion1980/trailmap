@@ -3173,7 +3173,12 @@ const CONNECTOR_HOVER_DELTA = 0.8;
 // hovered/base weight distinction: sized to cover a trail even at HOVER_WEIGHT so it never has to be
 // resized from setHover()/applyLineWeight() (which would mean touching every call site that changes a
 // line's weight, for a halo that's supposed to be a static ring, not something that grows with hover).
-const HALO_WEIGHT_TRAIL = HOVER_WEIGHT + 2;
+// Narrowed from +2 to +1 on 2026-08-14, once the halo widened from schwarz-only to every kind (see
+// BASE_PALETTES.sat.halo) -- at HOVER_WEIGHT (6.5) the ring is now 0.5px per side instead of 1px, still
+// enough to fully cover a hovered line (the one case this value must never undershoot, see the comment
+// above), but visibly thinner at rest (BASE_WEIGHT 3.5) now that every trail carries one, not just a
+// minority of schwarz-rated ones.
+const HALO_WEIGHT_TRAIL = HOVER_WEIGHT + 1;
 // Only the construction-time DEFAULT, matching a trail's own resting 0.85 (also hardcoded at
 // construction, see visibleSeg/line above) -- opacity is never left at this constant afterward.
 // applySolo/clearSolo/setHover/resetAllHoverStyles all call applyHaloOpacity() to keep a casing's
@@ -3191,25 +3196,23 @@ const HALO_OPACITY = 0.85;
 function trailLabelHtml(t){
   return `<span class="tl-diff" style="background:${diffColor[t.diff]}"></span>${t.name}`;
 }
-// Was a neutral mid-grey (#5a5a5a) everywhere, deliberately far from every diffColor tone (especially
-// schwarz #1c1c1c, which the old #222222 was nearly indistinguishable from) -- a connector's dash
-// pattern alone wasn't a reliable-enough visual cue that it isn't a black-rated trail stretch
-// (2026-07-24, per the user). Switched to orange on every basemap (2026-08-13): first added as bright
-// amber (#ffb300) for Satellit only, where grey turned out to collide with the imagery's own greyscale
-// patches (rock, snow, roads, shadow) regardless of shade -- then the user liked the idea enough on
-// Satellit to ask for orange "überall" (everywhere), then immediately found the same bright #ffb300 too
-// pale against "Straße"/"Straße hell"/"Relief"'s own light backgrounds and asked for a darker shade
-// there specifically (`#c9660a`), then found THAT too muted/dull ("etwas leuchtender... mehr Gelbanteil")
-// and asked for more yellow in it -- `#e08a00` is the result, a golden orange with noticeably more green
-// in the mix than `#c9660a` (0x66 -> 0x8a), still clearly darker/richer than Satellit's own bright
-// `#ffb300`. This initial value must stay byte-for-byte identical to `BASE_PALETTES.osm.connector`, same
-// invariant as `diffColor` above, since `boot()` never calls `applyBasePalette` itself; Satellit keeps
-// the original bright `#ffb300` (see its own palette entry for why darker doesn't apply there). Also
-// visually distinguishes a Tour's own connector stretches from a plain schwarz trail on every basemap
-// now, not just Satellit.
+// A full round trip back to the original neutral mid-grey (#5a5a5a), the SAME hex it started at on
+// 2026-07-24 -- deliberately far from every diffColor tone (especially schwarz #1c1c1c, which the old
+// #222222 was nearly indistinguishable from), so a dash pattern alone isn't the only cue that a stretch
+// isn't a black-rated trail. In between, it spent three weeks as orange (2026-08-13 through 2026-08-14):
+// bright amber (#ffb300) for Satellit only first, because grey collided with the imagery's own greyscale
+// patches (rock, snow, roads, shadow) regardless of shade -- then the user liked it enough to ask for
+// orange "überall", then found that same bright amber too pale against the three light basemaps and
+// wanted it darker there, then found the darker version too dull and wanted more yellow in it
+// (`#e08a00`, the result). All of that reasoning stopped applying once EVERY diff colour (not just
+// schwarz) got its own halo on Satellit, 2026-08-14 -- the halo is what now carries the contrast the
+// orange was invented for, on every basemap it exists on, so the connector no longer needs a hue of its
+// own anywhere, including Satellit itself (see `BASE_PALETTES.sat.halo.connector`). This initial value
+// must stay byte-for-byte identical to `BASE_PALETTES.osm.connector`, same invariant as `diffColor`
+// above, since `boot()` never calls `applyBasePalette` itself.
 // `let`, not `const` -- applyBasePalette() reassigns this (and the two LIFT_* colors below) when the
 // base layer changes, since a plain string can't be mutated in place the way the diffColor object is.
-let CONNECTOR_COLOR = "#e08a00"; // non-trail (fireroad/access) portion of a Trailrunde, see TRAIL_SEGMENTS
+let CONNECTOR_COLOR = "#5a5a5a"; // non-trail (fireroad/access) portion of a Trailrunde, see TRAIL_SEGMENTS
 
 // ---- Bike lift rendering ----
 // Styled after OSM's own aerialway rendering, which the user picked as the model: a THIN line with
@@ -3287,21 +3290,12 @@ const liftSelectionOutline = L.polyline([], {
   lineCap: "round", lineJoin: "round", interactive: false
 });
 
-// ---- Per-basemap color palette (2026-08-13) ----
+// ---- Per-basemap color palette (2026-08-13, widened 2026-08-14) ----
 // The trail/lift/selection colors above were tuned against OSM's own fairly light tiles. On Satellit
 // (Esri World Imagery), which is dark and low-contrast almost everywhere, the same colors -- especially
 // schwarz (#1c1c1c) and the grey lift mask -- nearly disappear into the imagery (user report). "carto"
-// ("Straße hell") and "topo" ("Relief") stay completely untouched -- the user, in order: "Strasse hell
-// ist gut so", and -- after a first attempt copied Satellit's bright colors onto Relief and the user
-// found that unhelpful, since Relief's actual problem is HUE COLLISION with OpenTopoMap's own green
-// forest fill and orange/brown contour lines, not darkness -- "Nur echten Halo, Farben wie Original
-// lassen" for Relief specifically, and a real halo there was rejected on performance grounds at the time
-// (see the halo history below for why that verdict later changed for schwarz specifically). Relief is
-// therefore pixel-identical to "osm"/"carto" for its diff colors, unsolved, rather than "fixed" with the
-// wrong kind of fix. "osm" ("Straße") got gruen/blau/rot brightened a little. The connector color is
-// amber (`#ffb300`) on EVERY basemap now, not just Satellit -- first added only there (see its own
-// comment for the grey-collision bug that motivated it), then the user liked it enough to ask for it
-// "überall" once they saw it live, independent of that original bug.
+// ("Straße hell") stays untouched -- the user: "Strasse hell ist gut so". "osm" ("Straße") got gruen/
+// blau/rot brightened a little.
 //
 // HALO HISTORY. A CSS `filter: drop-shadow(...)` halo (`tm-casing-light` body class) shipped first,
 // around every vector path on Satellit. It looked right in a desktop browser but broke on the user's own
@@ -3317,67 +3311,73 @@ const liftSelectionOutline = L.polyline([], {
 // same technique `selectionOutline` already uses for its yellow ring) was then designed but rejected
 // FOR EVERY TRAIL/CONNECTOR on performance grounds: leaflet-rotate repaints every vector path's viewBox
 // per degree turned, and doubling every trail's path count would double that per-frame cost. It came
-// back the same day, scoped down: `halo` is a PER-KIND map (`{gruen, blau, rot, schwarz, connector,
-// lift}` -> hex color or null) inside each basemap's palette entry, and only `sat.schwarz` is actually
-// set right now -- schwarz is a small minority of trails in any region, so the extra-path cost this time
-// is small, unlike "every trail on the map". See `haloKindFor()`/`HALO_ACTIVE_KINDS` below for how a
-// casing layer is only ever built for a kind that SOME basemap's `halo` entry actually uses, so adding
-// another kind later is a one-line data change, not a new code path.
+// back the same day (2026-08-13), scoped down to just `sat.schwarz` -- schwarz being a small minority of
+// trails in any region kept the extra-path cost small, unlike "every trail on the map".
+//
+// `halo` is a PER-KIND map (`{gruen, blau, rot, schwarz, connector, lift}` -> hex color or null) inside
+// each basemap's palette entry. See `haloKindFor()`/`HALO_ACTIVE_KINDS` below for how a casing layer is
+// only ever built for a kind that SOME basemap's `halo` entry actually uses, so widening it later is a
+// one-line data change per kind, not a new code path -- which is exactly what happened a day later
+// (2026-08-14): the user asked to try a halo behind every diff color, not just schwarz, on Satellit --
+// tried live rather than designed up front, kept once seen ("Das sieht gut aus, lassen wir für alles").
+// The original performance worry from 2026-08-13 turned out not to matter enough to block it in practice.
+// See the `sat` and `topo` entries below for what changed with it (connector color, lift mask/line, the
+// halo tints themselves) and why.
 const BASE_PALETTES = {
   // gruen/blau/rot match the brightened `diffColor` initial values above -- see that comment for why the
   // two must never drift apart. carto ("Straße hell") deliberately keeps the ORIGINAL, unbrightened trio
   // (the user, same message: "Strasse hell ist gut so") -- brighter was only ever wanted for "Straße".
-  // `halo` is present (all null) on every entry so a reader doesn't have to guess whether its absence
-  // means "no halo" or "forgot to migrate this palette" -- see HALO_ACTIVE_KINDS for how a null-only
-  // entry costs nothing at runtime (buildTrailLayer never even creates a casing layer for a kind no
-  // basemap ever wants).
-  // `connector` is a darker burnt-orange (#c9660a) on these three, not the bright amber Satellit uses
-  // (2026-08-13, per the user, after seeing the bright version live on all four basemaps: "Da muss das
-  // orange dunker sein" for Straße/Straße hell, "Orange kaum Sichtbar. Auch dunkler" for Relief). Bright
-  // amber (#ffb300) reads fine against Satellit's photographic imagery but is too pale against these
-  // three basemaps' own light backgrounds -- the opposite problem from the one amber was invented to
-  // solve on Satellit (grey blending into grey terrain), so it needs the opposite fix here: darker, not a
-  // different hue. `liftMaskOpacity: 0` on all three (see LIFT_MASK_OPACITY's own comment) -- the mask
-  // only ever existed to cover OSM's ("Straße") own vector aerialway rendering, and the user judged all
-  // three fine without it once seen live (Straße hell/Relief render their own aerialway differently or
-  // faintly enough not to need covering, and Satellit -- a photo, not a vector map -- never draws one at
-  // all, see the sat entry's own note).
-  osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:1, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
-  carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
-  topo:  { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  // `halo` is present (all null or all set) on every entry so a reader doesn't have to guess whether its
+  // absence means "no halo" or "forgot to migrate this palette" -- see HALO_ACTIVE_KINDS for how a
+  // null-only entry costs nothing at runtime (buildTrailLayer never even creates a casing layer for a kind
+  // no basemap ever wants). `connector` is the same neutral dark grey (#5a5a5a) on every basemap now,
+  // including Satellit -- see CONNECTOR_COLOR's own comment above for the full round trip through orange
+  // and back; the short version is that once a halo carries the contrast, the connector doesn't need a
+  // hue of its own anywhere.
+  osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftMaskOpacity:1, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  // "Relief" gets the FULL Satellit treatment now (2026-08-14) -- every diff color darkened, a halo behind
+  // every kind, the lift mask repurposed as a permanent contrast band -- because it had the same underlying
+  // problem Satellit had before its own halo: OpenTopoMap's own saturated green forest fill and orange/
+  // brown contour lines sit under a same-hue trail line, a hue collision no amount of brightening ever
+  // fixed (see the long-abandoned "Relief has no fix" gap this closes). Tried directly rather than
+  // designed from scratch, since the mechanism already existed for Satellit; the user's own verdict after
+  // seeing it live: "besser als vorher, aber Relief ist einfach schwierig. Wir lassen es so" -- an
+  // improvement, accepted as the ceiling for this basemap rather than a full fix. See the `sat` entry
+  // below for what each individual value is doing; topo's is a byte-for-byte copy of it on purpose, so if
+  // Satellit's own tuning changes again, check whether Relief should follow.
+  topo:  { diff: { gruen:"#2f9e52", blau:"#2a6fcf", rot:"#d8402a", schwarz:"#1c1c1c" }, connector:"#5a5a5a", liftMask:"#dab6f0", liftMaskOpacity:1, liftLine:"#5a5a5a", selectYellow:"#fff200", halo: { gruen:"#a8e8ba", blau:"#a9cdf5", rot:"#f5aa9d", schwarz:"#c7c7c7", connector:"#ffcc80", lift:null } },
   sat:   {
-    // schwarz is back to the plain near-black (#1c1c1c) every other basemap uses, not the #5c5c5c
-    // "lightened" compromise from earlier the same day (2026-08-13, per the user: "mit der weißen Linie
-    // kann man die schwarzen Trails auch wieder schwarz darstellen") -- now that the white halo below
-    // carries schwarz's contrast on Satellit, lightening the trail color itself is no longer needed and
-    // was only ever a workaround for not having a halo yet.
-    diff: { gruen:"#5fdd7a", blau:"#4fabff", rot:"#ff6a52", schwarz:"#1c1c1c" },
-    // The bright amber connector still fits HERE (unlike the three basemaps above): it was invented for
-    // Satellit specifically, to fix grey blending into grey/dark terrain, and that reasoning still holds.
-    // #e7e7e7 (near-white) was the very first version, reasoning Satellit is dark everywhere -- wrong,
-    // and the user caught it live: satellite imagery has plenty of BRIGHT patches too (snow, rock, sand,
-    // roads, sun-glare), and a near-white dashed line disappears into every one of them. A grey/near-
-    // white connector can never work reliably there, since rock/snow/roads/shadow are themselves
-    // greyscale -- any shade of grey collides with SOME real terrain. Amber has no natural equivalent in
-    // typical trail terrain and reads against both dark and bright patches alike -- EXCEPT the very
-    // brightest ones (snow, bright rock): a loop with no TRAIL_SEGMENTS data (drawn thin and at 0.85
-    // opacity, same style as a connector -- see buildTrailLayer's own comment on this) can still all but
-    // disappear there, which is the "Monte Corno ist komplett weiß" report on a schwarz-rated but
-    // unsegmented Dolomiti Paganella loop -- not a bug, the same contrast problem in its worst case.
-    // liftMask/liftLine were unaffected by the original grey-connector bug: back when the mask was still
-    // drawn at opacity 1 here, it fully covered the tile underneath, so the dots/hairline on top of it
-    // contrasted against the mask's own fixed color, never against whatever terrain happened to sit under
-    // that pixel -- which is also why `lift` stays null in `halo` below: a lift never needed a halo, only
-    // schwarz trails did. liftMaskOpacity is 0 here for an unrelated reason (see LIFT_MASK_OPACITY's own
-    // comment): Satellit is a photograph, not a vector map, so there is no aerialway line drawn by the
-    // tile to cover at all. liftLine is a light grey (`#d9d9d9`, not the near-black `#111111` every other
-    // basemap uses) for the same reason schwarz trails were brightened -- near-black hairline/dots read
-    // as almost nothing against Satellit's own dark terrain (rock, forest, shadow), and unlike schwarz
-    // trails a lift never got the halo treatment (the mask being invisible here means there is nothing
-    // for a lift-specific halo to sit behind anyway), so the fix here is the same "just brighten it" one
-    // used everywhere else on Satellit, per the user, 2026-08-13.
-    connector: "#ffb300", liftMask: "#f2f2f2", liftMaskOpacity: 0, liftLine: "#d9d9d9", selectYellow: "#fff200",
-    halo: { gruen:null, blau:null, rot:null, schwarz:"#ffffff", connector:null, lift:null },
+    // Every diff color is darker than the original brightened Satellit trio (2026-08-14) -- once a halo
+    // exists behind every kind (below), the halo carries the brightness/contrast job the color itself used
+    // to carry alone, so the trail color can move toward its own hue instead of toward maximum brightness.
+    // schwarz is unaffected -- it was already the same plain near-black (#1c1c1c) every other basemap
+    // uses, not the #5c5c5c "lightened" compromise from its own pre-halo design (2026-08-13).
+    diff: { gruen:"#2f9e52", blau:"#2a6fcf", rot:"#d8402a", schwarz:"#1c1c1c" },
+    // liftLine and liftMaskOpacity both changed the same day the halo widened to every kind. liftLine
+    // moved from a light grey (#d9d9d9, chosen only to beat near-black hairline/dots blending into dark
+    // terrain) to the same dark grey as the connector -- the user's own report: the light grey nearly
+    // vanished inside the yellow selection outline once selected, a problem the mask/halo fix below solves
+    // for every OTHER color but can't solve for the lift's own hairline+dots (see `lift: null` in halo).
+    // liftMaskOpacity flipping from 0 back to 1 needs its own explanation, since it looks like Straße's own
+    // reason (cover the tile's vector aerialway) but is not: Satellit is a photograph, there is nothing to
+    // cover. The point here is different -- the mask polyline (LIFT_MASK_WEIGHT, 7px) already sits BEHIND
+    // the hairline (1.1px) and dots (3.8px) in the same pane, purely by build order, which is EXACTLY the
+    // halo shape every other kind just got: a wider band in a contrasting color behind a thinner line.
+    // Turning it on needed no new rendering code at all, just this one flag -- the user's own observation
+    // ("wir haben ja die Linie für Straße, die bei den anderen Ansichten ausgeblendet ist"). Its color
+    // (#dab6f0, light violet) is deliberately its own hue, not white/light-grey like the trail halos below
+    // -- the user's own call, after trying white first and finding "weiß ist nicht das richtige für
+    // Lifte": a lift needed to read as its own kind of thing, not as another trail with a halo.
+    connector: "#5a5a5a", liftMask: "#dab6f0", liftMaskOpacity: 1, liftLine: "#5a5a5a", selectYellow: "#fff200",
+    // The halo widened from schwarz-only to every kind, and from white to each kind's own light tint, on
+    // the same day (2026-08-14) -- both the user's own idea, tried live rather than designed up front. The
+    // connector's halo is a light orange rather than a light grey/white specifically because the user
+    // tried the grey-with-white-halo connector first and rejected it: "sieht noch nicht gut aus", too
+    // little identity of its own, reading more like a map boundary than a piece of the Tour. `lift` stays
+    // null -- see liftMaskOpacity's own comment above for why a lift already has the equivalent of a halo
+    // through a completely different, pre-existing mechanism.
+    halo: { gruen:"#a8e8ba", blau:"#a9cdf5", rot:"#f5aa9d", schwarz:"#c7c7c7", connector:"#ffcc80", lift:null },
   },
 };
 // The set of "kinds" (a diff name, "connector", or "lift") that ANY basemap's `halo` wants a casing

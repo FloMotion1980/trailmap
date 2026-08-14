@@ -1,48 +1,57 @@
 // @suite   palette
-// @area    Per-basemap trail/lift/connector colors, the schwarz-only Satellit halo, the lift mask on/off
+// @area    Per-basemap trail/lift/connector colors and the geometry halo (Satellit + Relief)
 // @files   Trailmap App/index.html, Trailmap App/style.css
 // @touches applyBasePalette, repaintLineColors, syncHalo, applyHaloOpacity, applySolo, clearSolo, BASE_PALETTES, HALO, HALO_ACTIVE_KINDS, diffColor, CONNECTOR_COLOR, LIFT_LINE_COLOR, LIFT_MASK_COLOR, LIFT_MASK_OPACITY, SELECT_YELLOW, baseLayerControl
 // @needs   region=bikekingdom, builder=off
 //
-// Added 2026-08-13 per the user: on Satellit (Esri World Imagery, dark almost everywhere), the trail/lift/
-// connector colors tuned against OSM's light tiles -- especially schwarz and the grey lift mask -- nearly
-// disappear into the imagery. `diffColor`/`CONNECTOR_COLOR`/`LIFT_LINE_COLOR`/`LIFT_MASK_COLOR`/
-// `LIFT_MASK_OPACITY`/`SELECT_YELLOW`/`HALO` are all const/let inside the app's own scope and unreachable
-// here (same reason lineLayers/soloId are), so every check below reads the map's own SVG stroke/stroke-
-// width/stroke-opacity attributes, per the harness's own rule -- and that is deliberate, not a workaround:
-// it is what proves the already-built layers were actually repainted/rebuilt in place, not just that some
-// internal variable changed while the paint stayed stale.
+// Added 2026-08-13 (schwarz-only halo on Satellit), rewritten 2026-08-14 once the halo widened to every
+// kind and Relief got Satellit's whole treatment -- see CLAUDE.md's palette section for the full story,
+// including the three-week round trip the connector color took through orange and back to grey.
+// `diffColor`/`CONNECTOR_COLOR`/`LIFT_LINE_COLOR`/`LIFT_MASK_COLOR`/`LIFT_MASK_OPACITY`/`SELECT_YELLOW`/
+// `HALO` are all const/let inside the app's own scope and unreachable here (same reason lineLayers/
+// soloId are), so every check below reads the map's own SVG stroke/stroke-width/stroke-opacity
+// attributes, per the harness's own rule -- and that is deliberate, not a workaround: it is what proves
+// the already-built layers were actually repainted/rebuilt in place, not just that some internal
+// variable changed while the paint stayed stale.
 //
 // This suite drives the real #baseLayerControl chips (not applyBasePalette directly) so a bug in the click
 // wiring itself -- forgetting to call applyBasePalette() at all -- would fail it, and restores "osm" at the
 // end since changing the active basemap is shared state no other suite expects to inherit (same rule the
 // `regions` suite follows for the active region set).
 //
-// THE CONNECTOR COLOR IS NOT THE SAME EVERYWHERE, on purpose, and this bit the suite once already: amber
-// (#ffb300) was first added only for Satellit (grey blended into the imagery's own greyscale patches --
-// rock, snow, roads, shadow -- regardless of shade), then the user asked for orange "überall" once they
-// liked it live there, then immediately found that SAME bright amber too pale against "Straße"/"Straße
-// hell"/"Relief"'s own light backgrounds and asked for a darker shade specifically THERE. So: osm/carto/
-// topo get a darker burnt-orange (#e08a00), sat keeps the original bright #ffb300 -- check the right one
-// per basemap, never assume "connector = the same hex everywhere".
+// THE CONNECTOR COLOR IS THE SAME EVERYWHERE NOW (#5a5a5a, dark grey), on purpose, and this suite once
+// checked the opposite on purpose too -- worth knowing if this changes again: it spent 2026-08-13 through
+// 2026-08-14 as three different oranges (bright amber on Satellit only, then "überall", then two rounds
+// of darkening for the three light basemaps) before a full round trip back to the original grey, once a
+// halo existed everywhere to carry the contrast job orange was invented for. Don't assume grey is safe
+// again on a basemap that has NO halo behind it -- it was specifically the halo's arrival that made grey
+// work on Satellit a second time.
+//
+// A HALO IS A CASING POLYLINE PER KIND (diff name / "connector" / "lift"), sized by `HALO_WEIGHT_TRAIL`
+// (currently 7.5 -- HOVER_WEIGHT+1, narrowed from +2 the same day the halo widened from schwarz-only to
+// every kind). `HALO_ACTIVE_KINDS` decides which kinds get a casing layer built at all; right now that's
+// every kind except `lift` on topo and sat, and nothing on osm/carto. Width 7.5 is therefore a reliable
+// fingerprint for "this path is a halo casing", regardless of which kind or which basemap -- no other
+// path in the overlay pane uses that width (trail lines are 3.5/6.5, connectors 2.2/3.0).
+//
+// A LIFT'S CONTRAST COMES FROM A DIFFERENT, PRE-EXISTING MECHANISM, NOT A HALO CASING. Its own grey mask
+// polyline (LIFT_MASK_WEIGHT, 7px wide) already sits behind the 1.1px hairline and 3.8px dots, in the same
+// pane, purely by build order -- structurally identical to a halo. `LIFT_MASK_OPACITY` toggles it: 1 on
+// osm (covers OSM's own vector aerialway rendering), 0 on carto (nothing to cover, and no contrast band
+// wanted), 1 on topo/sat (repurposed as a permanent contrast band, once the user noticed the shape already
+// existed -- "wir haben ja die Linie für Straße, die bei den anderen Ansichten ausgeblendet ist"). Its
+// color on topo/sat is light violet (`#dab6f0`), not white, specifically so a lift reads as its own kind
+// of thing rather than another trail with a halo (the user tried white first and rejected it). `lift`
+// stays `null` in every basemap's `halo` map for this reason -- there is nothing to build for it.
 //
 // HALO HISTORY, worth knowing before touching this again. A CSS `filter: drop-shadow` contrast halo shipped
 // first, on every vector path on Satellit -- reverted the same day, since it broke on the user's iPhone in
 // Safari (no glow on trails, an opaque white background on lifts), a long-standing WebKit bug combining CSS
 // `filter` with an ancestor `transform` (every Leaflet pane, plus leaflet-rotate's rotate()). A geometry-
 // based halo for EVERY trail/connector was designed next but rejected on performance grounds before being
-// built (doubling the per-frame path count during rotation). It came back the same day, scoped down: a
-// casing layer is only ever built for a "kind" (diff name / "connector" / "lift") that SOME basemap's
-// `halo` entry actually uses -- right now that's just `sat.schwarz`, a small minority of trails in any
-// region. Once the halo existed, schwarz's OWN color went back to plain near-black (#1c1c1c) on Satellit
-// too (it had been lightened to #5c5c5c as a stopgap before the halo existed) -- the halo carries the
-// contrast now, so lightening the trail color itself was no longer needed.
-//
-// THE LIFT MASK IS OSM-ONLY NOW. It only ever existed to cover "Straße"'s (OSM's) own vector rendering of
-// the aerialway line; the user judged Straße hell/Relief fine without it once seen live, and Satellit is a
-// PHOTOGRAPH with no vector aerialway line to cover at all. `LIFT_MASK_OPACITY` is 1 on osm, 0 everywhere
-// else -- the mask layer itself still always exists (cheaper than the halo's add/remove dance), just
-// invisible on three of the four basemaps.
+// built (doubling the per-frame path count during rotation). It came back the same day, scoped down to
+// just `sat.schwarz` -- and widened to every kind, on Satellit AND Relief, a day later once the original
+// performance worry turned out not to matter enough to block it in practice.
 
 TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [data-layer='sat']") &&
        TM.ui.cardNamed("liftCards", /./) && TM.ui.cardNamed("tourCards", /./), async (T) => {
@@ -55,65 +64,94 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   const strokeCountOp = (layers, color, opacity) => layers.filter((p) =>
     (p.getAttribute("stroke") || "").toLowerCase() === color &&
     (p.getAttribute("stroke-opacity") || "1") === String(opacity)).length;
+  // Width 7.5 (HALO_WEIGHT_TRAIL) is a reliable fingerprint for "this path is a halo casing", regardless
+  // of colour or kind -- see the suite header for why no other overlay-pane path shares that width.
+  const haloWidthCount = () => overlay().filter((p) => p.getAttribute("stroke-width") === "7.5").length;
   const setBase = async (key) => {
     const chip = TM.$(`#baseLayerControl [data-layer='${key}']`);
     if (!chip.classList.contains("active")) { chip.click(); await TM.wait(200); }
   };
 
-  T.test("starts on osm: darker connector, schwarz near-black, lift mask visible");
+  T.test("starts on osm: dark grey connector, brightened diff trio, lift mask visible, no halo anywhere");
   await setBase("osm");
   const greenOsm = strokeCount(overlay(), "#4fa85e");
   T.ok("green trails present", greenOsm > 0, greenOsm, "> 0");
-  const maskOsm = strokeCountOp(band(), "#cfcfcf", 1);
-  T.ok("lift masks present and fully opaque on osm", maskOsm > 0, maskOsm, "> 0");
+  const blauOsm = strokeCount(overlay(), "#2f74c0");
+  T.ok("blau trails present", blauOsm > 0, blauOsm, "> 0");
+  const rotOsm = strokeCount(overlay(), "#d9483c");
+  T.ok("rot trails present", rotOsm > 0, rotOsm, "> 0");
   const schwarzOsm = strokeCount(overlay(), "#1c1c1c");
   T.ok("schwarz trails present, near-black", schwarzOsm > 0, schwarzOsm, "> 0");
-  T.eq("no white halo on osm", strokeCount(overlay(), "#ffffff", 8.5), 0);
-  const connectorsOsm = strokeCount(overlay(), "#e08a00");
-  T.ok("connectors present, the DARKER burnt-orange (not sat's bright amber)", connectorsOsm > 0, connectorsOsm, "> 0");
-  T.eq("no bright sat amber leaking onto osm", strokeCount(overlay(), "#ffb300"), 0);
+  const maskOsm = strokeCountOp(band(), "#cfcfcf", 1);
+  T.ok("lift masks present and fully opaque on osm", maskOsm > 0, maskOsm, "> 0");
+  // Width 2.2 (CONNECTOR_WEIGHT) disambiguates a connector from a Tour's own lift hairline, which shares
+  // this exact color on topo/sat (see checkSatLikeTreatment below) but never this width (1.1 or 3.8).
+  const connectorsOsm = strokeCount(overlay(), "#5a5a5a", 2.2);
+  T.ok("connectors present, the dark grey", connectorsOsm > 0, connectorsOsm, "> 0");
+  T.eq("no halo casing anywhere on osm", haloWidthCount(), 0);
+  T.eq("no leftover amber connector from the old orange scheme", strokeCount(overlay(), "#ffb300"), 0);
+  T.eq("no leftover burnt-orange connector either", strokeCount(overlay(), "#e08a00"), 0);
 
-  T.test("carto and topo: same darker connector as osm, lift mask invisible (opacity 0, not removed)");
+  T.test("carto: same dark grey connector, ORIGINAL unbrightened trio, lift mask invisible, no halo");
   await setBase("carto");
-  T.eq("carto connector matches osm's dark orange", strokeCount(overlay(), "#e08a00"), connectorsOsm);
+  T.eq("carto connector matches osm's dark grey", strokeCount(overlay(), "#5a5a5a", 2.2), connectorsOsm);
   T.eq("carto lift masks are transparent, same count as osm's opaque ones", strokeCountOp(band(), "#cfcfcf", 0), maskOsm);
+  T.eq("carto gruen is the ORIGINAL unbrightened one, not osm's brightened gruen", strokeCount(overlay(), "#3f8a4c"), greenOsm);
+  T.eq("no halo casing on carto either", haloWidthCount(), 0);
+
+  // Relief ("topo") and Satellit ("sat") are byte-for-byte the same treatment as of 2026-08-14 -- Relief
+  // had the same underlying hue-collision problem Satellit's halo already fixed, so it was given the
+  // identical configuration wholesale rather than a separate design. One function checks both.
+  const checkSatLikeTreatment = (label) => {
+    T.eq(`${label}: no old osm-brightened gruen leaking in`, strokeCount(overlay(), "#4fa85e"), 0);
+    T.eq(`${label}: no old unbrightened carto/topo gruen left either`, strokeCount(overlay(), "#3f8a4c"), 0);
+    T.eq(`${label}: gruen is the darker shade, same count`, strokeCount(overlay(), "#2f9e52"), greenOsm);
+    T.eq(`${label}: blau is the darker shade, same count`, strokeCount(overlay(), "#2a6fcf"), blauOsm);
+    T.eq(`${label}: rot is the darker shade, same count`, strokeCount(overlay(), "#d8402a"), rotOsm);
+    T.eq(`${label}: schwarz stays near-black -- the halo carries the contrast now, not a lightened color`,
+         strokeCount(overlay(), "#1c1c1c"), schwarzOsm);
+    // Width-filtered -- on topo/sat, a Tour's own lift hairline/dots share this exact color now (see the
+    // lift-line check below), and without the width filter they'd inflate this count.
+    T.eq(`${label}: connector unchanged -- same dark grey as every other basemap`, strokeCount(overlay(), "#5a5a5a", 2.2), connectorsOsm);
+    T.eq(`${label}: gruen halo matches gruen trail count`, strokeCount(overlay(), "#a8e8ba", 7.5), greenOsm);
+    T.eq(`${label}: blau halo matches blau trail count`, strokeCount(overlay(), "#a9cdf5", 7.5), blauOsm);
+    T.eq(`${label}: rot halo matches rot trail count`, strokeCount(overlay(), "#f5aa9d", 7.5), rotOsm);
+    T.eq(`${label}: schwarz halo matches schwarz trail count`, strokeCount(overlay(), "#c7c7c7", 7.5), schwarzOsm);
+    T.eq(`${label}: connector halo matches connector count`, strokeCount(overlay(), "#ffcc80", 7.5), connectorsOsm);
+    T.eq(`${label}: no leftover plain-white halo from the schwarz-only pre-widening design`, strokeCount(overlay(), "#ffffff", 7.5), 0);
+    T.ok(`${label}: lift masks are opaque violet -- reused as the lift's own contrast band`,
+         strokeCountOp(band(), "#dab6f0", 1) > 0, strokeCountOp(band(), "#dab6f0", 1), "> 0");
+    T.ok(`${label}: lift hairline/dots are the same dark grey as the connector`,
+         strokeCountOp(band(), "#5a5a5a", 1) > 0, strokeCountOp(band(), "#5a5a5a", 1), "> 0");
+    T.eq(`${label}: no leftover light-grey lift line (lost inside the yellow selection outline)`, strokeCountOp(band(), "#d9d9d9", 1), 0);
+    T.eq(`${label}: no leftover near-white lift mask from before it became the contrast band`, strokeCountOp(band(), "#f2f2f2", 1), 0);
+  };
+
+  T.test("switching to Relief: Satellit's whole configuration, applied wholesale");
   await setBase("topo");
-  T.eq("topo connector matches too", strokeCount(overlay(), "#e08a00"), connectorsOsm);
-  T.eq("topo lift masks are transparent too", strokeCountOp(band(), "#cfcfcf", 0), maskOsm);
-  T.eq("topo gruen is the ORIGINAL unbrightened one, not osm's brightened gruen", strokeCount(overlay(), "#3f8a4c"), greenOsm);
+  checkSatLikeTreatment("topo");
 
-  T.test("switching to Satellit: bright amber connector, schwarz stays near-black WITH a halo, lift mask invisible");
+  T.test("switching to Satellit: the identical configuration");
   await setBase("sat");
-  T.eq("no dark osm/carto/topo connector left", strokeCount(overlay(), "#e08a00"), 0);
-  T.eq("bright amber connector, same count", strokeCount(overlay(), "#ffb300"), connectorsOsm);
-  T.eq("no old osm gruen", strokeCount(overlay(), "#4fa85e"), 0);
-  T.eq("brighter sat gruen, same count", strokeCount(overlay(), "#5fdd7a"), greenOsm);
-  T.eq("schwarz is STILL near-black on Satellit -- the halo carries contrast now, not a lightened color",
-       strokeCount(overlay(), "#1c1c1c"), schwarzOsm);
-  T.eq("no leftover lightened #5c5c5c schwarz from the pre-halo design", strokeCount(overlay(), "#5c5c5c"), 0);
-  T.eq("exactly that many white halos appear behind schwarz, at the fixed halo weight",
-       strokeCount(overlay(), "#ffffff", 8.5), schwarzOsm);
-  T.eq("lift masks transparent on Satellit too (it's a photo, nothing to cover)", strokeCountOp(band(), "#f2f2f2", 0), maskOsm);
-  // Light grey (#d9d9d9), not the near-black #111111 every other basemap uses -- near-black hairline/
-  // dots read as almost nothing against Satellit's own dark terrain, the same "brighten it" fix schwarz
-  // trails got before they had a halo (2026-08-13, per the user).
-  T.eq("the lift symbol is light grey on Satellit, not near-black", strokeCountOp(band(), "#d9d9d9", 1) > 0, true, true);
-  T.eq("no near-black lift symbol left over from the osm/carto/topo color", strokeCountOp(band(), "#111111", 1), 0);
+  checkSatLikeTreatment("sat");
 
-  T.test("selecting a Tour that rides a lift must NOT force that lift's mask back to opaque");
+  T.test("selecting a Tour riding a lift must NOT force that lift's mask past LIFT_MASK_OPACITY -- exercised on carto, the one basemap left where the mask must stay hidden");
   // applyLiftSegmentOpacity() sets every lift segment's opacity to 1 when its OWN Tour is the soloed one
   // (which selecting a Tour does) -- but `liftSegments` is a flat [mask, hairline, dots, ...] repeat, and
   // the mask specifically must stay capped at LIFT_MASK_OPACITY regardless, or selecting/soloing a Tour
-  // riding a lift forces that lift's mask back to fully opaque on every basemap where it's supposed to be
+  // riding a lift forces that lift's mask back to fully opaque on a basemap where it's supposed to stay
   // invisible. Reported by the user as "Lifte die in einer Tour verwendet werden haben weiterhin den
   // grauen [weißen] Strich" -- specifically AFTER selecting the Tour, which is the tell: the mask was
-  // already correctly invisible before that, only selection forced it back.
+  // already correctly invisible before that, only selection forced it back. Used to be exercised on
+  // Satellit, back when Satellit's own LIFT_MASK_OPACITY was 0 too; now that topo/sat both keep the mask
+  // permanently visible, carto is the only basemap left where this cap is not a no-op.
+  await setBase("carto");
   {
     const maskOpacities = () => new Set(band()
       .filter((p) => p.getAttribute("stroke-width") === "7")
       .map((p) => p.getAttribute("stroke-opacity") || "1"));
     const before = maskOpacities();
-    T.ok("at rest, no lift mask is opaque on Satellit", ![...before].some((op) => parseFloat(op) > 0.5), [...before], "nothing > 0.5");
+    T.ok("at rest, no lift mask is opaque on carto", ![...before].some((op) => parseFloat(op) > 0.5), [...before], "nothing > 0.5");
     const tourRidingLift = TM.ui.tourCards().find((c) => /615|616|617|Biketicket/i.test(c.textContent));
     if (!tourRidingLift) {
       T.skip("no Tour riding a lift active right now");
@@ -129,20 +167,17 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
 
   T.test("a schwarz trail's halo dims together with its own line under solo mode -- the Monte Corno bug");
   // applyLineWeight() only ever touched a trail's own styleTarget, never its casing -- so a solo-dimmed
-  // schwarz trail's line faded to SOLO_DIM_OPACITY while its white halo kept glowing at HALO_OPACITY,
-  // right where the actual line used to be. Reported by the user as "Monte Corno wird komplett weiß" on
+  // schwarz trail's line faded to SOLO_DIM_OPACITY while its halo kept glowing at HALO_OPACITY, right
+  // where the actual line used to be. Reported by the user as "Monte Corno wird komplett weiß" on
   // Satellit, and only once Monte Corno itself was selected: Monte Corno is an unsegmented loop and never
   // has a halo of its own (see buildTrailLayer's own comment on why), but selecting ANY loop solos it,
   // which dimmed a schwarz trail lying near/under Monte Corno's own path while leaving that trail's halo
   // untouched. Needs at least one schwarz trail that ISN'T the soloed one to observe the dimming on.
+  await setBase("sat");
   {
     const schwarzHaloOpacities = () => new Set(overlay()
-      .filter((p) => (p.getAttribute("stroke") || "").toLowerCase() === "#ffffff" && p.getAttribute("stroke-width") === "8.5")
+      .filter((p) => (p.getAttribute("stroke") || "").toLowerCase() === "#c7c7c7" && p.getAttribute("stroke-width") === "7.5")
       .map((p) => p.getAttribute("stroke-opacity") || "1"));
-    // T.ok, not T.eq: the first argument after the label is a CONDITION here, and T.eq compares it against
-    // the third argument for equality -- so this read `true === ["0.85"]` and could never pass. It has been
-    // failing since the case was written (2026-08-13, ddec83e), which is worse than a missing check: a suite
-    // with a permanently red line trains everyone to skim past the red.
     T.ok("at rest, every schwarz halo is at the same (non-solo) opacity", schwarzHaloOpacities().size <= 1,
          [...schwarzHaloOpacities()], "at most one distinct value");
     const anyOtherTrail = TM.ui.trailCards().find((c) => !/Corno/i.test(c.textContent)) || TM.ui.trailCards()[0];
@@ -169,13 +204,13 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   T.test("selecting a schwarz trail suppresses ITS OWN halo -- the yellow selection ring doesn't need it");
   // The user's own follow-up, after the solo-dimming fix above: a selected trail is already as prominent
   // as the map gets (the yellow selectionOutline), so its contrast halo is redundant while selected, and
-  // the two rings sitting almost exactly the same width apart (9.5 vs 8.5) looked cluttered together.
-  // Suppressing (removing) the halo rather than fighting Leaflet z-order to make the wider yellow ring
-  // paint over the narrower white one sidesteps a real ordering problem: `layer.line.bringToFront()`
-  // brings a segmented Trailrunde's whole featureGroup -- including any attached segment casings --
-  // forward together, which would drag a halo back in front of the outline it was meant to hide behind.
+  // the two rings sitting close together looked cluttered. Suppressing (removing) the halo rather than
+  // fighting Leaflet z-order to make the wider yellow ring paint over the narrower one sidesteps a real
+  // ordering problem: `layer.line.bringToFront()` brings a segmented Trailrunde's whole featureGroup --
+  // including any attached segment casings -- forward together, which would drag a halo back in front of
+  // the outline it was meant to hide behind.
   {
-    const haloCount = () => strokeCount(overlay(), "#ffffff", 8.5);
+    const haloCount = () => strokeCount(overlay(), "#c7c7c7", 7.5);
     const before = haloCount();
     const schwarzCard = TM.ui.trailCards().find((c) => c.querySelector(".badge.schwarz"));
     if (!schwarzCard) {
@@ -224,25 +259,30 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   closeInfoPanelAndDeselect();
   await TM.wait(150);
 
-  T.test("switching back to osm round-trips every color/opacity exactly, nothing left stuck on the sat palette");
+  T.test("switching back to osm round-trips every color/opacity exactly, nothing left stuck on the sat/topo palette");
   await setBase("osm");
   T.eq("gruen restored, same count", strokeCount(overlay(), "#4fa85e"), greenOsm);
-  T.eq("no sat gruen left", strokeCount(overlay(), "#5fdd7a"), 0);
-  T.eq("connector back to the darker orange, same count", strokeCount(overlay(), "#e08a00"), connectorsOsm);
-  T.eq("no bright sat amber left", strokeCount(overlay(), "#ffb300"), 0);
+  T.eq("no sat/topo gruen left", strokeCount(overlay(), "#2f9e52"), 0);
+  T.eq("connector still the same dark grey, same count", strokeCount(overlay(), "#5a5a5a", 2.2), connectorsOsm);
   T.eq("lift masks opaque again, same count", strokeCountOp(band(), "#cfcfcf", 1), maskOsm);
-  T.eq("schwarz unchanged throughout (it was never lightened on osm)", strokeCount(overlay(), "#1c1c1c"), schwarzOsm);
-  T.eq("every white halo is gone again, not just recolored", strokeCount(overlay(), "#ffffff", 8.5), 0);
+  T.eq("schwarz unchanged throughout (it was never recolored on osm)", strokeCount(overlay(), "#1c1c1c"), schwarzOsm);
+  T.eq("every halo casing is gone again, not just recolored", haloWidthCount(), 0);
+  T.eq("lift line back to near-black, no dark-grey left from sat/topo", strokeCountOp(band(), "#5a5a5a", 1), 0);
+  T.eq("lift mask back to plain grey, no violet left from sat/topo", strokeCountOp(band(), "#dab6f0", 1), 0);
 
   T.test("an unknown basemap key falls back to the osm palette (colors, halo, AND mask opacity) rather than leaving stale state");
   // Not reachable through the UI (every chip's data-layer is a real key) -- calls the function directly,
-  // which plain function declarations allow (see the harness notes on Annex B).
+  // which plain function declarations allow (see the harness notes on Annex B). The connector can no
+  // longer be the differentiator here (it's the same #5a5a5a on every basemap now, including sat) -- gruen,
+  // the halo, and the lift mask still change per basemap, so those carry this check instead.
   await setBase("sat");
   applyBasePalette("not-a-real-basemap-key");
   await TM.wait(50);
-  T.eq("colors fall back to osm's dark connector", strokeCount(overlay(), "#e08a00"), connectorsOsm);
-  T.eq("the halo falls back to off, not left on from sat", strokeCount(overlay(), "#ffffff", 8.5), 0);
-  T.eq("the lift mask falls back to opaque, not left transparent from sat", strokeCountOp(band(), "#cfcfcf", 1), maskOsm);
+  T.eq("colors fall back to osm's brightened gruen", strokeCount(overlay(), "#4fa85e"), greenOsm);
+  T.eq("sat's own darker gruen is gone", strokeCount(overlay(), "#2f9e52"), 0);
+  T.eq("the halo falls back to off, not left on from sat", haloWidthCount(), 0);
+  T.eq("the lift mask falls back to osm's opaque grey, not left violet from sat", strokeCountOp(band(), "#cfcfcf", 1), maskOsm);
+  T.eq("no violet lift mask left over", strokeCountOp(band(), "#dab6f0", 1), 0);
   applyBasePalette("osm"); // leave state consistent with the chip UI, which still reads "sat" until re-clicked
   await setBase("osm");
 });

@@ -22,6 +22,34 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-14
+- **Connector back to plain dark grey everywhere, and the contrast halo widened from schwarz-only to
+  every trail/connector/lift on Satellit and Relief.** Both tried live at the user's own initiative,
+  neither designed up front. The connector (`#e08a00` at the start of the day) was reported as low-
+  contrast in bright sun on Straße/Straße hell; the user asked for the original dark grey (`#5a5a5a`)
+  back — and once a halo made every colour's own contrast case for a separate connector hue redundant, it
+  went onto Satellit too, closing out a three-week round trip through orange (`CLAUDE.md` keeps the full
+  history so nobody reinvents it). The halo itself widened the same day: white behind every diff colour
+  first, narrowed a step further once the user found plain white "zu neutral" — gruen/blau/rot now get
+  their own light tint, the diff colours themselves went darker to compensate, and the connector's halo
+  is a light orange after a grey-with-white-halo connector was rejected outright ("sieht noch nicht gut
+  aus", read as a map boundary rather than part of a Tour). The ring itself is narrower too
+  (`HALO_WEIGHT_TRAIL` +1 instead of +2), now that it covers every trail instead of a schwarz minority.
+- **Lifts get the same contrast band, for free — by turning ON a layer that already existed rather than
+  building a new one.** The user's own observation: "wir haben ja die Linie für Straße, die bei den
+  anderen Ansichten ausgeblendet ist" — a lift's own grey MASK polyline (7px, sitting behind the 1.1px
+  hairline and 3.8px dots in the same pane, by build order) is structurally identical to a halo casing.
+  `liftMaskOpacity` flipped from 0 to 1 on Satellit/Relief is the entire change; its colour went white
+  first, then light violet (`#dab6f0`) once white was rejected ("weiß ist nicht das richtige für Lifte")
+  — a lift needed to read as its own kind of thing, not as another trail with a halo. Lift hairline/dots
+  moved to the same dark grey as the connector too, separately: light grey (`#d9d9d9`) nearly vanished
+  inside the yellow selection outline once a lift was selected.
+- **Relief got Satellit's entire configuration wholesale, closing a gap open since 2026-08-13.** Tried
+  directly rather than designed from scratch, since the underlying problem — hue collision with
+  OpenTopoMap's own green/orange, not darkness — is exactly what Satellit's halo already fixed for a
+  different reason. Verdict after seeing it live: "besser als vorher, aber Relief ist einfach schwierig.
+  Wir lassen es so" — an improvement, accepted as the ceiling for this basemap rather than a full fix.
+  `tests/browser/palette.js` rewritten for the new final colours/values, mutation-checked (`tests/
+  MUTATIONS.md`).
 - **A Tour's segment hit areas moved into their own Leaflet pane (`tourSegHitPane`, z-index 405), which
   closes the segment-click bug structurally instead of by ordering discipline.** Clicking a Tour's stretch gave
   the plain trail's panel until the Tour had been selected once — because `lineTrails` order IS the map's
