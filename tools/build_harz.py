@@ -24,10 +24,11 @@ Enduro, 2.3 m from its start, despite sharing no word with it.
 St. Andreasberg resolved cleanly and completely: Trailforks carries the park's own `#1`-`#6`/`#9` numbers,
 and `msbx-6`'s own description ("#6 is the easiest of the steep routes, several options to cross over to #4
 and #5") confirms they are the same numbering the operator publishes -- so all eight get their official
-name. Difficulty is Trailforks' own per-trail rating throughout, the same rule the user set for Finale
-Ligure (see `finale-difficulty-realignment`): it is the only source that is per-trail, consistent across
-all six parks, and maps 1:1 onto this app's four colours. Where the operator's own word disagrees it is
-noted inline; those are the lines to revisit if the user ever wants the operator's scale instead.
+name. Difficulty was Trailforks' own per-trail rating throughout when this region was first built (the rule
+the user set for Finale Ligure, see `finale-difficulty-realignment`); **since 2026-08-14 the operator's own
+published grade wins wherever there is one**, per the user's standing rule -- see `OPERATOR_DIFF` below for
+which parks publish one at all, how a three-step German scale maps onto this app's four colours, and which
+trails are therefore left on Trailforks' rating.
 
 `len` is the geometry's own length, not the operator's published figure, wherever the two disagree by more
 than rounding -- the published numbers are marketing-rounded and several of them (Braunlage's Freeride at
@@ -105,6 +106,55 @@ SECTION_DIFF = {
     "downhill-middle-section": "Intermediate", "enduro-lower": "Difficult", "enduro-upper": "Difficult",
     "evil-rocks-upper": "Severe", "freeride-lower": "Difficult", "freeride-upper": "Difficult",
     "singletrail-lower": "Severe", "wurmberg-roller-upper-dh": "Easy",
+}
+
+# The OPERATOR's own published grade, which WINS over Trailforks wherever it exists and the trail is mapped
+# to the operator's own name with certainty -- the user's standing rule (2026-08-14), replacing the
+# Trailforks-throughout rule this region was first built to.
+#
+# Only three of the six parks publish a grade at all (all six operator pages re-checked 2026-08-14):
+# St. Andreasberg's numbered 1-9 list, Trailpark Ilsenburg's six, and Bodetal's prose. Hahnenklee,
+# Schulenberg and Braunlage publish NONE -- Braunlage's own coloured dots are trail MARKINGS, not grades,
+# which its Enduro's Trailforks description confirms ("official trail number 4, white markings") -- so those
+# three keep Trailforks' rating and there is nothing here to override.
+#
+# The operator scale is three-step (leicht / mittel / schwer) against this app's four colours, so it maps
+# onto the app's OWN labels rather than onto Trailforks' tiers: leicht -> blau ("Leicht"), mittel -> rot
+# ("Mittel"), schwer -> schwarz ("Schwer"). No operator here says "sehr leicht", so `gruen` is simply never
+# reached this way -- a park's easiest line being blau is the honest reading of "leicht", not a lost tier.
+# A trail the operator rates across TWO steps ("leicht / mittel", "mittel / schwer") takes the HARDER one:
+# the user's own call, and the same direction `max()` already resolves a merged trail's sections in.
+#
+# Each entry carries the operator's own wording next to the colour, so the mapping is auditable without
+# re-fetching six pages.
+OPERATOR_DIFF = {
+    # ---- Bikepark St. Andreasberg -- bikepark-andreasberg.de/trails, its own numbered 1-9 list ---------
+    "hz_ab_flowtrail": ("leicht", "blau"),
+    "hz_ab_singletrail": ("leicht / mittel", "rot"),
+    "hz_ab_funride": ("mittel", "rot"),
+    "hz_ab_freeride": ("schwer", "schwarz"),
+    "hz_ab_enduro": ("mittel / schwer", "schwarz"),
+    "hz_ab_downhill": ("schwer", "schwarz"),
+    "hz_ab_jump_line": ("mittel / schwer", "schwarz"),
+    # `Loam Line` is absent from the operator's list (unnumbered on Trailforks, and no length match to the
+    # unnumbered #7 Super Enduro), so no operator grade applies and it keeps Trailforks' Difficult/rot.
+
+    # ---- Trailpark Harz (Ilsenburg) -- trailparkharz.de -----------------------------------------------
+    # Only these two map to an operator name with certainty (see TRAILS below), and both were already
+    # schwarz -- listed anyway to record that the operator WAS checked and agrees. Eselsstieg and
+    # Stumpfrücken-Trail cannot be mapped to an operator name at all, so no operator grade exists for them.
+    "hz_tp_jack_the_ripper": ("schwer", "schwarz"),
+    "hz_tp_wassertal": ("schwer", "schwarz"),
+
+    # ---- Bikepark Bodetal (Rosstrappe) -- bikepark-bodetal.de, stated in prose rather than as grades ---
+    # Brunhildenritt is graded across its own length ("im oberen Teil leichten, im unteren Teil
+    # mittelschweren Enduro-Trail"), which is the same two-step case as St. Andreasberg's: the harder half
+    # decides.
+    "hz_bt_brunhildenritt": ("oben leicht / unten mittelschwer", "rot"),
+    "hz_bt_harzer_roller": ("leichte Strecke", "blau"),
+    "hz_bt_bodopass": ("weitere leichte Strecke", "blau"),
+    # 04 Rosstrappendownhill and 04a Felsenweg carry no operator wording, and `Bodetrail` is not one of the
+    # park's own numbered trails at all -- all three keep Trailforks' rating.
 }
 
 # (id, display name, sub-region, [section slugs in ride order])
@@ -190,7 +240,7 @@ TRAILS = [
      ["msbx2-wurzeltrail-upper", "msbx2-wurzeltrail-lower"]),
     ("hz_ab_funride", "Funride (3) – North Shore", "andreasberg",
      ["msbx-north-shore-upper", "msbx-north-shore-lower"]),
-    # Operator: "schwer". Trailforks: Difficult/Red. Kept at Trailforks' rating, as everywhere here.
+    # Operator: "schwer". Trailforks: Difficult/Red. The operator wins since 2026-08-14 -- see OPERATOR_DIFF.
     ("hz_ab_freeride", "Freeride (4) – Schwarzer Keiler", "andreasberg", ["schwarzer-keiler"]),
     ("hz_ab_enduro", "Enduro Trail (5)", "andreasberg", ["msbx-enduro"]),
     ("hz_ab_downhill", "Downhill Trail (6)", "andreasberg", ["msbx-6"]),
@@ -247,6 +297,19 @@ def chain(geo, slugs, trail_id):
     return out, joints
 
 
+def resolve_diff(trail_id, slugs):
+    """The colour a trail is built with, as (diff, trailforks_diff, operator_wording).
+
+    Two rules in one place: the operator's own published grade WINS wherever OPERATOR_DIFF has one, and a
+    trail Trailforks split into sections takes the HARDEST of those sections' ratings (a trail is only as
+    easy as its hardest stretch). `trailforks_diff` is returned alongside so a caller can report where the
+    two sources disagree instead of silently discarding one of them.
+    """
+    tf = TF_DIFF[max((SECTION_DIFF[s] for s in slugs), key=lambda d: DIFF_ORDER.index(TF_DIFF[d]))]
+    wording, diff = OPERATOR_DIFF.get(trail_id, (None, tf))
+    return diff, tf, wording
+
+
 def main():
     geo_src = json.load(open(GEO_SRC, encoding="utf-8"))
     missing = [s for _, _, _, ss in TRAILS for s in ss if s not in geo_src]
@@ -258,11 +321,13 @@ def main():
     trails, geo, profs = [], {}, {}
     for trail_id, name, region, slugs in TRAILS:
         raw, joints = chain(geo_src, slugs, trail_id)
-        diff = max((SECTION_DIFF[s] for s in slugs), key=lambda d: DIFF_ORDER.index(TF_DIFF[d]))
-        entry, coords, prof = build_trail(trail_id, name, region, TF_DIFF[diff], raw, elevation=ele)
+        diff, tf, wording = resolve_diff(trail_id, slugs)
+        entry, coords, prof = build_trail(trail_id, name, region, diff, raw, elevation=ele)
         trails.append(entry)
         geo[trail_id] = coords
         profs[trail_id] = prof
+        if wording and diff != tf:
+            print("%-28s Betreiber: %-26s -> %-7s (Trailforks: %s)" % (trail_id, wording, diff, tf))
         note = ("  joints: " + ", ".join("%s +%.1fm" % (s, g) for s, g in joints)) if joints else ""
         print("%-28s %-32s %-7s %5.2f km  +%3d/-%3d m  %3d pts%s"
               % (trail_id, name, entry["diff"], entry["len"], entry["up"], entry["down"],

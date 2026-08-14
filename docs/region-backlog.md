@@ -64,10 +64,22 @@ Added to the list later the same day (no order given beyond "also on the list"):
      **Brunhildenritt and Harzer Roller physically share** (which is why Trailforks has no "Brunhildenritt
      3"; the user knew this independently), and `senduro-entry` is Wildpig Enduro's entry despite sharing
      no word with it.
-   - **Difficulty is Trailforks' own per-trail rating throughout**, the rule the user set for Finale
-     Ligure. Where an operator's own word disagrees it is noted inline in the build script — St.
-     Andreasberg's Freeride (4) and Downhill Trail (6) are "schwer" officially and Difficult/Red on
-     Trailforks, so they are `rot` here, not `schwarz`. Say so if the operator scale is ever preferred.
+   - **Difficulty: the OPERATOR's own published grade wins, Trailforks only where there is none** —
+     changed 2026-08-14 on the user's standing rule ("Immer die Schwierigkeit des Betreibers
+     übernehmen"), replacing the Trailforks-throughout rule this region was first built to. All six
+     operator pages were re-checked that day: only **three publish a grade at all** — St. Andreasberg
+     (its own numbered 1–9 list), Trailpark Ilsenburg, and Bodetal (in prose) — while **Hahnenklee,
+     Schulenberg and Braunlage publish none**, so those three necessarily stay on Trailforks' rating
+     (Braunlage's coloured dots are trail *markings*, not grades). The three-step German scale maps onto
+     the app's own labels: leicht → `blau`, mittel → `rot`, schwer → `schwarz`, and a grade stated across
+     two steps ("mittel / schwer") takes the **harder** one, the user's own call. Nothing here is "sehr
+     leicht", so `gruen` is never reached this way. **Result: 7 St. Andreasberg trails changed** (Flowtrail
+     grün→blau, Singletrail blau→rot, Funride blau→rot, Freeride rot→schwarz, Enduro rot→schwarz, Downhill
+     rot→schwarz, Jump Line blau→schwarz); Ilsenburg's and Bodetal's operator grades already agreed with
+     what was shipped. The mapping table is `OPERATOR_DIFF` in `tools/build_harz.py`, with each trail's
+     operator wording beside its colour, and `resolve_diff` there is pinned by five cases in
+     `tests/python/geomerge.py` — including one comparing the shipped `harz.json` against the rule for all
+     42 trails, since the file is hand-edited after the build writes it.
    - **Names**: St. Andreasberg resolved completely — Trailforks carries the park's own #1–#6/#9 numbers
      and `msbx-6`'s description confirms it ("#6 is the easiest of the steep routes, options to cross to
      #4 and #5"), so all eight carry their official names. Bodetal keeps the operator's 01–05 numbering.
@@ -75,7 +87,10 @@ Added to the list later the same day (no order given beyond "also on the list"):
      only two trails in prose). **"Alberti-Lift" is the operator company (Alberti-Lift GmbH), not a
      lift** — the Matthias-Schmidt-Berg has two parallel double chairlifts, both with bike holders, and
      both are in.
-   - **Known gaps, left honest rather than guessed** — worth picking up if the user wants them closed:
+   - **Remaining gaps — reviewed with the user 2026-08-14 and accepted as they are** ("Die fehlenden
+     Trails lassen wir dann weg. Ich habe auch keine GPX gefunden. Alles andere können wir so lassen"), so
+     these are recorded rather than open. The user also confirmed the two non-park trails (Hahnenklee's
+     `Spiegelthaler-Trail`, Bodetal's `Bodetrail`) stay in even though they are not park lines:
      * **Trailpark Harz's names do not line up with its own site.** trailparkharz.de lists Waldbad /
        Moosklippe / Mönchsgraben / Jack the Ripper / Wassertal / Kammweg. Only Jack the Ripper and
        Wassertal map with certainty (descents agree to the metre: −227 m, −231 m). `Eselsstieg` and
@@ -88,8 +103,9 @@ Added to the list later the same day (no order given beyond "also on the list"):
        a guess. Also **Trailforks is missing over a kilometre of Freeride** (operator ~3 400 m against our
        2 034 m of line) and its upper/lower halves have a real **83 m gap at the gondola mid-station**,
        stitched straight and recorded in `WIDE_JOINTS`.
-     * **Missing trails with no geometry anywhere**: Bodetal's `05 Schwarze Köhlerliesel`, Schulenberg's
-       `OnAir` (Pro Jumpline), St. Andreasberg's `7 Super Enduro` and `8 Kids Trail Harz`.
+     * **Missing trails with no geometry anywhere — dropped for good** (user, 2026-08-14, who found no GPX
+       for them either): Bodetal's `05 Schwarze Köhlerliesel`, Schulenberg's `OnAir` (Pro Jumpline), St.
+       Andreasberg's `7 Super Enduro` and `8 Kids Trail Harz`. Do not re-open this without a new source.
      * `Loam Line` (St. Andreasberg) carries no Trailforks number and does not match the operator's
        unnumbered #7 by length, so it keeps its Trailforks name.
      * **No Touren/Trailrunden** — none of the six operators publishes a combination route.

@@ -3,7 +3,7 @@
 @suite   geomerge
 @area    Joining split trail/lift sections, comparing two sources' lines, measuring against OSM's own ways
 @files   tools/build_harz.py, tools/add_harz_lifts_places.py, tools/check_geo_vs_osm.py, tools/pfaelzerwald_containment.py, tools/pfaelzerwald_rederive_loops.py
-@touches chain, chain_sections, _key, _seg_distance_m, nearest_m, MAX_JOINT_M, WIDE_JOINTS, profile_shape, dist_profile, bbox_overlaps, fill_connectors, concat_ok, named_share
+@touches chain, chain_sections, _key, _seg_distance_m, nearest_m, MAX_JOINT_M, WIDE_JOINTS, resolve_diff, OPERATOR_DIFF, SECTION_DIFF, profile_shape, dist_profile, bbox_overlaps, fill_connectors, concat_ok, named_share
 
 Both halves of this suite exist because both shipped a bug first, and both bugs looked like success.
 
@@ -33,6 +33,15 @@ at both ends is `subsumed`, near-zero at one end followed by monotonically growi
 `junction` (shared trailhead, both stay), and anything else is `unclear` and goes to the user rather than
 being decided.
 
+**Whose difficulty wins.** `resolve_diff` answers one question with two rules that could easily be
+reintroduced the wrong way round: the OPERATOR's own published grade beats Trailforks' rating (the user's
+standing rule, 2026-08-14 -- this region shipped Trailforks-throughout first), and a trail Trailforks split
+into sections takes the HARDEST of them. Both round upwards, including a grade the operator states across two
+steps ("mittel / schwer" -> schwarz). The cases pin the three parks that publish NO grade as having no
+entries at all, so a guessed grade cannot slip in as an override, and they compare the shipped `harz.json`
+against the rule for all 42 trails -- the file is hand-edited after the build writes it, which is exactly how
+a data file drifts away from the script that claims to produce it.
+
 **Loop segment partition.** `fill_connectors` must slice a Trailrunde's own line into segments that
 concatenate back to it byte-for-byte -- that is `validate_region.py`'s loop invariant, and it is what lets
 this rework promise the drawn line never moves. Half-open slices, and single leftover points absorbed into a
@@ -52,8 +61,18 @@ which proves nothing about the test.
 | the `a - cursor == 1` absorption -> `if False:` | a one-point gap is absorbed |
 | the one-point-TAIL absorption -> `if False:` | a one-point TAIL is absorbed |
 | `if max(prof) <= tol * 3:` -> `if False:` in `profile_shape` | a growing tail that never gets far |
+| `named_share(segs, loop_coords)` -> `named_share(segs)` | share is measured against the whole line |
+
+The difficulty cases were mutation-checked when they were added (2026-08-14):
+
+| mutation | fails |
+|---|---|
+| `OPERATOR_DIFF.get(trail_id, (None, tf))` -> `(None, tf)` | the operator's grade beats Trailforks, the two-step rule, and the shipped-file comparison (3 cases) |
+| `"hz_ab_enduro": ("mittel / schwer", "schwarz")` -> `"rot"` | the two-step rule rounds UP, plus the shipped-file comparison |
+| an invented `"hz_hk_downhill": ("schwer", "schwarz")` entry | no operator grade is invented for a park that publishes none |
 """
 import importlib.util
+import json
 import os
 import sys
 
@@ -138,7 +157,6 @@ def run(t):
 
     t.case("the Harz trail table only ever references geometry that exists")
     src = os.path.join(ROOT, "Material", "Harz", "harz_tf_geo.json")
-    import json
     geo = json.load(open(src, encoding="utf-8"))
     used = [s for _, _, _, ss in harz.TRAILS for s in ss]
     t.eq("every referenced section is in the source file", sorted(set(used) - set(geo)), [])
@@ -152,6 +170,60 @@ def run(t):
     order = harz.DIFF_ORDER
     hardest = max(["Intermediate", "Severe", "Easy"], key=lambda d: order.index(harz.TF_DIFF[d]))
     t.eq("Severe wins over Intermediate and Easy", harz.TF_DIFF[hardest], "schwarz")
+    # Wildpig Enduro is the real case, and it has no operator grade (Hahnenklee publishes none), so it also
+    # pins the Trailforks fallback: Difficult + Intermediate sections -> rot, not blau.
+    diff, tf, wording = harz.resolve_diff("hz_hk_wildpig_enduro",
+                                          ["senduro-entry", "wildpig-enduro-upper",
+                                           "wildpig-enduro-upper-middle", "wildpig-enduro-lower-middle",
+                                           "wildpig-enduro-lower"])
+    t.eq("Wildpig Enduro comes out rot", diff, "rot")
+    t.eq("with no operator wording to override it", wording, None)
+    t.eq("and the Trailforks reading is reported unchanged", tf, "rot")
+
+    t.case("the operator's own grade beats Trailforks wherever the operator publishes one")
+    # The user's standing rule (2026-08-14). St. Andreasberg calls #6 "schwer" while Trailforks rates it
+    # Difficult/red -- before this rule the red was shipped, which is what the rule exists to stop.
+    diff, tf, wording = harz.resolve_diff("hz_ab_downhill", ["msbx-6"])
+    t.eq("Downhill Trail (6) is schwarz", diff, "schwarz")
+    t.eq("even though Trailforks says rot", tf, "rot")
+    t.eq("and the operator's own word is carried along", wording, "schwer")
+
+    t.case("a grade the operator states across two steps takes the HARDER one")
+    # "leicht / mittel" and "mittel / schwer" both round UP, the user's own call -- the same direction the
+    # section max() resolves a merged trail in, so the two rules never disagree.
+    t.eq("mittel / schwer -> schwarz", harz.resolve_diff("hz_ab_enduro", ["msbx-enduro"])[0], "schwarz")
+    t.eq("leicht / mittel -> rot",
+         harz.resolve_diff("hz_ab_singletrail",
+                           ["msbx2-wurzeltrail-upper", "msbx2-wurzeltrail-lower"])[0], "rot")
+    t.eq("and a single-step grade is unaffected",
+         harz.resolve_diff("hz_ab_funride", ["msbx-north-shore-upper", "msbx-north-shore-lower"])[0], "rot")
+
+    t.case("no operator grade is invented for a park that publishes none")
+    # Hahnenklee, Schulenberg and Braunlage state no difficulties at all (all six operator pages checked
+    # 2026-08-14; Braunlage's coloured dots are trail MARKINGS). An entry appearing here for one of them
+    # would mean a grade was guessed rather than read.
+    by_id = {tid: region for tid, _, region, _ in harz.TRAILS}
+    ungraded = sorted(tid for tid in harz.OPERATOR_DIFF
+                      if by_id.get(tid) in ("hahnenklee", "schulenberg", "braunlage"))
+    t.eq("no entry for the three parks without published grades", ungraded, [])
+    t.eq("every entry names a trail this region actually builds",
+         sorted(set(harz.OPERATOR_DIFF) - set(by_id)), [])
+    t.eq("and every entry's colour is one of the four",
+         sorted({d for _, d in harz.OPERATOR_DIFF.values()} - set(harz.DIFF_ORDER)), [])
+
+    t.case("the shipped region file agrees with resolve_diff for all 42 trails")
+    # The file is written once and edited by hand afterwards, so this is what keeps it from drifting away
+    # from the rule the build script states.
+    region = json.load(open(os.path.join(ROOT, "Trailmap App", "regions", "harz.json"), encoding="utf-8"))
+    shipped = {tr["id"]: tr["diff"] for tr in region["lineTrails"]}
+    wrong = sorted((tid, shipped.get(tid), harz.resolve_diff(tid, ss)[0])
+                   for tid, _, _, ss in harz.TRAILS if shipped.get(tid) != harz.resolve_diff(tid, ss)[0])
+    t.eq("no trail in harz.json disagrees with the build rule", wrong, [])
+    t.eq("and the seven operator overrides are the ones on screen",
+         sorted(tid for tid, _, _, ss in harz.TRAILS
+                if harz.resolve_diff(tid, ss)[0] != harz.resolve_diff(tid, ss)[1]),
+         ["hz_ab_downhill", "hz_ab_enduro", "hz_ab_flowtrail", "hz_ab_freeride", "hz_ab_funride",
+          "hz_ab_jump_line", "hz_ab_singletrail"])
 
     # ---- lift section chaining ------------------------------------------------------------------
     t.case("two genuine lift sections chain bottom-to-top")
@@ -312,10 +384,21 @@ def run(t):
     t.eq("no degenerate piece", min(len(s["coords"]) for s in segs) >= 2, True)
     t.eq("and no phantom trailing connector", [s["trailId"] for s in segs], [None, "t1"])
 
-    t.case("named_share counts length, not segment count")
-    t.near("half the line named",
-           red.named_share([{"coords": loop[:20], "trailId": "t1"},
-                            {"coords": loop[20:], "trailId": None}]), 0.5, 0.02)
+    t.case("named_share divides by the LOOP's length, not the sum of its segments")
+    # The half-open partition means the step between one segment's last point and the next one's first is
+    # in neither segment, so summing segment lengths undercounts the loop -- by 12% on a real 15-segment
+    # Kurztune. Dividing by that inflated every share the driver reported.
+    segs = red.fill_connectors(loop, [{"id": "t1", "start_idx": 0, "end_idx": 19}])
+    seg_sum = sum(red.line_len_m(x["coords"]) for x in segs)
+    whole = red.line_len_m(loop)
+    t.ok("the two denominators genuinely differ", seg_sum < whole - 1,
+         (round(seg_sum), round(whole)), "segment sum is short of the line")
+    named = red.line_len_m([p for x in segs if x["trailId"] for p in x["coords"]])
+    t.near("share is measured against the whole line", red.named_share(segs, loop),
+           named / whole, 0.001)
+    t.ok("and against the segment sum it comes out higher",
+         red.named_share(segs) > red.named_share(segs, loop),
+         (round(red.named_share(segs), 3), round(red.named_share(segs, loop), 3)), "inflated")
 
     t.case("nearest_m finds a way in a neighbouring cell, not only its own")
     grid = {}
