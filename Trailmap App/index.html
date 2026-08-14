@@ -3093,21 +3093,47 @@ const RIDE_LOOKAHEAD_FRACTION = 2 / 3; // of .map-wrap's height, from ITS top --
 // forever -- and worse, each redundant pass would re-fire the recentring panTo below on top of whatever pan
 // is already in flight. Skipping the whole thing when the numbers haven't actually changed breaks the loop
 // at the source, since a no-op style write still exists as a DOM mutation that observers see.
-let rideMapOffsetTop = null, rideMapOffsetHeight = null;
+let rideMapOffsetTop = null, rideMapOffsetHeight = null, rideMapOffsetLeft = null, rideMapOffsetWidth = null;
 function applyRideMapOffset(){
   const wrap = document.querySelector(".map-wrap");
   const mapEl = document.getElementById("map");
-  const h = wrap.getBoundingClientRect().height;
-  if (!h) return;
+  const rect = wrap.getBoundingClientRect();
+  const h = rect.height, w = rect.width;
+  if (!h || !w) return;
   // #map's own top must reach .map-wrap's top (offsetTop <= 0) so no blank strip appears above it -- the
   // minimum container height for that is 2 * h * RIDE_LOOKAHEAD_FRACTION; +15% is slack against rounding.
   const containerH = Math.round(h * RIDE_LOOKAHEAD_FRACTION * 2 * 1.15);
   const offsetTop = Math.round(h * RIDE_LOOKAHEAD_FRACTION - containerH / 2);
-  if (offsetTop === rideMapOffsetTop && containerH === rideMapOffsetHeight) return; // see comment above
+
+  // In landscape, #rideInfoPanel docks along the left edge (see its own landscape-compact CSS), covering
+  // part of the map -- the dot sitting at the FULL container's horizontal centre then reads as off-centre
+  // in what's actually visible next to the panel (user, 2026-08-15). Shift the container's own centre right
+  // by half the panel's width so it lands in the middle of the space that's actually uncovered. Widening by
+  // exactly `panelW + 40` and shifting left by a flat 20px keeps the offset a CONSTANT regardless of
+  // panelW: centre = -20 + (w + panelW + 40)/2 = w/2 + panelW/2 + 20 - 20 = w/2 + panelW/2, always with a
+  // comfortable margin against the left edge (`.map-wrap`'s overflow:hidden would otherwise leave a blank
+  // strip there, same risk as the vertical case above).
+  const isLandscape = document.documentElement.classList.contains("landscape-compact");
+  const panelEl = isLandscape ? document.getElementById("rideInfoPanel") : null;
+  const panelW = panelEl ? panelEl.getBoundingClientRect().width : 0;
+  const containerW = panelW > 0 ? Math.round(w + panelW + 40) : null;
+  const offsetLeft = panelW > 0 ? -20 : null;
+
+  if (offsetTop === rideMapOffsetTop && containerH === rideMapOffsetHeight &&
+      offsetLeft === rideMapOffsetLeft && containerW === rideMapOffsetWidth) return; // see comment above
   rideMapOffsetTop = offsetTop; rideMapOffsetHeight = containerH;
+  rideMapOffsetLeft = offsetLeft; rideMapOffsetWidth = containerW;
+
   mapEl.style.top = offsetTop + "px";
   mapEl.style.bottom = "auto";
   mapEl.style.height = containerH + "px";
+  if (containerW !== null) {
+    mapEl.style.left = offsetLeft + "px";
+    mapEl.style.right = "auto";
+    mapEl.style.width = containerW + "px";
+  } else {
+    mapEl.style.left = ""; mapEl.style.right = ""; mapEl.style.width = ""; // portrait: full width, unchanged
+  }
   ensureMapSizeCurrent(); // lets Leaflet notice the new size -- but its own resize-compensation only
                           // PRESERVES whatever was already on screen (right for an incidental resize like
                           // an orientation flip), not "recentre on the tracked point", which is what this
@@ -3119,10 +3145,14 @@ function applyRideMapOffset(){
 }
 function clearRideMapOffset(){
   const mapEl = document.getElementById("map");
-  rideMapOffsetTop = null; rideMapOffsetHeight = null; // next applyRideMapOffset() must not skip as a no-op
+  // next applyRideMapOffset() must not skip any of these as a no-op
+  rideMapOffsetTop = null; rideMapOffsetHeight = null; rideMapOffsetLeft = null; rideMapOffsetWidth = null;
   mapEl.style.top = "";
   mapEl.style.bottom = "";
   mapEl.style.height = "";
+  mapEl.style.left = "";
+  mapEl.style.right = "";
+  mapEl.style.width = "";
   ensureMapSizeCurrent();
 }
 

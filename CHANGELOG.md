@@ -39,6 +39,12 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   button (📍) still recentres to the true screen centre on tap, even mid-ride. See `CLAUDE.md`'s RIDE
   section and the plan file referenced there for the full reasoning, including why the first attempt
   failed and how the replacement was verified.
+- **RIDE mode, same-day follow-up: the position dot is now horizontally centred in landscape too.**
+  `#rideInfoPanel` docks along the left edge in landscape, covering part of the map — the dot sitting at
+  the full container's horizontal centre read as visibly off-centre in the space actually left uncovered.
+  `applyRideMapOffset()` now also widens/shifts `#map` horizontally by an amount derived from the panel's
+  own live-measured width, landing the dot exactly mid-way between the panel and the map's right edge
+  (verified: 0px off target). No change in portrait, where the panel is a full-width bottom bar instead.
 - **Added a RIDE mode, replacing the old hold-to-follow gesture on the locate button.** A new 🚵 button
   (in the map controls cluster, and in a trail's info panel) starts a full-screen riding view: header,
   sidebar and the info panel hide, GPS follow + auto "Blickrichtung oben" rotation start, and a focused
