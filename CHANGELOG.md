@@ -22,7 +22,34 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-14
+- **The selected stretch of a Tour is now drawn bold, on touch and desktop alike** (user request). Done by
+  raising that segment's own `_tmBaseWeight` rather than setting a width, which is what makes the emphasis
+  survive hover, solo dimming and a repaint without any of those needing to know about it -- the same
+  mechanism that gives a connector its thinner baseline. A lift stretch is never bolded: it is three strokes
+  that are exempt from the group's styling on purpose. Also fixes two bugs the user found on the live region:
+  a Tour riding the same trail twice always highlighted the FIRST occurrence (`selectedSegmentId` is a trail
+  id, so `segs.find()` could not tell them apart -- Felsenwanderweg Rodalben rides "Felsenweg Süd" at km
+  0.7-5.9 and again at 27.5-42.8), and a tapped trail stayed bold on a phone because `setHover(true)` lives
+  in the click handler and a finger produces no `mouseout` to undo it.
 
+- **Two trial light basemaps that actually draw forest roads and trails: "Wald" and "Outdoor".** The user's
+  own ask — the gap between "Straße hell" (light, but its paths are hairline-faint and gone above z14) and
+  "Relief" (draws everything, at the price of contour clutter and hue collision with our own lines).
+  **"Wald"** = the HOT style via OpenStreetMap France (calm sage green, cream dashes for paths, no contour
+  lines); **"Outdoor"** = Thunderforest Outdoors. Both inherit carto's unbrightened palette, and both were
+  picked by comparing real tiles rather than descriptions (CyclOSM and CARTO Voyager lost that comparison —
+  see `CLAUDE.md`). Three things only the real servers revealed: HOT answers **404 above z16 in rural areas**
+  (Pfälzerwald and Ischgl, while Paris renders to z18), hence `maxNativeZoom: 16`, or the map would be blank
+  from z17 exactly where you stand on a trail; OSM France **throttles bursts** (10 of 30 tiles delivered) and
+  Leaflet never re-requests a failed tile, hence `retryFailedTiles()` for these two layers only; and
+  Thunderforest renders a diagonal **"API Key Required"** into every keyless tile, hence `THUNDERFOREST_KEY`
+  — while it is empty the chip is disabled rather than serving a watermarked map. `tests/browser/palette.js`
+  +1 case (11/11), both halves mutation-checked.
+- **`tests/browser/palette.js` carried a line that could never go green** — `T.eq(label, <boolean>, <array>)`
+  where it meant `T.ok`, ever since the Monte Corno case was written on 2026-08-13 (`ddec83e`). A
+  permanently red line is worse than a missing check: it trains everyone to read past red. Same class of
+  thing in `tests/browser/solo.js`, a duplicate `const tourCard` in one callback (from `4cc3989`) — a
+  SyntaxError that took down the **whole bundle**, i.e. every `--changed` run after an index.html change.
 - **Pfälzerwald reworked against Trailforks: 437 → 805 trails, and the Trailrunden now name three times as
   much of their own length.** Source: all 485 Trailforks trails inside the region's box, from Trailforks'
   own `encodedpath` via logged-in Chrome; the Trailrunden's `trailSegments` re-derived with

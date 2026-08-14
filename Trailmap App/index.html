@@ -2131,6 +2131,18 @@ map.on("zoomend", updateStartDotVisibility);
 // every layout (desktop, portrait, landscape-compact) for free.
 L.control.scale({ position: "bottomright", imperial: false }).addTo(map);
 
+// Thunderforest ("Outdoor", testweise seit 2026-08-14) braucht einen API-Key, und das ist gemessen, nicht
+// aus den AGB abgelesen: ohne Key liefert der Server echte Karten -- aber mit einem diagonalen "API Key
+// Required" hineingerendert. Der Direktabruf gibt byteidentisch dasselbe Bild wie der Browser (mit und ohne
+// Referer, gleiche md5), es ist also nichts, was sich mit Headern umgehen ließe, und soll es auch nicht.
+// Leer = die Ebene wird gar nicht angeboten (der Chip wird unten deaktiviert), statt eine mit Wasserzeichen
+// überzogene Karte zu zeigen. Ein kostenloser "Hobby"-Key (nicht-kommerziell, 150k Kacheln/Monat) von
+// thunderforest.com/pricing trägt sich hier ein. Zwei Dinge dazu wissen: er steht dann im öffentlichen
+// Client-Code (das lässt sich bei einer statischen Seite nicht vermeiden), und "📥 Trail-Umgebung
+// vorladen" zieht sein Kontingent -- eine vorgeladene Region sind je nach Zuschnitt schnell tausende
+// Kacheln.
+const THUNDERFOREST_KEY = "";
+
 const baseLayers = {
   osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
@@ -2158,14 +2170,11 @@ const baseLayers = {
     maxZoom: 19, maxNativeZoom: 16, subdomains: 'ab',
     attribution: '&copy; OpenStreetMap contributors · Stil: Humanitarian OSM Team · Kacheln: OpenStreetMap France'
   }),
-  // "Outdoor" = Thunderforest Outdoors: blasses Grün, Wege gestrichelt, zarte Höhenlinien, rendert bis in
-  // hohe Zoomstufen überall (bis z19 in allen geprüften Regionen). Offiziell braucht Thunderforest einen
-  // API-Key (`?apikey=...`, Hobby-Plan kostenlos, nicht-kommerziell) -- der Server beantwortet keylose
-  // Anfragen derzeit trotzdem mit echten Kacheln, weshalb der Test ohne Key läuft. Wenn er das abstellt,
-  // meldet sich watchLayer() unten mit der Kachel-Warnung, statt dass die Karte still leer bleibt. Dann
-  // hier einen eigenen Key anhängen -- er stünde allerdings im öffentlichen Client-Code, und der
-  // Offline-Vorladen-Knopf frisst Kontingent.
-  outdoor: L.tileLayer('https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png', {
+  // "Outdoor" = Thunderforest Outdoors: blasses Grün, Wege gestrichelt, zarte Höhenlinien, und -- anders als
+  // "Wald" -- rendert es bis in hohe Zoomstufen überall (z19 in jeder geprüften Region), braucht also kein
+  // maxNativeZoom. Dafür braucht es einen API-Key, sonst kommen die Kacheln mit Wasserzeichen; siehe
+  // THUNDERFOREST_KEY oben, dort steht auch, was ein Key sonst noch mit sich bringt.
+  outdoor: L.tileLayer(`https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=${THUNDERFOREST_KEY}`, {
     maxZoom: 19, attribution: 'Karten &copy; Thunderforest · Daten &copy; OpenStreetMap contributors'
   })
 };
@@ -2185,6 +2194,20 @@ document.querySelectorAll("#baseLayerControl .chip").forEach(btn => {
     applyBasePalette(key);
   });
 });
+
+// Ohne Key gibt es "Outdoor" nicht zum Anklicken -- eine Karte mit "API Key Required" quer über jeder
+// Kachel ist schlechter als keine. Deaktiviert statt entfernt, damit sichtbar bleibt, dass die Ebene
+// existiert und woran es hängt (der Titel sagt es), und inline gestylt, damit dafür kein CSS-Deploy mit
+// ?v=-Bump nötig ist. Ein disabled <button> feuert kein click, der Handler oben braucht also keinen Zweig.
+if (!THUNDERFOREST_KEY) {
+  const outdoorChip = document.querySelector("#baseLayerControl [data-layer='outdoor']");
+  if (outdoorChip) {
+    outdoorChip.disabled = true;
+    outdoorChip.style.opacity = "0.45";
+    outdoorChip.style.cursor = "default";
+    outdoorChip.title = "Braucht einen (kostenlosen) Thunderforest-API-Key — ohne Key liegt auf jeder Kachel ein „API Key Required“-Wasserzeichen.";
+  }
+}
 
 // Just report load problems — never auto-switch back, so the button click always visibly does something.
 function watchLayer(layer, label){
@@ -4388,6 +4411,7 @@ function selectTourSegment(t, segId, segIdx){
                (segIdx == null || selectedSegmentIdx == null || selectedSegmentIdx === segIdx);
   selectedSegmentId = same ? null : segId;
   selectedSegmentIdx = same ? null : (segIdx == null ? null : segIdx);
+  syncSelectedSegmentWeight();
   showTrailInfo(t, { keepSegment: true });
   selectCardFor(t.id);
 }
@@ -4699,6 +4723,7 @@ function closeInfoPanelAndDeselect(){
   openLiftId = null;
   selectedSegmentId = null;
   selectedSegmentIdx = null;
+  syncSelectedSegmentWeight();   // width follows the panel: nothing selected -> nothing bold
   clearSolo();
   clearSelection();
   hideAllLiftEndpoints();
@@ -5305,6 +5330,7 @@ function showLiftInfo(l){
   openTrailId = null;      // a lift and a trail are never both open
   selectedSegmentId = null;
   selectedSegmentIdx = null;
+  syncSelectedSegmentWeight();   // width follows the panel: nothing selected -> nothing bold
   openLiftId = l.id;
   // Same rule as showTrailInfo: opening a DIFFERENT object drops the previous solo, but opening the one
   // that is currently soloed (which is what the panel's own solo button does) must keep it.
@@ -5343,7 +5369,8 @@ function showTrailInfo(t, opts){
   // clicking the loop itself did (user, 2026-07-28). Saying what is meant instead of faking the state.
   const keepSegment = !!(opts && opts.keepSegment);
   const isNewSelection = openTrailId !== t.id;
-  if (isNewSelection && !keepSegment) { selectedSegmentId = null; selectedSegmentIdx = null; } // switching to a genuinely different trail/loop
+  if (isNewSelection && !keepSegment) { selectedSegmentId = null; selectedSegmentIdx = null; }
+  syncSelectedSegmentWeight(); // switching to a genuinely different trail/loop
   openTrailId = t.id;
   if (soloId && soloId !== t.id) clearSolo();
   // Selecting a Trailrunde auto-enables solo (not for a regular trail) -- with dozens of loops now
@@ -5549,6 +5576,10 @@ function buildTrailLayer(t){
           });
           // Read back by applyLineWeight, which restores per-layer widths rather than one group-wide value.
           visibleSeg._tmBaseWeight = refTrail ? BASE_WEIGHT : CONNECTOR_WEIGHT;
+          // ...and the same value again, never modified. syncSelectedSegmentWeight() RAISES _tmBaseWeight for
+          // the stretch whose info the panel is currently showing, so it needs somewhere to put the width
+          // back from; reading BASE_WEIGHT again would lose a connector's own thinner baseline.
+          visibleSeg._tmSegBaseWeight = visibleSeg._tmBaseWeight;
           if (HALO_ACTIVE_KINDS.has(segKind)) {
             segmentCasings.push({
               casing: L.polyline(seg.coords, { color: HALO[segKind] || "#ffffff", weight: HALO_WEIGHT_TRAIL, opacity: HALO_OPACITY, lineCap:"round", interactive:false, bubblingMouseEvents:false }),
@@ -6278,6 +6309,32 @@ function setSelectedTrailHaloSuppressed(id, suppressed){
   });
 }
 
+// Draws the stretch whose stats the panel is currently showing at hover width, on touch and desktop alike
+// (user, 2026-08-14: "wenn ein Trailsegment einer Tour selektiert ist ... soll der selektierte Trailabschnitt
+// fett sein"). Implemented by raising that segment's own `_tmBaseWeight` rather than setting a width directly,
+// which is what makes it survive everything else that touches the group: applyLineWeight restores per-layer
+// widths from exactly that field, so hover, solo dimming and a repaint all keep the emphasis without any of
+// them needing to know about it -- the same trick that gives a connector its own thinner baseline.
+// A LIFT stretch is deliberately never bolded: it is drawn as three strokes (mask + hairline + dots) that are
+// exempt from the group's styling on purpose, and widening only one of them would just break the look.
+function syncSelectedSegmentWeight(){
+  Object.entries(lineLayers).forEach(([lid, layer]) => {
+    const segs = TRAIL_SEGMENTS[lid];
+    if (!segs || !layer.styleTarget || typeof layer.styleTarget.getLayers !== "function") return;
+    // styleTarget holds only the non-lift stretches, in order -- the same 1:1 correspondence
+    // repaintLineColors() relies on.
+    const styleable = segs.filter(s => !s.liftId);
+    const selectedSeg = (lid === currentSelectedId && selectedSegmentId && selectedSegmentIdx != null)
+      ? segs[selectedSegmentIdx] : null;
+    const wanted = selectedSeg && !selectedSeg.liftId ? styleable.indexOf(selectedSeg) : -1;
+    layer.styleTarget.getLayers().forEach((lyr, i) => {
+      const base = lyr._tmSegBaseWeight || lyr._tmBaseWeight || BASE_WEIGHT;
+      lyr._tmBaseWeight = i === wanted ? HOVER_WEIGHT : base;
+    });
+    applyLineWeight(layer.styleTarget, false, baselineLineOpacity(lid));
+  });
+}
+
 function highlightSelectedTrail(id){
   const layer = lineLayers[id];
   clearLiftSelection(); // selecting a trail drops any lift highlight
@@ -6298,6 +6355,9 @@ function highlightSelectedTrail(id){
   setLabelHovered(id, true);  // the selected trail keeps its label marked, hover or not
   syncSelectedCardSoloBtn(); // a loop's own auto-solo (showTrailInfo) may have run before currentSelectedId
                              // pointed at this trail yet -- re-sync now that it's the current selection
+  // Layers are rebuilt by render(), which resets every _tmBaseWeight -- re-apply the selected
+  // stretch's emphasis here so it survives a filter change or a region being added.
+  syncSelectedSegmentWeight();
 }
 
 function clearSelection(){

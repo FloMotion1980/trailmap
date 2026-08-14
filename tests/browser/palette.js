@@ -1,7 +1,7 @@
 // @suite   palette
 // @area    Per-basemap trail/lift/connector colors, the schwarz-only Satellit halo, the lift mask on/off
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches applyBasePalette, repaintLineColors, syncHalo, applyHaloOpacity, applySolo, clearSolo, BASE_PALETTES, HALO, HALO_ACTIVE_KINDS, diffColor, CONNECTOR_COLOR, LIFT_LINE_COLOR, LIFT_MASK_COLOR, LIFT_MASK_OPACITY, SELECT_YELLOW, baseLayerControl
+// @touches applyBasePalette, repaintLineColors, syncHalo, applyHaloOpacity, applySolo, clearSolo, BASE_PALETTES, HALO, HALO_ACTIVE_KINDS, diffColor, CONNECTOR_COLOR, LIFT_LINE_COLOR, LIFT_MASK_COLOR, LIFT_MASK_OPACITY, SELECT_YELLOW, baseLayerControl, THUNDERFOREST_KEY, baseLayers
 // @needs   region=bikekingdom, builder=off
 //
 // Added 2026-08-13 per the user: on Satellit (Esri World Imagery, dark almost everywhere), the trail/lift/
@@ -139,7 +139,11 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
     const schwarzHaloOpacities = () => new Set(overlay()
       .filter((p) => (p.getAttribute("stroke") || "").toLowerCase() === "#ffffff" && p.getAttribute("stroke-width") === "8.5")
       .map((p) => p.getAttribute("stroke-opacity") || "1"));
-    T.eq("at rest, every schwarz halo is at the same (non-solo) opacity", schwarzHaloOpacities().size <= 1,
+    // T.ok, not T.eq: the first argument after the label is a CONDITION here, and T.eq compares it against
+    // the third argument for equality -- so this read `true === ["0.85"]` and could never pass. It has been
+    // failing since the case was written (2026-08-13, ddec83e), which is worse than a missing check: a suite
+    // with a permanently red line trains everyone to skim past the red.
+    T.ok("at rest, every schwarz halo is at the same (non-solo) opacity", schwarzHaloOpacities().size <= 1,
          [...schwarzHaloOpacities()], "at most one distinct value");
     const anyOtherTrail = TM.ui.trailCards().find((c) => !/Corno/i.test(c.textContent)) || TM.ui.trailCards()[0];
     if (!anyOtherTrail) {
@@ -229,6 +233,54 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   T.eq("lift masks opaque again, same count", strokeCountOp(band(), "#cfcfcf", 1), maskOsm);
   T.eq("schwarz unchanged throughout (it was never lightened on osm)", strokeCount(overlay(), "#1c1c1c"), schwarzOsm);
   T.eq("every white halo is gone again, not just recolored", strokeCount(overlay(), "#ffffff", 8.5), 0);
+
+  T.test("the two trial light basemaps: Wald inherits carto's palette, Outdoor is unreachable without an API key");
+  // Added 2026-08-14 with the two trial layers. "Wald" (HOT via OpenStreetMap France) and "Outdoor"
+  // (Thunderforest Outdoors) are both light maps that draw forest roads and trails, so both inherit
+  // carto's UNbrightened trio -- the check is that they really got their own palette entry and did not
+  // silently fall through applyBasePalette's `|| BASE_PALETTES.osm` fallback, which would look almost
+  // right (same connector, same mask) and differ only in gruen/blau/rot.
+  await setBase("hot");
+  T.eq("Wald uses the ORIGINAL unbrightened gruen, i.e. its own entry, not the osm fallback",
+       strokeCount(overlay(), "#3f8a4c"), greenOsm);
+  T.eq("no osm-brightened gruen leaking onto Wald", strokeCount(overlay(), "#4fa85e"), 0);
+  T.eq("Wald connector is the dark orange", strokeCount(overlay(), "#e08a00"), connectorsOsm);
+  T.eq("Wald lift masks are transparent, like the other light basemaps", strokeCountOp(band(), "#cfcfcf", 0), maskOsm);
+  T.eq("no halo on Wald", strokeCount(overlay(), "#ffffff", 8.5), 0);
+  // The one deliberate difference between the two: Thunderforest draws aerialways itself (a black line
+  // with ticks, read off its own tiles at Ischgl), so "Outdoor" keeps the mask at opacity 1 like "Straße",
+  // while HOT draws none. That is data, not behaviour, so what is checked here is the reachability rule.
+  //
+  // Without a key Thunderforest renders a diagonal "API Key Required" across every tile, so the chip is
+  // disabled -- and a disabled chip must not be able to change the basemap. Skipped once a key IS
+  // configured, since then the chip is a normal one and there is nothing to pin.
+  const outdoorChip = TM.$("#baseLayerControl [data-layer='outdoor']");
+  T.ok("the Outdoor chip exists", !!outdoorChip, !!outdoorChip, true);
+  if (outdoorChip && outdoorChip.disabled) {
+    outdoorChip.click();
+    await TM.wait(200);
+    T.eq("clicking the keyless Outdoor chip does not switch the basemap away from Wald",
+         TM.$("#baseLayerControl .chip.active").dataset.layer, "hot");
+    T.eq("and it did not repaint anything either -- still Wald's own gruen",
+         strokeCount(overlay(), "#3f8a4c"), greenOsm);
+    T.ok("it says why it is disabled", /API.?Key/i.test(outdoorChip.title), outdoorChip.title.slice(0, 40), "mentions the key");
+  } else if (outdoorChip) {
+    // The chip being ENABLED is only correct if a key is actually configured, and the tile URL is the one
+    // place a test can see that (THUNDERFOREST_KEY, like every other app-scope const, is unreachable from
+    // here). Written as the else-branch on purpose rather than as an `if (disabled)`-only assertion: that
+    // way deleting the disabling logic does not make this case quietly SKIP -- it lands here, switches the
+    // basemap, finds `apikey=` empty and fails. Which is the whole point, because what it is guarding is
+    // not a colour: keyless Thunderforest tiles arrive with a diagonal "API Key Required" rendered into
+    // them, i.e. the map still "works" and looks broken, so nothing else in the app would complain.
+    await setBase("outdoor");
+    await TM.until(() => TM.$$(".leaflet-tile-pane img").some((i) => /thunderforest/.test(i.src)));
+    const srcs = TM.$$(".leaflet-tile-pane img").map((i) => i.src).filter((s) => /thunderforest/.test(s));
+    T.ok("an enabled Outdoor chip means a real API key is in the tile URL",
+         srcs.length > 0 && srcs.every((s) => /[?&]apikey=[^&\s]+/.test(s)),
+         (srcs[0] || "no tile").replace(/apikey=([^&]{0,4}).*/, "apikey=$1…"), "apikey=<non-empty>");
+  }
+  await setBase("osm");
+  T.eq("back on osm, gruen is the brightened one again", strokeCount(overlay(), "#4fa85e"), greenOsm);
 
   T.test("an unknown basemap key falls back to the osm palette (colors, halo, AND mask opacity) rather than leaving stale state");
   // Not reachable through the UI (every chip's data-layer is a real key) -- calls the function directly,

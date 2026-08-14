@@ -159,9 +159,12 @@ TM.add("solo", () => typeof applySolo === "function" && TM.map.tourLiftStretches
   const hitOrder = () => [...TM.$$(".leaflet-overlay-pane svg path")]
     .map((el, i) => ({ i, w: parseFloat(el.getAttribute("stroke-width") || "0") }))
     .filter(x => x.w === 18 || x.w === 22);
-  const tourCard = TM.ui.cardNamed("tourCards", /Biketicket/);
-  tourCard.click();
-  await TM.until(() => tourCard.classList.contains("selected"));
+  // Own name: `tourCard` is already declared further up in this same callback (the Tour used for the
+  // dimming case), and two `const`s of one name in one function scope is a SyntaxError -- which took the
+  // WHOLE bundle down, not just this suite, since the bundle is one script.
+  const zOrderTourCard = TM.ui.cardNamed("tourCards", /Biketicket/);
+  zOrderTourCard.click();
+  await TM.until(() => zOrderTourCard.classList.contains("selected"));
   await TM.wait(400);
   const order = hitOrder();
   T.ok("there are both kinds of hit area to order", order.some(x => x.w === 18) && order.some(x => x.w === 22),
