@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=168" />
+<link rel="stylesheet" href="style.css?v=169" />
 </head>
 <body>
 <div id="fatalError">
@@ -2200,6 +2200,9 @@ let followMode = false;
 // Following is on, but the map has stopped chasing because you panned it by hand. The position stays live;
 // only the panTo is suspended until you tap the re-centre button. See syncLocateChrome/map "dragstart".
 let followDetached = false;
+// Set for the exact duration of a call that changes zoom ON PURPOSE (currently just the first fix's own
+// flyTo) -- see the map.on("zoomstart",...) listener for why this exists at all.
+let expectingOwnZoomChange = false;
 const locateBtn = document.getElementById("locateBtn");
 
 let compassActive = false;
@@ -2744,7 +2747,15 @@ function updateUserLocation(pos, isFirstFix){
   // (730,190) under a panel spanning x 576..806. Centre and pivot being the same point makes both go away by
   // construction. Trail fits keep their padding (see paddedBoundsView): fitting a whole trail into the free
   // space is a different job, with no pivot involved.
-  if (isFirstFix) { map.flyTo(L.latLng(latlng), 15, { duration: 0.8 }); panCount++; }
+  if (isFirstFix) {
+    // flyTo changes zoom, which fires "zoomstart" -- and that event is now ALSO how a pinch gesture is
+    // detected (see the map.on("zoomstart",...) listener below), so without this guard the very first fix
+    // of a follow session would immediately flag itself as "detached" the instant it arrives.
+    expectingOwnZoomChange = true;
+    map.flyTo(L.latLng(latlng), 15, { duration: 0.8 });
+    expectingOwnZoomChange = false;
+    panCount++;
+  }
   else if (followMode && !followDetached) { map.panTo(L.latLng(latlng), { animate: true, duration: 0.5 }); panCount++; }
   updateLiveStatus();
 }
@@ -3048,13 +3059,24 @@ document.addEventListener("visibilitychange", () => {
 // Panning by hand drops out of chasing without ending the tracking -- the fix for "ich kann die Karte nicht
 // mehr bewegen, das Tracking holt sie immer zurück". `dragstart` is user-only; panTo's own animation fires
 // movestart, not dragstart, so this cannot detach itself.
-map.on("dragstart", () => {
-  // Cancel any panTo still animating from the last fix. Without this the user's drag and Leaflet's own pan
-  // animation run against each other for up to half a second, which is precisely the moment a rider grabs the
-  // map -- right after the dot jumped. `map.stop()` is Leaflet's documented way to abort flyTo/panTo.
+function handleUserGestureStart(){
+  // Cancel any panTo still animating from the last fix. Without this the user's drag/pinch and Leaflet's own
+  // pan animation run against each other for up to half a second, which is precisely the moment a rider
+  // grabs the map -- right after the dot jumped. `map.stop()` is Leaflet's documented way to abort flyTo/panTo.
   map.stop();
   if (followMode && !followDetached) { followDetached = true; syncLocateChrome(); }
-});
+}
+map.on("dragstart", handleUserGestureStart);
+// A two-finger pinch (zoom, optionally combined with a pan) is handled entirely by leaflet-rotate's own
+// TouchGestures, a completely different code path from Leaflet's core drag handler -- so it NEVER fires
+// "dragstart", even when it visibly moves the tracked position away from the container centre (user,
+// 2026-08-15: "wenn ich mit zwei Fingern zoome und dabei auch die Position verschiebe, kommt der Locator
+// nicht"). It reliably fires "zoomstart" instead (leaflet-rotate calls `_moveStart(true, false)`, which fires
+// both "zoomstart" and "movestart" -- "movestart" is deliberately not used here since it ALSO fires for our
+// own follow panTo/flyTo calls, see the comment above). "zoomstart" itself is safe from that false-positive
+// for the routine follow-loop panTo (it never changes zoom) -- the one exception is the very first fix's own
+// flyTo, which does change zoom on purpose, guarded by expectingOwnZoomChange.
+map.on("zoomstart", () => { if (!expectingOwnZoomChange) handleUserGestureStart(); });
 
 // Visibility rule for the merged position cell (2026-08-15): hidden while actively following AND centred
 // (nothing to do there), shown while detached (tap to re-attach) OR not following at all (tap for a
@@ -7188,7 +7210,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v168"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v169"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

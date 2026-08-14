@@ -881,17 +881,18 @@ html.landscape-compact #sidebarToggle .st-bars{
    looks like it did nothing at all. */
 #locateBtn.busy{ opacity:.55; }
 /* The position cell (2026-08-15, merged: see #locateBtn's own JS comment) is hidden entirely while
-   following AND centred -- nothing to tap there -- and takes on the old re-centre cell's filled look while
-   detached, since it is now doing that button's job. display rather than opacity, so a hidden cell takes no
+   following AND centred -- nothing to tap there -- and simply reappears while detached, since it is now
+   doing that button's job. No filled/highlighted look while detached (tried, then the user asked for plain
+   appear/disappear only -- "die Logik fürs blau Färben... ist unnötig, er soll einfach nur eingeblendet
+   werden") -- appearing at all is already the signal. display rather than opacity, so a hidden cell takes no
    room in the container; it is the LAST cell precisely so appearing/disappearing cannot displace a cell you
    were aiming at. Both selectors have to name the container: `#mapControls > button` sets `display:flex` on
    every cell and an id alone loses to it on specificity, so a plain `#locateBtn{ display:none }` would never
    hide anything (measured, on the old #recenterBtn this replaced). */
 #locateCluster.is-centred-following #mapControls > #locateBtn{ display:none; }
-#locateCluster.is-detached #mapControls > #locateBtn{ background: var(--forest); color:#f2f3ec; }
 @media (hover: hover){
   #mapControls > button:hover{ background:#eff2e9; }
-  #bearingBtn.active:hover, #rideModeBtn.active:hover, #locateCluster.is-detached #mapControls > #locateBtn:hover{ background: var(--forest-dark); }
+  #bearingBtn.active:hover, #rideModeBtn.active:hover{ background: var(--forest-dark); }
 }
 .geo-wrap{ position:relative; width:40px; height:40px; }
 .geo-cone{

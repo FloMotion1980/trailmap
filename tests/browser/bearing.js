@@ -1,7 +1,7 @@
 // @suite   bearing
 // @area    Map orientation: "Norden oben" vs. "Blickrichtung oben"
 // @files   Trailmap App/index.html, Trailmap App/style.css, Trailmap App/leaflet-rotate.js
-// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, targetBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, buildDirectionArrowLayer, rescaleDirectionArrows, metresPerPixel, ARROW_MIN_ZOOM, canRotate, BEARING_MIN_DELTA_DEG, compassStillNeeded, startFollowing, stopFollowing, detachOrientationListener, bearingFrameSafety, locateBtn
+// @touches setHeadingUp, applyMapBearing, currentMapBearing, headingUp, appliedBearing, targetBearing, updateHeadingCone, refreshHeadingCone, uiOffsetVector, getOffsetCenter, paddedBoundsView, flyToTrailBounds, ROTATING_PANE, rotatePane, bearingBtn, buildDirectionArrowLayer, rescaleDirectionArrows, metresPerPixel, ARROW_MIN_ZOOM, canRotate, BEARING_MIN_DELTA_DEG, compassStillNeeded, startFollowing, stopFollowing, detachOrientationListener, bearingFrameSafety, locateBtn, handleUserGestureStart, expectingOwnZoomChange
 // @needs   builder=off
 //
 // Rotation is the one feature here that is bolted on by a third-party file patching Leaflet's core, and its
@@ -391,6 +391,43 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     navigator.geolocation.watchPosition = realWatch;
     navigator.geolocation.clearWatch = realClear;
     await TM.wait(1800);
+  }
+
+  T.test("a pinch (zoomstart with no dragstart) detaches follow just like a drag does");
+  // The user's own report (2026-08-15): "wenn ich mit zwei Fingern zoome und dabei auch die Position
+  // verschiebe, kommt der Locator nicht". A two-finger pinch is handled entirely by leaflet-rotate's own
+  // TouchGestures, a different code path from Leaflet's core drag handler, so it never fires "dragstart" --
+  // only "zoomstart" (leaflet-rotate calls `_moveStart(true, false)`). #locateBtn's own visibility is driven
+  // by is-detached/is-centred-following (see controls.js), so the observable property here is exactly that:
+  // a bare zoomstart, simulating the pinch without needing real touch events, must flip the same switch a
+  // real drag does.
+  const pinchWatch = navigator.geolocation.watchPosition;
+  const pinchClear = navigator.geolocation.clearWatch;
+  navigator.geolocation.watchPosition = (ok) => { setTimeout(() => ok({ coords: fixed }), 30); return 1; };
+  navigator.geolocation.clearWatch = () => {};
+  try {
+    startFollowing();
+    await TM.until(() => TM.$("#liveStatus").classList.contains("live"), 3000);
+    await TM.wait(250);
+    T.ok("the first fix's own zoom change did not falsely detach it",
+         TM.$("#locateCluster").classList.contains("is-centred-following") &&
+         !TM.$("#locateCluster").classList.contains("is-detached"),
+         TM.$("#locateCluster").className, "is-centred-following, not is-detached");
+    map.fire("zoomstart");                 // what a pinch fires; dragstart deliberately not fired here
+    await TM.wait(50);
+    T.ok("a bare zoomstart (no dragstart) detaches it, same as a real drag would",
+         TM.$("#locateCluster").classList.contains("is-detached"),
+         TM.$("#locateCluster").className, "is-detached");
+    TM.$("#locateBtn").click();             // reattach, same button, same path a real drag's recovery uses
+    await TM.wait(50);
+    T.ok("and the merged button reattaches it again",
+         !TM.$("#locateCluster").classList.contains("is-detached"),
+         TM.$("#locateCluster").className, "not is-detached");
+  } finally {
+    if (typeof stopFollowing === "function") stopFollowing();
+    navigator.geolocation.watchPosition = pinchWatch;
+    navigator.geolocation.clearWatch = pinchClear;
+    await TM.wait(200);
   }
 
   T.test("a padded bounds fit puts the target in the uncovered part of the map, at every bearing");

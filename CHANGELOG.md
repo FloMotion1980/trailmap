@@ -22,6 +22,12 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-15
+- **Fixed: a two-finger pinch never showed the position button, even while visibly moving the tracked
+  position off-centre.** A pinch is handled entirely by leaflet-rotate's own `TouchGestures`, a different
+  code path from Leaflet core's drag handler, which only fires "dragstart". Confirmed from the vendored
+  source that a pinch fires "zoomstart" instead — now also listened for (guarded so the very first GPS fix's
+  own zoom-in doesn't falsely trigger it). Also removed the blue/filled highlight on the position button
+  while detached, per the user's request — it now just appears, nothing more.
 - **Merged the position button (📍) and the old separate re-centre button (◎) into one.** Both ultimately
   meant "put my position back where it belongs" (the user's own observation). `#mapControls` order is now
   RIDE, bearing, position (RIDE leads as the entry point into riding; position is last since it's the only
