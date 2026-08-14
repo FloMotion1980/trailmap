@@ -1197,6 +1197,12 @@ html.landscape-compact .ele-chart{ height:40px; }
    still calls closeSidebar() so it isn't left open underneath). */
 html.ride-mode header,
 html.ride-mode #infoPanel{ display:none !important; }
+/* #map is made taller than this and shifted upward while riding (applyRideMapOffset(), JS) so Leaflet's own
+   dead-centre placement lands lower within the visible crop -- overflow:hidden is what actually crops the
+   excess rather than letting it spill and enlarge .map-wrap's own box. Scoped to ride-mode only: #map
+   normally exactly fills .map-wrap (inset:0), so this would never clip anything outside RIDE anyway, but
+   there is no reason to apply it where it isn't needed. */
+html.ride-mode .map-wrap{ overflow:hidden; }
 /* Unlike #infoPanel, deliberately not display:none outside RIDE via the same html.ride-mode gate on this rule
    alone -- see the base rule below, which hides it independently so a stray reference before RIDE ever starts
    can't show a stray dark bar. */
@@ -1204,10 +1210,13 @@ html.ride-mode #infoPanel{ display:none !important; }
 /* Bottom, not top (2026-08-15, user, after the first phone test -- also the Bosch eBike Flow app's own
    "Ride" screen layout: the direction of travel is UP the screen once "Blickrichtung oben" is active, so
    the top is the one area worth keeping clear for what's coming, and readouts belong at the bottom where a
-   thumb/glance naturally goes). Clears Leaflet's attribution strip the same way #offlineBanner already does. */
+   thumb/glance naturally goes). Flush with the real bottom edge (not clearing Leaflet's attribution strip
+   the way #offlineBanner does) -- clearing it left a strip of map visible below the panel, which read as
+   unfinished in a full-screen mode that has hidden everything else (user, 2026-08-15); the panel's own
+   background simply sits on top of the (tiny, low-priority) attribution text instead. */
 html.ride-mode #rideInfoPanel{
   display:block; position:absolute; z-index:1300;
-  bottom: calc(26px + env(safe-area-inset-bottom, 0px)); left:0; right:0;
+  bottom:0; left:0; right:0;
   background: var(--forest-dark); color:#f2f3ec;
   padding: 10px 14px calc(10px + env(safe-area-inset-bottom,0px));
 }

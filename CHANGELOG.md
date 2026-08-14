@@ -22,20 +22,23 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-15
-- **RIDE mode, round two, after the first phone test: bottom info bar + a look-ahead position offset.**
-  `#rideInfoPanel` now docks at the BOTTOM in portrait (was top) — modelled loosely on the Bosch eBike
-  Flow app's own "Ride" screen (dark background, readouts at the bottom, top kept clear for what's ahead).
-  More significantly: while riding, the user's position now sits below dead centre (not exactly centred)
-  so more of the map ahead is visible, since travel direction is "up" once "Blickrichtung oben" is active.
-  This required patching two of the vendored `leaflet-rotate.js`'s own internals from the app's own script
-  (`_getNewPixelOrigin` and `_getPixelCenter`, both hardcode container-centre) — a 2026-08-01 note had
-  locked position-centring to dead centre after an earlier offset attempt orbited/misplaced the dot, but
-  that bug was in an offset that moved only the pan TARGET while leaflet-rotate's own rotation pivot
-  stayed at dead centre; the fix here moves both by the same amount, keyed off a global `rideMode` flag
-  so it's a no-op (byte-identical to before) whenever RIDE is off. The locate button (📍) still recentres
-  to the true screen centre on tap, even mid-ride, via a `rideOffsetSuppressed` flag cleared on the
-  resulting pan's own `moveend`. See `CLAUDE.md`'s RIDE section and the plan file referenced there for the
-  full reasoning.
+- **RIDE mode, round two, after the first phone test: bottom info bar + a look-ahead position placement.**
+  `#rideInfoPanel` now docks at the BOTTOM in portrait, flush with the real bottom edge (was top, and
+  briefly left a gap above Leaflet's attribution strip before that too got fixed the same day) — modelled
+  loosely on the Bosch eBike Flow app's own "Ride" screen (dark background, readouts at the bottom, top
+  kept clear for what's ahead). More significantly: while riding, the user's position now sits about a
+  third of the map's height up from the bottom (not dead centre), so more of the map ahead is visible,
+  since travel direction is "up" once "Blickrichtung oben" is active. First attempt patched two of the
+  vendored `leaflet-rotate.js`'s own internals (`_getNewPixelOrigin`/`_getPixelCenter`) — reverted the same
+  day after the phone test showed the rotation pivot moving correctly while the position dot stayed at
+  true dead centre regardless (the same disagreement the 2026-08-01 "dead centre" fix was originally for,
+  just from different internal math). What shipped instead touches none of Leaflet's own centring/rotation
+  code: `#map` itself is made taller than the visible window and shifted upward during RIDE
+  (`applyRideMapOffset()`/`clearRideMapOffset()`), so Leaflet's own dead-centre placement — provably
+  correct, since nothing about it changed — lands lower within the cropped, visible part. The locate
+  button (📍) still recentres to the true screen centre on tap, even mid-ride. See `CLAUDE.md`'s RIDE
+  section and the plan file referenced there for the full reasoning, including why the first attempt
+  failed and how the replacement was verified.
 - **Added a RIDE mode, replacing the old hold-to-follow gesture on the locate button.** A new 🚵 button
   (in the map controls cluster, and in a trail's info panel) starts a full-screen riding view: header,
   sidebar and the info panel hide, GPS follow + auto "Blickrichtung oben" rotation start, and a focused

@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=166" />
+<link rel="stylesheet" href="style.css?v=167" />
 </head>
 <body>
 <div id="fatalError">
@@ -2074,58 +2074,10 @@ window.addEventListener("orientationchange", syncSearchFieldLocation);
 // rotation call site is guarded by this one flag instead of assuming the methods exist.
 const canRotate = typeof L.Map.prototype.setBearing === "function";
 
-// ---- RIDE mode's look-ahead position offset (2026-08-15) -------------------------------------------
-// `rideMode` has to exist before the map is constructed: the map's own initial `.setView(...)` below
-// already calls `_getNewPixelOrigin` synchronously, and the override right below reads `rideMode` --
-// a `let` declared later would still be in its temporal dead zone at that point and throw.
+// `rideMode` has to exist before the map is constructed and before RIDE's own DOM-resize helper further
+// down (see applyRideMapOffset()) -- kept here, not with the rest of RIDE mode's code further down, so
+// nothing that reads it early is ever in its temporal dead zone.
 let rideMode = false;
-// Only true for the short window between a deliberate "recentre on the real screen centre" action
-// (the locate button, see its click handler) and that pan's own `moveend` -- see there for why.
-let rideOffsetSuppressed = false;
-
-// While riding, the user's position sits lower on screen (not dead centre) so more of the map AHEAD
-// (which is "up" once "Blickrichtung oben" is active) is visible -- the user's own request, modelled
-// after the Bosch eBike Flow app's "Ride" screen. This was deliberately NOT done back on 2026-08-01
-// (see the "dead centre" notes elsewhere in this file) -- but that lock-in was a reaction to a REAL bug
-// in the offset that existed then, not a rejection of offsets as such: that offset only ever moved the
-// PAN TARGET (via getFlyPadding()'s UI-avoidance padding, meant for bounds-fitting, not this), while
-// leaflet-rotate's rotation pivot (see _getPixelCenter below) stayed at dead centre regardless -- the two
-// drifted apart on every compass tick between GPS fixes, which is what orbited the dot in a ~84px circle
-// and, in landscape, could push it out from under the info panel entirely.
-//
-// The fix here is to shift BOTH of leaflet-rotate's own centre-point primitives by the exact same
-// amount, so the pivot and the pan target are always the same screen point again (by construction, same
-// invariant that made dead-centre work correctly in the first place) -- just moved down instead of at
-// {0,0}. Recomputed fresh from the live container size on every call (not cached), same "don't cache,
-// re-derive" rule this file already follows for uiOffsetVector()/metresPerPixel().
-const RIDE_LOOKAHEAD_FRACTION = 0.22; // of container height, below dead centre
-function rideLookAheadOffset(mapInst){
-  if (!rideMode || rideOffsetSuppressed) return null;
-  return new L.Point(0, Math.round(mapInst.getSize().y * RIDE_LOOKAHEAD_FRACTION));
-}
-// _getNewPixelOrigin decides where a panTo/flyTo/setView TARGET lands on screen -- every follow pan,
-// the first flyTo, the viewport-settle re-centre and the recentre button all end up here regardless of
-// which call site triggered them, so patching it here covers all of them for free.
-const _origGetNewPixelOrigin = L.Map.prototype._getNewPixelOrigin;
-L.Map.prototype._getNewPixelOrigin = function(latlng, zoom){
-  const off = rideLookAheadOffset(this);
-  if (!this._rotate || !off) return _origGetNewPixelOrigin.call(this, latlng, zoom);
-  const centerPoint = this.getSize()._divideBy(2)._add(off);
-  return this.project(latlng, zoom).rotate(this._bearing)
-    ._subtract(centerPoint)._add(this._getMapPanePos())._add(this._getRotatePanePos())
-    .rotate(-this._bearing)._round();
-};
-// _getPixelCenter is the PIVOT setBearing() rotates the already-positioned rotate pane around on every
-// compass tick. Must move by the exact same offset as above, or the two disagree between GPS fixes.
-const _origGetPixelCenter = L.Map.prototype._getPixelCenter;
-L.Map.prototype._getPixelCenter = function(){
-  const off = rideLookAheadOffset(this);
-  if (!this._rotate || !off) return _origGetPixelCenter.call(this);
-  return this.getSize()._divideBy(2)._add(off)._subtract(this._getMapPanePos());
-};
-// Both overrides fall through to the untouched original whenever there's nothing to offset (RIDE off,
-// suppressed, or the rotate plugin never loaded) -- byte-identical behaviour to before this change in
-// every one of those cases, including on a browser where leaflet-rotate itself failed to load.
 
 // Every rotation-related option is passed EXPLICITLY, including the ones we don't want: leaflet-rotate
 // defaults `shiftKeyRotate` and `rotateControl` to TRUE, so merely loading it would have added a rotate
@@ -2713,7 +2665,7 @@ function ensureMapSizeCurrent(){
 // Not while detached: the user panned away on purpose.
 let settleScheduled = false;
 function onViewportSettled(){
-  ensureMapSizeCurrent();
+  if (rideMode) applyRideMapOffset(); else ensureMapSizeCurrent();
   // The padding that makes a turn repaint-free depends on the container's shape (see rotationPadding), so a
   // flip has to re-derive it -- otherwise portrait's value is left behind in a landscape container, where it is
   // one repaint short.
@@ -3050,13 +3002,14 @@ locateBtn.addEventListener("contextmenu", (e) => e.preventDefault());
 locateBtn.addEventListener("click", () => {
   if (orientationHandler === null) requestOrientationPermission();
   // During RIDE, this button is the deliberate "show me exactly where I am" override: it recentres on
-  // the REAL screen centre, ignoring the look-ahead offset, for the duration of this one fix -- suppressed
-  // until the resulting pan's own moveend, so the whole flyTo animation (not just its first frame) sees
-  // the real centre. The next follow-driven pan (if RIDE/following is still active) re-applies the offset
-  // as usual; see rideLookAheadOffset() near canRotate.
+  // the REAL screen centre, ignoring the look-ahead placement, for the duration of this one fix.
+  // clearRideMapOffset() undoes the oversized/shifted #map (see enterRideMode()) so Leaflet's own,
+  // already-correct dead-centre applies for this one pan; applyRideMapOffset() puts the look-ahead
+  // placement back on the resulting pan's own moveend. The next follow-driven pan (if RIDE is still
+  // active) then simply crops the same, already-centred content through the shifted window again.
   if (rideMode) {
-    rideOffsetSuppressed = true;
-    map.once("moveend", () => { rideOffsetSuppressed = false; });
+    clearRideMapOffset();
+    map.once("moveend", () => { if (rideMode) applyRideMapOffset(); });
   }
   oneShotLocate();
 });
@@ -3119,6 +3072,60 @@ function syncLocateChrome(){
 // `rideMode` itself is declared much earlier (right after `canRotate`, before the map is constructed) --
 // see the look-ahead pivot override there for why.
 
+// ---- RIDE mode's look-ahead position placement (2026-08-15) -----------------------------------------
+// The user's position sits roughly a third of the map's height up from the BOTTOM while riding (not dead
+// centre), so more of the map ahead -- "up" once "Blickrichtung oben" is active -- stays visible. First
+// tried (2026-08-14) by patching leaflet-rotate's own `_getPixelCenter`/`_getNewPixelOrigin` internals to
+// move its centring math -- reverted the same day: on the phone, that moved the rotation PIVOT correctly
+// but left the position dot at true dead centre, i.e. the two disagreed again exactly the way the ORIGINAL
+// 2026-08-01 bug did, just from a different piece of leaflet-rotate's internals than the one identified
+// (and patched) as the cause. That's the "small, RIDE-exclusive offset, easy to get subtly wrong" risk
+// flagged for this feature from the very start -- so this version doesn't touch Leaflet's own centring math
+// AT ALL. Instead, `#map` itself is made TALLER than the visible `.map-wrap` window and shifted upward, so
+// Leaflet's own dead-centre placement (proven correct, including under rotation, since nothing about it
+// changes) lands lower within the visible crop. The tracked position and the rotation pivot are still
+// exactly the same point by construction -- they always were, that was never the bug -- only WHICH part of
+// the (always correctly centred) content is visible has changed.
+const RIDE_LOOKAHEAD_FRACTION = 2 / 3; // of .map-wrap's height, from ITS top -- i.e. about a third up from the bottom
+// `map.getContainer()` IS `#map` -- the very element this function resizes -- and the app's own
+// ResizeObserver (elsewhere in this file) watches exactly that container to catch layout settling. Without
+// a guard, every resize here would re-trigger that observer, which re-triggers this (via onViewportSettled),
+// forever -- and worse, each redundant pass would re-fire the recentring panTo below on top of whatever pan
+// is already in flight. Skipping the whole thing when the numbers haven't actually changed breaks the loop
+// at the source, since a no-op style write still exists as a DOM mutation that observers see.
+let rideMapOffsetTop = null, rideMapOffsetHeight = null;
+function applyRideMapOffset(){
+  const wrap = document.querySelector(".map-wrap");
+  const mapEl = document.getElementById("map");
+  const h = wrap.getBoundingClientRect().height;
+  if (!h) return;
+  // #map's own top must reach .map-wrap's top (offsetTop <= 0) so no blank strip appears above it -- the
+  // minimum container height for that is 2 * h * RIDE_LOOKAHEAD_FRACTION; +15% is slack against rounding.
+  const containerH = Math.round(h * RIDE_LOOKAHEAD_FRACTION * 2 * 1.15);
+  const offsetTop = Math.round(h * RIDE_LOOKAHEAD_FRACTION - containerH / 2);
+  if (offsetTop === rideMapOffsetTop && containerH === rideMapOffsetHeight) return; // see comment above
+  rideMapOffsetTop = offsetTop; rideMapOffsetHeight = containerH;
+  mapEl.style.top = offsetTop + "px";
+  mapEl.style.bottom = "auto";
+  mapEl.style.height = containerH + "px";
+  ensureMapSizeCurrent(); // lets Leaflet notice the new size -- but its own resize-compensation only
+                          // PRESERVES whatever was already on screen (right for an incidental resize like
+                          // an orientation flip), not "recentre on the tracked point", which is what this
+                          // needs: if a fix already arrived before this runs (e.g. a later viewport-settle
+                          // while already riding, not the very first call from enterRideMode()), explicitly
+                          // put it back at the container's own true centre -- exactly what onViewportSettled()
+                          // already does for the same reason.
+  if (userLocationMarker) map.panTo(userLocationMarker.getLatLng(), { animate: false });
+}
+function clearRideMapOffset(){
+  const mapEl = document.getElementById("map");
+  rideMapOffsetTop = null; rideMapOffsetHeight = null; // next applyRideMapOffset() must not skip as a no-op
+  mapEl.style.top = "";
+  mapEl.style.bottom = "";
+  mapEl.style.height = "";
+  ensureMapSizeCurrent();
+}
+
 function syncRideModeChrome(){
   document.querySelectorAll("#rideModeBtn, .ride-btn").forEach(b => {
     b.classList.toggle("active", rideMode);
@@ -3145,6 +3152,7 @@ function enterRideMode(){
   document.documentElement.classList.add("ride-mode");
   closeSidebar();
   syncRideModeChrome();
+  applyRideMapOffset();
   updateSelectionOutlineVisibility(); // drop the yellow ring immediately if a trail is already open
   if (openTrailId && soloId !== openTrailId) applySolo(openTrailId);
   updateRideInfoPanel();
@@ -3158,6 +3166,7 @@ function exitRideMode(){
   rideMode = false;
   document.documentElement.classList.remove("ride-mode");
   syncRideModeChrome();
+  clearRideMapOffset();
   setHeadingUp(false);
   stopFollowing();
   updateSelectionOutlineVisibility(); // give the yellow ring back if a trail is still open
@@ -7145,7 +7154,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v166"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v167"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
