@@ -22,6 +22,18 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-14
+- **A Tour's segment hit areas moved into their own Leaflet pane (`tourSegHitPane`, z-index 405), which
+  closes the segment-click bug structurally instead of by ordering discipline.** Clicking a Tour's stretch gave
+  the plain trail's panel until the Tour had been selected once — because `lineTrails` order IS the map's
+  z-order and any trail built after a Tour lays its invisible 22px hitLine over that Tour's per-segment areas.
+  Two rounds of re-raising (at build time, then in `applySolo`) each held only at the moment they ran, and the
+  user named why that can never be enough: "wenn man in der App Filter aktiviert und wieder deaktiviert, kann
+  man in so einen Zustand ja immer kommen" — `render()` adds and removes layers on every filter change. A pane
+  makes the question disappear. Verified live: 92 hit areas in the new pane, zero left in the overlay pane, and
+  the pane is **empty while the Tours are hidden**, so the trails underneath stay clickable (the user's own
+  follow-up requirement). Lifts were already at the bottom (`liftBandPane`, 350) including a Tour's own lift
+  stretches; putting the visible Tour LINES above the trail lines as well is deliberately left for its own
+  change, since four suites select trail geometry via `.leaflet-overlay-pane`.
 - **The selected stretch of a Tour is now drawn bold, on touch and desktop alike** (user request). Done by
   raising that segment's own `_tmBaseWeight` rather than setting a width, which is what makes the emphasis
   survive hover, solo dimming and a repaint without any of those needing to know about it -- the same

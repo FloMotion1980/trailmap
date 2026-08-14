@@ -140,45 +140,50 @@ TM.add("solo", () => typeof applySolo === "function" && TM.map.tourLiftStretches
   T.eq("selection cleared", TM.$$(".trail-card.selected").length, 0);
   T.eq("lifts back", TM.map.standaloneLifts(), LIFTS_ON_MAP);
   T.eq("Tour stretches back", TM.map.tourLiftStretches(), TOUR_STRETCHES);
-  // NOT YET WATCHED FAIL: this case was written on 2026-08-14 but never executed -- a browser suite needs a
-  // visible window and the only Chrome available here was a background tab, where throttled timers make the
-  // run never finish. By this project's own rule that is worth stating rather than glossing: a suite nobody
-  // has seen fail proves nothing. Mutation to try first: delete the two bringToFront() calls at the end of
-  // applySolo, which should flip "a segment hit area is the topmost of them".
-  T.test("soloing a Tour puts ITS hit areas on top, so a segment click reaches the Tour");
-  // lineTrails order is the map's z-order, and every trail built after a Tour lays its own invisible 22px
-  // hitLine over that Tour's per-segment hit areas. Dimming does nothing about it -- a hitline is
-  // opacity:0 and stays fully clickable -- so clicking a Tour's stretch opened the plain trail's panel
-  // instead of keeping the Tour selected and appending the stretch (user, 2026-08-14, on Pfälzerwald after
-  // 480 trails were appended past its Tours; the live region never showed it because only 3 trails sit
-  // after its last Tour, and Bike Kingdom has none). buildTrailLayer already raises segmentHitLines above
-  // the Tour's OWN hitline at build time; it cannot raise them above layers that do not exist yet, so
-  // applySolo has to redo it against the whole map for the trail the user is actually interacting with.
-  // Asserted on document order rather than on a click, because the adverse ordering that triggers the bug
-  // does not occur in this region -- the guarantee has to hold regardless of how the region is ordered.
-  const hitOrder = () => [...TM.$$(".leaflet-overlay-pane svg path")]
-    .map((el, i) => ({ i, w: parseFloat(el.getAttribute("stroke-width") || "0") }))
-    .filter(x => x.w === 18 || x.w === 22);
-  // Own name: `tourCard` is already declared further up in this same callback (the Tour used for the
-  // dimming case), and two `const`s of one name in one function scope is a SyntaxError -- which took the
-  // WHOLE bundle down, not just this suite, since the bundle is one script.
-  const zOrderTourCard = TM.ui.cardNamed("tourCards", /Biketicket/);
-  zOrderTourCard.click();
-  await TM.until(() => zOrderTourCard.classList.contains("selected"));
-  await TM.wait(400);
-  const order = hitOrder();
-  T.ok("there are both kinds of hit area to order", order.some(x => x.w === 18) && order.some(x => x.w === 22),
-       order.length, "both 18 and 22 present");
-  const lastSeg = Math.max(...order.filter(x => x.w === 18).map(x => x.i));
-  const lastTrail = Math.max(...order.filter(x => x.w === 22).map(x => x.i));
-  T.ok("a segment hit area is the topmost of them", lastSeg > lastTrail, { lastSeg, lastTrail },
-       "segment above trail");
+  T.test("a Tour's segment hit areas sit in their own pane, above every trail's hit area");
+  // The bug this closes: lineTrails order is the map's z-order, so a trail built after a Tour lays its own
+  // invisible 22px hitLine over that Tour's per-segment areas and swallows their clicks -- the stretch then
+  // opens the plain trail's panel instead of keeping the Tour selected. Two rounds of re-raising
+  // (buildTrailLayer at build time, applySolo on selection) each held only at the moment they ran, which the
+  // user diagnosed exactly: clicks worked only AFTER a Tour had been selected once, and "wenn man in der App
+  // Filter aktiviert und wieder deaktiviert, kann man in so einen Zustand ja immer kommen" -- render() adds
+  // and removes layers on every filter change. TOUR_SEG_HIT_PANE settles it structurally, so this asserts the
+  // structure rather than an order that would only be true right now.
+  const segPane = TM.$(".leaflet-tourSegHit-pane");
+  T.ok("the pane exists", !!segPane, !!segPane, true);
+  T.ok("and sits above the overlay pane", parseInt(getComputedStyle(segPane).zIndex, 10) >
+       parseInt(getComputedStyle(TM.$(".leaflet-overlay-pane")).zIndex, 10),
+       [getComputedStyle(segPane).zIndex, getComputedStyle(TM.$(".leaflet-overlay-pane")).zIndex],
+       "segment pane higher");
+  const inPane = [...segPane.querySelectorAll("path")];
+  T.ok("the Tours' segment hit areas are in it", inPane.length > 0, inPane.length, "> 0");
+  T.eq("and nothing else is", [...new Set(inPane.map(p => p.getAttribute("stroke-width")))], ["18"]);
+  T.eq("none is left behind in the overlay pane",
+       TM.$$(".leaflet-overlay-pane path").filter(p => p.getAttribute("stroke-width") === "18").length, 0);
+
+  T.test("hiding the Tours empties that pane, so the trails underneath stay clickable");
+  // The user's own requirement once the pane went in: "Hauptsache ich kann auch die Trails treffen, wenn die
+  // Touren ausgeblendet sind". A higher pane that kept its areas while its Tours were hidden would block
+  // every trail under them. render() already removes them; this pins it, because the pane makes the cost of
+  // getting it wrong much higher than it was.
+  const tourSwitch = TM.$$("input[type=checkbox]").find(i =>
+    /Touren/.test((i.closest("label") || i.parentElement).textContent));
+  if (!tourSwitch) {
+    T.skip("no Touren switch in this build");
+  } else {
+    const was = tourSwitch.checked;
+    if (was) { tourSwitch.click(); await TM.wait(500); }
+    T.eq("pane is empty with the Tours hidden", segPane.querySelectorAll("path").length, 0);
+    tourSwitch.click();
+    await TM.wait(500);
+    T.ok("and refilled when they come back", segPane.querySelectorAll("path").length > 0,
+         segPane.querySelectorAll("path").length, "> 0");
+    if (!was) { tourSwitch.click(); await TM.wait(300); }
+  }
 
   // NOT covered here, deliberately: the sibling fix from the same report -- a Tour riding the same trail
   // twice highlighting the clicked occurrence rather than always the first (selectedSegmentIdx) -- cannot be
   // reached from a pasted suite. It needs `lineTrails` and `TRAIL_SEGMENTS` to find a Tour that repeats a
   // component and to call selectTourSegment(t, id, idx), and both are top-level `const` in the app's own
-  // script block, so an injected script cannot see them (functions hoist, consts do not -- see
-  // tests/README.md). A behavioural version would have to click two points on the same repeated stretch and
-  // compare the highlight rect's x, which needs a region that HAS one (Pfälzerwald, not Bike Kingdom).
+  // script block, so an injected script cannot see them (functions hoist, consts do not).
 });

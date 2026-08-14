@@ -3497,6 +3497,22 @@ const BUILDER_GLOW = [
 const BUILDER_PANE = "builderPane";
 // Parent is the rotating pane (see ROTATING_PANE) -- the glow marks specific lines and must not drift off them.
 map.createPane(BUILDER_PANE, ROTATING_PANE()).style.zIndex = 345;
+
+// A Tour's per-segment hit areas live in their OWN pane, above the default overlay pane (Leaflet's is 400),
+// and that is a structural fix for a bug that two attempts at ordering discipline could not close.
+// lineTrails order is the map's z-order, so any trail built after a Tour lays its own invisible 22px hitLine
+// over that Tour's per-segment areas and swallows their clicks -- the stretch then opens the plain trail's
+// panel instead of keeping the Tour selected. buildTrailLayer raised the segment areas at build time, and
+// applySolo raised them again for the soloed layer, and BOTH are only true at the moment they run: the user
+// found that clicking a stretch gave the trail until the Tour had been selected once, and then made the
+// point that settles the approach -- "wenn man in der App Filter aktiviert und wieder deaktiviert, kann man
+// in so einen Zustand ja immer kommen". render() adds and removes layers on every filter and region change,
+// so no amount of re-raising can hold. A pane makes the question disappear instead of answering it.
+// Parent is the rotating pane (see ROTATING_PANE), like every other custom pane here: these are real
+// geometry over real lines and must turn with them. 405 sits above the trails and below Leaflet's own
+// shadow (500), marker (600) and tooltip (650) panes.
+const TOUR_SEG_HIT_PANE = "tourSegHitPane";
+map.createPane(TOUR_SEG_HIT_PANE, ROTATING_PANE()).style.zIndex = 405;
 const builderHighlight = L.layerGroup([], { pane: BUILDER_PANE }).addTo(map);
 
 function builderCoordsOf(item){
@@ -5496,7 +5512,7 @@ function buildTrailLayer(t){
           // Same per-segment hit-line pattern as a component trail below: keeps the LOOP as the open
           // panel (per the user's earlier rule that clicking into a loop shouldn't lose its context)
           // and just toggles a small lift block into it via selectedSegmentId.
-          const liftHit = L.polyline(seg.coords, { color:"#000", weight: 18, opacity: 0, bubblingMouseEvents:false }).addTo(map);
+          const liftHit = L.polyline(seg.coords, { color:"#000", weight: 18, opacity: 0, bubblingMouseEvents:false, pane: TOUR_SEG_HIT_PANE }).addTo(map);
           liftHit.bindTooltip(`🚡 ${refLift.name}`, { permanent:true, direction:"top", className:"trail-label-tooltip", interactive:false });
           liftHit.closeTooltip();
           liftHit.on("mouseover", () => { liftDots.setStyle({ weight: LIFT_DOT_WEIGHT + 2 }); if (!showNames) liftHit.openTooltip(); });
@@ -5516,7 +5532,7 @@ function buildTrailLayer(t){
         // which matters most when the trail itself isn't separately shown right now (added 2026-07-23
         // per the user's request — "Segmente jetzt klickbar/hoverbar machen").
         if (refTrail) {
-          const segHit = L.polyline(seg.coords, { color:"#000", weight: 18, opacity: 0, bubblingMouseEvents:false }).addTo(map);
+          const segHit = L.polyline(seg.coords, { color:"#000", weight: 18, opacity: 0, bubblingMouseEvents:false, pane: TOUR_SEG_HIT_PANE }).addTo(map);
           // Bound as permanent (like hitLine above) so Leaflet doesn't auto-wire its own hover-driven
           // open/close — instead opened/closed manually below, gated on `!showNames`, so a segment's
           // hover tooltip never doubles up with its always-on permanent name label (segmentNameLabels)
@@ -5598,12 +5614,11 @@ function buildTrailLayer(t){
   // name-label tooltip (rather than `line`, which for a Trailrunde is a featureGroup without tooltip
   // support) so tooltip behavior is identical for every trail regardless of segments.
   const hitLine = L.polyline(coords, { color:"#000", weight: 22, opacity: 0, bubblingMouseEvents:false }).addTo(map);
-  // segmentHitLines were added to the map before hitLine (built earlier, while constructing `line`
-  // above) — since Leaflet's default SVG renderer stacks later-added paths on top, hitLine would
-  // otherwise sit above them and swallow every real pointer event across the whole track, so the
-  // more specific per-segment hit-areas never actually receive clicks/hovers in a real browser (only
-  // in a test that fires events directly on the layer objects, bypassing hit-testing entirely — which
-  // is exactly how this bug slipped through). Bring them back above hitLine now that it exists.
+  // TOUR_SEG_HIT_PANE is what keeps these above hitLine and above every other trail's hit area now, whatever
+  // order things are built or re-added in -- which is why this no longer NEEDS to be a bringToFront(). Kept
+  // for the narrower job it still does: ordering a Tour's own segments against OTHER Tours' segments, which
+  // share that pane. Where two Tours ride the same stretch the more recently built one answers; arbitrary
+  // either way, and nothing has ever depended on it.
   segmentHitLines.forEach(h => h.bringToFront());
   const startDot = L.circleMarker(coords[0], { radius:5, color:"#22301f", weight:1.5, fillColor:"#fff", fillOpacity:1, bubblingMouseEvents:false }).addTo(map);
   const startMarker = L.circleMarker(coords[0], { radius:5, color:"#0d3d1a", weight:1.5, fillColor:"#3fbf5e", fillOpacity:1, bubblingMouseEvents:false });
