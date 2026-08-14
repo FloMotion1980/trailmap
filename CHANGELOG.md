@@ -32,19 +32,27 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   0.7-5.9 and again at 27.5-42.8), and a tapped trail stayed bold on a phone because `setHover(true)` lives
   in the click handler and a finger produces no `mouseout` to undo it.
 
-- **Two trial light basemaps that actually draw forest roads and trails: "Wald" and "Outdoor".** The user's
-  own ask — the gap between "Straße hell" (light, but its paths are hairline-faint and gone above z14) and
-  "Relief" (draws everything, at the price of contour clutter and hue collision with our own lines).
-  **"Wald"** = the HOT style via OpenStreetMap France (calm sage green, cream dashes for paths, no contour
-  lines); **"Outdoor"** = Thunderforest Outdoors. Both inherit carto's unbrightened palette, and both were
-  picked by comparing real tiles rather than descriptions (CyclOSM and CARTO Voyager lost that comparison —
-  see `CLAUDE.md`). Three things only the real servers revealed: HOT answers **404 above z16 in rural areas**
-  (Pfälzerwald and Ischgl, while Paris renders to z18), hence `maxNativeZoom: 16`, or the map would be blank
-  from z17 exactly where you stand on a trail; OSM France **throttles bursts** (10 of 30 tiles delivered) and
-  Leaflet never re-requests a failed tile, hence `retryFailedTiles()` for these two layers only; and
-  Thunderforest renders a diagonal **"API Key Required"** into every keyless tile, hence `THUNDERFOREST_KEY`
-  — while it is empty the chip is disabled rather than serving a watermarked map. `tests/browser/palette.js`
-  +1 case (11/11), both halves mutation-checked.
+- **A fifth basemap that is light AND draws forest roads and trails: "Wald".** The user's own ask — the gap
+  between "Straße hell" (light, but its paths are hairline-faint and gone above z14) and "Relief" (draws
+  everything, at the price of contour clutter and hue collision with our own lines). "Wald" is the HOT style
+  via OpenStreetMap France: calm sage green, cream dashes for paths, no contour lines, carto's unbrightened
+  palette. Picked by comparing **real tiles of one spot in the Pfälzerwald** rather than descriptions —
+  CyclOSM (saturated, contour-heavy, tracks that read like our own lines) and CARTO Voyager (paths nearly as
+  faint as Positron's) lost that comparison. Two things only the real server revealed: it answers **404 above
+  z16** (measured in five places, including a German village and a French forest; only Paris-dense areas
+  serve z17 — and CyclOSM on the *same* infrastructure serves z18 everywhere, so it is the HOT style's render
+  setup, not the host), hence `maxNativeZoom: 16` or the map would be blank from z17 exactly where you stand
+  on a trail; and OSM France **throttles bursts** (10 of 30 tiles delivered) while Leaflet never re-requests a
+  failed tile, hence `retryFailedTiles()` for this layer only. `tests/browser/palette.js` +1 case (11/11),
+  mutation-checked. **The blurry upscale above z16 is a known, accepted limitation** (user: "Schade, dass Wald
+  nicht so weit reinzoomt … wir lassen sie mal drin"); `CLAUDE.md` records the shape of a fix if it ever
+  matters.
+- **Thunderforest Outdoors ("Outdoor") shipped alongside it for a few hours and was removed again** on the
+  user's call. It renders to z19 everywhere — i.e. exactly what "Wald" cannot — but needs an API key: keyless
+  tiles come back as real maps with a diagonal **"API Key Required"** rendered in, byte-identical with and
+  without a `Referer`. On a static site the key would sit in public client code and the preload button would
+  spend its quota. The measurement and that reasoning are kept in `CLAUDE.md` as a rejected alternative, so
+  nobody re-adds it keylessly.
 - **`tests/browser/palette.js` carried a line that could never go green** — `T.eq(label, <boolean>, <array>)`
   where it meant `T.ok`, ever since the Monte Corno case was written on 2026-08-13 (`ddec83e`). A
   permanently red line is worse than a missing check: it trains everyone to read past red. Same class of

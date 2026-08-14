@@ -143,11 +143,12 @@
             <button class="chip" data-layer="carto">Straße hell</button>
             <button class="chip" data-layer="topo">Relief</button>
             <button class="chip" data-layer="sat">Satellit</button>
-            <!-- Testweise, 2026-08-14: zwei helle Ebenen, die Forstwege UND Trails zeichnen -- genau die
-                 Lücke zwischen "Straße hell" (hell, aber die Wege sind hauchdünn/ab z14 gar nicht da) und
-                 "Relief" (zeigt alles, aber Höhenlinien-Gewusel und Farbkollision mit unseren Linien). -->
+            <!-- 2026-08-14: die helle Ebene, die Forstwege UND Trails zeichnet -- genau die Lücke zwischen
+                 "Straße hell" (hell, aber die Wege sind hauchdünn/ab z14 gar nicht da) und "Relief" (zeigt
+                 alles, aber Höhenlinien-Gewusel und Farbkollision mit unseren Linien). Testweise mit einer
+                 zweiten Ebene ("Outdoor", Thunderforest) eingeführt, die der User am selben Tag wieder
+                 rausnehmen ließ -- warum, steht am hot-Layer unten. -->
             <button class="chip" data-layer="hot">Wald</button>
-            <button class="chip" data-layer="outdoor">Outdoor</button>
           </div>
           <div class="toggle-row-group">
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showNamesToggle"><span class="slider"></span></span>Namen</label>
@@ -2131,18 +2132,6 @@ map.on("zoomend", updateStartDotVisibility);
 // every layout (desktop, portrait, landscape-compact) for free.
 L.control.scale({ position: "bottomright", imperial: false }).addTo(map);
 
-// Thunderforest ("Outdoor", testweise seit 2026-08-14) braucht einen API-Key, und das ist gemessen, nicht
-// aus den AGB abgelesen: ohne Key liefert der Server echte Karten -- aber mit einem diagonalen "API Key
-// Required" hineingerendert. Der Direktabruf gibt byteidentisch dasselbe Bild wie der Browser (mit und ohne
-// Referer, gleiche md5), es ist also nichts, was sich mit Headern umgehen ließe, und soll es auch nicht.
-// Leer = die Ebene wird gar nicht angeboten (der Chip wird unten deaktiviert), statt eine mit Wasserzeichen
-// überzogene Karte zu zeigen. Ein kostenloser "Hobby"-Key (nicht-kommerziell, 150k Kacheln/Monat) von
-// thunderforest.com/pricing trägt sich hier ein. Zwei Dinge dazu wissen: er steht dann im öffentlichen
-// Client-Code (das lässt sich bei einer statischen Seite nicht vermeiden), und "📥 Trail-Umgebung
-// vorladen" zieht sein Kontingent -- eine vorgeladene Region sind je nach Zuschnitt schnell tausende
-// Kacheln.
-const THUNDERFOREST_KEY = "";
-
 const baseLayers = {
   osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
@@ -2156,26 +2145,31 @@ const baseLayers = {
   sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19, attribution: 'Tiles &copy; Esri'
   }),
-  // TESTWEISE (2026-08-14, auf Wunsch des Users), beide gegen echte Kacheln im Pfälzerwald verglichen:
-  // hell wie "Straße hell", zeichnen aber Forstwege und Trails deutlich sichtbar.
+  // "Wald" (2026-08-14, auf Wunsch des Users, gegen echte Kacheln im Pfälzerwald ausgewählt statt nach
+  // Beschreibung): der HOT-Stil (Humanitarian OSM Team) auf den Kacheln von OpenStreetMap France -- hell wie
+  // "Straße hell", zeichnet aber Forstwege und Trails deutlich sichtbar. Ruhiges Salbeigrün, Wege als
+  // creme-weiße Striche, KEINE Höhenlinien: also nicht das Gewusel von "Relief", und keine Farbkollision mit
+  // unseren grün/rot/blauen Trails.
   //
-  // "Wald" = der HOT-Stil (Humanitarian OSM Team) auf den Kacheln von OpenStreetMap France: ruhiges
-  // Salbeigrün, Wege als creme-weiße Striche, KEINE Höhenlinien -- also nicht das Gewusel von "Relief", und
-  // keine Farbkollision mit unseren grün/rot/blauen Trails. maxNativeZoom ist der Punkt, der hier wirklich
-  // wichtig ist: der Server liefert für ländliche Gegenden oberhalb z16 nur 404 (gemessen -- Pfälzerwald und
-  // Ischgl beide ab z17, während Paris bis z18 rendert; drei Wiederholungen, also kein Aussetzer, sondern
-  // eine Eigenschaft des Servers). Ohne maxNativeZoom wäre die Karte ab z17 genau dort leer, wo man auf
-  // einem Trail steht. Mit ihm skaliert Leaflet die z16-Kachel hoch: unscharf, aber vorhanden.
+  // maxNativeZoom 16 ist die eine Zeile, die man hier verstehen muss, und die bekannte Schwäche der Ebene
+  // (der User: "Schade, dass Wald nicht so weit reinzoomt wie Straße oder Straße hell"): oberhalb z16
+  // antwortet der Server mit 404 -- gemessen im Pfälzerwald, in Ischgl, in Lenzerheide, in einem deutschen
+  // DORF und sogar in einem französischen Wald, je mehrfach wiederholt, also kein Aussetzer. Nur sehr dichte
+  // Gegenden (Paris) liefern z17, keine davon z19. Es ist auch nicht der Host: CyclOSM auf DERSELBEN
+  // Infrastruktur (tile-cyclosm.openstreetmap.fr) liefert z17 und z18 überall, wo HOT 404 sagt -- die
+  // Grenze hängt am Render-Setup des HOT-Stils. Ohne maxNativeZoom wäre die Karte ab z17 genau dort leer, wo
+  // man auf einem Trail steht; mit ihm skaliert Leaflet die z16-Kachel hoch: unscharf, aber vorhanden.
+  //
+  // Ein zweiter Kandidat, Thunderforest Outdoors ("Outdoor"), war denselben Tag testweise daneben und ist
+  // auf Wunsch des Users wieder raus. Für den Fall, dass jemand ihn wieder holen will, der Grund, ihn NICHT
+  // keylos einzubauen: ohne API-Key liefert der Server echte Karten, aber mit einem diagonalen "API Key
+  // Required" hineingerendert -- byteidentisch mit und ohne Referer, also nichts, was man mit Headern
+  // umgeht. Er rendert dafür bis z19 überall, bräuchte also kein maxNativeZoom; ein Key (Hobby-Plan,
+  // kostenlos, nicht-kommerziell) stünde bei einer statischen Seite zwangsläufig offen im Client-Code, und
+  // "📥 Trail-Umgebung vorladen" würde sein Kontingent ziehen.
   hot: L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
     maxZoom: 19, maxNativeZoom: 16, subdomains: 'ab',
     attribution: '&copy; OpenStreetMap contributors · Stil: Humanitarian OSM Team · Kacheln: OpenStreetMap France'
-  }),
-  // "Outdoor" = Thunderforest Outdoors: blasses Grün, Wege gestrichelt, zarte Höhenlinien, und -- anders als
-  // "Wald" -- rendert es bis in hohe Zoomstufen überall (z19 in jeder geprüften Region), braucht also kein
-  // maxNativeZoom. Dafür braucht es einen API-Key, sonst kommen die Kacheln mit Wasserzeichen; siehe
-  // THUNDERFOREST_KEY oben, dort steht auch, was ein Key sonst noch mit sich bringt.
-  outdoor: L.tileLayer(`https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=${THUNDERFOREST_KEY}`, {
-    maxZoom: 19, attribution: 'Karten &copy; Thunderforest · Daten &copy; OpenStreetMap contributors'
   })
 };
 let currentBaseKey = "osm";
@@ -2195,20 +2189,6 @@ document.querySelectorAll("#baseLayerControl .chip").forEach(btn => {
   });
 });
 
-// Ohne Key gibt es "Outdoor" nicht zum Anklicken -- eine Karte mit "API Key Required" quer über jeder
-// Kachel ist schlechter als keine. Deaktiviert statt entfernt, damit sichtbar bleibt, dass die Ebene
-// existiert und woran es hängt (der Titel sagt es), und inline gestylt, damit dafür kein CSS-Deploy mit
-// ?v=-Bump nötig ist. Ein disabled <button> feuert kein click, der Handler oben braucht also keinen Zweig.
-if (!THUNDERFOREST_KEY) {
-  const outdoorChip = document.querySelector("#baseLayerControl [data-layer='outdoor']");
-  if (outdoorChip) {
-    outdoorChip.disabled = true;
-    outdoorChip.style.opacity = "0.45";
-    outdoorChip.style.cursor = "default";
-    outdoorChip.title = "Braucht einen (kostenlosen) Thunderforest-API-Key — ohne Key liegt auf jeder Kachel ein „API Key Required“-Wasserzeichen.";
-  }
-}
-
 // Just report load problems — never auto-switch back, so the button click always visibly does something.
 function watchLayer(layer, label){
   let ok = 0, fail = 0;
@@ -2224,11 +2204,9 @@ function watchLayer(layer, label){
 watchLayer(baseLayers.topo, "Relief (Topo)");
 watchLayer(baseLayers.sat, "Satellit (Esri)");
 watchLayer(baseLayers.carto, "Straße hell (CARTO)");
-// Beide neuen Ebenen hängen an fremden Servern mit Fair-Use-Politik (OSM France) bzw. an einem Anbieter,
-// der offiziell einen API-Key erwartet (Thunderforest) -- die Warnung ist hier also nicht Kosmetik,
-// sondern der Unterschied zwischen "Server sagt nein" und "die Karte ist kaputt".
+// "Wald" hängt an einem Community-Server mit Fair-Use-Politik (OSM France) -- die Warnung ist hier also
+// nicht Kosmetik, sondern der Unterschied zwischen "Server sagt nein" und "die Karte ist kaputt".
 watchLayer(baseLayers.hot, "Wald (HOT/OSM France)");
-watchLayer(baseLayers.outdoor, "Outdoor (Thunderforest)");
 
 // Fehlgeschlagene Kacheln noch ein-, zweimal nachfordern -- und das ist hier keine Vorsichtsmaßnahme
 // "für den Fall", sondern gemessenes Verhalten: beim ersten Umschalten auf "Wald" hat OSM France von 30
@@ -2237,9 +2215,9 @@ watchLayer(baseLayers.outdoor, "Outdoor (Thunderforest)");
 // nachträglich an: das Loch bleibt stehen, bis derselbe Ausschnitt neu aufgebaut wird. Genau das würde
 // eine an sich brauchbare Ebene als "kaputt" erscheinen lassen.
 //
-// Absichtlich nur für die zwei neuen Ebenen: die vier alten hängen an Servern, die das nicht brauchen,
-// und ein Retry gegen einen drosselnden Server soll höflich bleiben -- zwei Versuche, wachsender Abstand,
-// und nichts davon offline (dort ist ein Fehlschlag die Wahrheit, nicht ein Aussetzer).
+// Absichtlich nur für "Wald": die vier alten Ebenen hängen an Servern, die das nicht brauchen, und ein
+// Retry gegen einen drosselnden Server soll höflich bleiben -- zwei Versuche, wachsender Abstand, und
+// nichts davon offline (dort ist ein Fehlschlag die Wahrheit, nicht ein Aussetzer).
 // `#r<n>` an der URL ist der Trick, der den Neuversuch überhaupt auslöst: dieselbe src erneut zuzuweisen
 // startet in Chrome keinen neuen Request. Das Fragment geht nicht an den Server und fällt auch aus dem
 // Cache-Key des Service Workers heraus, die Kachel landet also unter ihrer normalen URL im Cache.
@@ -2258,7 +2236,6 @@ function retryFailedTiles(layer, tries = 2, baseDelayMs = 1200){
   });
 }
 retryFailedTiles(baseLayers.hot);
-retryFailedTiles(baseLayers.outdoor);
 
 // ---- My Location (blue dot, accuracy ring, heading cone) ----
 const geoIcon = L.divIcon({
@@ -3432,16 +3409,13 @@ const BASE_PALETTES = {
   osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:1, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
   carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
   topo:  { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
-  // Die beiden testweisen hellen Ebenen (2026-08-14) erben die Farben von "carto": beide sind helle Karten
-  // mit blassem Grün, also gilt derselbe Grund, aus dem "Straße hell" die UNaufgehellten Farben behält.
-  // Der eine echte Unterschied zwischen ihnen ist die Lift-Maske, und der ist an den Kacheln abgelesen,
-  // nicht geraten: Thunderforest zeichnet Luftseilbahnen selbst (schwarze Linie mit Querstrichen, samt
-  // Namen -- auf der Testkachel bei Ischgl deutlich als "Schwarzwasserlift" zu sehen), also braucht
-  // "Outdoor" die Maske genauso wie "Straße" (liftMaskOpacity 1), sonst liegt unser Lift-Symbol auf der
-  // Linie der Karte. Der HOT-Stil zeichnet auf derselben Kachel keine Bahn -- daher 0, wie bei den anderen
-  // hellen Ebenen. Wenn auf dem Gerät doch eine durchscheint, ist das hier die eine Ziffer, die es braucht.
-  hot:     { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
-  outdoor: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:1, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  // "Wald" (2026-08-14) erbt die Farben von "carto" -- auch eine helle Karte mit blassem Grün, also gilt
+  // derselbe Grund, aus dem "Straße hell" die UNaufgehellten Farben behält. `liftMaskOpacity: 0` ist an den
+  // Kacheln abgelesen, nicht geraten: der HOT-Stil zeichnet auf der Testkachel bei Ischgl keine Luftseilbahn,
+  // es gibt also nichts zu überdecken (Thunderforest, der andere Kandidat vom selben Tag, zeichnete dort
+  // sehr wohl eine, samt Namen -- der hätte die Maske gebraucht). Wenn auf dem Gerät doch eine durchscheint,
+  // ist das hier die eine Ziffer, die es braucht.
+  hot:   { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
   sat:   {
     // schwarz is back to the plain near-black (#1c1c1c) every other basemap uses, not the #5c5c5c
     // "lightened" compromise from earlier the same day (2026-08-13, per the user: "mit der weißen Linie
