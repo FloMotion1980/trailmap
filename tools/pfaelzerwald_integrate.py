@@ -51,6 +51,28 @@ TF_DIFF = {"Easiest": "gruen", "Easy": "gruen", "Intermediate": "blau", "Difficu
            "Severe": "schwarz", "Extremely Difficult": "schwarz",
            "Extremely Difficult & dangerous, pros only!": "schwarz"}
 ASSIGNABLE = ["johanniskreuz", "weinstrasse", "wasgau"]
+
+#: Trailforks trails NOT to import, because the region already has the same ground under a better entry.
+#:
+#: These five are the RV Edelweiss Deidesheim "Naturtrail" descents, which Trailforks also carries. The
+#: user's instruction was that the three existing `naturtrail_deidesheim` entries are correct and need no
+#: reconciling -- which `pfaelzerwald_containment.py` implements by excluding that sub-region from the
+#: comparison entirely. Correct as far as it goes, and it created exactly the problem it was meant to avoid:
+#: nothing then stopped the Trailforks copies being ADDED alongside, putting two entries on one trail. Found
+#: 2026-08-14 by checking the excluded trails against the incoming set afterwards, which is the check the
+#: exclusion made necessary.
+#:
+#: Ours win on both counts, so this is not a close call: they are complete where Trailforks is split
+#: (Churchner 1.82 km against Teil 1 + Teil 2 = 1.50 km; Pechstein 1.68 km against upper + lower = 1.47 km),
+#: and they carry the trail's actual name instead of 74 characters of sponsor text, which would wreck the
+#: sidebar's card layout (see the card-sizing notes in CLAUDE.md).
+SKIP_SLUGS = {
+    "drei-eichen-sponsored-by-sigma-rv-edelweiss-1924-deidesheim-e-v",
+    "pechstein-upper-sponsored-by-trp-rv-edelweiss-1924-deidesheim-e-v",
+    "pechstein-lower-sponsored-by-trp-rv-edelweiss-1924-deidesheim-e-v",
+    "churchner-sponsored-by-raaw-rv-edelweiss-1924-deidesheim-e-v--teil-1",
+    "churchner-sponsored-by-raaw-rv-edelweiss-1924-deidesheim-e-v--teil-2",
+}
 HAARDT_MIN_LAT = 49.445
 BIENWALD_MAX_LAT = 49.12
 BIENWALD_MIN_LON = 8.00
@@ -105,7 +127,11 @@ def main():
 
     added, per_sub, per_diff, clashes = 0, collections.Counter(), collections.Counter(), []
     existing_ids = {t["id"] for t in line_trails}
+    skipped_dupes = []
     for slug, coords in sorted(geo_new.items()):
+        if slug in SKIP_SLUGS:
+            skipped_dupes.append(slug)
+            continue
         m = meta[slug]
         tid = trail_id(slug)
         if tid in existing_ids:
@@ -131,7 +157,8 @@ def main():
         if added % 50 == 0:
             print("   ... %d/%d Höhenprofile" % (added, len(geo_new)), flush=True)
 
-    print("neu hinzugefügt: %d" % added)
+    print("neu hinzugefügt: %d  (%d Trailforks-Dubletten übersprungen: %s)"
+          % (added, len(skipped_dupes), ", ".join(s.split("-sponsored")[0] for s in skipped_dupes)))
     print("   je Sub-Region: %s" % dict(per_sub))
     print("   je Schwierigkeit: %s" % dict(per_diff))
     if clashes:
