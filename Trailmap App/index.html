@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=164" />
+<link rel="stylesheet" href="style.css?v=165" />
 </head>
 <body>
 <div id="fatalError">
@@ -273,11 +273,17 @@
              Order matters: the re-centre cell is LAST because it is the only conditional one, so its
              appearing cannot move a cell you were aiming at. -->
         <div id="mapControls">
-          <button id="locateBtn" title="Tippen: Position zeigen – Halten: Folgen starten">📍</button>
+          <button id="locateBtn" title="Position zeigen">📍</button>
           <!-- The north-up / heading-up switch. In this cluster at the user's request ("ein Button dort wo
                auch der Zentrieren Button erscheint", 2026-08-01), and permanently visible unlike the
                re-centre cell, since it is a mode and not a reaction to anything. -->
           <button id="bearingBtn" title="Karte: Norden oben — tippen für Blickrichtung oben" aria-pressed="false">🧭</button>
+          <!-- RIDE mode (2026-08-14, replaces the old hold-to-follow gesture on #locateBtn entirely): one
+               explicit, discoverable button that starts full-screen riding -- GPS follow, auto rotation, and
+               (if a trail is open) an isolated solo view of it, with no yellow selection ring. Placed BEFORE
+               #recenterBtn on purpose: it is a permanent mode switch like #bearingBtn, not a conditional cell,
+               and the conditional one must stay last (see #recenterBtn's own comment). -->
+          <button id="rideModeBtn" class="ride-btn" title="RIDE-Modus starten" aria-pressed="false">🚵</button>
           <!-- Only while following AND detached (you panned the map away). Re-attaching is its own control on
                purpose: the readout's job is to display, not to act. -->
           <button id="recenterBtn" title="Zurück zur Position">◎</button>
@@ -287,12 +293,6 @@
              rather than diagnosis -- and the chip itself is the fold handle, so it can never be covered the
              way a separate handle tucked under the locate button was. Tapping it slides the full line
              (fix age, compass state, map bearing, the counters) out to the left. -->
-        <!-- Teaches the hold gesture at the moment it is relevant: right after a TAP, which is the cheap half of
-             the same button. A short partial fill runs up the locate cell at the same time, so the sentence and
-             the gesture it describes are shown together. On every tap -- see showFollowHint() for why there is no
-             budget. aria-hidden because it is a transient duplicate of the button's own title, which a screen
-             reader already reads out. -->
-        <div id="followHint" aria-hidden="true">Halten für Folgen-Modus</div>
         <div id="liveStatus">
           <div id="liveStatusPanel"><span id="liveStatusText">Live-Tracking</span></div>
           <button id="liveStatusChip" title="Anzeige ein-/ausklappen">
@@ -328,6 +328,14 @@
            from a map tap: it closed the panel but LEFT the trail selected. Closing now always deselects. -->
       <div id="infoPanel">
         <div id="ipContent"></div>
+      </div>
+      <!-- RIDE mode's own readout (2026-08-14): permanent while riding, in place of the closed info panel and
+           the hidden header. Deliberately shown even with nothing focused (a reduced/placeholder state) rather
+           than display:none, since it is meant to grow into a general tracking readout later -- see
+           updateRideInfoPanel(). -->
+      <div id="rideInfoPanel">
+        <div id="rideInfoName">–</div>
+        <div id="rideInfoStats"></div>
       </div>
       <div id="layerWarning"></div>
       <div id="offlineBanner">📴 Offline-Modus</div>
@@ -2937,46 +2945,11 @@ function stopFollowing(){
   releaseWakeLock();
 }
 
-// ---- The locate button's two gestures (2026-07-29) -------------------------------------------------
-// TAP shows the position once, HOLD starts following. The user's own model, and the reason for it is that the
-// frequent action gets the cheap gesture: "where am I" is a tap, while following -- which costs a wake lock
-// and battery -- asks for a deliberate one. It also means a single tap gets you back OUT of following,
-// instead of cycling through three states to switch it off.
-//
-//   aus     + Tippen  -> Position, ONE-SHOT: getCurrentPosition, no watch, no wake lock
-//   aus     + Halten  -> Folgen (watchPosition + panTo + wake lock), the button pulses
-//   Folgen  + Tippen  -> aus
-//   Folgen  + Wischen auf der Karte -> abgekoppelt (see followDetached): the position stays live but the map
-//                        stops chasing, and the re-centre button appears below the locate button
-const HOLD_MS = 500;
-let holdTimer = null, holdFired = false;
-
-// ---- Teaching the hold gesture (2026-08-04) -------------------------------------------------------
-// A hidden gesture that nobody finds is a feature nobody has, and the button's `title` is worth nothing on a
-// touch screen. So the hint fires after a TAP -- the moment the user has just asked "where am I", which is
-// exactly when "and you can keep following" is worth knowing -- and it shows the same partial fill the hold
-// itself draws, so the sentence and the gesture are learnt together rather than the words alone.
-//
-// EVERY tap, with no budget and nothing persisted (user, 2026-08-04: "würde ich nicht machen, dass der Text
-// nach 3x nicht mehr kommt"). It briefly showed three times and then never again; a label this small, on a
-// gesture you may go weeks without using, is a reminder rather than an onboarding step. Not showing it while
-// already following is the one exception, and not a cap: there a tap means "stop", so the sentence would be
-// describing something else.
-const FOLLOW_HINT_MS = 3800;
-let followHintTimer = null;
-const followHintEl = document.getElementById("followHint");
-function hideFollowHint(){
-  if (followHintTimer !== null) { clearTimeout(followHintTimer); followHintTimer = null; }
-  followHintEl.classList.remove("visible");
-  locateBtn.classList.remove("hinting");
-}
-function showFollowHint(){
-  if (followMode) return;
-  hideFollowHint();                     // restart cleanly if one is still on screen
-  followHintEl.classList.add("visible");
-  locateBtn.classList.add("hinting");
-  followHintTimer = setTimeout(() => { followHintTimer = null; hideFollowHint(); }, FOLLOW_HINT_MS);
-}
+// ---- The locate button (2026-08-14: simplified to a plain one-shot) --------------------------------
+// Used to also carry a HOLD gesture that started "Folgen" -- replaced by the explicit RIDE button
+// (see enterRideMode()/exitRideMode() below), which owns startFollowing()/stopFollowing() now. A tap
+// here always just shows the position once; it deliberately does NOT toggle RIDE off, so tapping
+// "where am I" mid-ride cannot accidentally end the ride.
 
 // A one-shot position brings the heading cone with it -- the user was explicit, because "where am I and which
 // way am I facing" is the actual question at a junction.
@@ -3011,47 +2984,18 @@ function oneShotLocate(){
   );
 }
 
-// The orientation permission is requested on POINTERDOWN, not from the hold timer: on iOS
-// DeviceOrientationEvent.requestPermission() only works inside a user gesture, and a setTimeout callback is
-// not one. Guarded so a second press does not stack listeners.
+// The orientation permission is requested on POINTERDOWN as well as click, same dual-path reasoning as
+// #bearingBtn below (Safari only grants the activation DeviceOrientationEvent.requestPermission() needs on
+// click/touchend, Android accepts it earlier on pointerdown -- both guarded, whichever the platform honours wins).
 locateBtn.addEventListener("pointerdown", () => {
   if (orientationHandler === null) requestOrientationPermission();
-  if (followMode) return;                   // holding while following has no meaning
-  holdFired = false;
-  locateBtn.classList.add("holding");
-  holdTimer = setTimeout(() => {
-    holdTimer = null;
-    holdFired = true;
-    locateBtn.classList.remove("holding");
-    hideFollowHint();        // the gesture is happening; the label above the finger has nothing left to say
-    startFollowing();
-  }, HOLD_MS);
 });
-const cancelHold = () => {
-  if (holdTimer !== null) { clearTimeout(holdTimer); holdTimer = null; }
-  locateBtn.classList.remove("holding");
-};
-locateBtn.addEventListener("pointerup", cancelHold);
-locateBtn.addEventListener("pointercancel", cancelHold);
-// Deliberately NOT pointerleave: a thumb wanders a few pixels on a 46px target during a half-second hold, and
-// cancelling on that would make the gesture feel broken. Sliding off on purpose still completes the hold,
-// which costs one tap to undo.
-// Without this a long press opens the platform's own callout on the emoji instead of starting the follow.
+// Without this a long press opens the platform's own callout on the emoji.
 locateBtn.addEventListener("contextmenu", (e) => e.preventDefault());
 
 locateBtn.addEventListener("click", () => {
-  // The compass permission is asked for HERE, before the hold's early return, because Safari only grants the
-  // user activation that DeviceOrientationEvent.requestPermission() requires on click/touchend -- NOT on
-  // pointerdown. Moving it to pointerdown yesterday is what broke the cone: the request started being
-  // rejected, which shows up as ✕ in the readout. The pointerdown attempt is kept as well (it is the earlier
-  // of the two, and valid on Android), and both are guarded, so whichever one the platform honours wins.
   if (orientationHandler === null) requestOrientationPermission();
-  // A completed hold is followed by a click event; swallowing it is what stops the follow from being switched
-  // straight back off.
-  if (holdFired) { holdFired = false; return; }
-  if (followMode) { stopFollowing(); return; }
   oneShotLocate();
-  showFollowHint();
 });
 
 // The orientation-mode switch. `click`, not `pointerdown`: this is the one call site where getting the
@@ -3101,11 +3045,63 @@ map.on("dragstart", () => {
 
 function syncLocateChrome(){
   document.getElementById("locateCluster").classList.toggle("is-detached", followMode && followDetached);
-  locateBtn.classList.toggle("active", followMode);
-  locateBtn.title = followMode
-    ? "Folgen beenden"
-    : "Tippen: Position zeigen – Halten: Folgen starten";
 }
+
+// ---- RIDE mode (2026-08-14) -------------------------------------------------------------------------
+// Replaces the old hold-to-follow gesture with one explicit, discoverable button: full-screen map, GPS
+// follow + auto rotation, and -- if a trail/Tour is open -- an isolated solo view of it with the yellow
+// selection ring suppressed (RIDE never shows it, regardless of how the trail got selected). Reuses the
+// existing follow/rotation/solo machinery wholesale; RIDE only changes how they're triggered and adds the
+// full-screen chrome + its own readout (#rideInfoPanel).
+let rideMode = false;
+
+function syncRideModeChrome(){
+  document.querySelectorAll("#rideModeBtn, .ride-btn").forEach(b => {
+    b.classList.toggle("active", rideMode);
+    b.setAttribute("aria-pressed", rideMode ? "true" : "false");
+    b.title = rideMode ? "RIDE-Modus beenden" : "RIDE-Modus starten";
+  });
+}
+
+// Fills the RIDE readout from the focused trail's own lineTrails entry -- kept visible even with nothing
+// focused (a reduced/placeholder state) since it's meant to grow into a general tracking readout later.
+function updateRideInfoPanel(){
+  const nameEl = document.getElementById("rideInfoName");
+  const statsEl = document.getElementById("rideInfoStats");
+  const t = openTrailId ? lineTrails.find(tr => tr.id === openTrailId) : null;
+  if (!t) { nameEl.textContent = "–"; statsEl.innerHTML = ""; return; }
+  nameEl.textContent = t.name;
+  statsEl.innerHTML = `<span>${t.len.toFixed(1)} km</span><span>⬆️ ${Math.round(t.up)} m</span><span>⬇️ ${Math.round(t.down)} m</span>`;
+}
+
+function enterRideMode(){
+  if (rideMode) return;
+  if (builderMode) setBuilderMode(false); // RIDE and the Tourenbuilder are mutually exclusive
+  rideMode = true;
+  document.documentElement.classList.add("ride-mode");
+  closeSidebar();
+  syncRideModeChrome();
+  updateSelectionOutlineVisibility(); // drop the yellow ring immediately if a trail is already open
+  if (openTrailId && soloId !== openTrailId) applySolo(openTrailId);
+  updateRideInfoPanel();
+  if (orientationHandler === null) requestOrientationPermission();
+  setHeadingUp(true);
+  if (!followMode) startFollowing();
+}
+
+function exitRideMode(){
+  if (!rideMode) return;
+  rideMode = false;
+  document.documentElement.classList.remove("ride-mode");
+  syncRideModeChrome();
+  setHeadingUp(false);
+  stopFollowing();
+  updateSelectionOutlineVisibility(); // give the yellow ring back if a trail is still open
+}
+
+document.getElementById("rideModeBtn").addEventListener("click", () => {
+  if (rideMode) exitRideMode(); else enterRideMode();
+});
 
 
 // ---- Place labels (village names) — independent of zoom, and switchable via "Orte" (see showPlaces).
@@ -4625,6 +4621,13 @@ function handleInfoPanelClick(e){
     // Same button in a lift's panel carries data-lift-id instead of data-id.
     const layer = locBtn.dataset.liftId ? liftLayers[locBtn.dataset.liftId] : lineLayers[locBtn.dataset.id];
     if (layer) flyToTrailBounds(layer.bounds);
+    return;
+  }
+  const rideBtn = e.target.closest(".ride-btn");
+  if (rideBtn) {
+    if (rideMode) { exitRideMode(); return; }
+    const t = lineTrails.find(tr => tr.id === rideBtn.dataset.id);
+    if (t) { if (openTrailId !== t.id) showTrailInfo(t); enterRideMode(); }
   }
 }
 ipContent.addEventListener("click", handleInfoPanelClick);
@@ -4653,7 +4656,9 @@ function closeInfoPanelAndDeselect(){
   // pattern already used in setHover(true) itself for the analogous hover-side case.
   resetAllHoverStyles();
 }
-map.on("click", closeInfoPanelAndDeselect);
+// During RIDE, a focused trail cannot be deselected by tapping empty map space (user, 2026-08-14) --
+// the whole point of the focus is that it survives incidental taps while riding.
+map.on("click", () => { if (!rideMode) closeInfoPanelAndDeselect(); });
 
 // ---- Drive a tap on a trail/lift ourselves, never through the platform's own click (2026-08-04) ---
 // First cut (same day) only retargeted when the touchend position hit tested to something different than the
@@ -5232,6 +5237,7 @@ function buildInfoPanelHtml(t){
       <button class="solo-btn${isSolo ? " active" : ""}" data-id="${t.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button>
       <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">⏪</button>
       <button class="gpx-download-btn" data-id="${t.id}" title="GPX herunterladen">GPX</button>
+      <button class="ride-btn${rideMode ? " active" : ""}" data-id="${t.id}" title="${rideMode ? "RIDE-Modus beenden" : "RIDE-Modus für diesen Trail starten"}">🚵</button>
     </span></h3>
     <div class="ip-trail">
       <span class="dot-start">●</span> → ${t.len} km → <span class="dot-end">●</span><span
@@ -5299,7 +5305,9 @@ function showTrailInfo(t, opts){
   // loop" -- handleInfoPanelClick's own solo-btn handler re-calls showTrailInfo(t) on the *same*
   // already-open loop just to refresh the button's label after a manual toggle, which would
   // otherwise instantly re-force solo back on and make the manual off-toggle a no-op.
-  if (isNewSelection && t.loop) applySolo(t.id);
+  // During RIDE, ANY newly selected trail is auto-soloed, not just loops -- e.g. tapping a different
+  // trail mid-ride. updateRideInfoPanel() mirrors the new focus into the RIDE readout.
+  if (isNewSelection && (t.loop || rideMode)) applySolo(t.id);
   if (reversedId && reversedId !== t.id) {
     const oldReversedId = reversedId;
     reversedId = null;
@@ -5307,6 +5315,7 @@ function showTrailInfo(t, opts){
   }
   ipContent.innerHTML = buildInfoPanelHtml(t);
   infoPanel.classList.add("visible");
+  if (rideMode) updateRideInfoPanel();
 }
 
 function downloadTrailGpx(id){
@@ -6253,6 +6262,18 @@ function syncSelectedSegmentWeight(){
   });
 }
 
+// Adds/removes/repositions the yellow selection ring for `id` (defaults to currentSelectedId). RIDE mode
+// (2026-08-14) always suppresses it outright, regardless of how the trail got selected -- a soloed/focused
+// trail during RIDE never needs the extra emphasis a yellow ring gives on a normal map.
+function updateSelectionOutlineVisibility(id){
+  const targetId = id !== undefined ? id : currentSelectedId;
+  const layer = targetId ? lineLayers[targetId] : null;
+  if (!layer || rideMode) { if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline); return; }
+  selectionOutline.setLatLngs(layer.coords);
+  if (!map.hasLayer(selectionOutline)) selectionOutline.addTo(map);
+  selectionOutline.bringToBack();
+}
+
 function highlightSelectedTrail(id){
   const layer = lineLayers[id];
   clearLiftSelection(); // selecting a trail drops any lift highlight
@@ -6261,10 +6282,8 @@ function highlightSelectedTrail(id){
     setLabelHovered(currentSelectedId, false);   // only one trail's label is ever marked as the selected one
     setSelectedTrailHaloSuppressed(currentSelectedId, false); // give the previous selection its halo back
   }
-  if (!layer) { if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline); currentSelectedId = null; return; }
-  selectionOutline.setLatLngs(layer.coords);
-  if (!map.hasLayer(selectionOutline)) selectionOutline.addTo(map);
-  selectionOutline.bringToBack();
+  if (!layer) { currentSelectedId = null; updateSelectionOutlineVisibility(); return; }
+  updateSelectionOutlineVisibility(id);
   layer.line.bringToFront();
   setSelectedTrailHaloSuppressed(id, true); // after bringToFront, so a segmented loop's casing (dragged
                                              // forward along with its featureGroup) is removed again
@@ -6286,7 +6305,7 @@ function clearSelection(){
     setSelectedTrailHaloSuppressed(currentSelectedId, false);
     currentSelectedId = null;
   }
-  if (map.hasLayer(selectionOutline)) map.removeLayer(selectionOutline);
+  updateSelectionOutlineVisibility();
   clearLiftSelection(); // a lift and a trail are never selected at the same time
 }
 
@@ -7062,7 +7081,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v164"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v165"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

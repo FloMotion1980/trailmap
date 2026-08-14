@@ -679,7 +679,8 @@ html.landscape-compact .search-overlay-summary{
 #infoPanel h3 .ip-btns > button:hover{ background: var(--forest-dark); }
 #infoPanel h3 .ip-btns .locate-btn,
 #infoPanel h3 .ip-btns .solo-btn,
-#infoPanel h3 .ip-btns .reverse-btn{ width:22px; border-radius:50%; font-size:12px; }
+#infoPanel h3 .ip-btns .reverse-btn,
+#infoPanel h3 .ip-btns .ride-btn{ width:22px; border-radius:50%; font-size:12px; }
 #infoPanel h3 .ip-btns .gpx-download-btn{
   border-radius:11px; padding:0 8px; font-size:10.5px; font-family:Arial, sans-serif; font-weight:700;
 }
@@ -689,7 +690,8 @@ html.landscape-compact .search-overlay-summary{
    already this app's own colour for exactly that meaning elsewhere (#builderModeBtn.on). Has to beat the
    group's own green fill above. */
 #infoPanel h3 .ip-btns .solo-btn.active,
-#infoPanel h3 .ip-btns .reverse-btn.active{ background: var(--highlight); color: var(--ink); }
+#infoPanel h3 .ip-btns .reverse-btn.active,
+#infoPanel h3 .ip-btns .ride-btn.active{ background: var(--highlight); color: var(--ink); }
 /* No bottom margin: it separated this block from .ip-actions, the row that used to hold the GPX button, and both
    are gone -- so it was 10px of empty panel under the elevation chart, on top of the panel's own 10px of padding
    (user, 2026-08-02: "die InfoBox hat jetzt unten recht viel Whitespace"). */
@@ -870,59 +872,11 @@ html.landscape-compact #sidebarToggle{ gap:7px; margin:-5px -7px; padding:5px 7p
 html.landscape-compact #sidebarToggle .st-bars{
   width:16px; box-shadow: 0 -5px 0 rgba(242,243,236,.8), 0 5px 0 rgba(242,243,236,.8);
 }
-/* The teaching version of the fill below: a fifth of the way up and back down, twice, which says "there is more
-   in this button" without pretending a hold has started. Same overlay, so the hint and the real thing cannot
-   drift apart visually. */
-#locateBtn.hinting::after{
-  content:""; position:absolute; inset:0; background: rgba(47,74,58,0.32);
-  transform: scaleY(0); transform-origin: bottom;
-  animation: locateHoldHint 1.5s ease-in-out 2;
-}
-@keyframes locateHoldHint{
-  0%{ transform: scaleY(0); } 45%{ transform: scaleY(0.22); } 100%{ transform: scaleY(0); }
-}
-/* Left of the control column, level with the locate cell, and it must never eat a tap meant for the map or the
-   button it points at -- hence pointer-events:none. The offset is measured from the cluster's own right edge
-   (46px column + 8px), not from the column, because the cluster is as wide as its widest child and the readout
-   below grows to 240px when expanded. */
-#followHint{
-  position:absolute; top:6px; right:54px; z-index:1;
-  /* width:max-content is not cosmetic here: an absolutely positioned box with `right` set and `width:auto`
-     resolves against its containing block, and this one's containing block is the cluster -- 46px wide, minus a
-     54px offset, i.e. nothing. It shrank to min-content and rendered the sentence over four lines (measured
-     65x74). max-content lets it be as wide as its text and overflow the cluster's box, which is harmless for a
-     pointer-events:none label. */
-  width: max-content; max-width: min(190px, calc(100vw - 120px));
-  background: rgba(28,38,32,0.94); color:#f2f3ec;
-  font-family: Arial, sans-serif; font-size:12px; font-weight:600; line-height:1.25;
-  padding:7px 11px; border-radius:14px; box-shadow:0 3px 10px rgba(0,0,0,0.25);
-  pointer-events:none; opacity:0; transform: translateX(6px);
-  transition: opacity .2s ease, transform .2s ease;
-}
-#followHint.visible{ opacity:1; transform:none; }
-/* Landscape: the column is a row along the top edge, so the only free direction is downwards. */
-html.landscape-compact #followHint{
-  top: 52px; right: calc(3px + env(safe-area-inset-right, 0px));
-}
-@media (prefers-reduced-motion: reduce){
-  #locateBtn.hinting::after{ animation:none; transform: scaleY(0.22); }
-  #followHint{ transition:none; }
-}
-/* Feedback WHILE holding: a fill climbs the cell over the hold duration, so you can tell the gesture registered
-   without staring at the map -- without it a long press is indistinguishable from a slow tap. It used to be a
-   box-shadow ring growing OUTSIDE the button, which the segmented container's overflow:hidden would clip; an
-   inset overlay says the same thing inside the cell. */
-#locateBtn.holding::after{
-  content:""; position:absolute; inset:0; background: rgba(47,74,58,0.45);
-  transform: scaleY(0); transform-origin: bottom;
-  animation: locateHoldFill .5s linear forwards;
-}
-@keyframes locateHoldFill{ from{ transform: scaleY(0); } to{ transform: scaleY(1); } }
 /* Following, and heading-up: a filled cell. The locate cell used to PULSE for this, which the segmented
    container cannot carry (the pulse was a ring outside the button) -- and it no longer has to: the readout chip
    below carries a blinking dot whenever tracking is live, so the "is it actually following" signal is still
    there and is only in one place instead of two. */
-#locateBtn.active, #bearingBtn.active{ background: var(--forest); color:#f2f3ec; }
+#locateBtn.active, #bearingBtn.active, #rideModeBtn.active{ background: var(--forest); color:#f2f3ec; }
 /* Waiting for the one-shot fix. getCurrentPosition can take seconds under trees, and without this the tap
    looks like it did nothing at all. */
 #locateBtn.busy{ opacity:.55; }
@@ -936,10 +890,7 @@ html.landscape-compact #followHint{
 #locateCluster.is-detached #mapControls > #recenterBtn{ display:flex; }
 @media (hover: hover){
   #mapControls > button:hover{ background:#eff2e9; }
-  #locateBtn.active:hover, #bearingBtn.active:hover, #recenterBtn:hover{ background: var(--forest-dark); }
-}
-@media (prefers-reduced-motion: reduce){
-  #locateBtn.holding::after{ animation:none; transform: scaleY(1); }
+  #locateBtn.active:hover, #bearingBtn.active:hover, #rideModeBtn.active:hover, #recenterBtn:hover{ background: var(--forest-dark); }
 }
 .geo-wrap{ position:relative; width:40px; height:40px; }
 .geo-cone{
@@ -1236,6 +1187,35 @@ html.landscape-compact #infoPanel{
   overflow-y: auto;
 }
 html.landscape-compact .ele-chart{ height:40px; }
+
+/* ---- RIDE mode (2026-08-14) -----------------------------------------------------
+   Full-screen riding: header, sidebar drawer and the trail info panel are hidden, and this app's own
+   readout (#rideInfoPanel) takes over the header's spot in portrait / the left edge in landscape, exactly
+   like the user described it. header/#infoPanel hiding is enough to give the map the full height -- .layout
+   is `flex:1` inside `.app`'s flex column, so it grows into whatever header no longer takes; aside itself is
+   an off-flow drawer on the touch layouts RIDE is limited to, so it needs no extra hiding (enterRideMode()
+   still calls closeSidebar() so it isn't left open underneath). */
+html.ride-mode header,
+html.ride-mode #infoPanel{ display:none !important; }
+/* Unlike #infoPanel, deliberately not display:none outside RIDE via the same html.ride-mode gate on this rule
+   alone -- see the base rule below, which hides it independently so a stray reference before RIDE ever starts
+   can't show a stray dark bar. */
+#rideInfoPanel{ display:none; }
+html.ride-mode #rideInfoPanel{
+  display:block; position:absolute; z-index:1300;
+  top: env(safe-area-inset-top, 0px); left:0; right:0;
+  background: var(--forest-dark); color:#f2f3ec;
+  padding: calc(10px + env(safe-area-inset-top,0px)) 14px 10px;
+}
+#rideInfoName{ font-weight:700; font-size:15px; }
+#rideInfoStats{ display:flex; gap:14px; font-size:13px; opacity:.9; margin-top:2px; }
+#rideInfoStats:empty{ display:none; }
+/* Landscape: left edge instead of a top bar, same reasoning as #infoPanel's own landscape-compact override. */
+html.ride-mode.landscape-compact #rideInfoPanel{
+  top:0; left:0; right:auto; bottom:0; width:min(38vw, 170px);
+  padding: calc(10px + env(safe-area-inset-top,0px)) 10px 10px calc(10px + env(safe-area-inset-left,0px));
+}
+html.ride-mode.landscape-compact #rideInfoStats{ flex-direction:column; gap:4px; }
 
 /* ---- Tourenbuilder (2026-07-26) ------------------------------------------------
    A scratch list of trails/lifts in ride order. Kept visually close to .trail-card

@@ -22,6 +22,17 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-14
+- **Added a RIDE mode, replacing the old hold-to-follow gesture on the locate button.** A new 🚵 button
+  (in the map controls cluster, and in a trail's info panel) starts a full-screen riding view: header,
+  sidebar and the info panel hide, GPS follow + auto "Blickrichtung oben" rotation start, and a focused
+  trail is shown solo (dimmed rest of the map) with the yellow selection ring always suppressed,
+  regardless of how the trail got selected. A focused trail cannot be deselected by tapping empty map
+  space while riding, and exiting RIDE always rotates back to north. A new permanent readout
+  (`#rideInfoPanel`, top in portrait / left edge in landscape) shows the focused trail's name/length/Hm
+  while riding, and stays visible (reduced) with nothing focused as a placeholder for future tracking
+  info. Reuses the existing `startFollowing`/`stopFollowing`/solo/rotation machinery wholesale — only the
+  trigger and the full-screen chrome are new. See `CLAUDE.md`'s architecture section for the exact
+  functions touched.
 - **Connector back to plain dark grey everywhere, and the contrast halo widened from schwarz-only to
   every trail/connector/lift on Satellit and Relief.** Both tried live at the user's own initiative,
   neither designed up front. The connector (`#e08a00` at the start of the day) was reported as low-
