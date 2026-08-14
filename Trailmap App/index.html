@@ -143,6 +143,11 @@
             <button class="chip" data-layer="carto">Straße hell</button>
             <button class="chip" data-layer="topo">Relief</button>
             <button class="chip" data-layer="sat">Satellit</button>
+            <!-- Testweise, 2026-08-14: zwei helle Ebenen, die Forstwege UND Trails zeichnen -- genau die
+                 Lücke zwischen "Straße hell" (hell, aber die Wege sind hauchdünn/ab z14 gar nicht da) und
+                 "Relief" (zeigt alles, aber Höhenlinien-Gewusel und Farbkollision mit unseren Linien). -->
+            <button class="chip" data-layer="hot">Wald</button>
+            <button class="chip" data-layer="outdoor">Outdoor</button>
           </div>
           <div class="toggle-row-group">
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showNamesToggle"><span class="slider"></span></span>Namen</label>
@@ -2138,6 +2143,30 @@ const baseLayers = {
   }),
   sat: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19, attribution: 'Tiles &copy; Esri'
+  }),
+  // TESTWEISE (2026-08-14, auf Wunsch des Users), beide gegen echte Kacheln im Pfälzerwald verglichen:
+  // hell wie "Straße hell", zeichnen aber Forstwege und Trails deutlich sichtbar.
+  //
+  // "Wald" = der HOT-Stil (Humanitarian OSM Team) auf den Kacheln von OpenStreetMap France: ruhiges
+  // Salbeigrün, Wege als creme-weiße Striche, KEINE Höhenlinien -- also nicht das Gewusel von "Relief", und
+  // keine Farbkollision mit unseren grün/rot/blauen Trails. maxNativeZoom ist der Punkt, der hier wirklich
+  // wichtig ist: der Server liefert für ländliche Gegenden oberhalb z16 nur 404 (gemessen -- Pfälzerwald und
+  // Ischgl beide ab z17, während Paris bis z18 rendert; drei Wiederholungen, also kein Aussetzer, sondern
+  // eine Eigenschaft des Servers). Ohne maxNativeZoom wäre die Karte ab z17 genau dort leer, wo man auf
+  // einem Trail steht. Mit ihm skaliert Leaflet die z16-Kachel hoch: unscharf, aber vorhanden.
+  hot: L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+    maxZoom: 19, maxNativeZoom: 16, subdomains: 'ab',
+    attribution: '&copy; OpenStreetMap contributors · Stil: Humanitarian OSM Team · Kacheln: OpenStreetMap France'
+  }),
+  // "Outdoor" = Thunderforest Outdoors: blasses Grün, Wege gestrichelt, zarte Höhenlinien, rendert bis in
+  // hohe Zoomstufen überall (bis z19 in allen geprüften Regionen). Offiziell braucht Thunderforest einen
+  // API-Key (`?apikey=...`, Hobby-Plan kostenlos, nicht-kommerziell) -- der Server beantwortet keylose
+  // Anfragen derzeit trotzdem mit echten Kacheln, weshalb der Test ohne Key läuft. Wenn er das abstellt,
+  // meldet sich watchLayer() unten mit der Kachel-Warnung, statt dass die Karte still leer bleibt. Dann
+  // hier einen eigenen Key anhängen -- er stünde allerdings im öffentlichen Client-Code, und der
+  // Offline-Vorladen-Knopf frisst Kontingent.
+  outdoor: L.tileLayer('https://tile.thunderforest.com/outdoors/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: 'Karten &copy; Thunderforest · Daten &copy; OpenStreetMap contributors'
   })
 };
 let currentBaseKey = "osm";
@@ -2172,6 +2201,41 @@ function watchLayer(layer, label){
 watchLayer(baseLayers.topo, "Relief (Topo)");
 watchLayer(baseLayers.sat, "Satellit (Esri)");
 watchLayer(baseLayers.carto, "Straße hell (CARTO)");
+// Beide neuen Ebenen hängen an fremden Servern mit Fair-Use-Politik (OSM France) bzw. an einem Anbieter,
+// der offiziell einen API-Key erwartet (Thunderforest) -- die Warnung ist hier also nicht Kosmetik,
+// sondern der Unterschied zwischen "Server sagt nein" und "die Karte ist kaputt".
+watchLayer(baseLayers.hot, "Wald (HOT/OSM France)");
+watchLayer(baseLayers.outdoor, "Outdoor (Thunderforest)");
+
+// Fehlgeschlagene Kacheln noch ein-, zweimal nachfordern -- und das ist hier keine Vorsichtsmaßnahme
+// "für den Fall", sondern gemessenes Verhalten: beim ersten Umschalten auf "Wald" hat OSM France von 30
+// gleichzeitig angeforderten Kacheln 10 geliefert und 20 mit ERR_FAILED abgewiesen (Drosselung -- eine
+// einzelne Kachel danach lud sofort wieder). Leaflet fordert eine gescheiterte Kachel NIE von selbst
+// nachträglich an: das Loch bleibt stehen, bis derselbe Ausschnitt neu aufgebaut wird. Genau das würde
+// eine an sich brauchbare Ebene als "kaputt" erscheinen lassen.
+//
+// Absichtlich nur für die zwei neuen Ebenen: die vier alten hängen an Servern, die das nicht brauchen,
+// und ein Retry gegen einen drosselnden Server soll höflich bleiben -- zwei Versuche, wachsender Abstand,
+// und nichts davon offline (dort ist ein Fehlschlag die Wahrheit, nicht ein Aussetzer).
+// `#r<n>` an der URL ist der Trick, der den Neuversuch überhaupt auslöst: dieselbe src erneut zuzuweisen
+// startet in Chrome keinen neuen Request. Das Fragment geht nicht an den Server und fällt auch aus dem
+// Cache-Key des Service Workers heraus, die Kachel landet also unter ihrer normalen URL im Cache.
+function retryFailedTiles(layer, tries = 2, baseDelayMs = 1200){
+  layer.on("tileerror", (e) => {
+    const img = e.tile;
+    if (!img || !img.src || !navigator.onLine) return;
+    const done = img._tmTileRetries || 0;
+    if (done >= tries) return;
+    img._tmTileRetries = done + 1;
+    const src = img.src.split("#")[0];
+    setTimeout(() => {
+      // Nicht mehr im Dokument = Leaflet hat die Kachel längst weggeräumt (weggezoomt/-gescrollt).
+      if (img.parentNode) img.src = `${src}#r${img._tmTileRetries}`;
+    }, baseDelayMs * (done + 1));
+  });
+}
+retryFailedTiles(baseLayers.hot);
+retryFailedTiles(baseLayers.outdoor);
 
 // ---- My Location (blue dot, accuracy ring, heading cone) ----
 const geoIcon = L.divIcon({
@@ -3345,6 +3409,16 @@ const BASE_PALETTES = {
   osm:   { diff: { gruen:"#4fa85e", blau:"#2f74c0", rot:"#d9483c", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:1, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
   carto: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
   topo:  { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  // Die beiden testweisen hellen Ebenen (2026-08-14) erben die Farben von "carto": beide sind helle Karten
+  // mit blassem Grün, also gilt derselbe Grund, aus dem "Straße hell" die UNaufgehellten Farben behält.
+  // Der eine echte Unterschied zwischen ihnen ist die Lift-Maske, und der ist an den Kacheln abgelesen,
+  // nicht geraten: Thunderforest zeichnet Luftseilbahnen selbst (schwarze Linie mit Querstrichen, samt
+  // Namen -- auf der Testkachel bei Ischgl deutlich als "Schwarzwasserlift" zu sehen), also braucht
+  // "Outdoor" die Maske genauso wie "Straße" (liftMaskOpacity 1), sonst liegt unser Lift-Symbol auf der
+  // Linie der Karte. Der HOT-Stil zeichnet auf derselben Kachel keine Bahn -- daher 0, wie bei den anderen
+  // hellen Ebenen. Wenn auf dem Gerät doch eine durchscheint, ist das hier die eine Ziffer, die es braucht.
+  hot:     { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:0, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
+  outdoor: { diff: { gruen:"#3f8a4c", blau:"#1f5f9e", rot:"#c23b30", schwarz:"#1c1c1c" }, connector:"#e08a00", liftMask:"#cfcfcf", liftMaskOpacity:1, liftLine:"#000000", selectYellow:"#fff200", halo: { gruen:null, blau:null, rot:null, schwarz:null, connector:null, lift:null } },
   sat:   {
     // schwarz is back to the plain near-black (#1c1c1c) every other basemap uses, not the #5c5c5c
     // "lightened" compromise from earlier the same day (2026-08-13, per the user: "mit der weißen Linie
@@ -4302,9 +4376,18 @@ const liftLayers = {}; // liftId -> { mask, hairline, dots, hitLine, startMarker
 // Tour's own segment layer, and the standalone lift line lying under it): keeps the TOUR as the open
 // panel and just toggles that stretch's own small block into it -- per the user's rule that clicking
 // into a Tour must not lose the Tour's context.
-function selectTourSegment(t, segId){
+function selectTourSegment(t, segId, segIdx){
   const wasOpen = openTrailId === t.id;
-  selectedSegmentId = (wasOpen && selectedSegmentId === segId) ? null : segId;
+  // The INDEX identifies the stretch, not the id: a Tour can ride the same trail twice, and Pfälzerwald's
+  // Felsenwanderweg Rodalben rides "Felsenweg Süd" at both its start and its end. Keyed on the id alone,
+  // buildInfoPanelHtml's `segs.find(...)` returned the FIRST occurrence for either click, so the profile
+  // always highlighted the start of the Tour whichever end was clicked (reported 2026-08-14). The id is
+  // still carried: the panel's own lookups (name, difficulty, lift) need it, and the toggle has to survive
+  // a rebuild that has no index to offer.
+  const same = wasOpen && selectedSegmentId === segId &&
+               (segIdx == null || selectedSegmentIdx == null || selectedSegmentIdx === segIdx);
+  selectedSegmentId = same ? null : segId;
+  selectedSegmentIdx = same ? null : (segIdx == null ? null : segIdx);
   showTrailInfo(t, { keepSegment: true });
   selectCardFor(t.id);
 }
@@ -4615,6 +4698,7 @@ function closeInfoPanelAndDeselect(){
   openTrailId = null;
   openLiftId = null;
   selectedSegmentId = null;
+  selectedSegmentIdx = null;
   clearSolo();
   clearSelection();
   hideAllLiftEndpoints();
@@ -4665,6 +4749,15 @@ map.getContainer().addEventListener("touchend", (e) => {
   if (Math.hypot(t.clientX - start.x, t.clientY - start.y) > 14 || Date.now() - start.time > 500) return;
   e.preventDefault();   // never let the platform's own (mismatched, or ghost-tap-suppressed) click also fire
   start.target.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, clientX: t.clientX, clientY: t.clientY }));
+  // ...and immediately drop the hover styling the click handler just applied. `setHover(true)` lives inside
+  // that handler (see the note above -- it has to, so one dispatched click reproduces the whole effect), and
+  // on a mouse the browser's own mouseout undoes the bold line a moment later. A finger never produces one,
+  // so on a phone the tapped trail STAYED bold for as long as it was selected -- reported 2026-08-14, with
+  // the second-order cost the user named: a Tour frozen at hover weight leaves no width left to show which
+  // of its stretches is actually being hovered, so the desktop's per-segment feedback was invisible there.
+  // Selection is drawn by its own yellow outline and is untouched by this; only the hover width goes back to
+  // baseline, which is exactly what the mouse path ends up at.
+  resetAllHoverStyles();
 }, { passive: false });
 
 // `highlight` (optional {distStart, distEnd, color}, in the same km units as the profile's own
@@ -5111,6 +5204,8 @@ let openLiftId = null;        // lift currently shown in #infoPanel, or null (mu
 // For a loop: which of its segments was last clicked, or null. Holds either a component *trail* id or
 // (since lifts became segment-able) a *lift* id -- buildInfoPanelHtml resolves it against both.
 let selectedSegmentId = null;
+// Which OCCURRENCE of that stretch -- see selectTourSegment for why the id alone is not enough.
+let selectedSegmentIdx = null;
 
 function buildInfoPanelHtml(t){
   const isSolo = soloId === t.id;
@@ -5129,7 +5224,12 @@ function buildInfoPanelHtml(t){
   let highlight = null, segmentInfoHtml = "";
   if (t.loop && selectedSegmentId) {
     const segs = TRAIL_SEGMENTS[t.id] || [];
-    const seg = segs.find(s => s.trailId === selectedSegmentId || s.liftId === selectedSegmentId);
+    // Prefer the exact stretch that was clicked; fall back to the first match by id for a selection that
+    // survived a rebuild, since render() keeps the id but has no index to restore.
+    const atIdx = selectedSegmentIdx != null ? segs[selectedSegmentIdx] : null;
+    const seg = (atIdx && (atIdx.trailId === selectedSegmentId || atIdx.liftId === selectedSegmentId))
+      ? atIdx
+      : segs.find(s => s.trailId === selectedSegmentId || s.liftId === selectedSegmentId);
     const segTrail = lineTrails.find(tr => tr.id === selectedSegmentId);
     const segLift = LIFTS.find(lf => lf.id === selectedSegmentId);
     if (seg && segTrail && seg.distStart != null) {
@@ -5204,6 +5304,7 @@ function buildInfoPanelHtml(t){
 function showLiftInfo(l){
   openTrailId = null;      // a lift and a trail are never both open
   selectedSegmentId = null;
+  selectedSegmentIdx = null;
   openLiftId = l.id;
   // Same rule as showTrailInfo: opening a DIFFERENT object drops the previous solo, but opening the one
   // that is currently soloed (which is what the panel's own solo button does) must keep it.
@@ -5242,7 +5343,7 @@ function showTrailInfo(t, opts){
   // clicking the loop itself did (user, 2026-07-28). Saying what is meant instead of faking the state.
   const keepSegment = !!(opts && opts.keepSegment);
   const isNewSelection = openTrailId !== t.id;
-  if (isNewSelection && !keepSegment) selectedSegmentId = null; // switching to a genuinely different trail/loop
+  if (isNewSelection && !keepSegment) { selectedSegmentId = null; selectedSegmentIdx = null; } // switching to a genuinely different trail/loop
   openTrailId = t.id;
   if (soloId && soloId !== t.id) clearSolo();
   // Selecting a Trailrunde auto-enables solo (not for a regular trail) -- with dozens of loops now
@@ -5419,7 +5520,7 @@ function buildTrailLayer(t){
   let line, styleTarget;
   let casing = null, casingKind = null; // the non-segmented branch's own single casing, see below
   if (segments) {
-      segments.forEach(seg => {
+      segments.forEach((seg, segIdx) => {
         const refTrail = seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
         const refLift = seg.liftId ? LIFTS.find(lf => lf.id === seg.liftId) : null;
         let visibleSeg = null; // the styleable line, for a trail or connector stretch
@@ -5468,7 +5569,7 @@ function buildTrailLayer(t){
           liftHit.on("mouseout", () => { liftDots.setStyle({ weight: LIFT_DOT_WEIGHT }); liftHit.closeTooltip(); });
           liftHit.on("click", () => {
             if (builderTryAdd("lift", refLift.id)) return;
-            selectTourSegment(t, refLift.id);
+            selectTourSegment(t, refLift.id, segIdx);
           });
           segmentHitLines.push(liftHit);
         }
@@ -5509,7 +5610,7 @@ function buildTrailLayer(t){
           // buildInfoPanelHtml's selectedSegmentId handling), rather than opening a separate panel.
           segHit.on("click", () => {
             if (builderTryAdd("trail", refTrail.id)) return;
-            selectTourSegment(t, refTrail.id);
+            selectTourSegment(t, refTrail.id, segIdx);
           });
           segmentHitLines.push(segHit);
           // Standalone (not bound to any layer) permanent tooltip for the "Namen" toggle — added

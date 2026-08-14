@@ -1,7 +1,7 @@
 // @suite   solo
 // @area    Solo mode for trails, Tours and lifts
 // @files   Trailmap App/index.html
-// @touches applySolo, clearSolo, applyLiftVisibility, applyLiftSegmentOpacity, liftHiddenBySolo, baselineLineOpacity, resetAllHoverStyles, applyLineWeight, syncSelectedCardSoloBtn, SOLO_DIM_OPACITY, liftSegments
+// @touches applySolo, clearSolo, selectTourSegment, selectedSegmentIdx, applyLiftVisibility, applyLiftSegmentOpacity, liftHiddenBySolo, baselineLineOpacity, resetAllHoverStyles, applyLineWeight, syncSelectedCardSoloBtn, SOLO_DIM_OPACITY, liftSegments
 // @needs   region=bikekingdom, builder=off
 //
 // Solo has produced more repeat reports than anything else in the app, and each time for a DIFFERENT reason,
@@ -140,4 +140,42 @@ TM.add("solo", () => typeof applySolo === "function" && TM.map.tourLiftStretches
   T.eq("selection cleared", TM.$$(".trail-card.selected").length, 0);
   T.eq("lifts back", TM.map.standaloneLifts(), LIFTS_ON_MAP);
   T.eq("Tour stretches back", TM.map.tourLiftStretches(), TOUR_STRETCHES);
+  // NOT YET WATCHED FAIL: this case was written on 2026-08-14 but never executed -- a browser suite needs a
+  // visible window and the only Chrome available here was a background tab, where throttled timers make the
+  // run never finish. By this project's own rule that is worth stating rather than glossing: a suite nobody
+  // has seen fail proves nothing. Mutation to try first: delete the two bringToFront() calls at the end of
+  // applySolo, which should flip "a segment hit area is the topmost of them".
+  T.test("soloing a Tour puts ITS hit areas on top, so a segment click reaches the Tour");
+  // lineTrails order is the map's z-order, and every trail built after a Tour lays its own invisible 22px
+  // hitLine over that Tour's per-segment hit areas. Dimming does nothing about it -- a hitline is
+  // opacity:0 and stays fully clickable -- so clicking a Tour's stretch opened the plain trail's panel
+  // instead of keeping the Tour selected and appending the stretch (user, 2026-08-14, on Pfälzerwald after
+  // 480 trails were appended past its Tours; the live region never showed it because only 3 trails sit
+  // after its last Tour, and Bike Kingdom has none). buildTrailLayer already raises segmentHitLines above
+  // the Tour's OWN hitline at build time; it cannot raise them above layers that do not exist yet, so
+  // applySolo has to redo it against the whole map for the trail the user is actually interacting with.
+  // Asserted on document order rather than on a click, because the adverse ordering that triggers the bug
+  // does not occur in this region -- the guarantee has to hold regardless of how the region is ordered.
+  const hitOrder = () => [...TM.$$(".leaflet-overlay-pane svg path")]
+    .map((el, i) => ({ i, w: parseFloat(el.getAttribute("stroke-width") || "0") }))
+    .filter(x => x.w === 18 || x.w === 22);
+  const tourCard = TM.ui.cardNamed("tourCards", /Biketicket/);
+  tourCard.click();
+  await TM.until(() => tourCard.classList.contains("selected"));
+  await TM.wait(400);
+  const order = hitOrder();
+  T.ok("there are both kinds of hit area to order", order.some(x => x.w === 18) && order.some(x => x.w === 22),
+       order.length, "both 18 and 22 present");
+  const lastSeg = Math.max(...order.filter(x => x.w === 18).map(x => x.i));
+  const lastTrail = Math.max(...order.filter(x => x.w === 22).map(x => x.i));
+  T.ok("a segment hit area is the topmost of them", lastSeg > lastTrail, { lastSeg, lastTrail },
+       "segment above trail");
+
+  // NOT covered here, deliberately: the sibling fix from the same report -- a Tour riding the same trail
+  // twice highlighting the clicked occurrence rather than always the first (selectedSegmentIdx) -- cannot be
+  // reached from a pasted suite. It needs `lineTrails` and `TRAIL_SEGMENTS` to find a Tour that repeats a
+  // component and to call selectTourSegment(t, id, idx), and both are top-level `const` in the app's own
+  // script block, so an injected script cannot see them (functions hoist, consts do not -- see
+  // tests/README.md). A behavioural version would have to click two points on the same repeated stretch and
+  // compare the highlight rect's x, which needs a region that HAS one (Pfälzerwald, not Bike Kingdom).
 });
