@@ -21,7 +21,21 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
-## 2026-08-14
+## 2026-08-15
+- **RIDE mode, round two, after the first phone test: bottom info bar + a look-ahead position offset.**
+  `#rideInfoPanel` now docks at the BOTTOM in portrait (was top) — modelled loosely on the Bosch eBike
+  Flow app's own "Ride" screen (dark background, readouts at the bottom, top kept clear for what's ahead).
+  More significantly: while riding, the user's position now sits below dead centre (not exactly centred)
+  so more of the map ahead is visible, since travel direction is "up" once "Blickrichtung oben" is active.
+  This required patching two of the vendored `leaflet-rotate.js`'s own internals from the app's own script
+  (`_getNewPixelOrigin` and `_getPixelCenter`, both hardcode container-centre) — a 2026-08-01 note had
+  locked position-centring to dead centre after an earlier offset attempt orbited/misplaced the dot, but
+  that bug was in an offset that moved only the pan TARGET while leaflet-rotate's own rotation pivot
+  stayed at dead centre; the fix here moves both by the same amount, keyed off a global `rideMode` flag
+  so it's a no-op (byte-identical to before) whenever RIDE is off. The locate button (📍) still recentres
+  to the true screen centre on tap, even mid-ride, via a `rideOffsetSuppressed` flag cleared on the
+  resulting pan's own `moveend`. See `CLAUDE.md`'s RIDE section and the plan file referenced there for the
+  full reasoning.
 - **Added a RIDE mode, replacing the old hold-to-follow gesture on the locate button.** A new 🚵 button
   (in the map controls cluster, and in a trail's info panel) starts a full-screen riding view: header,
   sidebar and the info panel hide, GPS follow + auto "Blickrichtung oben" rotation start, and a focused

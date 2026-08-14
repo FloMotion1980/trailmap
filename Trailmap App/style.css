@@ -1201,11 +1201,15 @@ html.ride-mode #infoPanel{ display:none !important; }
    alone -- see the base rule below, which hides it independently so a stray reference before RIDE ever starts
    can't show a stray dark bar. */
 #rideInfoPanel{ display:none; }
+/* Bottom, not top (2026-08-15, user, after the first phone test -- also the Bosch eBike Flow app's own
+   "Ride" screen layout: the direction of travel is UP the screen once "Blickrichtung oben" is active, so
+   the top is the one area worth keeping clear for what's coming, and readouts belong at the bottom where a
+   thumb/glance naturally goes). Clears Leaflet's attribution strip the same way #offlineBanner already does. */
 html.ride-mode #rideInfoPanel{
   display:block; position:absolute; z-index:1300;
-  top: env(safe-area-inset-top, 0px); left:0; right:0;
+  bottom: calc(26px + env(safe-area-inset-bottom, 0px)); left:0; right:0;
   background: var(--forest-dark); color:#f2f3ec;
-  padding: calc(10px + env(safe-area-inset-top,0px)) 14px 10px;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom,0px));
 }
 #rideInfoName{ font-weight:700; font-size:15px; }
 #rideInfoStats{ display:flex; gap:14px; font-size:13px; opacity:.9; margin-top:2px; }
