@@ -1,7 +1,7 @@
 // @suite   palette
 // @area    Per-basemap trail/lift/connector colors, the schwarz-only Satellit halo, the lift mask on/off
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches applyBasePalette, repaintLineColors, syncHalo, applyHaloOpacity, applySolo, clearSolo, BASE_PALETTES, HALO, HALO_ACTIVE_KINDS, diffColor, CONNECTOR_COLOR, LIFT_LINE_COLOR, LIFT_MASK_COLOR, LIFT_MASK_OPACITY, SELECT_YELLOW, baseLayerControl, baseLayers, maxNativeZoom
+// @touches applyBasePalette, repaintLineColors, syncHalo, applyHaloOpacity, applySolo, clearSolo, BASE_PALETTES, HALO, HALO_ACTIVE_KINDS, diffColor, CONNECTOR_COLOR, LIFT_LINE_COLOR, LIFT_MASK_COLOR, LIFT_MASK_OPACITY, SELECT_YELLOW, baseLayerControl
 // @needs   region=bikekingdom, builder=off
 //
 // Added 2026-08-13 per the user: on Satellit (Esri World Imagery, dark almost everywhere), the trail/lift/
@@ -233,59 +233,6 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   T.eq("lift masks opaque again, same count", strokeCountOp(band(), "#cfcfcf", 1), maskOsm);
   T.eq("schwarz unchanged throughout (it was never lightened on osm)", strokeCount(overlay(), "#1c1c1c"), schwarzOsm);
   T.eq("every white halo is gone again, not just recolored", strokeCount(overlay(), "#ffffff", 8.5), 0);
-
-  T.test("the Wald basemap has its own palette entry, inherited from carto");
-  // Added 2026-08-14 with the layer. "Wald" (HOT via OpenStreetMap France) is a light map like carto, so it
-  // inherits carto's UNbrightened trio -- the check is that it really got its own palette entry and does not
-  // silently fall through applyBasePalette's `|| BASE_PALETTES.osm` fallback, which would look almost right
-  // (same connector, same mask) and differ only in gruen/blau/rot. A second trial layer that day
-  // ("Outdoor", Thunderforest) was removed again at the user's request, and its half of this case with it.
-  await setBase("hot");
-  T.eq("Wald uses the ORIGINAL unbrightened gruen, i.e. its own entry, not the osm fallback",
-       strokeCount(overlay(), "#3f8a4c"), greenOsm);
-  T.eq("no osm-brightened gruen leaking onto Wald", strokeCount(overlay(), "#4fa85e"), 0);
-  T.eq("Wald connector is the dark orange", strokeCount(overlay(), "#e08a00"), connectorsOsm);
-  T.eq("Wald lift masks are transparent, like the other light basemaps", strokeCountOp(band(), "#cfcfcf", 0), maskOsm);
-  T.eq("no halo on Wald", strokeCount(overlay(), "#ffffff", 8.5), 0);
-  // Its tiles come from a community server whose HOT style stops rendering above z16 (404, measured in five
-  // places), so `maxNativeZoom: 16` is what keeps the background from going blank exactly when you are zoomed
-  // in on a trail -- Leaflet upscales the z16 tile instead. The requested URLs are the only place that is
-  // observable: maxNativeZoom leaves no trace in app state, and an upscaled tile looks like a tile.
-  //
-  // The zooming is the load-bearing part of this check. Read at the app's own starting zoom it would pass
-  // whether or not maxNativeZoom is set, because nothing has asked for z17 yet -- so it has to get PAST 16
-  // first, and Leaflet's own doubleClickZoom is the one way to do that from here (`map` is app-scope, like
-  // every other internal, see the header). A tile URL carries the zoom it was requested at, which is also
-  // how the starting zoom is known without reading the map.
-  const hotTiles = () => TM.$$(".leaflet-tile-pane img").map((i) => i.src).filter((s) => /openstreetmap\.fr\/hot/.test(s));
-  const zoomOf = (src) => parseInt((src.match(/\/hot\/(\d+)\//) || [])[1], 10);
-  await TM.until(() => hotTiles().length > 0);
-  T.ok("Wald really is serving HOT tiles", hotTiles().length > 0, hotTiles().length, "> 0");
-  // Proving the view MOVED needs a signal that is not the tile zoom -- with maxNativeZoom working, the tile
-  // zoom is pinned at 16 by definition, so it cannot distinguish "zoomed in, upscaling" from "did not zoom".
-  // The scale control's own label can: it is redrawn on every zoom. This matters because Leaflet's zoom runs
-  // on animation frames, which a window that is not being painted does not deliver -- and this suite's own
-  // README already warns to keep the window visible. Without the guard, a background run would zoom nothing,
-  // observe no z17 request, and report a confident green: the mutation check for `maxNativeZoom` did exactly
-  // that once (it "passed" against an index.html with the option deleted) before this was written.
-  const scaleText = () => (TM.$(".leaflet-control-scale-line") || {}).textContent;
-  const scaleBefore = scaleText();
-  const startZoom = Math.max(...hotTiles().map(zoomOf));
-  const mapEl = TM.$(".leaflet-container");
-  const box = mapEl.getBoundingClientRect();
-  for (let z = startZoom; z < 19; z++) {
-    mapEl.dispatchEvent(new MouseEvent("dblclick", { bubbles: true, cancelable: true,
-      clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 }));
-    await TM.wait(450);
-  }
-  if (scaleText() === scaleBefore) {
-    T.skip(`the view did not zoom (scale still "${scaleBefore}") — window not being painted, nothing to measure`);
-  } else {
-    T.ok("no tile is ever requested above z16, where the server answers 404",
-         hotTiles().every((s) => zoomOf(s) <= 16), [...new Set(hotTiles().map(zoomOf))], "all <= 16");
-  }
-  await setBase("osm");
-  T.eq("back on osm, gruen is the brightened one again", strokeCount(overlay(), "#4fa85e"), greenOsm);
 
   T.test("an unknown basemap key falls back to the osm palette (colors, halo, AND mask opacity) rather than leaving stale state");
   // Not reachable through the UI (every chip's data-layer is a real key) -- calls the function directly,
