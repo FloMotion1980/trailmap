@@ -49,15 +49,18 @@ import sys
 import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-# resolve_segments() is deliberately NOT used here, and the reason is the whole point of this script.
-# It returns each matched candidate's OWN stored geometry, clipped and oriented -- right for BUILDING a
-# tour line out of its components (what tools/build_bikekingdom_tours.py does), and wrong here: it would
-# replace the loop's drawn line with a stitched-together one. This rework must leave the line untouched and
-# change only the attribution, so the segments have to be slices of the loop's own coordinate list, which
-# is what match_gpx_to_network()'s start_idx/end_idx already give. Keeping the line identical is also what
-# makes the concatenation invariant hold by construction rather than by luck.
-from gpx_map_match import match_gpx_to_network
-from trailmap_pipeline import haversine_m, write_region
+# resolve_segments() gives each matched candidate's OWN stored geometry, clipped to the ridden range and
+# oriented the way it was ridden. That is what a segment's `coords` must be, and a first version of this
+# script got it wrong: it used slices of the LOOP's line instead, reasoning that keeping the drawn line
+# untouched was the safer promise. It is not the app's design, and the user reported all three consequences
+# from the live preview -- a component trail and the Tour's own stretch drawn as two slightly offset lines,
+# a click landing on the trail instead of the Tour's segment, and the same ground stored twice with
+# different geometry. Measured across the regions that were built correctly (Donnersberg, Bike Kingdom,
+# Laax) 100% of segments sit 0.0 m from their trail's line; the slice-based version managed 56%.
+# The consequence is accepted deliberately: the Tour's line now SHIFTS onto its component trails, by up to
+# ~25 m on a named stretch. That shift is precisely what "same course as the trail" means.
+from gpx_map_match import match_gpx_to_network, resolve_segments
+from trailmap_pipeline import ElevationLookup, build_profile, cumulative_km, haversine_m, write_region
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGION = os.path.join(ROOT, "Trailmap App", "regions", "pfaelzerwald.json")
@@ -118,10 +121,55 @@ def match_median_m(loop_coords, m, candidates):
     return ds[len(ds) // 2] if ds else 1e9
 
 
-def named_share(segments):
-    tot = sum(line_len_m(s["coords"]) for s in segments) or 1.0
+def named_share(segments, loop_coords=None):
+    """Share of the LOOP's length that falls on a named component trail.
+
+    The denominator has to be the loop's own line, not the sum of the segment lengths. Those differ, and
+    not slightly: the segments partition the loop's points half-open, so the step between one segment's
+    last point and the next segment's first point is counted in neither. Over Kurztour 5's 15 segments that
+    swallowed 1 301 m of 10 590 m -- 12% -- and dividing by the smaller figure inflated every share this
+    script reported by about that much. Caught by comparing against pfaelzerwald_report.py, which always
+    used the loop line and therefore measured baseline and result on the same basis; its numbers were the
+    trustworthy ones all along.
+    """
+    tot = line_len_m(loop_coords) if loop_coords else sum(line_len_m(s["coords"]) for s in segments)
     named = sum(line_len_m(s["coords"]) for s in segments if s.get("trailId"))
-    return named / tot
+    return named / (tot or 1.0)
+
+
+def build_segments(loop_coords, matched, candidates):
+    """Segments whose named stretches carry their TRAIL's geometry, and the loop line rebuilt from them.
+
+    Returns (segments, new_loop_coords). A named stretch's coords come from `resolve_segments()`, i.e. they
+    are an exact contiguous slice of that trail's own stored points (reversed if it was ridden the other
+    way) -- so the Tour's stretch and the trail's own polyline coincide pixel-for-pixel, which is what makes
+    the stretch clickable as part of the Tour and stops the two drawing as a doubled line. A connector keeps
+    the loop's own recorded points, because no named trail describes that ground.
+
+    The loop line is then the concatenation, which satisfies validate_region.py's loop invariant by
+    construction. It is NOT the line that went in: on each named stretch it snaps onto the trail.
+    """
+    resolved = {(r["gpx_start_idx"], r["gpx_end_idx"]): r
+                for r in resolve_segments(loop_coords, candidates, matched)}
+    segs = []
+    cursor = 0
+    for m in sorted(matched, key=lambda x: x["start_idx"]):
+        a, b = m["start_idx"], m["end_idx"]
+        r = resolved.get((m["start_idx"], m["end_idx"]))
+        if r is None or len(r["coords"]) < 2:
+            continue
+        if a < cursor:
+            a = cursor
+        if a > b:
+            continue
+        if a > cursor + 1:                     # a 1-point connector would draw nothing; drop it
+            segs.append({"coords": [list(p) for p in loop_coords[cursor:a]], "trailId": None})
+        segs.append({"coords": [list(p) for p in r["coords"]], "trailId": m["id"]})
+        cursor = b + 1
+    if cursor < len(loop_coords) - 1:
+        segs.append({"coords": [list(p) for p in loop_coords[cursor:]], "trailId": None})
+    new_line = [p for s in segs for p in s["coords"]]
+    return add_dist_range(new_line, segs), new_line
 
 
 def fill_connectors(loop_coords, matched):
@@ -153,7 +201,42 @@ def fill_connectors(loop_coords, matched):
             segs[-1]["coords"] = segs[-1]["coords"] + tail
         else:
             segs.append({"coords": tail, "trailId": None})
+    return add_dist_range(loop_coords, segs)
+
+
+def add_dist_range(loop_coords, segs):
+    """Stamp each segment with `distStart`/`distEnd`, its span on the ELEVATION PROFILE's own km axis.
+
+    Not optional, and leaving it out is not a silent omission -- it changes the info panel in two visible
+    ways, both of which the user reported before this was traced (2026-08-14):
+
+    * `buildInfoPanelHtml` builds the elevation chart's per-segment colour array from `TRAIL_SEGMENTS`
+      **skipping any entry without `distStart`**. With none of them carrying it the array comes out empty
+      and the chart falls back to one flat colour -- the Tour's own difficulty -- instead of showing each
+      component trail's colour the way the map does.
+    * A clicked segment's highlight is a `<rect>` spanning `[distStart, distEnd]`, so without the field
+      there is nothing to highlight and the panel no longer extends with that stretch's own information.
+
+    The values are simply the loop's cumulative distance at the segment's first and last point, which is
+    what the existing region data contains, verified segment-for-segment against it. Consecutive segments
+    are therefore NOT contiguous on this axis: the step across each joint belongs to no segment, exactly as
+    before, which is why the chart has always had thin uncoloured slivers at the joins.
+    """
+    cum = cumulative_km(loop_coords)
+    idx = 0
+    for s in segs:
+        first = idx
+        last = idx + len(s["coords"]) - 1
+        s["distStart"] = round(cum[first], 3)
+        s["distEnd"] = round(cum[last], 3)
+        idx = last + 1
     return segs
+
+
+def shift_m(before, after):
+    """Median distance from the rebuilt line's points to the original recording -- how far the Tour moved."""
+    ds = sorted(min(haversine_m(p, q) for q in before) for p in after[::5])
+    return ds[len(ds) // 2] if ds else 0.0
 
 
 def concat_ok(loop_coords, segs):
@@ -191,7 +274,9 @@ def main():
     candidates = {t["id"]: geo[t["id"]] for t in d["lineTrails"] if not t.get("loop")}
     print("Kandidaten: %d Einzeltrails, %d Trailrunden neu herzuleiten" % (len(candidates), len(loops)))
 
+    ele = ElevationLookup(os.path.join(ROOT, "Material", "elevation_cache.json"))
     report, new_segs = [], dict(old_segs)
+    new_geo, new_profs = dict(geo), dict(d["elevationProfiles"])
     for i, t in enumerate(loops, 1):
         lid = t["id"]
         coords = geo[lid]
@@ -209,14 +294,14 @@ def main():
             if args.verbose and dropped:
                 print("     %s: %d Treffer wegen Abstand verworfen: %s"
                       % (params, len(dropped), dropped[:6]))
-            segs = fill_connectors(coords, kept)
-            if not concat_ok(coords, segs):
+            segs, new_line = build_segments(coords, kept, candidates)
+            if not concat_ok(new_line, segs):
                 if args.verbose:
                     print("     %s: Verkettung verletzt, verworfen" % params)
                 continue
-            share = named_share(segs)
+            share = named_share(segs, new_line)
             if best is None or share > best["share"]:
-                best = {"share": share, "segs": segs, "params": params,
+                best = {"share": share, "segs": segs, "line": new_line, "params": params,
                         "components": len({s["trailId"] for s in segs if s.get("trailId")}),
                         "median_m": round(max([md for _, md in meds if md <= MAX_MATCH_MEDIAN_M] or [0]), 1),
                         "dropped": len(dropped)}
@@ -228,7 +313,16 @@ def main():
             row.update(written=False, reason="Anteil gefallen", new_share=round(best["share"], 4))
         else:
             new_segs[lid] = best["segs"]
+            # The loop's own line and profile are rebuilt too, because the named stretches now follow their
+            # trails rather than the recording. Leaving the old profile in place would misalign the chart's
+            # x-axis against the new line -- and the segment highlight rides that same axis.
+            new_geo[lid] = best["line"]
+            elevs = ele([[p[0], p[1]] for p in best["line"]])
+            prof, gain, loss = build_profile(best["line"], elevs)
+            new_profs[lid] = prof
             row.update(written=True, new_share=round(best["share"], 4),
+                       line_shift_m=round(shift_m(coords, best["line"]), 1),
+                       new_km=round(cumulative_km(best["line"])[-1], 2),
                        components=best["components"], params=best["params"],
                        worst_median_m=best["median_m"], dropped_matches=best["dropped"])
         report.append(row)
@@ -239,7 +333,7 @@ def main():
         json.dump(report, open(args.report, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
     if args.region_out:
-        write_region(args.region_out, d["lineTrails"], geo, d["elevationProfiles"],
+        write_region(args.region_out, d["lineTrails"], new_geo, new_profs,
                      places=d.get("places"), lifts=d.get("lifts"), trail_segments=new_segs)
         print("geschrieben: %s" % args.region_out)
     wrote = sum(1 for r in report if r.get("written"))

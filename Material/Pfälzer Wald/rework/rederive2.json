@@ -1,0 +1,758 @@
+[
+ {
+  "id": "pw_tour4_hochspeyer",
+  "name": "Tour 4 - Hochspeyer",
+  "region": "johanniskreuz",
+  "baseline_share": 0.2173,
+  "secs": 242.0,
+  "written": true,
+  "new_share": 0.2495,
+  "line_shift_m": 0.0,
+  "new_km": 65.22,
+  "components": 30,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 17.1,
+  "dropped_matches": 3
+ },
+ {
+  "id": "pw_tour1_rodalben",
+  "name": "Tour 1 - Rodalben",
+  "region": "johanniskreuz",
+  "baseline_share": 0.1242,
+  "secs": 160.6,
+  "written": true,
+  "new_share": 0.1231,
+  "line_shift_m": 0.0,
+  "new_km": 56.91,
+  "components": 18,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 18.5,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_tour2_waldfischbach_burgalben",
+  "name": "Tour 2 - Waldfischbach-Burgalben",
+  "region": "johanniskreuz",
+  "baseline_share": 0.1094,
+  "secs": 203.5,
+  "written": true,
+  "new_share": 0.1251,
+  "line_shift_m": 0.0,
+  "new_km": 53.3,
+  "components": 16,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 19.2,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_tour3_schopp",
+  "name": "Tour 3 - Schopp",
+  "region": "johanniskreuz",
+  "baseline_share": 0.1738,
+  "secs": 289.6,
+  "written": true,
+  "new_share": 0.2252,
+  "line_shift_m": 0.0,
+  "new_km": 60.53,
+  "components": 22,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 22.9,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_tour5_lambrecht",
+  "name": "Tour 5 - Lambrecht",
+  "region": "johanniskreuz",
+  "baseline_share": 0.1351,
+  "secs": 192.5,
+  "written": true,
+  "new_share": 0.1542,
+  "line_shift_m": 0.0,
+  "new_km": 71.51,
+  "components": 24,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 22.7,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_tour6_landstuhl",
+  "name": "Tour 6 - Landstuhl",
+  "region": "johanniskreuz",
+  "baseline_share": 0.1547,
+  "secs": 236.9,
+  "written": true,
+  "new_share": 0.161,
+  "line_shift_m": 0.0,
+  "new_km": 45.48,
+  "components": 16,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 21.8,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_tour7_albersweiler",
+  "name": "Tour 7 - Albersweiler",
+  "region": "weinstrasse",
+  "baseline_share": 0.0915,
+  "secs": 183.8,
+  "written": true,
+  "new_share": 0.0725,
+  "line_shift_m": 0.0,
+  "new_km": 32.42,
+  "components": 6,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 7.7,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_tour8_annweiler",
+  "name": "Tour 8 - Annweiler",
+  "region": "weinstrasse",
+  "baseline_share": 0.0821,
+  "secs": 294.6,
+  "written": true,
+  "new_share": 0.0981,
+  "line_shift_m": 0.0,
+  "new_km": 52.23,
+  "components": 13,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 22.8,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_tour9_bad_bergzabern",
+  "name": "Tour 9 - Bad Bergzabern",
+  "region": "weinstrasse",
+  "baseline_share": 0.1136,
+  "secs": 233.0,
+  "written": true,
+  "new_share": 0.1714,
+  "line_shift_m": 0.0,
+  "new_km": 42.05,
+  "components": 13,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 20.2,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_tour10_oberotterbach",
+  "name": "Tour 10 - Oberotterbach",
+  "region": "weinstrasse",
+  "baseline_share": 0.1503,
+  "secs": 162.9,
+  "written": true,
+  "new_share": 0.1452,
+  "line_shift_m": 0.0,
+  "new_km": 30.51,
+  "components": 11,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 0.0,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_tour11_hauenstein",
+  "name": "Tour 11 - Hauenstein",
+  "region": "wasgau",
+  "baseline_share": 0.0743,
+  "secs": 201.1,
+  "written": true,
+  "new_share": 0.0883,
+  "line_shift_m": 0.0,
+  "new_km": 35.18,
+  "components": 9,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 14.1,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_tour12_hauenstein_west",
+  "name": "Tour 12 - Hauenstein West",
+  "region": "wasgau",
+  "baseline_share": 0.1096,
+  "secs": 228.6,
+  "written": true,
+  "new_share": 0.1469,
+  "line_shift_m": 0.0,
+  "new_km": 39.42,
+  "components": 14,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 24.7,
+  "dropped_matches": 3
+ },
+ {
+  "id": "pw_tour13_dahn",
+  "name": "Tour 13 - Dahn",
+  "region": "wasgau",
+  "baseline_share": 0.1098,
+  "secs": 502.8,
+  "written": true,
+  "new_share": 0.1344,
+  "line_shift_m": 0.0,
+  "new_km": 81.04,
+  "components": 27,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 22.8,
+  "dropped_matches": 2
+ },
+ {
+  "id": "pw_tour14_bundenthal_dahn_suedost",
+  "name": "Tour 14 - Bundenthal (Dahn-Suedost)",
+  "region": "wasgau",
+  "baseline_share": 0.1133,
+  "secs": 163.7,
+  "written": true,
+  "new_share": 0.1147,
+  "line_shift_m": 0.0,
+  "new_km": 25.72,
+  "components": 7,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 0.0,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_tour15_bundenthal_dahn_sued",
+  "name": "Tour 15 - Bundenthal (Dahn-Sued)",
+  "region": "wasgau",
+  "baseline_share": 0.1093,
+  "secs": 49.3,
+  "written": true,
+  "new_share": 0.12,
+  "line_shift_m": 0.0,
+  "new_km": 29.74,
+  "components": 8,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 18.8,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_tour16_fischbach",
+  "name": "Tour 16 - Fischbach",
+  "region": "wasgau",
+  "baseline_share": 0.0451,
+  "secs": 72.0,
+  "written": true,
+  "new_share": 0.0289,
+  "line_shift_m": 0.0,
+  "new_km": 38.29,
+  "components": 3,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 0.0,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_tour17_eppenbrunn",
+  "name": "Tour 17 - Eppenbrunn",
+  "region": "wasgau",
+  "baseline_share": 0.0535,
+  "secs": 378.2,
+  "written": true,
+  "new_share": 0.0539,
+  "line_shift_m": 0.0,
+  "new_km": 60.5,
+  "components": 11,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 3.8,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_tour18_lemberg_langmuehle",
+  "name": "Tour 18 - Lemberg-Langmuehle",
+  "region": "wasgau",
+  "baseline_share": 0.0736,
+  "secs": 251.2,
+  "written": true,
+  "new_share": 0.1382,
+  "line_shift_m": 0.0,
+  "new_km": 47.56,
+  "components": 13,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 19.4,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_tour19_lemberg",
+  "name": "Tour 19 - Lemberg",
+  "region": "wasgau",
+  "baseline_share": 0.0905,
+  "secs": 132.9,
+  "written": true,
+  "new_share": 0.1469,
+  "line_shift_m": 0.0,
+  "new_km": 24.38,
+  "components": 7,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 9.8,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_tour20_pirmasens",
+  "name": "Tour 20 - Pirmasens",
+  "region": "wasgau",
+  "baseline_share": 0.0877,
+  "secs": 343.4,
+  "written": true,
+  "new_share": 0.0884,
+  "line_shift_m": 0.0,
+  "new_km": 58.91,
+  "components": 17,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 21.7,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_kurztour_5_lambrecht",
+  "name": "Kurztour 5 - Lambrecht",
+  "region": "kurztouren",
+  "baseline_share": 0.1355,
+  "secs": 121.2,
+  "written": true,
+  "new_share": 0.1352,
+  "line_shift_m": 0.0,
+  "new_km": 43.04,
+  "components": 10,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 22.9,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_kurztour_5_johanniskreuz",
+  "name": "Kurztour 5 - Johanniskreuz",
+  "region": "kurztouren",
+  "baseline_share": 0.2635,
+  "secs": 22.9,
+  "written": true,
+  "new_share": 0.2668,
+  "line_shift_m": 0.0,
+  "new_km": 10.59,
+  "components": 7,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 21.4,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_kurztour_3_finsterbrunnertal",
+  "name": "Kurztour 3 - Finsterbrunnertal",
+  "region": "kurztouren",
+  "baseline_share": 0.2634,
+  "secs": 72.4,
+  "written": true,
+  "new_share": 0.3108,
+  "line_shift_m": 0.0,
+  "new_km": 29.05,
+  "components": 13,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 14.9,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_kurztour_3_schopp",
+  "name": "Kurztour 3 - Schopp",
+  "region": "kurztouren",
+  "baseline_share": 0.1488,
+  "secs": 87.6,
+  "written": true,
+  "new_share": 0.1665,
+  "line_shift_m": 0.0,
+  "new_km": 35.52,
+  "components": 8,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 10.6,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_kurztour_4_waldleiningen",
+  "name": "Kurztour 4 - Waldleiningen",
+  "region": "kurztouren",
+  "baseline_share": 0.1274,
+  "secs": 59.9,
+  "written": true,
+  "new_share": 0.1472,
+  "line_shift_m": 0.0,
+  "new_km": 23.17,
+  "components": 7,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 10.4,
+  "dropped_matches": 2
+ },
+ {
+  "id": "pw_kurztour_6_landstuhl_west",
+  "name": "Kurztour 6 - Landstuhl (West)",
+  "region": "kurztouren",
+  "baseline_share": 0.1191,
+  "secs": 58.3,
+  "written": true,
+  "new_share": 0.1089,
+  "line_shift_m": 0.0,
+  "new_km": 18.05,
+  "components": 6,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 13.7,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_kurztour_1_leimen",
+  "name": "Kurztour 1 - Leimen",
+  "region": "kurztouren",
+  "baseline_share": 0.1266,
+  "secs": 57.3,
+  "written": true,
+  "new_share": 0.1165,
+  "line_shift_m": 0.0,
+  "new_km": 23.58,
+  "components": 7,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 22.1,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_kurztour_2_heltersberg",
+  "name": "Kurztour 2 - Heltersberg",
+  "region": "kurztouren",
+  "baseline_share": 0.1271,
+  "secs": 92.2,
+  "written": true,
+  "new_share": 0.1448,
+  "line_shift_m": 0.0,
+  "new_km": 32.62,
+  "components": 10,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 21.6,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_kurztour_5_elmstein",
+  "name": "Kurztour 5 - Elmstein",
+  "region": "kurztouren",
+  "baseline_share": 0.049,
+  "secs": 53.1,
+  "written": true,
+  "new_share": 0.0454,
+  "line_shift_m": 0.0,
+  "new_km": 20.59,
+  "components": 3,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 18.9,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_kurztour_6_landstuhl_ost",
+  "name": "Kurztour 6 - Landstuhl (Ost)",
+  "region": "kurztouren",
+  "baseline_share": 0.1617,
+  "secs": 92.4,
+  "written": true,
+  "new_share": 0.1892,
+  "line_shift_m": 0.0,
+  "new_km": 33.95,
+  "components": 12,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 24.0,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_kurztour_1_rodalben",
+  "name": "Kurztour 1 - Rodalben",
+  "region": "kurztouren",
+  "baseline_share": 0.1265,
+  "secs": 102.7,
+  "written": true,
+  "new_share": 0.1486,
+  "line_shift_m": 0.0,
+  "new_km": 32.62,
+  "components": 12,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 22.4,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_kurztour_2_waldfischbach_burgalben",
+  "name": "Kurztour 2 - Waldfischbach-Burgalben",
+  "region": "kurztouren",
+  "baseline_share": 0.2469,
+  "secs": 51.1,
+  "written": true,
+  "new_share": 0.1097,
+  "line_shift_m": 0.0,
+  "new_km": 19.8,
+  "components": 7,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 23.5,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_ost_west_passage",
+  "name": "Ost-West-Passage",
+  "region": "fernwege_felsentouren",
+  "baseline_share": 0.1977,
+  "secs": 184.4,
+  "written": true,
+  "new_share": 0.2363,
+  "line_shift_m": 0.0,
+  "new_km": 77.85,
+  "components": 34,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 21.4,
+  "dropped_matches": 2
+ },
+ {
+  "id": "pw_trans_pfaelzerwald",
+  "name": "Trans Pfälzerwald",
+  "region": "fernwege_felsentouren",
+  "baseline_share": 0.138,
+  "secs": 467.7,
+  "written": true,
+  "new_share": 0.1502,
+  "line_shift_m": 0.0,
+  "new_km": 91.48,
+  "components": 32,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 16.4,
+  "dropped_matches": 3
+ },
+ {
+  "id": "pw_felsenwanderweg_rodalben",
+  "name": "Felsenwanderweg Rodalben",
+  "region": "fernwege_felsentouren",
+  "baseline_share": 0.2434,
+  "secs": 268.6,
+  "written": true,
+  "new_share": 0.8518,
+  "line_shift_m": 3.6,
+  "new_km": 43.89,
+  "components": 8,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 12.8,
+  "dropped_matches": 0
+ },
+ {
+  "id": "pw_rodalben_felsentrails",
+  "name": "Rodalben Felsentrails",
+  "region": "fernwege_felsentouren",
+  "baseline_share": 0.1849,
+  "secs": 108.3,
+  "written": true,
+  "new_share": 0.173,
+  "line_shift_m": 0.0,
+  "new_km": 41.32,
+  "components": 17,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 15.9,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_gelber_strich_kreuz_rinne",
+  "name": "Lämmchesberg Runde",
+  "region": "private_runden",
+  "baseline_share": 0.2381,
+  "secs": 54.5,
+  "written": true,
+  "new_share": 0.3559,
+  "line_shift_m": 0.0,
+  "new_km": 25.39,
+  "components": 12,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 20.9,
+  "dropped_matches": 4
+ },
+ {
+  "id": "pw_pfaelzer_wald_tour_bei_kl",
+  "name": "Uni-Wohnstadt Runde",
+  "region": "private_runden",
+  "baseline_share": 0.3019,
+  "secs": 148.3,
+  "written": true,
+  "new_share": 0.3381,
+  "line_shift_m": 0.0,
+  "new_km": 36.07,
+  "components": 19,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 20.5,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_pfaelzer_wald_trailtour_bei_neustadt",
+  "name": "Gimmeldingen Runde",
+  "region": "private_runden",
+  "baseline_share": 0.2938,
+  "secs": 136.5,
+  "written": true,
+  "new_share": 0.3531,
+  "line_shift_m": 0.0,
+  "new_km": 34.51,
+  "components": 18,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 18.0,
+  "dropped_matches": 2
+ },
+ {
+  "id": "pw_dubbels_tour_bei_neustadt",
+  "name": "Haardt Runde",
+  "region": "private_runden",
+  "baseline_share": 0.4267,
+  "secs": 91.6,
+  "written": true,
+  "new_share": 0.5295,
+  "line_shift_m": 0.0,
+  "new_km": 40.89,
+  "components": 25,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 15.7,
+  "dropped_matches": 2
+ },
+ {
+  "id": "pw_kaiserslautern_runde",
+  "name": "Europahöhe Runde",
+  "region": "private_runden",
+  "baseline_share": 0.2671,
+  "secs": 99.3,
+  "written": true,
+  "new_share": 0.3684,
+  "line_shift_m": 5.7,
+  "new_km": 37.15,
+  "components": 13,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 23.1,
+  "dropped_matches": 1
+ },
+ {
+  "id": "pw_dahner_felsenpfad",
+  "name": "Dahner Felsenpfad",
+  "region": "fernwege_felsentouren",
+  "baseline_share": 0.0,
+  "secs": 53.3,
+  "written": true,
+  "new_share": 0.0,
+  "line_shift_m": 0.0,
+  "new_km": 12.65,
+  "components": 0,
+  "params": {
+   "strict_thresh_m": 15.0,
+   "loose_thresh_m": 35.0
+  },
+  "worst_median_m": 0,
+  "dropped_matches": 1
+ }
+]

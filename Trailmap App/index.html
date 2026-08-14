@@ -546,8 +546,8 @@ const REGION_CATALOG = {
   // "Technical Difficulty X/6" (1-2->blau, 3-4->rot, 5-6->schwarz) -- no manual per-trail review, per
   // the user -- "einige Fehler machen nix".
   pfaelzerwald: {
-    countries: ["DE"], label: "Mountainbikepark Pfälzerwald", file: "regions/pfaelzerwald.json", trailCount: 437,
-    bounds: [[49.04013, 7.50087], [49.44465, 8.16781]],
+    countries: ["DE"], label: "Mountainbikepark Pfälzerwald", file: "regions/pfaelzerwald.json", trailCount: 805,
+    bounds: [[49.02409, 7.46910], [49.53032, 8.20046]],
     subRegions: {
       johanniskreuz: { label: "Rund um Johanniskreuz", color: "#5a7a3a" },
       weinstrasse: { label: "Weinstraße", color: "#8a3a4a" },
@@ -558,7 +558,18 @@ const REGION_CATALOG = {
       // Split out from the "Empfehlungen" staging bucket 2026-07-24 into its own permanent sub-region
       // once the user confirmed these 3 (Churchner, Drei Eichen, Pechstein -- RV Edelweiss 1924
       // Deidesheim e.V.'s real "Naturtrail" network, opened Feb 2025) are correctly sourced/connected.
-      naturtrail_deidesheim: { label: "Naturtrail Deidesheim", color: "#c2185b" }
+      naturtrail_deidesheim: { label: "Naturtrail Deidesheim", color: "#c2185b" },
+      // Both added 2026-08-14 with the Trailforks rework, which reached past the region's previous
+      // footprint in two directions -- the user's call was to take everything the harvest found rather
+      // than clip it. `haardt` is the northern Haardt edge around Bad Dürkheim/Wachenheim: geographically
+      // Pfälzerwald and adjoining Weinstraße, but absent from our data until now, so all 112 of its trails
+      // are new ground rather than replacements. Donnersberg's own region starts at 49.5355, so the two
+      // stay disjoint even after this region's bounds grew north to 49.53. `bienwald` is the flat Rhine
+      // plain around Kandel, 27-31 km from any other sub-region's centre -- kept separate rather than
+      // folded into Wasgau so it reads honestly on the map and can be split off later if it ever deserves
+      // its own region.
+      haardt: { label: "Mittelhaardt", color: "#c1440e" },
+      bienwald: { label: "Bienwald (Kandel)", color: "#a03a8a" }
       // (2026-07-26) The "empfehlungen" (Empfehlungen vorläufig) staging sub-region was removed: its
       // last remaining entry, the Dahner Felsenpfad loop, was moved to Wahrzeichen-Touren
       // (fernwege_felsentouren) per the user, leaving the bucket empty.
@@ -4501,6 +4512,21 @@ function applySolo(id){
     }
   });
   soloId = id;
+  // Dimming a line does nothing to its HITLINE: that is a weight-22, opacity-0 polyline and stays fully
+  // clickable, so any trail built after this one still swallows pointer events across it -- and every
+  // trail is built after some Trailrunde. The user hit this on a Tour whose segments coincide exactly with
+  // their component trails (as they should, see docs/trailrunde-feature.md): clicking a segment opened the
+  // TRAIL's own panel instead of keeping the Tour selected and appending the stretch, because a foreign
+  // hitline was on top. Measured on the live preview -- the topmost element over a Tour's own segment was
+  // another trail's 22px hitline. buildTrailLayer already solves exactly this at build time by bringing
+  // segmentHitLines above the trail's own hitLine; soloing has to redo it against the whole map, since the
+  // soloed trail is the one the user is interacting with. Order matters: hitLine first, then the
+  // per-segment areas, or the loop's own full-length hitline would cover its own segments again.
+  const soloed = lineLayers[id];
+  if (soloed) {
+    soloed.hitLine.bringToFront();
+    (soloed.segmentHitLines || []).forEach(h => h.bringToFront());
+  }
   applyLiftVisibility();      // after soloId is set -- liftHiddenBySolo() reads it
   applyLiftSegmentOpacity();  // ditto: the Tours' own lift stretches, which the group styling above misses
   syncSelectedCardSoloBtn();

@@ -66,7 +66,18 @@ EXCLUDE_SUBREGIONS = {"naturtrail_deidesheim"}
 #: Measured across all 107 replacements that are loop components: 14 of them cost the loops 5 355 m of
 #: attributed ground, worst "Wanderweg Stelzenberg Horst 3 1" at 2 496 m across 3 loops with only 36%
 #: landing on its replacement. Those 14 keep their old trail instead.
-LOOP_GROUND_KEEP = 0.70      # >= this fraction of the loop ground must land on the replacement
+#: **Disabled (0.0) on the user's decision, 2026-08-14, and the reason is worth keeping.** The measurement
+#: above is sound but it was measuring the wrong world: it assumed a Trailrunde's segment carries the LOOP's
+#: own points, which is how a first version of pfaelzerwald_rederive_loops.py built them. Segments carry the
+#: TRAIL's geometry now (see that file's own note), so "does the loop's ground land on the replacement" no
+#: longer decides whether the stretch can be attributed -- the matcher's proximity test does, and the
+#: segment then follows the trail regardless.
+#: Keeping the 14 rescued trails actively hurt in that world: three of them (Rodalber Felsenwanderweg 7 and
+#: 8, Pfälzerwald Blau-Weißer Balken) sat as blue stretches on top of the green Felsenweg Nord, which is
+#: exactly the doubled-line clutter the user then reported from the preview. Measured effect of the rescue
+#: before it was switched off: +3.6 points on Tour 7 - Albersweiler, the one case it was built for, and
+#: between -1.6 and +0.7 everywhere else. Not worth the clutter, so 112 replacements again instead of 98.
+LOOP_GROUND_KEEP = 0.0       # >= this fraction of the loop ground must land on the replacement (0 = off)
 LOOP_GROUND_TOL_M = 25.0     # matches MAX_MATCH_MEDIAN_M in pfaelzerwald_rederive_loops.py
 
 

@@ -21,6 +21,49 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-14
+
+- **Pfälzerwald reworked against Trailforks: 437 → 805 trails, and the Trailrunden now name three times as
+  much of their own length.** Source: all 485 Trailforks trails inside the region's box, from Trailforks'
+  own `encodedpath` via logged-in Chrome; the Trailrunden's `trailSegments` re-derived with
+  `tools/gpx_map_match.py` against the merged trail set. 112 existing entries replaced where a Trailforks
+  trail covers them, 273 kept (mostly OSM hiking-route fragments, which the user confirmed may stay), two
+  new sub-regions for ground the region never covered (`haardt` 112, `bienwald` 13). The headline number is
+  the share of each Tour's length that falls on a *named* trail: **13.3% → 19.7%**, 37 of 42 Tours better,
+  3 unchanged, 2 worse. Felsenwanderweg Rodalben went 24.3% → **85.2%** once the user pointed out it simply
+  *is* the Rodalber Felsenwanderweg, which Trailforks carries as "Felsenweg Nord/Süd". Tools:
+  `pfaelzerwald_{report,containment,integrate,rederive_loops,finalize}.py`.
+- **That 13.3% is the corrected baseline, and finding it mattered more than the gain.** The region's 616
+  existing attributions turned out bimodal — half exactly on their trail, then a tail reaching 827 m away
+  ("König-Albrecht-Wanderweg 1"). About a tenth claimed ground their named trail is nowhere near, inflating
+  the old headline to 15.2%. `pfaelzerwald_report.py` now measures both, and raw == clean after the rework:
+  the gain is not paid for with new noise.
+- **A Tour's segment must carry its component trail's geometry, not a slice of the Tour's own line.** Built
+  the wrong way round first, and the user reported all three consequences from the preview: doubled offset
+  lines, clicks opening the trail instead of extending the Tour's panel, and the same ground stored twice.
+  Donnersberg/Bike Kingdom/Laax have 100% of segments sitting 0.0 m from their trail; the slice version
+  managed 56%. Fixed via `resolve_segments()`, and the Tour lines moved at most 5.7 m in the process.
+- **`lineTrails` order IS the map's z-order** — appending the 480 harvested trails after the Tours put 483
+  hitlines over every Tour's per-segment hit areas, so segment clicks went to the wrong layer. The live
+  region has 3 trails after its last Tour and Bike Kingdom 0, which is why it never showed there. Tours are
+  sorted last now, and `applySolo` additionally re-raises the soloed layer's own hit areas — dimming a line
+  never touched its invisible 22px hitline, so **Donnersberg carries the same bug latently** and is fixed
+  by that half too.
+- **Harz difficulties now follow the OPERATOR, not Trailforks** — the user's standing rule ("immer die
+  Schwierigkeit des Betreibers übernehmen"), which reverses for this region the Trailforks-throughout rule
+  it was built to. All six operator pages re-checked: only St. Andreasberg, Trailpark Ilsenburg and Bodetal
+  publish a grade at all, so Hahnenklee/Schulenberg/Braunlage necessarily stay on Trailforks. The
+  three-step German scale maps onto the app's own labels (leicht → blau, mittel → rot, schwer → schwarz),
+  and a two-step grade ("mittel / schwer") rounds **up**. Net effect: **7 St. Andreasberg trails
+  re-coloured**, Ilsenburg's and Bodetal's grades already agreed. `OPERATOR_DIFF`/`resolve_diff` in
+  `tools/build_harz.py` carry the mapping plus each trail's operator wording; five new cases in
+  `tests/python/geomerge.py` (mutation-checked) pin the rule, one of them comparing the shipped
+  `harz.json` against it for all 42 trails.
+- **Harz's remaining gaps reviewed and closed as accepted, not open**: the four trails with no geometry
+  anywhere (Bodetal `05 Schwarze Köhlerliesel`, Schulenberg `OnAir`, St. Andreasberg `7 Super Enduro` and
+  `8 Kids Trail Harz`) are dropped for good — the user found no GPX for them either — and the two
+  non-park trails (`Spiegelthaler-Trail`, `Bodetrail`) stay in deliberately. See `docs/region-backlog.md`.
+
 ## 2026-08-13
 
 - **Per-basemap map colors, several rounds of live iteration.** Trail/connector/lift colors were tuned

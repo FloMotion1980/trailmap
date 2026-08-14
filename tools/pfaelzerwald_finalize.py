@@ -70,7 +70,27 @@ def main():
         geo.pop(tid, None)
         profs.pop(tid, None)
 
-    # --- 2. publishability ----------------------------------------------------------------------
+    # --- 2. Trailrunden last, because lineTrails order IS the map's z-order ----------------------
+    # buildTrailLayer walks lineTrails and Leaflet's SVG renderer stacks later-added paths on top, so a
+    # trail built after a Trailrunde puts its own 22px hitLine over that Tour's per-segment hit areas and
+    # swallows their clicks -- the Tour's stretch then opens the plain trail's panel instead of staying
+    # selected and appending the stretch. buildTrailLayer already guards the within-layer case
+    # (segmentHitLines are brought above the Tour's own hitLine); it cannot guard against layers that do
+    # not exist yet.
+    #
+    # This is why the live region behaves correctly and the reworked one did not, which is what the user
+    # pointed out: production has 3 trails after its last loop, Bike Kingdom 0 -- while appending 480
+    # harvested trails put 483 on top of every Tour. Sorting the loops to the end restores the property
+    # the working regions have by accident, rather than relying on it. (Donnersberg has 36 trails after its
+    # single loop and is a latent case of the same bug; applySolo now also re-raises the soloed layer's hit
+    # areas, which covers it independently of order.)
+    loops = [t for t in trails if t.get("loop")]
+    if loops:
+        trails = [t for t in trails if not t.get("loop")] + loops
+        print("Trailrunden ans Ende sortiert (%d Touren hinter %d Einzeltrails)"
+              % (len(loops), len(trails) - len(loops)))
+
+    # --- 3. publishability ----------------------------------------------------------------------
     ids = {t["id"] for t in trails}
     problems = []
     if ids - set(geo):
