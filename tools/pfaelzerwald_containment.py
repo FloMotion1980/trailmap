@@ -55,6 +55,20 @@ SURE_REPLACE = 0.70          # >= this fraction contained -> replace, no shape q
 MAYBE_LOW = 0.30             # below this -> keep, no question asked
 EXCLUDE_SUBREGIONS = {"naturtrail_deidesheim"}
 
+#: A replacement additionally has to hold where the TRAILRUNDEN actually run, not merely where the old
+#: trail runs, and those are not the same test. Found 2026-08-14 from Tour 7 - Albersweiler losing
+#: attribution: "Dernbach D2" is 100% contained in "Neuscharfeneck Full" -- but at 0-16 m, not coincident --
+#: while the loop's own segment sits up to 20 m from Dernbach D2, so the loop can be ~36 m from the
+#: replacement and only 32% of it lands within 20 m. **The tolerances stack.** Both sources describe the
+#: same trail; their geometry differs by ~15 m; and the loop follows the old one. Replacing then moves the
+#: named line away from the ground the loop actually covers, and the re-derivation can no longer attribute
+#: it -- which is precisely what the user's "only replace where Trailforks lies" was meant to prevent.
+#: Measured across all 107 replacements that are loop components: 14 of them cost the loops 5 355 m of
+#: attributed ground, worst "Wanderweg Stelzenberg Horst 3 1" at 2 496 m across 3 loops with only 36%
+#: landing on its replacement. Those 14 keep their old trail instead.
+LOOP_GROUND_KEEP = 0.70      # >= this fraction of the loop ground must land on the replacement
+LOOP_GROUND_TOL_M = 25.0     # matches MAX_MATCH_MEDIAN_M in pfaelzerwald_rederive_loops.py
+
 
 def _utf8_stdout():
     """Force UTF-8 output, but only when run as a script.
@@ -121,6 +135,26 @@ def dist_profile(short, long_):
                         best = d
         out.append(best)
     return out
+
+
+def loop_ground_kept(old_id, new_coords, loop_segments, tol=LOOP_GROUND_TOL_M):
+    """Fraction of the loop length currently attributed to `old_id` that lies on `new_coords`.
+
+    Returns None when the old trail is not a loop component at all -- then there is no loop ground to lose
+    and the trail-to-trail containment decides alone.
+    """
+    segs = loop_segments.get(old_id)
+    if not segs:
+        return None
+    total = covered = 0.0
+    for coords in segs:
+        seg_len = line_len_m(coords)
+        if seg_len <= 0:
+            continue
+        near = sum(1 for p in coords if min(haversine_m(p, q) for q in new_coords) <= tol) / len(coords)
+        total += seg_len
+        covered += near * seg_len
+    return covered / total if total else None
 
 
 def profile_shape(prof, tol=TOL_M):
@@ -195,6 +229,12 @@ def main():
     geo = d["trailGeo"]
     old = [t for t in d["lineTrails"]
            if not t.get("loop") and t["region"] not in EXCLUDE_SUBREGIONS]
+    # every stretch of every Trailrunde, grouped by the component trail it is attributed to
+    loop_segments = {}
+    for ss in d.get("trailSegments", {}).values():
+        for seg in ss:
+            if seg.get("trailId"):
+                loop_segments.setdefault(seg["trailId"], []).append(seg["coords"])
     new = json.load(open(args.new, encoding="utf-8"))
     if isinstance(new, dict) and "rows" in new:
         new = new["rows"]
@@ -202,6 +242,7 @@ def main():
     old_pre = [(t, geo[t["id"]], line_len_m(geo[t["id"]]), bbox(geo[t["id"]], BBOX_PAD_DEG))
                for t in old]
     new_pre = [(s, c, line_len_m(c), bbox(c)) for s, c in new.items()]
+    geo_by_slug = dict(new)
     print("vergleiche %d bestehende (ohne %s) gegen %d neue Trailforks-Trails"
           % (len(old_pre), "/".join(EXCLUDE_SUBREGIONS), len(new_pre)))
 
@@ -223,7 +264,13 @@ def main():
         if best is None or best["frac"] < MAYBE_LOW:
             decisions["keep"].append(rec)
         elif best["frac"] >= SURE_REPLACE and best["shape"] == "subsumed":
-            decisions["replace"].append(rec)
+            ground = loop_ground_kept(t["id"], geo_by_slug[best["slug"]], loop_segments)
+            best["loop_ground"] = None if ground is None else round(ground, 3)
+            if ground is not None and ground < LOOP_GROUND_KEEP:
+                rec["kept_reason"] = ("Ersatz deckt nur %.0f%% des Rundenbodens" % (100 * ground))
+                decisions["keep"].append(rec)
+            else:
+                decisions["replace"].append(rec)
         elif best["shape"] == "junction":
             decisions["keep"].append(rec)
         else:
@@ -231,6 +278,12 @@ def main():
 
     for k in decisions:
         print("   %-8s %4d" % (k, len(decisions[k])))
+    saved = [r for r in decisions["keep"] if r.get("kept_reason")]
+    if saved:
+        print("   davon %d behalten, weil der Ersatz nicht dort liegt wo die Runde laeuft:" % len(saved))
+        for r in sorted(saved, key=lambda x: x["match"]["loop_ground"]):
+            print("      %3.0f%% Rundenboden  %-40s -> %s"
+                  % (100 * r["match"]["loop_ground"], r["old_name"][:40], r["match"]["slug"][:28]))
     json.dump(decisions, open(args.out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print("geschrieben: %s" % args.out)
 
