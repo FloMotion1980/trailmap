@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=177" />
+<link rel="stylesheet" href="style.css?v=178" />
 </head>
 <body>
 <div id="fatalError">
@@ -138,21 +138,22 @@
         </details>
         <details class="filter-section" id="secMapOptions">
           <summary>Kartenoptionen</summary>
+          <!-- Straße/Straße dezent/Straße hell are the SAME osm tile layer at three different CSS filter
+               levels (see STRASSE_CONTRAST_FILTERS/applyStrasseFilter()), presented as three peer main
+               options rather than sub-options of one button -- the user's own call (2026-08-16), after
+               first asking for sub-options and then preferring them "wie Hauptoptionen". "Straße hell" here
+               is the NEW filter-based pale look; the OLD Straße-hell basemap (CARTO/Positron, which drops
+               paths/forest roads entirely -- the whole reason this filter approach exists instead of just
+               switching basemap) is kept, per the user's explicit request not to remove it, renamed to
+               "Pastell" so the two don't collide by name. Default on a first-ever visit is "Straße dezent"
+               (data-contrast="a"), not plain Straße -- also the user's own call. -->
           <div class="chip-row" id="baseLayerControl">
-            <button class="chip active" data-layer="osm">Straße</button>
-            <button class="chip" data-layer="carto">Straße hell</button>
+            <button class="chip" data-layer="osm" data-contrast="normal">Straße</button>
+            <button class="chip active" data-layer="osm" data-contrast="a">Straße dezent</button>
+            <button class="chip" data-layer="osm" data-contrast="b">Straße hell</button>
+            <button class="chip" data-layer="carto">Pastell</button>
             <button class="chip" data-layer="topo">Relief</button>
             <button class="chip" data-layer="sat">Satellit</button>
-          </div>
-          <!-- Only ever meaningful while "Straße" is the active basemap -- toggled visible/hidden by the
-               #baseLayerControl click handler and by boot(), never shown alongside another basemap. Three
-               abgeschwächte Varianten (see applyStrasseFilter()) as sub-options of Straße itself, not a
-               fifth basemap of their own -- the user's own framing (2026-08-16): "Ich will Straße normal
-               und die beiden helleren Varianten als eine Art Unteroptionen". -->
-          <div class="chip-row sub-chip-row" id="strasseContrastControl">
-            <button class="chip small active" data-contrast="normal">Normal</button>
-            <button class="chip small" data-contrast="a">Dezent</button>
-            <button class="chip small" data-contrast="b">Deutlich</button>
           </div>
           <div class="toggle-row-group">
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showNamesToggle"><span class="slider"></span></span>Namen</label>
@@ -1377,10 +1378,11 @@ let activeRegionGroups = new Set(); // which REGION_CATALOG groups are currently
 let activeRegions = new Set(Object.keys(REGIONS));
 let activeDiffs = new Set(["gruen","blau","rot","schwarz"]);
 let showNames = false;
-// "Normal" | "a" (dezent) | "b" (deutlich) -- a sub-option of the "Straße" basemap specifically, not a
-// standalone toggle, per the user's own framing (2026-08-16). Only ever applied while Straße is the
-// active basemap; see applyStrasseFilter() and #strasseContrastControl's own comment in the markup.
-let strasseContrast = "normal";
+// "normal" | "a" (dezent) | "b" (hell) -- which of the three Straße/Straße-dezent/Straße-hell chips is
+// active; all three are the SAME osm tile layer at a different CSS filter level, see
+// STRASSE_CONTRAST_FILTERS/applyStrasseFilter() and #baseLayerControl's own comment in the markup.
+// Defaults to "a" (dezent), not "normal" -- the user's own choice for a first-ever visit (2026-08-16).
+let strasseContrast = "a";
 let showUphill = true; // hides/shows trails flagged uphill:true (EMTB uphill trails) — independent of diff
 let showLoop = true; // hides/shows trails flagged loop:true (Trailrunden) — independent of diff
 let showDownhill = true; // hides/shows "regular" trails (neither uphill nor loop) — independent of diff
@@ -2179,35 +2181,12 @@ const baseLayers = {
 let currentBaseKey = "osm";
 baseLayers.osm.addTo(map);
 
-const layerWarningEl = document.getElementById("layerWarning");
-document.querySelectorAll("#baseLayerControl .chip").forEach(btn => {
-  btn.addEventListener("click", () => {
-    const key = btn.dataset.layer;
-    if (key === currentBaseKey) return;
-    map.removeLayer(baseLayers[currentBaseKey]);
-    baseLayers[key].addTo(map);
-    currentBaseKey = key;
-    document.querySelectorAll("#baseLayerControl .chip").forEach(b => b.classList.toggle("active", b === btn));
-    layerWarningEl.classList.remove("visible");
-    applyBasePalette(key);
-    syncStrasseContrastVisibility();
-    applyStrasseFilter();
-  });
-});
-
-// The sub-option row only ever means something while Straße (osm) is the active basemap -- hidden
-// entirely otherwise, rather than shown-but-inert, so it never reads as "this applies to Relief too".
-function syncStrasseContrastVisibility(){
-  document.getElementById("strasseContrastControl").classList.toggle("visible", currentBaseKey === "osm");
-}
-
 // Plain CSS filters on Leaflet's own tile pane -- no tile server involved, works offline, scales with
-// zoom/pan for free. "Dezent"/"Deutlich" approximate "Straße hell"'s pale colour feel while keeping
-// Straße's own paths/forest-road rendering, which Straße hell drops entirely (the whole reason this
-// exists rather than just switching basemap -- the user, 2026-08-16, after a live-map mockup round:
-// "Straße hell wäre von der Farbgebung eigentlich ideal", but "da werden nicht alle Wege dargestellt").
-// A no-op (empty string) whenever a different basemap is active, so switching away from Straße always
-// shows that basemap's own true colours regardless of which contrast level was last picked.
+// zoom/pan for free. "Straße dezent"/"Straße hell" approximate the old Straße-hell (CARTO/Positron)
+// basemap's pale colour feel while keeping Straße's own paths/forest-road rendering, which that basemap
+// drops entirely (the whole reason this exists rather than just switching basemap -- the user, 2026-08-16,
+// after a live-map mockup round: "Straße hell wäre von der Farbgebung eigentlich ideal", but "da werden
+// nicht alle Wege dargestellt"). A no-op (empty string) whenever a non-osm basemap is active.
 const STRASSE_CONTRAST_FILTERS = {
   normal: "",
   a: "brightness(1.15) saturate(0.55) contrast(0.9)",
@@ -2218,10 +2197,25 @@ function applyStrasseFilter(){
   if (!pane) return;
   pane.style.filter = currentBaseKey === "osm" ? STRASSE_CONTRAST_FILTERS[strasseContrast] : "";
 }
-document.querySelectorAll("#strasseContrastControl .chip").forEach(btn => {
+
+const layerWarningEl = document.getElementById("layerWarning");
+// Straße / Straße dezent / Straße hell all carry data-layer="osm" (the SAME tile layer, three filter
+// levels) plus their own data-contrast; Pastell/Relief/Satellit carry only data-layer. One handler covers
+// both: the tile layer is only actually swapped when data-layer itself changes, so picking a different
+// Straße contrast while already on Straße never removes/re-adds the tile layer (no reload, no flicker).
+document.querySelectorAll("#baseLayerControl .chip").forEach(btn => {
   btn.addEventListener("click", () => {
-    strasseContrast = btn.dataset.contrast;
-    document.querySelectorAll("#strasseContrastControl .chip").forEach(b => b.classList.toggle("active", b === btn));
+    const key = btn.dataset.layer;
+    const contrast = btn.dataset.contrast || "normal";
+    if (key !== currentBaseKey) {
+      map.removeLayer(baseLayers[currentBaseKey]);
+      baseLayers[key].addTo(map);
+      currentBaseKey = key;
+      layerWarningEl.classList.remove("visible");
+      applyBasePalette(key);
+    }
+    strasseContrast = contrast;
+    document.querySelectorAll("#baseLayerControl .chip").forEach(b => b.classList.toggle("active", b === btn));
     applyStrasseFilter();
     persistActiveState();
   });
@@ -6097,7 +6091,7 @@ function restoreActiveState(){
     if (typeof saved.showPlaces !== "boolean") saved.showPlaces = true;
     if (typeof saved.liveStatusOpen !== "boolean") saved.liveStatusOpen = true;
     if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = true;
-    if (!STRASSE_CONTRAST_FILTERS.hasOwnProperty(saved.strasseContrast)) saved.strasseContrast = "normal";
+    if (!STRASSE_CONTRAST_FILTERS.hasOwnProperty(saved.strasseContrast)) saved.strasseContrast = "a";
     return saved;
   } catch (e) { return null; }
 }
@@ -7244,11 +7238,11 @@ async function boot(){
     showDirectionArrows = saved.showDirectionArrows;
     strasseContrast = saved.strasseContrast;
   }
-  document.querySelectorAll("#strasseContrastControl .chip").forEach(b =>
+  // currentBaseKey is still "osm" here (applyBasePalette/the tile layer swap only ever happen from a chip
+  // click, never from boot) -- only the three osm-family chips carry data-contrast, so this correctly
+  // leaves Pastell/Relief/Satellit alone regardless of which contrast level was last picked.
+  document.querySelectorAll("#baseLayerControl .chip[data-contrast]").forEach(b =>
     b.classList.toggle("active", b.dataset.contrast === strasseContrast));
-  syncStrasseContrastVisibility(); // currentBaseKey is still "osm" here (applyBasePalette is only ever
-                                    // called from a chip click, never from boot) -- shows the row on a
-                                    // fresh boot, same as the map itself starting on Straße.
   applyStrasseFilter();
 
   await loadRegionVersions(); // fresh per-file versions before any region fetch (see versionedRegionUrl)
@@ -7428,7 +7422,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v177"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v178"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

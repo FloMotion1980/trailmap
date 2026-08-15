@@ -22,13 +22,14 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-16
-- **"Straße" basemap gets sub-options for a paler, lower-contrast look — "Normal"/"Dezent"/"Deutlich"**,
-  shown as a small chip row right under the Straße button in Kartenoptionen (only while Straße is the
-  active basemap) and persisted like the other filter toggles. Plain CSS filters on Leaflet's own tile
-  pane (`brightness`/`saturate`/`contrast`, no tile-server involvement, works offline): approximates
-  "Straße hell"'s pale colour feel while keeping Straße's own paths/forest-road rendering, which Straße
-  hell drops entirely — the reason this exists as sub-options of Straße rather than just switching
-  basemap. General setting, not RIDE-only, per the user's own framing.
+- **Basemap picker restructured: "Straße"/"Straße dezent"/"Straße hell" are now three peer options**
+  (same osm tiles, three CSS filter levels — `brightness`/`saturate`/`contrast` on Leaflet's own tile
+  pane, no tile-server involvement, works offline), not sub-options of one button as first built the
+  same day. The old CARTO/Positron "Straße hell" basemap is kept (the user didn't want it removed after
+  all) but renamed to **"Pastell"** so the two don't collide by name — `data-layer="carto"` is
+  unchanged, so its own test coverage needed no changes beyond the visible label. **Default basemap on
+  a first-ever visit is now "Straße dezent"**, not plain Straße. Persisted like the other filter
+  toggles; general setting, not RIDE-only.
 - **RIDE button emoji and the info-panel's own RIDE button.** Went 🚵 (mountain biker, "harder to
   recognize at a glance") → 🚴 (plain cyclist) → 🚲 (bicycle alone, no rider/hill) after the user found
   🚴 still rendered with a hill in the background on their phone's emoji font. A record/stop icon

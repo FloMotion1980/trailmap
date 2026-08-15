@@ -231,13 +231,6 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
 .chip.diff-blau.active{ background:var(--blau); border-color:var(--blau); }
 .chip.diff-rot.active{ background:var(--rot); border-color:var(--rot); }
 .chip.diff-schwarz.active{ background:var(--schwarz); border-color:var(--schwarz); }
-/* Sub-options of the "Straße" basemap chip specifically (2026-08-16) -- see #strasseContrastControl's own
-   comment in index.html for why these are framed as belonging to Straße rather than as a 5th basemap.
-   Hidden by default (only relevant while Straße is active) and pulled up tight against the row above via
-   the negative margin, so the two rows read as one group instead of two separate chip lists. */
-.sub-chip-row{ display:none; margin-top:-4px; }
-.sub-chip-row.visible{ display:flex; }
-.chip.small{ padding:3px 9px; font-size:11px; }
 .toggle-row-group{ display:flex; gap:16px; flex-wrap:wrap; margin-top:4px; }
 .toggle-row{ display:flex; align-items:center; gap:6px; font-family: Arial, sans-serif; font-size:12.5px; color:var(--ink); cursor:pointer; }
 /* A switch whose value cannot take effect right now — currently only 🔁 Touren while builder mode is on,
