@@ -890,7 +890,14 @@ html.landscape-compact #sidebarToggle .st-bars{
    container cannot carry (the pulse was a ring outside the button) -- and it no longer has to: the readout chip
    below carries a blinking dot whenever tracking is live, so the "is it actually following" signal is still
    there and is only in one place instead of two. */
-#bearingBtn.active, #rideModeBtn.active{ background: var(--forest); color:#f2f3ec; }
+#bearingBtn.active{ background: var(--forest); color:#f2f3ec; }
+/* RIDE's own active fill is light, not the dark forest green #bearingBtn uses -- the cyclist emoji keeps
+   its own native colours (a blue shirt on most platforms) regardless of the button's `color`, since emoji
+   glyphs aren't recoloured by CSS the way a text icon would be, and a blue shirt on dark green read as
+   poorly as the mountain-background version the user already rejected (2026-08-16). `--highlight` is the
+   same amber the info panel's own `.ride-btn.active` already uses, for the same reason and for visual
+   consistency between the two RIDE entry points. */
+#rideModeBtn.active{ background: var(--highlight); color: var(--ink); }
 /* Waiting for the one-shot fix. getCurrentPosition can take seconds under trees, and without this the tap
    looks like it did nothing at all. */
 #locateBtn.busy{ opacity:.55; }
@@ -906,7 +913,7 @@ html.landscape-compact #sidebarToggle .st-bars{
 #locateCluster.is-centred-following #mapControls > #locateBtn{ display:none; }
 @media (hover: hover){
   #mapControls > button:hover{ background:#eff2e9; }
-  #bearingBtn.active:hover, #rideModeBtn.active:hover{ background: var(--forest-dark); }
+  #bearingBtn.active:hover{ background: var(--forest-dark); }
 }
 .geo-wrap{ position:relative; width:40px; height:40px; }
 .geo-cone{
