@@ -22,6 +22,15 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-16
+- **RIDE infobox: phone-tested refinements after the redesign.** Speed number is now genuinely centred
+  (`#rideInfoBig` needed an explicit `width:100%`, or the flex column shrinks to its content and sits
+  left-aligned even with `align-items:center` set); altitude's portrait badge and the gap above the
+  trail row both grew per the user's sizing calls; in landscape the speed number grew, each stat's unit
+  moved below its number instead of beside it, and the trail row is now genuinely pinned to the bottom
+  of the column instead of trailing after the big numbers. Also fixed: the length/⬆️/⬇️ stats sat at
+  visibly different heights on a real phone (iOS's own emoji font has different vertical metrics than
+  plain digits) — switched from baseline to centre alignment, which sidesteps the font-metric mismatch
+  instead of compensating for one specific emoji font.
 - **RIDE infobox redesigned for sunlight readability**, after reviewing mockups (built with the
   `visualize` tool first, before touching app code) instead of iterating live: speed is now a single
   dominant, centred 80px (58px landscape) number in a plain heavy sans (Arial/Helvetica, not the app's

@@ -1230,6 +1230,9 @@ html.ride-mode #rideInfoPanel{
    the user over several alternatives). */
 #rideInfoBig{
   position:relative; display:flex; flex-direction:column; align-items:center;
+  width:100%; /* without this, the flex column shrinks to its content's own width and sits at the
+                 panel's left edge instead of truly centred across the full panel -- the corner badge
+                 below is positioned relative to THIS box, so it has to span the real width too */
   font-family: Arial, Helvetica, sans-serif;
 }
 .ride-big-stat{ display:inline-flex; align-items:baseline; }
@@ -1238,38 +1241,58 @@ html.ride-mode #rideInfoPanel{
 .ride-speed-stat .ride-big-num{ font-size:80px; }
 .ride-speed-stat .ride-big-unit{ font-size:14px; }
 /* Portrait: a small badge in the corner, not a second centred number -- speed stays the only thing the
-   eye is drawn to at a glance. */
+   eye is drawn to at a glance. Sized up a little from the first cut (20px -> 26px, user's own call --
+   still clearly secondary to the 80px speed, just easier to read at a glance). */
 .ride-alt-stat{ position:absolute; top:0; right:0; }
-.ride-alt-stat .ride-big-num{ font-size:20px; }
-.ride-alt-stat .ride-big-unit{ font-size:11px; }
+.ride-alt-stat .ride-big-num{ font-size:26px; }
+.ride-alt-stat .ride-big-unit{ font-size:12px; }
 .ride-big-divider{ display:none; } /* only shown in landscape, see below */
 /* The focused trail's name/length/Hm -- a second, much smaller row. Hidden OUTRIGHT with nothing
    focused (no dash placeholder, per the user's own call: unlike speed/altitude, which always show
-   *something*, there is genuinely nothing to say here without a trail). */
+   *something*, there is genuinely nothing to say here without a trail). Pulled further down from the
+   big numbers than the first cut (6px -> 22px gap, user's own call) for clearer separation. */
 #rideInfoTrail{
-  display:flex; align-items:baseline; justify-content:center; gap:8px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
   font-family: Arial, Helvetica, sans-serif; font-size:12px; font-weight:700; opacity:.85;
-  margin-top:6px; padding-top:6px; border-top:1px solid rgba(242,243,236,.25);
+  margin-top:22px; padding-top:6px; border-top:1px solid rgba(242,243,236,.25);
 }
 #rideInfoName{ font-weight:800; }
-#rideInfoStats{ display:flex; gap:8px; }
-/* Landscape: left edge instead of a top bar, same reasoning as #infoPanel's own landscape-compact override. */
+/* align-items:center, not the flex default (stretch) or baseline: iOS's own emoji font (⬆️/⬇️) has
+   different vertical metrics than plain digits, so a baseline-driven alignment visibly sat the emoji
+   stats lower than the plain "km" one on a real phone (user, 2026-08-16: "die Hoch und runter Meter
+   rechts sind etwas tiefer") -- centring each span's own box sidesteps that font-metric mismatch
+   entirely instead of trying to compensate for one specific emoji font's ascent/descent. */
+#rideInfoStats{ display:flex; align-items:center; gap:8px; }
+/* Landscape: left edge instead of a top bar, same reasoning as #infoPanel's own landscape-compact
+   override. A flex column spanning the panel's own full height (already fixed by top:0+bottom:0) so
+   #rideInfoTrail can be pinned to the true bottom via margin-top:auto below, instead of just trailing
+   wherever the big numbers happen to end. */
 html.ride-mode.landscape-compact #rideInfoPanel{
   top:0; left:0; right:auto; bottom:0; width:min(38vw, 170px);
   padding: calc(10px + env(safe-area-inset-top,0px)) 10px 10px calc(10px + env(safe-area-inset-left,0px));
+  display:flex; flex-direction:column; align-items:center;
 }
 /* Narrower column: altitude drops out of the corner and stacks below the speed instead, separated by a
    plain divider line -- there is no "corner" worth using at this width, and side-by-side would force
-   both numbers too small to read at a glance. */
-html.ride-mode.landscape-compact .ride-speed-stat .ride-big-num{ font-size:58px; }
+   both numbers too small to read at a glance. Speed sized up from the first cut (58px -> 70px, user's
+   own call) -- still comfortably inside the ~150px usable width even at 3 digits. */
+html.ride-mode.landscape-compact .ride-speed-stat .ride-big-num{ font-size:70px; }
 html.ride-mode.landscape-compact .ride-alt-stat{ position:static; margin-top:6px; }
 html.ride-mode.landscape-compact .ride-alt-stat .ride-big-num{ font-size:28px; }
 html.ride-mode.landscape-compact .ride-big-divider{
   display:block; width:50%; height:1px; background:rgba(242,243,236,.25); margin:6px 0;
 }
+/* The unit sits BELOW its number here, not beside it (user's own call) -- stacking reads better in a
+   narrow column than a wide baseline-aligned row, for both the speed and the altitude stat alike. */
+html.ride-mode.landscape-compact .ride-big-stat{ flex-direction:column; align-items:center; gap:0; }
+html.ride-mode.landscape-compact .ride-big-unit{ margin-left:0; margin-top:-2px; }
 /* Trail name joins the other trail stats here (2026-08-16, user's own call) -- stacked instead of one
-   row, since the column has height to spare but not width. */
-html.ride-mode.landscape-compact #rideInfoTrail{ flex-direction:column; align-items:center; gap:2px; }
+   row, since the column has height to spare but not width. Pinned to the true bottom of the column
+   (user's own call: "die Trailinfos stehen nicht ganz unten") rather than trailing right after the big
+   numbers -- #rideInfoPanel is a flex column above, so an auto top margin here consumes the rest. */
+html.ride-mode.landscape-compact #rideInfoTrail{
+  flex-direction:column; align-items:center; gap:2px; margin-top:auto; padding-top:0; border-top:none;
+}
 html.ride-mode.landscape-compact #rideInfoStats{ flex-direction:column; gap:2px; }
 
 /* ---- Tourenbuilder (2026-07-26) ------------------------------------------------
