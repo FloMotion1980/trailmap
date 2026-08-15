@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=172" />
+<link rel="stylesheet" href="style.css?v=173" />
 </head>
 <body>
 <div id="fatalError">
@@ -3143,10 +3143,23 @@ function applyRideMapOffset(){
   const rect = wrap.getBoundingClientRect();
   const h = rect.height, w = rect.width;
   if (!h || !w) return;
+
+  const isLandscape = document.documentElement.classList.contains("landscape-compact");
+
+  // In portrait, #rideInfoPanel docks along the BOTTOM edge (see its CSS) and covers part of the map --
+  // "1/3 up from the bottom" has to mean 1/3 up from the bottom of what's actually still visible, not from
+  // .map-wrap's own full (partly-covered) bottom edge, or the panel growing taller (bigger fonts/padding,
+  // 2026-08-16) silently pushes the dot down behind it. Subtract the panel's own live rendered height from
+  // the vertical fraction's reference height so the target point is always measured against the visible
+  // map area, not the full container.
+  const portraitPanelEl = !isLandscape ? document.getElementById("rideInfoPanel") : null;
+  const portraitPanelH = portraitPanelEl ? portraitPanelEl.getBoundingClientRect().height : 0;
+  const visibleH = Math.max(1, h - portraitPanelH);
+
   // #map's own top must reach .map-wrap's top (offsetTop <= 0) so no blank strip appears above it -- the
-  // minimum container height for that is 2 * h * RIDE_LOOKAHEAD_FRACTION; +15% is slack against rounding.
-  const containerH = Math.round(h * RIDE_LOOKAHEAD_FRACTION * 2 * 1.15);
-  const offsetTop = Math.round(h * RIDE_LOOKAHEAD_FRACTION - containerH / 2);
+  // minimum container height for that is 2 * visibleH * RIDE_LOOKAHEAD_FRACTION; +15% is slack against rounding.
+  const containerH = Math.round(visibleH * RIDE_LOOKAHEAD_FRACTION * 2 * 1.15);
+  const offsetTop = Math.round(visibleH * RIDE_LOOKAHEAD_FRACTION - containerH / 2);
 
   // In landscape, #rideInfoPanel docks along the left edge (see its own landscape-compact CSS), covering
   // part of the map -- the dot sitting at the FULL container's horizontal centre then reads as off-centre
@@ -3156,7 +3169,6 @@ function applyRideMapOffset(){
   // panelW: centre = -20 + (w + panelW + 40)/2 = w/2 + panelW/2 + 20 - 20 = w/2 + panelW/2, always with a
   // comfortable margin against the left edge (`.map-wrap`'s overflow:hidden would otherwise leave a blank
   // strip there, same risk as the vertical case above).
-  const isLandscape = document.documentElement.classList.contains("landscape-compact");
   const panelEl = isLandscape ? document.getElementById("rideInfoPanel") : null;
   const panelW = panelEl ? panelEl.getBoundingClientRect().width : 0;
   const containerW = panelW > 0 ? Math.round(w + panelW + 40) : null;
@@ -3217,11 +3229,17 @@ function updateRideInfoPanel(){
   document.getElementById("rideInfoAlt").textContent = lastAltitudeM !== null ? Math.round(lastAltitudeM) : "–";
   const trailEl = document.getElementById("rideInfoTrail");
   const t = openTrailId ? lineTrails.find(tr => tr.id === openTrailId) : null;
-  if (!t) { trailEl.style.display = "none"; return; }
-  trailEl.style.display = "";
-  document.getElementById("rideInfoName").textContent = t.name;
-  document.getElementById("rideInfoStats").innerHTML =
-    `<span>${t.len.toFixed(1)} km</span><span>⬆️ ${Math.round(t.up)} m</span><span>⬇️ ${Math.round(t.down)} m</span>`;
+  if (!t) { trailEl.style.display = "none"; }
+  else {
+    trailEl.style.display = "";
+    document.getElementById("rideInfoName").textContent = t.name;
+    document.getElementById("rideInfoStats").innerHTML =
+      `<span>${t.len.toFixed(1)} km</span><span>⬆️ ${Math.round(t.up)} m</span><span>⬇️ ${Math.round(t.down)} m</span>`;
+  }
+  // Showing/hiding the trail row changes the panel's own rendered height in portrait, which
+  // applyRideMapOffset()'s look-ahead fraction is measured against (2026-08-16) -- re-derive it
+  // here rather than at every call site, since every caller of this function already implies rideMode.
+  applyRideMapOffset();
 }
 
 function enterRideMode(){
@@ -3231,10 +3249,9 @@ function enterRideMode(){
   document.documentElement.classList.add("ride-mode");
   closeSidebar();
   syncRideModeChrome();
-  applyRideMapOffset();
   updateSelectionOutlineVisibility(); // drop the yellow ring immediately if a trail is already open
   if (openTrailId && soloId !== openTrailId) applySolo(openTrailId);
-  updateRideInfoPanel();
+  updateRideInfoPanel(); // also applies the map offset, now that the trail row's height (if any) is set
   if (orientationHandler === null) requestOrientationPermission();
   setHeadingUp(true);
   if (!followMode) startFollowing();
@@ -7233,7 +7250,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v172"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v173"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

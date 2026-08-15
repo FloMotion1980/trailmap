@@ -22,6 +22,19 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-16
+- **Fixed two follow-up bugs from the infobox refinements above.** (1) The km/h number was still not
+  exactly centred in portrait — the number+unit sat together in one flex box, and the unit's own width
+  shifted that whole box (and the number inside it) off from the panel's true centre. `.ride-speed-stat`
+  is now sized to the number alone (`inline-block`), with the unit positioned beside it via
+  `position:absolute` so it adds no width to what gets centred; landscape's existing stacked layout
+  (already correct, confirmed unaffected) needed an explicit `display:flex`/`position:static` override to
+  survive the more specific portrait rule. (2) The RIDE look-ahead offset (position dot at ~1/3 up from
+  the visible bottom) was computed against `.map-wrap`'s full height, so once the portrait info panel
+  grew taller (bigger fonts/padding, same day) the fraction was measured against a container that's now
+  partly covered by the panel — pushing the dot lower than intended. `applyRideMapOffset()` now subtracts
+  the panel's own live rendered height from that reference height, and is also re-run whenever the panel's
+  content (and therefore its height) changes — i.e. whenever a trail is focused/unfocused mid-ride, not
+  just once on entering RIDE.
 - **RIDE infobox: phone-tested refinements after the redesign.** Speed number is now genuinely centred
   (`#rideInfoBig` needed an explicit `width:100%`, or the flex column shrinks to its content and sits
   left-aligned even with `align-items:center` set); altitude's portrait badge and the gap above the

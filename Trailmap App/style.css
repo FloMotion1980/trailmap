@@ -1238,6 +1238,18 @@ html.ride-mode #rideInfoPanel{
 .ride-big-stat{ display:inline-flex; align-items:baseline; }
 .ride-big-num{ font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
 .ride-big-unit{ font-weight:700; opacity:.75; margin-left:4px; }
+/* Portrait: the small unit must not shift the NUMBER off-centre. With both in one flex box, a unit
+   wider than the number pulls that box's own centre (and therefore the number) to one side of the
+   panel's true centre (user, 2026-08-16: "die Zahl und Einheit ist mittig, aber ich wollte, dass nur
+   die Zahl mittig ist"). Sizing the stat to the NUMBER alone -- an inline-block with the unit
+   absolutely positioned beside it, out of flow, so it adds no width to what gets centred -- decouples
+   the two: #rideInfoBig's own align-items:center now centres the number's own box, and the unit just
+   trails alongside it. Landscape overrides this back to a normal stacked flex item below. */
+.ride-speed-stat{ position:relative; display:inline-block; }
+.ride-speed-stat .ride-big-unit{
+  position:absolute; left:100%; top:50%; transform:translateY(-50%);
+  margin-left:4px; white-space:nowrap;
+}
 .ride-speed-stat .ride-big-num{ font-size:80px; }
 .ride-speed-stat .ride-big-unit{ font-size:14px; }
 /* Portrait: a small badge in the corner, not a second centred number -- speed stays the only thing the
@@ -1284,8 +1296,8 @@ html.ride-mode.landscape-compact .ride-big-divider{
 }
 /* The unit sits BELOW its number here, not beside it (user's own call) -- stacking reads better in a
    narrow column than a wide baseline-aligned row, for both the speed and the altitude stat alike. */
-html.ride-mode.landscape-compact .ride-big-stat{ flex-direction:column; align-items:center; gap:0; }
-html.ride-mode.landscape-compact .ride-big-unit{ margin-left:0; margin-top:-2px; }
+html.ride-mode.landscape-compact .ride-big-stat{ display:flex; position:static; flex-direction:column; align-items:center; gap:0; }
+html.ride-mode.landscape-compact .ride-speed-stat .ride-big-unit{ position:static; transform:none; margin-left:0; margin-top:-2px; }
 /* Trail name joins the other trail stats here (2026-08-16, user's own call) -- stacked instead of one
    row, since the column has height to spare but not width. Pinned to the true bottom of the column
    (user's own call: "die Trailinfos stehen nicht ganz unten") rather than trailing right after the big
