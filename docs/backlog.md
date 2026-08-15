@@ -35,6 +35,66 @@ before implementing any of these.
   (GPX-style), distinct from RIDE's existing live GPS-follow display — but this is a guess, not
   confirmed. Needs a real discussion before any design/implementation, not just an assumption from the
   name.
+- **2026-08-16 phone-test follow-ups, still open, in discussion:**
+  - **Basemap contrast during RIDE**: "Straße" is the best basemap for navigation (colour-wise "Straße
+    hell" would be nicer, but it's missing paths, which is a problem if you get lost) — user wants to
+    know whether "Straße"'s own tile rendering can be dimmed/desaturated specifically during RIDE so
+    the app's own trail/tour lines stand out more. Likely feasible via a CSS filter on the tile pane,
+    scoped to `html.ride-mode` + the osm basemap only. User chose "erst als Mockup ansehen" — not yet
+    built.
+  - **Selected trail/tour line needs to be bolder AND higher-contrast in sunlight** — current 3.5px
+    line is hard to read on a bright phone screen. Went through several rounds of `visualize`-tool
+    mockups (variants A-F, see conversation) before landing on anything: variants B (just thicker)/C
+    (flat orange)/D (halo like Satellit/Relief) were shown first; the user pushed back that C/D lose
+    the *difficulty colour coding*, which they specifically called out as one of the app's core value
+    props ("das ist einer der großen Mehrwerte unserer App") — so the winning direction must keep
+    each trail's own diff colour visible as the core line, with a bold accent (orange and/or blue,
+    per the user's own suggestion) added around/through it for contrast, not replacing it. Variants E
+    (diff-colour core + orange halo) and F (three-tone combinations, dashed accent patterns) are the
+    current candidates — no final pick yet as of the last message in this thread. Only apply during
+    RIDE per the user's explicit scoping answer, not to normal trail selection everywhere.
+  - **Bigger `#mapControls` buttons for glove/on-bike use** — decided via AskUserQuestion: "deutlich
+    größer" (e.g. 44px → 64px) AND "nur während RIDE" (not a permanent size change). Not yet
+    implemented — the user flagged "Abstimmungsbedarf" for all three of these RIDE points together
+    before any of them get built, so treat this as agreed-on-paper but still gated on the user saying
+    go for the batch.
+  - **Compass appears to freeze for a few seconds repeatedly while riding** — traced to intended
+    behaviour, not a bug: `handleOrientation`'s bearing deliberately FREEZES (rather than resetting)
+    when magnetometer readings go stale, and a bike's own metal frame/phone-mount magnets/vibration are
+    the likely real-world cause of those brief dropouts — the user's own instinct that GPS reception is
+    unrelated is correct. Komoot likely avoids this by driving its direction indicator mainly from GPS
+    course-over-ground while moving rather than the magnetometer; this app currently prioritises the
+    compass and only falls back to GPS course when there is no compass reading at all. A speed-gated
+    hybrid (GPS course above some km/h, compass at a standstill) was floated as a possible fix but is a
+    real design change, not implemented, not yet decided.
+  - **Future idea, explicitly "im Hinterkopf behalten" (not scoped, not requested for now):** colour
+    the already-ridden portion of the currently-open trail/tour differently from the part still ahead,
+    the way Komoot does — would need live progress-along-the-line tracking (nearest point reached on
+    `TRAIL_GEO`/loop line) feeding into the elevation-chart-segment-colouring style split already used
+    elsewhere in the app.
+  - **The line-style mockup work above converged on a concrete direction (2026-08-16, still mockups only,
+    nothing built): a three-layer halo** — an outer accent ring, a middle tint in a light version of the
+    segment's own colour, and the segment's own full colour as the core. For a component-trail stretch the
+    middle/core follow that trail's own difficulty colour (light tint + full tone, matching the existing
+    Satellit/Relief halo colours: `#a8e8ba`/`#a9cdf5`/`#f5aa9d` for grün/blau/rot; schwarz uses light GREY
+    `#cfcfcf`, not white — white was tried first and rejected only for being the wrong shade, not the wrong
+    idea). For a connector stretch (no component trail) the core is the existing dark grey
+    dashed line, at a slightly bigger weight than before (`#3d3d3d`, ~5px — the user's pick over a lighter
+    `#5a5a5a`/4px alternative). The OUTER ring is orange (`#ff6a00`, ~15-18px, ~0.75 opacity — brightened
+    and widened once from a paler first attempt after the user found it invisible against the red trail's
+    own light-red tint) on every kind (trail and connector alike).
+  - **The outer ring's colour is NOT a placeholder — the user corrected this explicitly (2026-08-16):
+    orange and grey are both permanent, meaning RIDE PROGRESS, not a temporary stand-in for one another.**
+    When a RIDE session on a tour starts, the entire tour's outer ring is orange (nothing ridden yet); as
+    the rider progresses, the outer ring behind the live position turns grey, ahead of it stays orange —
+    exactly the Komoot-style already-ridden-vs-still-to-come split from the earlier bullet, just
+    implemented as the SAME outer-ring layer rather than a separate feature. This needs live
+    progress-along-the-line tracking (nearest point reached on the open tour's `TRAIL_GEO`) feeding a
+    split point into the per-point outer-ring colour — real RIDE-mode work, not just a CSS/style change,
+    so still backlog rather than something to build alongside the mockup styling. Outside of an active
+    RIDE session (or before the rider has moved), the ring is presumably all-orange by default (nothing
+    ridden yet) — not yet confirmed with the user what it should look like when a tour is merely selected
+    without RIDE running.
 - **Automated test coverage for RIDE mode is still thin and worth closing out.** What exists:
   `tests/browser/bearing.js` (the merged position-button reattach path, the pinch-vs-drag detach fix)
   and `tests/browser/controls.js` (the position cell's show/hide contract via
@@ -44,6 +104,43 @@ before implementing any of these.
   portrait AND landscape), and `updateRideInfoPanel`/`#rideInfoPanel`'s content updates. Add these once
   the info panel redesign (above) settles, so the tests aren't written against a UI that's about to
   change again.
+
+## Trailrunden-Lückenschließen (tools/close_loop_gaps.py)
+
+Neues Tool (2026-08-16), das echte Segment-Grenz-Lücken in einer Trailrunde (siehe die
+`buildTrailLayer`-Doku in `CLAUDE.md` für WARUM diese Lücken überhaupt entstehen) automatisch
+schließt, statt sie von Hand zu flicken. Probiert pro Lücke mehrere Kandidaten (wiederverwendeter
+Connector aus einer anderen Tour, "entlang des schon passenden OSM-Wegs laufen" — die Idee des
+Nutzers, nachdem der reine Dijkstra-Kürzeste-Pfad-Ansatz einen 7,6-fachen Umweg produzierte — und
+Dijkstra als Fallback) und nimmt die kürzeste echte Route. Erstmals angewendet auf
+`pw_rodalben_felsentrails`: alle 29 Lücken über 30m geschlossen, Ø Routenfaktor 1,02, committed.
+
+**Bekannte Lücke im Tool, vom Nutzer live am Ergebnis gefunden (2026-08-16): keine
+Befahrbarkeits-/Zugangsprüfung des gematchten Wegs.** Am Rodalben-Startpunkt (seg0→seg1, die
+zuerst gemeldete 181m-Lücke) folgt die gewählte `matched_way_b`-Route einem OSM-Weg, der als
+`highway=track`, `vehicle=forestry` getaggt ist — geometrisch nah genug, um als Kandidat zu
+gewinnen, aber real nicht für öffentlichen Durchgangsverkehr gedacht ("Auf OSM ist klar, dass man
+da nicht hochfahren kann", der Nutzer nach Ansicht der Live-Karte). Das Tool prüft aktuell NUR die
+Entfernung, nicht die OSM-Tags (`access`/`vehicle`/`bicycle`/`highway`-Typ) des gewählten Wegs.
+
+**Nutzers eigener Vorschlag für den Fix, noch nicht umgesetzt:** statt den Connector zurück zu
+einem nahen Punkt zu verlängern, stattdessen ein Stück vom TRAIL selbst abschneiden (die
+Segment-Geometrie an einer früheren Stelle kappen), bis eine wirklich sauber befahrbare Verbindung
+entsteht — d.h. die "Lösungsraum"-Erweiterung ist nicht nur "connector verlängern" sondern auch
+"trail-Segment kürzen" als gleichwertige Kandidaten-Klasse.
+
+**Vor der nächsten Anwendung dieses Tools (auf Rodalben erneut oder eine andere Tour):**
+1. Nach dem Best-Match eine Tag-Prüfung des gewählten Wegs einbauen (mindestens `access=private`,
+   `vehicle=forestry`/`agricultural`, `bicycle=no` als Rot-Flagge behandeln, nicht nur Distanz).
+2. Die "Trail kürzen"-Kandidatenklasse ergänzen (zusätzlich zu reused_connector/matched_way/
+   osm_route).
+3. Jedes Ergebnis, dessen gewählter Weg eine verdächtige Zugangsbeschränkung trägt, im Report
+   gesondert markieren (wie schon für hohen Routenfaktor), nicht nur nach Streckenlänge urteilen —
+   der Rodalben-Fall hatte einen völlig unauffälligen Faktor (1,1), das Problem war rein inhaltlich
+   (befahrbar oder nicht), nicht geometrisch.
+4. Erst NACH dieser Erweiterung erneut über Rodalben (und andere Touren) laufen lassen; der
+   aktuelle Rodalben-Stand ist committed/gepusht, aber mit diesem bekannten Makel an mindestens
+   einer Stelle.
 
 ## Regionen
 

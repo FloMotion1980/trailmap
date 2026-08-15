@@ -3242,6 +3242,62 @@ function updateRideInfoPanel(){
   applyRideMapOffset();
 }
 
+// Every extra decorative polyline added for the current RIDE focus, for cleanup -- and the small set of
+// CONNECTOR core layers whose color/weight got overridden, so they can be restored exactly (a trail's own
+// core is never touched, see the constants' own comment above).
+let rideHaloLayers = [];
+let rideHaloOriginalConnectorStyles = []; // [{layer, weight, color}]
+let rideHaloTrailId = null;
+
+function clearRideFocusHalo(){
+  rideHaloLayers.forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
+  rideHaloLayers = [];
+  rideHaloOriginalConnectorStyles.forEach(({ layer, weight, color }) => layer.setStyle({ weight, color }));
+  rideHaloOriginalConnectorStyles = [];
+  rideHaloTrailId = null;
+}
+
+function applyRideFocusHalo(trailId){
+  clearRideFocusHalo();
+  if (!rideMode || !trailId) return;
+  const layer = lineLayers[trailId];
+  const t = lineTrails.find(tr => tr.id === trailId);
+  if (!layer || !t) return;
+  rideHaloTrailId = trailId;
+
+  function addRing(coords, kind, coreLayer){
+    if (RIDE_MIDDLE_TINT[kind]) {
+      const mid = L.polyline(coords, { color: RIDE_MIDDLE_TINT[kind], weight: RIDE_MIDDLE_WEIGHT,
+        opacity: RIDE_MIDDLE_OPACITY, lineCap:"round", interactive:false, bubblingMouseEvents:false }).addTo(map);
+      mid.bringToBack();
+      rideHaloLayers.push(mid);
+    }
+    const outer = L.polyline(coords, { color: RIDE_OUTER_COLOR, weight: RIDE_OUTER_WEIGHT,
+      opacity: RIDE_OUTER_OPACITY, lineCap:"round", interactive:false, bubblingMouseEvents:false }).addTo(map);
+    outer.bringToBack();
+    rideHaloLayers.push(outer);
+    if (coreLayer && kind === "connector") {
+      rideHaloOriginalConnectorStyles.push({ layer: coreLayer, weight: coreLayer.options.weight, color: coreLayer.options.color });
+      coreLayer.setStyle({ weight: RIDE_CONNECTOR_CORE_WEIGHT, color: RIDE_CONNECTOR_CORE_COLOR });
+    }
+  }
+
+  const segments = TRAIL_SEGMENTS[trailId];
+  if (segments && layer.styleTarget && typeof layer.styleTarget.getLayers === "function") {
+    // Same segment/sub-layer ordering invariant repaintLineColors() already relies on: styleTarget's
+    // children line up 1:1 with segments.filter(seg => !seg.liftId). Lifts keep their own look, untouched.
+    const nonLiftSegs = segments.filter(seg => !seg.liftId);
+    layer.styleTarget.getLayers().forEach((coreLayer, idx) => {
+      const seg = nonLiftSegs[idx];
+      if (!seg) return;
+      const refTrail = seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
+      addRing(seg.coords, refTrail ? refTrail.diff : "connector", coreLayer);
+    });
+  } else if (layer.styleTarget) {
+    addRing(layer.coords, (t.loop && !segments) ? "connector" : t.diff, layer.styleTarget);
+  }
+}
+
 function enterRideMode(){
   if (rideMode) return;
   if (builderMode) setBuilderMode(false); // RIDE and the Tourenbuilder are mutually exclusive
@@ -3251,6 +3307,7 @@ function enterRideMode(){
   syncRideModeChrome();
   updateSelectionOutlineVisibility(); // drop the yellow ring immediately if a trail is already open
   if (openTrailId && soloId !== openTrailId) applySolo(openTrailId);
+  applyRideFocusHalo(openTrailId);
   updateRideInfoPanel(); // also applies the map offset, now that the trail row's height (if any) is set
   if (orientationHandler === null) requestOrientationPermission();
   setHeadingUp(true);
@@ -3263,6 +3320,7 @@ function exitRideMode(){
   document.documentElement.classList.remove("ride-mode");
   syncRideModeChrome();
   clearRideMapOffset();
+  clearRideFocusHalo();
   setHeadingUp(false);
   stopFollowing();
   updateSelectionOutlineVisibility(); // give the yellow ring back if a trail is still open
@@ -3353,6 +3411,39 @@ const HALO_WEIGHT_TRAIL = HOVER_WEIGHT + 1;
 // comment): not Monte Corno's own halo (an unsegmented loop never gets one, see buildTrailLayer), but a
 // NEARBY schwarz trail's halo glowing at full strength while solo-dimmed to near-invisibility around it.
 const HALO_OPACITY = 0.85;
+// ---- RIDE focus halo (2026-08-16) -- makes the currently OPEN trail/tour readable in bright sun while
+// riding, on TOP of whatever the active basemap's own halo already does (which stays off on Straße/
+// Straße hell -- see BASE_PALETTES -- exactly the basemap the user actually navigates with). Deliberately
+// separate from the basemap halo mechanism above rather than reusing/extending HALO_ACTIVE_KINDS: this one
+// applies to exactly ONE trail (whichever is focused during RIDE) regardless of basemap, the other applies
+// to every trail on certain basemaps only -- conflating the two would mean every basemap switch has to
+// reason about RIDE state and vice versa. Landed on after a `visualize`-tool mockup round (variants A-K):
+// the user rejected a flat accent color replacing the difficulty color outright ("das ist einer der
+// großen Mehrwerte unserer App"), so the design keeps each segment's own diff colour as the true core and
+// adds two rings around it -- a middle tint (the SAME light per-difficulty colors already used for
+// Satellit/Relief's own halo, reused here for consistency rather than inventing a second set) and a bright
+// orange outer ring for raw contrast against any basemap. Orange was tuned once already after the user
+// found the first attempt invisible against the red trail's own light-red tint ("bei rot sieht man das
+// orange gar nicht") -- brighter (#ff6a00) and wider fixed that. schwarz's middle tint is light GREY, not
+// white -- the user's own correction after seeing white on screen. A connector stretch has no named
+// difficulty to tint, so it only gets the orange outer ring, plus its own core recoloured darker/thicker
+// (the user's explicit pick over a lighter/thinner alternative) -- unlike the trail case, this DOES modify
+// the existing core layer's style, so `repaintLineColors()`'s own basemap-switch repaint (which resets
+// every connector back to CONNECTOR_COLOR) has to be followed by a fresh applyRideFocusHalo() call, see
+// applyBasePalette() below.
+//
+// **Explicitly NOT the final design for the outer ring's colour**: the user's own next step (still
+// backlog, not built) is to replace this fixed orange with a live already-ridden/still-to-come split
+// (orange ahead, grey behind the rider's current position) -- see docs/backlog.md's RIDE-Modus section.
+// Orange today simply means "this whole trail/tour is not yet marked as ridden".
+const RIDE_OUTER_COLOR = "#ff6a00";
+const RIDE_OUTER_WEIGHT = 14;
+const RIDE_OUTER_OPACITY = 0.75;
+const RIDE_MIDDLE_TINT = { gruen:"#a8e8ba", blau:"#a9cdf5", rot:"#f5aa9d", schwarz:"#c7c7c7" };
+const RIDE_MIDDLE_WEIGHT = 8;
+const RIDE_MIDDLE_OPACITY = 0.9;
+const RIDE_CONNECTOR_CORE_WEIGHT = 5;
+const RIDE_CONNECTOR_CORE_COLOR = "#3d3d3d";
 // Map labels for a trail carry its difficulty as a coloured dot in front of the name, the same way lift
 // labels start with 🚡 — the user's own analogy (2026-07-28). Worth it because the labels are the one place
 // the map named a trail without saying anything about how hard it is, and the line's own colour is often
@@ -3633,6 +3724,10 @@ function applyBasePalette(key){
   SELECT_YELLOW = p.selectYellow;
   HALO = p.halo || {};
   repaintLineColors();
+  // repaintLineColors() just reset every connector back to CONNECTOR_COLOR, which would silently undo the
+  // RIDE focus halo's own darker/thicker connector core (see applyRideFocusHalo's own comment) -- reapply
+  // it on top, for whichever trail/tour is currently focused during RIDE, if any.
+  if (rideMode && rideHaloTrailId) applyRideFocusHalo(rideHaloTrailId);
 }
 
 // ---- Tourenbuilder (2026-07-26) ----
@@ -5475,7 +5570,8 @@ function showTrailInfo(t, opts){
   // already-open loop just to refresh the button's label after a manual toggle, which would
   // otherwise instantly re-force solo back on and make the manual off-toggle a no-op.
   // During RIDE, ANY newly selected trail is auto-soloed, not just loops -- e.g. tapping a different
-  // trail mid-ride. updateRideInfoPanel() mirrors the new focus into the RIDE readout.
+  // trail mid-ride. updateRideInfoPanel() mirrors the new focus into the RIDE readout, and the focus
+  // halo (applyRideFocusHalo) moves to the newly selected trail/tour.
   if (isNewSelection && (t.loop || rideMode)) applySolo(t.id);
   if (reversedId && reversedId !== t.id) {
     const oldReversedId = reversedId;
@@ -5484,7 +5580,7 @@ function showTrailInfo(t, opts){
   }
   ipContent.innerHTML = buildInfoPanelHtml(t);
   infoPanel.classList.add("visible");
-  if (rideMode) updateRideInfoPanel();
+  if (rideMode) { updateRideInfoPanel(); applyRideFocusHalo(t.id); }
 }
 
 function downloadTrailGpx(id){
