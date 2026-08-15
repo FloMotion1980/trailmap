@@ -142,6 +142,36 @@ entsteht — d.h. die "Lösungsraum"-Erweiterung ist nicht nur "connector verlä
    aktuelle Rodalben-Stand ist committed/gepusht, aber mit diesem bekannten Makel an mindestens
    einer Stelle.
 
+**2026-08-16, zweite Runde Nutzer-Feedback, nachdem der obige Stand gepusht war — noch NICHT
+umgesetzt, "machen wir gleich":**
+
+- **Nur `pw_rodalben_felsentrails` wurde bisher behandelt.** Der Nutzer hat beim weiteren
+  Durchschauen der App eine ANDERE Tour gefunden (Screenshot zeigt eine Stelle bei "Eisenbahnschienen"
+  / "Wiesental Wildgehege" — welche Tour/Region das genau ist, noch nicht identifiziert, vermutlich
+  eine weitere Pfälzerwald-Trailrunde), bei der praktisch keine der Segment-Grenzen geschlossen sind
+  ("wenn ich mir das weiter anschaue, sind fast keine Lücken geschlossen"). Das ist erwartbar, nicht
+  überraschend — `close_loop_gaps.py` wurde bislang nur für Rodalben aufgerufen, für alle anderen
+  Touren mit `trailSegments` gilt der Zustand von vorher unverändert. **Nächster Schritt: jede
+  Trailrunde mit Lücken über der Schwelle durchgehen und dasselbe Tool anwenden** (sobald die
+  Erweiterungen unten eingebaut sind) — nicht nur Rodalben war das Ziel, das war nur der erste Test.
+- **Priorität der Kandidaten-Methoden umkehren**: aktuell probiert `best_bridge_for_gap` alle
+  Kandidaten (reused_connector, matched_way_a, matched_way_b, osm_route) gleichberechtigt und nimmt
+  die kürzeste Route. Der Nutzer möchte stattdessen **zuerst konsequent versuchen, beide Enden auf
+  echte OSM-Wege zu mappen und zu verbinden** (das ist im Kern schon `matched_way_a`/`b`), mit den
+  anderen Methoden nur als Fallback, wenn das nicht klappt — nicht als gleichwertige Konkurrenz nach
+  Streckenlänge. Grund: die Trail-eigene Geometrie stimmt bekanntlich nicht exakt mit OSM überein
+  (das ist ja der ganze Grund, warum die Lücke entsteht), also ist "kürzeste Route unter allen
+  Methoden" nicht dasselbe Kriterium wie "folgt echten, zusammenhängenden Wegen".
+- **Neue Kandidaten-Variante: BEIDE Seiten auf ihre jeweils passenden OSM-Wege mappen und prüfen, ob
+  sich ein Schnittpunkt ergibt**, statt wie aktuell nur EINE Seite zu matchen und stur bis zum
+  rohen Endpunkt der anderen Seite zu laufen. Konkret: für jede Seite der Lücke (Trail-Ende UND
+  Connector-Anfang) den best-passenden Weg identifizieren (wie `walk_along_matched_way` das schon pro
+  Seite tut), dann BEIDE Wege in Richtung der Lücke weiterlaufen und schauen, ob/wo sie sich
+  schneiden oder nah genug aneinander kommen — das wäre der eigentliche, geometrisch fundierte
+  Anschlusspunkt, nicht nur "der nächste Punkt auf EINEM der beiden Wege zum rohen Endpunkt der
+  anderen Seite". Sollte die aktuelle `matched_way_a`/`matched_way_b`-Unterscheidung ablösen bzw.
+  ergänzen.
+
 ## Regionen
 
 Ordered list of bike regions the user has asked to add to Trailmap, in the order they were

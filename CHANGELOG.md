@@ -22,6 +22,22 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-16
+- **RIDE focus halo: thicker orange ring, and gaps between segments now get bridged too.** After
+  phone/live-map feedback: `RIDE_OUTER_WEIGHT` bumped 14→18px, and any real gap between two
+  consecutive Trailrunde segments (see `tools/close_loop_gaps.py` for why these exist) is now bridged
+  with a plain orange line during RIDE, so an un-closed tour still reads as one continuous line instead
+  of visibly breaking apart — verified on "Tour 1 - Rodalben" (34 known gaps), which now shows one
+  unbroken orange ring end to end.
+- **Closed all 29 real segment-boundary gaps on Rodalben Felsentrails** via a new tool,
+  `tools/close_loop_gaps.py` — tries reusing an existing connector from another tour, walking the OSM
+  way the other side already follows, or Dijkstra shortest-path as a fallback, and keeps whichever
+  produces the shortest real route (average factor 1.02, no detours). Added the same day: a
+  three-layer RIDE focus halo (orange outer ring, light per-difficulty tint, existing core line) for
+  whichever trail/tour is open during RIDE, so it stays legible in bright sun on any basemap. See
+  `docs/backlog.md`'s Trailrunden-Lückenschließen section for a known gap in the tool itself (no OSM
+  access-tag check yet — one junction's winning route follows a `vehicle=forestry`-restricted track)
+  and the plan for the next round (other tours, OSM-mapping prioritised over Dijkstra, a "trim the
+  trail" candidate, a two-sided intersection search).
 - **Fixed two follow-up bugs from the infobox refinements above.** (1) The km/h number was still not
   exactly centred in portrait — the number+unit sat together in one flex box, and the unit's own width
   shifted that whole box (and the number inside it) off from the panel's true centre. `.ride-speed-stat`

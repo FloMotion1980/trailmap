@@ -3293,6 +3293,18 @@ function applyRideFocusHalo(trailId){
       const refTrail = seg.trailId ? lineTrails.find(tr => tr.id === seg.trailId) : null;
       addRing(seg.coords, refTrail ? refTrail.diff : "connector", coreLayer);
     });
+    // Bridge any actual gap between consecutive segments (including the wrap-around from the last back to
+    // the first) with a plain orange line -- see RIDE_GAP_BRIDGE_MIN_M's own comment for why this exists.
+    for (let i = 0; i < segments.length; i++) {
+      const a = segments[i].coords[segments[i].coords.length - 1];
+      const b = segments[(i + 1) % segments.length].coords[0];
+      if (haversineM(a, b) > RIDE_GAP_BRIDGE_MIN_M) {
+        const bridge = L.polyline([a, b], { color: RIDE_OUTER_COLOR, weight: RIDE_OUTER_WEIGHT,
+          opacity: RIDE_OUTER_OPACITY, lineCap:"round", interactive:false, bubblingMouseEvents:false }).addTo(map);
+        bridge.bringToBack();
+        rideHaloLayers.push(bridge);
+      }
+    }
   } else if (layer.styleTarget) {
     addRing(layer.coords, (t.loop && !segments) ? "connector" : t.diff, layer.styleTarget);
   }
@@ -3437,8 +3449,17 @@ const HALO_OPACITY = 0.85;
 // (orange ahead, grey behind the rider's current position) -- see docs/backlog.md's RIDE-Modus section.
 // Orange today simply means "this whole trail/tour is not yet marked as ridden".
 const RIDE_OUTER_COLOR = "#ff6a00";
-const RIDE_OUTER_WEIGHT = 14;
+const RIDE_OUTER_WEIGHT = 18;
 const RIDE_OUTER_OPACITY = 0.75;
+// A gap between two consecutive segments (see boundary_gaps() in tools/close_loop_gaps.py for why these
+// exist) has no geometry drawn across it at all -- buildTrailLayer only ever draws each segment's OWN
+// coords, so nothing connects segment i's last point to segment i+1's first (2026-08-16, the user: "wenn
+// Lücken bestehen bleiben... ist es schade, dass die nicht orange sind"). During RIDE, applyRideFocusHalo
+// bridges any such gap with a plain orange line of its own -- no middle tint, since there's no real
+// geometry there to tint, just the outer ring's colour standing in for "the tour continues this way even
+// though we don't have the exact path". Below this many metres it's just the usual sub-metre slop every
+// boundary has and not worth a visible bridge.
+const RIDE_GAP_BRIDGE_MIN_M = 2;
 const RIDE_MIDDLE_TINT = { gruen:"#a8e8ba", blau:"#a9cdf5", rot:"#f5aa9d", schwarz:"#c7c7c7" };
 const RIDE_MIDDLE_WEIGHT = 8;
 const RIDE_MIDDLE_OPACITY = 0.9;
