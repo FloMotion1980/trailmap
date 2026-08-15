@@ -22,6 +22,13 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-16
+- **RIDE mode: bigger control buttons, and the halo's orange is now fully opaque.** `#mapControls`'s
+  three cells grow 44px→64px (icon 20px→28px) while `html.ride-mode` is active — gloves/vibration on
+  the bike, per the user's request — with the readout chip widened to match so the joined-corner
+  design still lines up; unaffected outside RIDE. Separately, the focus halo's outer ring dropped its
+  0.75 opacity to fully opaque: where a loop's own line runs close beside or crosses itself (a normal
+  shape for a Trailrunde), two semi-transparent orange rings stacked and darkened toward red at the
+  overlap, reading as an unrelated reddish smudge on the map.
 - **RIDE focus halo: thicker orange ring, and gaps between segments now get bridged too.** After
   phone/live-map feedback: `RIDE_OUTER_WEIGHT` bumped 14→18px, and any real gap between two
   consecutive Trailrunde segments (see `tools/close_loop_gaps.py` for why these exist) is now bridged

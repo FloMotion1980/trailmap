@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=173" />
+<link rel="stylesheet" href="style.css?v=174" />
 </head>
 <body>
 <div id="fatalError">
@@ -3450,7 +3450,11 @@ const HALO_OPACITY = 0.85;
 // Orange today simply means "this whole trail/tour is not yet marked as ridden".
 const RIDE_OUTER_COLOR = "#ff6a00";
 const RIDE_OUTER_WEIGHT = 18;
-const RIDE_OUTER_OPACITY = 0.75;
+// Fully opaque, not the usual halo transparency (2026-08-16) -- where a loop's own line crosses or runs
+// close beside itself (a real, common shape for a Trailrunde), two semi-transparent orange rings stack
+// and darken toward red at the overlap, reading as an unrelated reddish smudge on the map. Opaque orange
+// paints over itself identically no matter how many rings overlap there.
+const RIDE_OUTER_OPACITY = 1;
 // A gap between two consecutive segments (see boundary_gaps() in tools/close_loop_gaps.py for why these
 // exist) has no geometry drawn across it at all -- buildTrailLayer only ever draws each segment's OWN
 // coords, so nothing connects segment i's last point to segment i+1's first (2026-08-16, the user: "wenn
@@ -7367,7 +7371,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v173"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v174"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

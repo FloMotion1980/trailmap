@@ -856,6 +856,14 @@ html.landscape-compact #mapControls{ border-radius:0 14px 14px 0; }
    hiding a cell (no rotation plugin, or the re-centre cell while attached) never leaves a stray line or a
    doubled one -- whichever cell is visually first simply has no rule matching it. */
 #mapControls > button + button{ border-top:1px solid #e4e8dd; }
+/* Bigger touch targets while actually riding -- gloves, vibration, one glance instead of a careful tap
+   (user, 2026-08-16). Deliberately scoped to html.ride-mode only, not a permanent size change: outside
+   RIDE the cluster sits beside a full sidebar/header and 44px already matches every other control on
+   the page. #liveStatusChip is widened to match, or the readout segment below the stack would end up
+   narrower than the buttons above it and the joined-corner design (see #liveStatus's own comment) would
+   look broken rather than like one column. */
+html.ride-mode #mapControls > button{ width:64px; height:64px; font-size:28px; }
+html.ride-mode #liveStatusChip{ width:64px; }
 html.landscape-compact #locateCluster{ flex-direction:row-reverse; align-items:center; gap:0; }
 html.landscape-compact #mapControls{ flex-direction:row; }
 html.landscape-compact #mapControls > button + button{ border-top:none; border-left:1px solid #e4e8dd; }
