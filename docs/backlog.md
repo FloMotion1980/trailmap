@@ -16,8 +16,9 @@ Follow-up ideas from the same day RIDE mode shipped and was confirmed working on
 `CLAUDE.md`'s RIDE section for the feature itself). Not yet designed or scoped — clarify with the user
 before implementing any of these.
 
-- **Infobox (`#rideInfoPanel`) still needs work** — no specifics given yet; ask what exactly bothers
-  the user about it before touching it.
+- **Infobox (`#rideInfoPanel`) may still need more work** — 2026-08-16 shipped a first step (a big live
+  speed/altitude readout above the trail name/stats), but ask if anything else about it still bothers
+  the user before assuming it's done.
 - **A toggle button for map orientation, instead of driving it from the phone's own sensors.**
   Currently "Blickrichtung oben" is compass-driven (`setHeadingUp`/`handleOrientation`) and is
   auto-enabled when RIDE starts. The user wants a manual toggle instead — unclear yet whether this
