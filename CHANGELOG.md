@@ -22,6 +22,15 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-16
+- **RIDE button emoji and the info-panel's own RIDE button.** Went 🚵 (mountain biker, "harder to
+  recognize at a glance") → 🚴 (plain cyclist) → 🚲 (bicycle alone, no rider/hill) after the user found
+  🚴 still rendered with a hill in the background on their phone's emoji font. A record/stop icon
+  (⏺️/⏹️) was considered and rejected twice — once for the coloured background chip those render with
+  on many platforms, once on principle ("solange wir nix aufnehmen ist das nicht das richtige", since
+  nothing is actually being recorded). Also fixed: the info panel's own `.ride-btn` (in `.ip-btns`,
+  alongside locate/solo/reverse/GPX) was visible on desktop too — RIDE only makes sense on a phone
+  actually being ridden with, so it's now hidden by default and shown again only in the same
+  touch-only media query `#locateCluster` already uses.
 - **RIDE mode: bigger control buttons, and the halo's orange is now fully opaque.** `#mapControls`'s
   three cells grow 44px→64px (icon 20px→28px) while `html.ride-mode` is active — gloves/vibration on
   the bike, per the user's request — with the readout chip widened to match so the joined-corner

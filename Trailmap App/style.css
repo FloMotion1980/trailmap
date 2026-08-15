@@ -681,6 +681,12 @@ html.landscape-compact .search-overlay-summary{
 #infoPanel h3 .ip-btns .solo-btn,
 #infoPanel h3 .ip-btns .reverse-btn,
 #infoPanel h3 .ip-btns .ride-btn{ width:22px; border-radius:50%; font-size:12px; }
+/* RIDE only makes sense on a phone actually being ridden with -- hidden on desktop by default (2026-08-16,
+   the user's own catch), shown again in the touch-only media query below alongside #locateCluster, which
+   is the other RIDE entry point gated the same way. Must repeat `.ip-btns > button`'s own display:inline-flex
+   there, not just override to visible -- an id/class alone loses to that more specific rule, the same trap
+   #locateBtn's own comment already documents for the map-controls cluster. */
+#infoPanel h3 .ip-btns .ride-btn{ display:none; }
 #infoPanel h3 .ip-btns .gpx-download-btn{
   border-radius:11px; padding:0 8px; font-size:10.5px; font-family:Arial, sans-serif; font-weight:700;
 }
@@ -1180,6 +1186,9 @@ html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
      as `grid` it silently overrode a flex column and stretched the control container to the width of the
      widest sibling: 232px instead of 44px, measured. */
   #locateCluster{ display:flex; }
+  /* RIDE's other entry point -- see the base rule's own comment. Must repeat inline-flex for the same
+     specificity reason as #locateCluster above. */
+  #infoPanel h3 .ip-btns .ride-btn{ display:inline-flex; }
 }
 html.is-standalone #infoPanel{
   bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
