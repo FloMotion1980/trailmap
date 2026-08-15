@@ -21,6 +21,13 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-16
+- **RIDE mode: added a big live speed (km/h) and altitude (m) readout**, sitting above the existing
+  trail name/length/Hm in `#rideInfoPanel` (not replacing it, per the user's own preference). Pulled
+  straight from each GPS fix's own `coords.speed`/`coords.altitude`; shown as "–" rather than a
+  misleading 0 whenever the current fix doesn't carry a usable value. 34px in portrait, a smaller 28px
+  stacked layout in landscape's narrower column.
+
 ## 2026-08-15
 - **Merged `docs/region-backlog.md` into a new general `docs/backlog.md`**, per the user's request for
   one cross-topic backlog instead of a new per-topic file each time. Regions moved in as their own

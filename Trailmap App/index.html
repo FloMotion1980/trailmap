@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=169" />
+<link rel="stylesheet" href="style.css?v=170" />
 </head>
 <body>
 <div id="fatalError">
@@ -335,6 +335,10 @@
            than display:none, since it is meant to grow into a general tracking readout later -- see
            updateRideInfoPanel(). -->
       <div id="rideInfoPanel">
+        <div id="rideInfoBig">
+          <span class="ride-big-stat"><span id="rideInfoSpeed" class="ride-big-num">–</span><span class="ride-big-unit">km/h</span></span>
+          <span class="ride-big-stat"><span id="rideInfoAlt" class="ride-big-num">–</span><span class="ride-big-unit">m</span></span>
+        </div>
         <div id="rideInfoName">–</div>
         <div id="rideInfoStats"></div>
       </div>
@@ -2196,6 +2200,10 @@ const geoIcon = L.divIcon({
 let userLocationMarker = null;
 let userAccuracyCircle = null;
 let geoWatchId = null;
+// The latest GPS fix's speed (km/h) and altitude (m), read by the RIDE readout -- see
+// updateRideInfoPanel(). null (not 0) whenever the current fix carries no usable value.
+let lastSpeedKmh = null;
+let lastAltitudeM = null;
 let followMode = false;
 // Following is on, but the map has stopped chasing because you panned it by hand. The position stays live;
 // only the panTo is suspended until you tap the re-centre button. See syncLocateChrome/map "dragstart".
@@ -2707,9 +2715,15 @@ if (typeof ResizeObserver === "function") {
 
 function updateUserLocation(pos, isFirstFix){
   ensureMapSizeCurrent();
-  const { latitude, longitude, accuracy, heading } = pos.coords;
+  const { latitude, longitude, accuracy, heading, speed, altitude } = pos.coords;
   const latlng = [latitude, longitude];
   lastFixAt = Date.now(); lastAccuracy = accuracy; fixCount++;   // read by updateLiveStatus
+  // GPS speed is m/s and often null (stationary, or a low-quality fix) -- kept as null rather than 0 so
+  // the RIDE readout can show "–" instead of a misleading zero. Altitude is similarly often missing on
+  // phones without a real barometric/GNSS altitude fix.
+  lastSpeedKmh = (speed != null && !isNaN(speed)) ? speed * 3.6 : null;
+  lastAltitudeM = (altitude != null && !isNaN(altitude)) ? altitude : null;
+  if (rideMode) updateRideInfoPanel();
 
   if (!userLocationMarker) {
     userLocationMarker = L.marker(latlng, { icon: geoIcon, zIndexOffset: 1000, interactive:false }).addTo(map);
@@ -3190,9 +3204,13 @@ function syncRideModeChrome(){
   });
 }
 
-// Fills the RIDE readout from the focused trail's own lineTrails entry -- kept visible even with nothing
-// focused (a reduced/placeholder state) since it's meant to grow into a general tracking readout later.
+// Fills the RIDE readout: the live speed/altitude (2026-08-16, big numbers, from the latest GPS fix --
+// see updateUserLocation) always update, and the focused trail's own lineTrails entry (name/length/Hm)
+// is kept visible even with nothing focused (a reduced/placeholder state), since it's meant to grow
+// into a general tracking readout later.
 function updateRideInfoPanel(){
+  document.getElementById("rideInfoSpeed").textContent = lastSpeedKmh !== null ? Math.round(lastSpeedKmh) : "–";
+  document.getElementById("rideInfoAlt").textContent = lastAltitudeM !== null ? Math.round(lastAltitudeM) : "–";
   const nameEl = document.getElementById("rideInfoName");
   const statsEl = document.getElementById("rideInfoStats");
   const t = openTrailId ? lineTrails.find(tr => tr.id === openTrailId) : null;
@@ -7210,7 +7228,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v169"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v170"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

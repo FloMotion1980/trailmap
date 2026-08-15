@@ -1222,6 +1222,13 @@ html.ride-mode #rideInfoPanel{
   background: var(--forest-dark); color:#f2f3ec;
   padding: 10px 14px calc(10px + env(safe-area-inset-bottom,0px));
 }
+/* The live speed/altitude readout (2026-08-16, user's own request: "in sehr großer Schrift") -- the
+   panel's most prominent content, ahead of the (smaller) focused-trail name/stats below it. Baseline-
+   aligned so the small unit label sits naturally against the big number rather than centred beside it. */
+#rideInfoBig{ display:flex; gap:22px; align-items:baseline; margin-bottom:3px; }
+.ride-big-stat{ display:inline-flex; align-items:baseline; }
+.ride-big-num{ font-size:34px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; }
+.ride-big-unit{ font-size:12px; opacity:.75; margin-left:3px; }
 #rideInfoName{ font-weight:700; font-size:15px; }
 #rideInfoStats{ display:flex; gap:14px; font-size:13px; opacity:.9; margin-top:2px; }
 #rideInfoStats:empty{ display:none; }
@@ -1230,6 +1237,10 @@ html.ride-mode.landscape-compact #rideInfoPanel{
   top:0; left:0; right:auto; bottom:0; width:min(38vw, 170px);
   padding: calc(10px + env(safe-area-inset-top,0px)) 10px 10px calc(10px + env(safe-area-inset-left,0px));
 }
+/* Narrower column: the two big stats stack instead of sitting side by side, and shrink a little so
+   neither one wraps or overflows the ~150-170px width. */
+html.ride-mode.landscape-compact #rideInfoBig{ flex-direction:column; gap:2px; }
+html.ride-mode.landscape-compact .ride-big-num{ font-size:28px; }
 html.ride-mode.landscape-compact #rideInfoStats{ flex-direction:column; gap:4px; }
 
 /* ---- Tourenbuilder (2026-07-26) ------------------------------------------------
