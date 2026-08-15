@@ -279,7 +279,7 @@
                yellow selection ring. FIRST cell (2026-08-15, user's own reordering request) -- it is the
                entry point into riding, so it leads the row; being a permanent mode switch like #bearingBtn,
                not a conditional cell, it can sit anywhere except last (see #locateBtn's own comment). -->
-          <button id="rideModeBtn" class="ride-btn" title="RIDE-Modus starten" aria-pressed="false">🚲</button>
+          <button id="rideModeBtn" class="ride-btn" title="RIDE-Modus starten" aria-pressed="false">🚴‍♂️</button>
           <!-- The north-up / heading-up switch. In this cluster at the user's request ("ein Button dort wo
                auch der Zentrieren Button erscheint", 2026-08-01), and permanently visible, since it is a
                mode and not a reaction to anything. -->
@@ -5526,7 +5526,7 @@ function buildInfoPanelHtml(t){
       <button class="solo-btn${isSolo ? " active" : ""}" data-id="${t.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button>
       <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">⏪</button>
       <button class="gpx-download-btn" data-id="${t.id}" title="GPX herunterladen">GPX</button>
-      <button class="ride-btn${rideMode ? " active" : ""}" data-id="${t.id}" title="${rideMode ? "RIDE-Modus beenden" : "RIDE-Modus für diesen Trail starten"}">🚲</button>
+      <button class="ride-btn${rideMode ? " active" : ""}" data-id="${t.id}" title="${rideMode ? "RIDE-Modus beenden" : "RIDE-Modus für diesen Trail starten"}">🚴‍♂️</button>
     </span></h3>
     <div class="ip-trail">
       <span class="dot-start">●</span> → ${t.len} km → <span class="dot-end">●</span><span
