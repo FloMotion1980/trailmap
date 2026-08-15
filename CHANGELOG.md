@@ -22,6 +22,13 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-16
+- **Fixed: a difficulty/category/region/search filter that hid a trail left its halo casing glowing on
+  Satellit/Relief** (reported live by the user). `render()`'s filter-driven hide branch only ever touched
+  `layer.line`/`hitLine`/`startDot`/etc, never `layer.casing` — fine for a segmented Trailrunde (its
+  casings are children of `layer.line` and go with it for free) but not for a plain trail, whose casing
+  lives directly on `map` (same reason `destroyTrailLayer` has its own explicit removal for it). Fixed by
+  adding the matching `map.removeLayer(layer.casing)` to the hide branch and a `syncHalo()` re-add to the
+  show branch. New mutation-checked case in `tests/browser/palette.js`; see `tests/MUTATIONS.md`.
 - **Basemap picker restructured: "Straße"/"Straße dezent"/"Straße hell" are now three peer options**
   (same osm tiles, three CSS filter levels — `brightness`/`saturate`/`contrast` on Leaflet's own tile
   pane, no tile-server involvement, works offline), not sub-options of one button as first built the

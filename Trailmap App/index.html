@@ -7133,10 +7133,24 @@ function render(){
             // 2026-07-23, reported by the user). Close it again on every re-add, same as applyNameLabels
             // already does for the plain hitLine tooltip.
             (layer.segmentHitLines || []).forEach(h => { map.addLayer(h); h.closeTooltip(); });
+            // A non-segmented trail's halo casing lives directly on `map` (see buildTrailLayer's own
+            // comment), never as a child of `layer.line` -- so it needs its own re-add here, exactly
+            // like destroyTrailLayer needs its own explicit removal for the same reason. syncHalo() is
+            // the right call, not a bare addLayer: it also re-checks the CURRENT basemap's halo colour
+            // for this kind, since the basemap could have changed while this trail was filtered out.
+            // A segmented loop's casings need no equivalent here: they are members of `layer.line`
+            // itself and come back with it via the map.addLayer(layer.line) call above.
+            syncHalo(map, layer.casing, layer.casingKind);
           } else {
             map.removeLayer(layer.line); map.removeLayer(layer.hitLine); map.removeLayer(layer.startDot);
             if (layer.directionArrowLayer) map.removeLayer(layer.directionArrowLayer);
             (layer.segmentHitLines || []).forEach(h => map.removeLayer(h));
+            // The bug this closes (2026-08-16, the user): a filter that hides a trail (difficulty,
+            // category, region, search) removed its line but left a schwarz trail's halo casing glowing
+            // on Satellit/Relief, since that casing is never a child of `layer.line` for a non-segmented
+            // trail (see the comment above) -- map.removeLayer(layer.line) simply never reached it. A
+            // segmented loop needs no equivalent here, for the same reason its re-add doesn't either.
+            if (layer.casing) map.removeLayer(layer.casing);
             hideEndpoints(t.id);
             // A filter change (not just deactivating a whole region, which destroyTrailLayer already
             // handled this way) can just as easily hide the currently-selected trail out from under

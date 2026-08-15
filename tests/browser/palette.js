@@ -135,6 +135,39 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   await setBase("sat");
   checkSatLikeTreatment("sat");
 
+  T.test("a filter that hides a trail hides its halo casing too, not just its line -- the user's own bug report (2026-08-16)");
+  // render()'s filter-driven show/hide branch used to only ever touch layer.line/hitLine/startDot/etc, never
+  // layer.casing -- fine for a SEGMENTED loop (its casings are children of layer.line and go with it for
+  // free), but a non-segmented trail's casing lives directly on `map` (see buildTrailLayer's own comment,
+  // and destroyTrailLayer's matching explicit removal), so map.removeLayer(layer.line) never reached it.
+  // A schwarz trail filtered out via the difficulty chip therefore left its halo glowing on Satellit/Relief
+  // with no line underneath it -- reported live, not found by inspection.
+  {
+    // Not asserting either count reaches exactly 0: a Trailrunde segment is coloured by its OWN
+    // component trail's difficulty regardless of the LOOP's overall diff (see buildTrailLayer/
+    // repaintLineColors), so a schwarz-coloured segment inside a differently-rated Tour can legitimately
+    // stay on screen while every STANDALONE schwarz trail (and schwarz-diff loop) disappears. What must
+    // hold is that the halo count tracks the line count -- both drop by the same amount, and both come
+    // back, rather than the halo staying stuck at its old count while the lines disappear underneath it.
+    const haloCount = () => strokeCount(overlay(), "#c7c7c7", 7.5);
+    const lineCount = () => strokeCount(overlay(), "#1c1c1c");
+    const haloBefore = haloCount(), lineBefore = lineCount();
+    const schwerChip = TM.$('[data-diff="schwarz"]');
+    if (!haloBefore || !schwerChip) {
+      T.skip("no schwarz halo currently on screen, or no difficulty chip found");
+    } else {
+      schwerChip.click();
+      await TM.wait(300);
+      const haloAfter = haloCount(), lineAfter = lineCount();
+      T.ok("at least one schwarz halo disappeared along with its line", haloAfter < haloBefore, haloAfter, "< " + haloBefore);
+      T.eq("the halo count drops by exactly as much as the line count", haloBefore - haloAfter, lineBefore - lineAfter);
+      schwerChip.click();
+      await TM.wait(300);
+      T.eq("re-enabling the filter brings every halo back", haloCount(), haloBefore);
+      T.eq("...and every line back, in the same count", lineCount(), lineBefore);
+    }
+  }
+
   T.test("selecting a Tour riding a lift must NOT force that lift's mask past LIFT_MASK_OPACITY -- exercised on carto, the one basemap left where the mask must stay hidden");
   // applyLiftSegmentOpacity() sets every lift segment's opacity to 1 when its OWN Tour is the soloed one
   // (which selecting a Tour does) -- but `liftSegments` is a flat [mask, hairline, dots, ...] repeat, and
