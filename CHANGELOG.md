@@ -22,11 +22,17 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-16
+- **RIDE infobox redesigned for sunlight readability**, after reviewing mockups (built with the
+  `visualize` tool first, before touching app code) instead of iterating live: speed is now a single
+  dominant, centred 80px (58px landscape) number in a plain heavy sans (Arial/Helvetica, not the app's
+  decorative Copperplate); altitude is a smaller secondary badge (corner in portrait, below a divider in
+  landscape) rather than an equal second number. The focused trail's name/length/Hm moved into one row
+  and is now hidden outright with nothing focused — no dash placeholder, unlike speed/altitude which
+  always show something.
 - **RIDE mode: added a big live speed (km/h) and altitude (m) readout**, sitting above the existing
   trail name/length/Hm in `#rideInfoPanel` (not replacing it, per the user's own preference). Pulled
   straight from each GPS fix's own `coords.speed`/`coords.altitude`; shown as "–" rather than a
-  misleading 0 whenever the current fix doesn't carry a usable value. 34px in portrait, a smaller 28px
-  stacked layout in landscape's narrower column.
+  misleading 0 whenever the current fix doesn't carry a usable value.
 
 ## 2026-08-15
 - **Merged `docs/region-backlog.md` into a new general `docs/backlog.md`**, per the user's request for

@@ -21,7 +21,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=170" />
+<link rel="stylesheet" href="style.css?v=171" />
 </head>
 <body>
 <div id="fatalError">
@@ -336,11 +336,14 @@
            updateRideInfoPanel(). -->
       <div id="rideInfoPanel">
         <div id="rideInfoBig">
-          <span class="ride-big-stat"><span id="rideInfoSpeed" class="ride-big-num">–</span><span class="ride-big-unit">km/h</span></span>
-          <span class="ride-big-stat"><span id="rideInfoAlt" class="ride-big-num">–</span><span class="ride-big-unit">m</span></span>
+          <span class="ride-big-stat ride-speed-stat"><span id="rideInfoSpeed" class="ride-big-num">–</span><span class="ride-big-unit">km/h</span></span>
+          <span class="ride-big-divider" aria-hidden="true"></span>
+          <span class="ride-big-stat ride-alt-stat"><span id="rideInfoAlt" class="ride-big-num">–</span><span class="ride-big-unit">m</span></span>
         </div>
-        <div id="rideInfoName">–</div>
-        <div id="rideInfoStats"></div>
+        <div id="rideInfoTrail">
+          <span id="rideInfoName"></span>
+          <span id="rideInfoStats"></span>
+        </div>
       </div>
       <div id="layerWarning"></div>
       <div id="offlineBanner">📴 Offline-Modus</div>
@@ -3204,19 +3207,21 @@ function syncRideModeChrome(){
   });
 }
 
-// Fills the RIDE readout: the live speed/altitude (2026-08-16, big numbers, from the latest GPS fix --
-// see updateUserLocation) always update, and the focused trail's own lineTrails entry (name/length/Hm)
-// is kept visible even with nothing focused (a reduced/placeholder state), since it's meant to grow
-// into a general tracking readout later.
+// Fills the RIDE readout: the live speed/altitude (2026-08-16, the panel's own big numbers, from the
+// latest GPS fix -- see updateUserLocation) always update. The focused trail's own lineTrails entry
+// (name/length/Hm) is a second, smaller row -- #rideInfoTrail is hidden OUTRIGHT with nothing focused
+// (2026-08-16, user's own call: no dash placeholder for that part, unlike speed/altitude which always
+// show something).
 function updateRideInfoPanel(){
   document.getElementById("rideInfoSpeed").textContent = lastSpeedKmh !== null ? Math.round(lastSpeedKmh) : "–";
   document.getElementById("rideInfoAlt").textContent = lastAltitudeM !== null ? Math.round(lastAltitudeM) : "–";
-  const nameEl = document.getElementById("rideInfoName");
-  const statsEl = document.getElementById("rideInfoStats");
+  const trailEl = document.getElementById("rideInfoTrail");
   const t = openTrailId ? lineTrails.find(tr => tr.id === openTrailId) : null;
-  if (!t) { nameEl.textContent = "–"; statsEl.innerHTML = ""; return; }
-  nameEl.textContent = t.name;
-  statsEl.innerHTML = `<span>${t.len.toFixed(1)} km</span><span>⬆️ ${Math.round(t.up)} m</span><span>⬇️ ${Math.round(t.down)} m</span>`;
+  if (!t) { trailEl.style.display = "none"; return; }
+  trailEl.style.display = "";
+  document.getElementById("rideInfoName").textContent = t.name;
+  document.getElementById("rideInfoStats").innerHTML =
+    `<span>${t.len.toFixed(1)} km</span><span>⬆️ ${Math.round(t.up)} m</span><span>⬇️ ${Math.round(t.down)} m</span>`;
 }
 
 function enterRideMode(){
@@ -7228,7 +7233,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v170"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v171"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

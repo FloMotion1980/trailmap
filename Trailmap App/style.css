@@ -1222,26 +1222,55 @@ html.ride-mode #rideInfoPanel{
   background: var(--forest-dark); color:#f2f3ec;
   padding: 10px 14px calc(10px + env(safe-area-inset-bottom,0px));
 }
-/* The live speed/altitude readout (2026-08-16, user's own request: "in sehr großer Schrift") -- the
-   panel's most prominent content, ahead of the (smaller) focused-trail name/stats below it. Baseline-
-   aligned so the small unit label sits naturally against the big number rather than centred beside it. */
-#rideInfoBig{ display:flex; gap:22px; align-items:baseline; margin-bottom:3px; }
+/* The live speed/altitude readout (2026-08-16, user's own request: "in sehr großer Schrift", mittig,
+   in sehr einfacher Schrift -- readability in direct sunlight was the whole point, so a plain, heavy
+   geometric sans beats the app's own decorative Copperplate here). Speed is the dominant, centred hero
+   number; altitude is deliberately smaller -- a corner badge in portrait (see .ride-alt-stat), tucked
+   below the speed with a divider in landscape's narrow column (mockups "Variante B" / "L2", picked by
+   the user over several alternatives). */
+#rideInfoBig{
+  position:relative; display:flex; flex-direction:column; align-items:center;
+  font-family: Arial, Helvetica, sans-serif;
+}
 .ride-big-stat{ display:inline-flex; align-items:baseline; }
-.ride-big-num{ font-size:34px; font-weight:700; line-height:1; font-variant-numeric:tabular-nums; }
-.ride-big-unit{ font-size:12px; opacity:.75; margin-left:3px; }
-#rideInfoName{ font-weight:700; font-size:15px; }
-#rideInfoStats{ display:flex; gap:14px; font-size:13px; opacity:.9; margin-top:2px; }
-#rideInfoStats:empty{ display:none; }
+.ride-big-num{ font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+.ride-big-unit{ font-weight:700; opacity:.75; margin-left:4px; }
+.ride-speed-stat .ride-big-num{ font-size:80px; }
+.ride-speed-stat .ride-big-unit{ font-size:14px; }
+/* Portrait: a small badge in the corner, not a second centred number -- speed stays the only thing the
+   eye is drawn to at a glance. */
+.ride-alt-stat{ position:absolute; top:0; right:0; }
+.ride-alt-stat .ride-big-num{ font-size:20px; }
+.ride-alt-stat .ride-big-unit{ font-size:11px; }
+.ride-big-divider{ display:none; } /* only shown in landscape, see below */
+/* The focused trail's name/length/Hm -- a second, much smaller row. Hidden OUTRIGHT with nothing
+   focused (no dash placeholder, per the user's own call: unlike speed/altitude, which always show
+   *something*, there is genuinely nothing to say here without a trail). */
+#rideInfoTrail{
+  display:flex; align-items:baseline; justify-content:center; gap:8px;
+  font-family: Arial, Helvetica, sans-serif; font-size:12px; font-weight:700; opacity:.85;
+  margin-top:6px; padding-top:6px; border-top:1px solid rgba(242,243,236,.25);
+}
+#rideInfoName{ font-weight:800; }
+#rideInfoStats{ display:flex; gap:8px; }
 /* Landscape: left edge instead of a top bar, same reasoning as #infoPanel's own landscape-compact override. */
 html.ride-mode.landscape-compact #rideInfoPanel{
   top:0; left:0; right:auto; bottom:0; width:min(38vw, 170px);
   padding: calc(10px + env(safe-area-inset-top,0px)) 10px 10px calc(10px + env(safe-area-inset-left,0px));
 }
-/* Narrower column: the two big stats stack instead of sitting side by side, and shrink a little so
-   neither one wraps or overflows the ~150-170px width. */
-html.ride-mode.landscape-compact #rideInfoBig{ flex-direction:column; gap:2px; }
-html.ride-mode.landscape-compact .ride-big-num{ font-size:28px; }
-html.ride-mode.landscape-compact #rideInfoStats{ flex-direction:column; gap:4px; }
+/* Narrower column: altitude drops out of the corner and stacks below the speed instead, separated by a
+   plain divider line -- there is no "corner" worth using at this width, and side-by-side would force
+   both numbers too small to read at a glance. */
+html.ride-mode.landscape-compact .ride-speed-stat .ride-big-num{ font-size:58px; }
+html.ride-mode.landscape-compact .ride-alt-stat{ position:static; margin-top:6px; }
+html.ride-mode.landscape-compact .ride-alt-stat .ride-big-num{ font-size:28px; }
+html.ride-mode.landscape-compact .ride-big-divider{
+  display:block; width:50%; height:1px; background:rgba(242,243,236,.25); margin:6px 0;
+}
+/* Trail name joins the other trail stats here (2026-08-16, user's own call) -- stacked instead of one
+   row, since the column has height to spare but not width. */
+html.ride-mode.landscape-compact #rideInfoTrail{ flex-direction:column; align-items:center; gap:2px; }
+html.ride-mode.landscape-compact #rideInfoStats{ flex-direction:column; gap:2px; }
 
 /* ---- Tourenbuilder (2026-07-26) ------------------------------------------------
    A scratch list of trails/lifts in ride order. Kept visually close to .trail-card
