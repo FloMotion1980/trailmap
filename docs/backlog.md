@@ -104,6 +104,61 @@ before implementing any of these.
   portrait AND landscape), and `updateRideInfoPanel`/`#rideInfoPanel`'s content updates. Add these once
   the info panel redesign (above) settles, so the tests aren't written against a UI that's about to
   change again.
+  - **2026-08-16: `tests/browser/ride.js` was built to close exactly this gap** (11 cases covering
+    enter/exit chrome, auto-solo + selection-ring suppression, the focus halo for both a plain trail and
+    a segmented Tour, `applyRideMapOffset` in portrait AND landscape, and the info panel's speed/
+    altitude/trail-row content) — while building it, it surfaced a REAL, previously-unreported crash (see
+    the next bullet), not just a test-writing exercise.
+- **FIXED (2026-08-16): entering RIDE mode (or just toggling "Blickrichtung oben" rapidly) could crash the
+  whole app with "Karte konnte nicht geladen werden" / `Script error.`** — confirmed by the user on their own
+  phone independently of this session's testing ("Immer beim Einschalten des Ride Modes... auch oft
+  hintereinander", later corrected to "auch direkt nach App-Start... aber auch da nicht bei jedem Mal").
+  **Real root cause, found from a full (not truncated) stack trace after extensive bisection:** an infinite
+  event-handler loop, not a Leaflet/leaflet-rotate internals bug. A `map.stop()` call added earlier the same
+  day (to cancel an in-flight pan/zoom animation before rotating/resizing the map) cancels a mid-flight
+  flyTo/panTo by internally forcing a zoom reset, which fires Leaflet's own `"zoomstart"` event; this app's
+  pre-existing `map.on("zoomstart", () => { if (!expectingOwnZoomChange) handleUserGestureStart(); })`
+  listener (built for pinch-detach detection) reacted to that by calling `handleUserGestureStart()`, whose
+  own body calls `map.stop()` again — which can fire `"zoomstart"` again, calling `handleUserGestureStart()`
+  again, forever, until "Maximum call stack size exceeded". Confirmed with the FULL stack trace (not just the
+  first few frames, which earlier looked like different, unrelated Leaflet-internal call sites each time —
+  `_tryAnimatedZoom`, `_getCenterOffset`, `_resetView`, `latLngToLayerPoint` were all just different POINTS
+  inside the SAME recursive loop, depending on how many bounces had already happened when the stack
+  overflowed): `setView → _resetView → _moveStart → fire("zoomstart") → handleUserGestureStart →
+  map.stop() → setZoom → getCenter → ...`. **The actual fix**: every `map.stop()` call in the file now goes
+  through a new `safeMapStop()` helper (near `expectingOwnZoomChange`'s own declaration) — a plain reentrancy
+  guard (`mapStopInProgress`) that makes a `map.stop()` call triggered WHILE another one is still unwinding a
+  no-op instead of recursing, plus setting `expectingOwnZoomChange` for its own duration so the zoomstart
+  listener doesn't even try. This replaced the four separate `map.stop()` call sites (`commitBearing`,
+  `enterRideMode`, `handleUserGestureStart`, `recoverFromRotationCrash`). **Also added, and kept even though
+  the real bug is now understood**: `toggleRideMode()`/`withRideCooldown()` (a 400ms cooldown so the two RIDE
+  buttons can't fire the same transition twice before the first settles) and a `window.onerror`-level safety
+  net (`recoverFromRotationCrash()`, aliased on `window` since the outer handler has no closure over the
+  app's internal state) that resets rotation/RIDE state to a clean baseline if this class of crash — or any
+  other stack overflow with this exact message — ever recurs for a different reason, so the app degrades to
+  "tap the button again" rather than a dead end. Verified with two independent full 12-suite regression runs
+  in a fresh browser tab, both landing on the identical 168/170 passed (the 2 remaining `bearing` failures and
+  1 `infopanel` failure are unrelated, pre-existing flakes) — before the fix, `tests/browser/ride.js` and
+  several unrelated suites (`lists`, `solo`, `regions`, `labels`) failed/threw inconsistently every run,
+  because the corrupted rotation state this bug left behind bled into whatever suite ran next.
+- **Bug (reported 2026-08-16, not yet fixed): a trail selected from the sidebar list gets the yellow
+  selection outline (correct) AND the bold hover-width line style (wrong) on a TOUCH device.** On
+  desktop this is correct behaviour (a mouse genuinely hovering the sidebar should bold the
+  corresponding line), but a touch tap has no hover state distinct from selection, so a selected trail
+  should not also be forced into the hover-width look on phone. Needs the actual call site identified
+  (`highlightSelectedTrail`/`setHover`/`applyLineWeight`, or wherever a card selection currently also
+  triggers the hover width) and a touch-vs-desktop distinction added. No test exists for this yet —
+  add one alongside the fix.
+- **Bug (reported 2026-08-16, not yet fixed): during RIDE mode, a trail's END marker turns red correctly,
+  but its START marker stays white instead of turning green.** Likely in whatever code colours/recolours
+  `startMarker`/`endMarker` specifically for the RIDE focus (or the same code path used for a normal
+  selection, if RIDE reuses it) — needs the actual call site identified before fixing. No test exists for
+  this yet — add one alongside the fix.
+- **General note from the same 2026-08-16 conversation: go through `CLAUDE.md`'s documented feature
+  history looking for other behaviours that don't yet have a browser-suite case**, the same way this
+  session's `ride.js` work surfaced a real bug purely from the exercise of writing tests for
+  already-shipped behaviour. Not scoped into a concrete list yet — do this as a deliberate pass next time,
+  cross-referencing CLAUDE.md's per-feature bullets against `tests/browser/*.js`'s `@touches` headers.
 
 ## Trailrunden-Lückenschließen (tools/close_loop_gaps.py)
 

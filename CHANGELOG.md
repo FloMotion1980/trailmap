@@ -22,6 +22,18 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-16
+- **Fixed a real app-crashing bug the user hit repeatedly on their phone: toggling RIDE mode (or "Blickrichtung
+  oben") could throw "Maximum call stack size exceeded" and show the fatal panel.** Root cause: a `map.stop()`
+  added earlier the same day (to cancel an in-flight pan/zoom animation before rotating) could itself fire
+  Leaflet's `"zoomstart"` event, which the app's own pinch/drag-detach listener turned into another
+  `map.stop()` call — an infinite loop between our own event handler and Leaflet's `stop()`, not a
+  Leaflet/leaflet-rotate internals bug. Fixed with a reentrancy guard (`safeMapStop()`) that every `map.stop()`
+  call in the file now goes through. Also added: a 400ms cooldown on the RIDE toggle buttons and a
+  `window.onerror`-level recovery hook that resets rotation state gracefully if this class of crash ever
+  recurs for a different reason, instead of leaving the app stuck behind the fatal panel. New suite
+  `tests/browser/ride.js` (11 cases: enter/exit chrome, auto-solo + selection-ring suppression, the RIDE focus
+  halo, the look-ahead map offset in portrait/landscape, the info panel's content) — building it is what
+  surfaced this bug in the first place. See `docs/backlog.md`'s RIDE-Modus section for the full investigation.
 - **Fixed: a difficulty/category/region/search filter that hid a trail left its halo casing glowing on
   Satellit/Relief** (reported live by the user). `render()`'s filter-driven hide branch only ever touched
   `layer.line`/`hitLine`/`startDot`/etc, never `layer.casing` — fine for a segmented Trailrunde (its

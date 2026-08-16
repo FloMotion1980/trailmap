@@ -168,6 +168,29 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
     }
   }
 
+  T.test("the same tracking holds for the SEARCH box, not just the difficulty chip -- a different trailPassesFilters() path reaching the same render() branch");
+  // The fix above lives in render()'s generic visible/not-visible branch, driven by trailPassesFilters()'s
+  // overall boolean -- so any of its inputs (difficulty, category, region, search) should hide/show a
+  // casing the same way. Only the difficulty chip was exercised above; this proves the search box's own,
+  // separate matchesSearch() path reaches the identical code, not just the one input already covered.
+  {
+    const anyHaloCount = () => haloWidthCount();
+    const haloBefore = anyHaloCount();
+    const searchEl = TM.$("#trailSearchInput");
+    if (!haloBefore || !searchEl) {
+      T.skip("no halo currently on screen, or no search box found");
+    } else {
+      searchEl.value = "no-such-trail-zzz";
+      searchEl.dispatchEvent(new Event("input", { bubbles: true }));
+      await TM.wait(300);
+      T.eq("a search matching nothing clears every halo, not just every line", anyHaloCount(), 0);
+      searchEl.value = "";
+      searchEl.dispatchEvent(new Event("input", { bubbles: true }));
+      await TM.wait(300);
+      T.eq("clearing the search brings every halo back", anyHaloCount(), haloBefore);
+    }
+  }
+
   T.test("selecting a Tour riding a lift must NOT force that lift's mask past LIFT_MASK_OPACITY -- exercised on carto, the one basemap left where the mask must stay hidden");
   // applyLiftSegmentOpacity() sets every lift segment's opacity to 1 when its OWN Tour is the soloed one
   // (which selecting a Tour does) -- but `liftSegments` is a flat [mask, hairline, dots, ...] repeat, and

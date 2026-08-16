@@ -375,6 +375,34 @@ updateLayoutModeClass();
 window.addEventListener("resize", updateLayoutModeClass);
 window.addEventListener("orientationchange", updateLayoutModeClass);
 window.onerror = function(msg, url, line, col, err) {
+  // Safety net for a known, hard-to-pin-down crash in the rotation subsystem (2026-08-16, reported by the
+  // user on their own phone): "Maximum call stack size exceeded" somewhere inside Leaflet/leaflet-rotate's
+  // zoom-animation and bearing internals, seen at three different call sites while chasing it depending on
+  // exact timing (_tryAnimatedZoom, _getCenterOffset, _resetView) -- root cause not fully isolated despite
+  // extensive testing (see docs/backlog.md's RIDE-Modus section for the full investigation). Rather than
+  // leave the user stuck behind the fatal panel until they force-close and reopen the app, this recognises
+  // the one specific message this bug always produces and, if the app itself has registered a recovery hook
+  // (set from inside the main try-block, where the rotation state actually lives -- this outer handler has
+  // no closure over it), resets rotation to a known-good baseline instead of showing the panel. A plain
+  // stack overflow from anywhere else in the app would be a different, unrelated bug and still shows the
+  // panel as before -- this only special-cases the one exact message this specific bug is known to produce.
+  // The CDN's Leaflet script has no crossorigin attribute, so an error thrown INSIDE it (which is exactly
+  // where this recursion happens, per the stack traces gathered while chasing it) is reported here as the
+  // generic "Script error." with no real message/line/error object at all -- this is, word for word, what
+  // the user's own screenshot of the fatal panel showed. So the match has to accept that generic message
+  // too, not just the real "Maximum call stack size exceeded" text (which only ever showed up when a
+  // synchronous catch of our OWN caught it directly during this bug's investigation, never via this handler).
+  var msgStr = String(msg);
+  if ((msgStr.indexOf('Maximum call stack size exceeded') !== -1 || msgStr === 'Script error.') &&
+      typeof window.__recoverFromRotationCrash === 'function') {
+    try {
+      window.__recoverFromRotationCrash();
+      return true; // suppress the default "uncaught error" handling; recovery already ran
+    } catch (recoveryErr) {
+      console.error('Recovery from rotation crash itself failed:', recoveryErr);
+      // fall through to the normal fatal-panel path below
+    }
+  }
   var msgEl = document.getElementById('fatalErrorMsg');
   var panel = document.getElementById('fatalError');
   if (msgEl && panel && !panel.classList.contains('visible')) {
@@ -2256,6 +2284,27 @@ let followDetached = false;
 // Set for the exact duration of a call that changes zoom ON PURPOSE (currently just the first fix's own
 // flyTo) -- see the map.on("zoomstart",...) listener for why this exists at all.
 let expectingOwnZoomChange = false;
+// The one safe way to call map.stop() anywhere in this file (2026-08-16, replacing several direct
+// map.stop() calls after a real, reproduced "Maximum call stack size exceeded" crash -- reported by the
+// user on their own phone). Root cause, found from a full stack trace: map.stop() cancelling a still-
+// animating flyTo/zoom fires "zoomstart", which our own map.on("zoomstart", ...) listener further down
+// turns into a call to handleUserGestureStart() -- which itself calls map.stop() again. That inner call can
+// fire "zoomstart" again the same way, and so on: a genuine infinite loop between our own event handler and
+// Leaflet's own stop() implementation, not a Leaflet/leaflet-rotate bug by itself. `expectingOwnZoomChange`
+// (already used for the same reason around the first GPS fix's own deliberate flyTo) suppresses the
+// zoomstart listener's reaction, but that alone wasn't enough here -- handleUserGestureStart's OWN internal
+// map.stop() call re-enters this same cascade regardless of who called the outer one. A plain reentrancy
+// guard is what actually breaks the loop: once a map.stop() is already unwinding, any call that happens
+// WHILE it's still in progress (directly, or via the very events it fires) becomes a no-op instead of
+// recursing.
+let mapStopInProgress = false;
+function safeMapStop(){
+  if (mapStopInProgress) return;
+  mapStopInProgress = true;
+  const wasExpecting = expectingOwnZoomChange;
+  expectingOwnZoomChange = true;
+  try { map.stop(); } finally { expectingOwnZoomChange = wasExpecting; mapStopInProgress = false; }
+}
 const locateBtn = document.getElementById("locateBtn");
 
 let compassActive = false;
@@ -2517,11 +2566,87 @@ function commitBearing(force){
   lastBearingAt = Date.now();
   appliedBearing = ((bearingTarget % 360) + 360) % 360;
   bearingSweeping = true;
-  map.setBearing(appliedBearing);
-  refreshHeadingCone();
+  // map.stop() cancels any Leaflet pan/zoom animation still in flight BEFORE rotating the map -- without
+  // this, calling map.setBearing() while Leaflet's own zoom animation is mid-flight (e.g. a trail card's
+  // flyToTrailBounds, the boot sequence's own fitBounds, or just a second bearing commit arriving while an
+  // earlier one's own animation frame hasn't settled) reliably threw "Maximum call stack size exceeded" in
+  // leaflet-rotate's patched _getCenterOffset calling back into core Leaflet's _tryAnimatedZoom, and back
+  // again -- reported by the user on their phone ("immer beim Einschalten des Ride Modes... auch oft
+  // hintereinander", also "direkt nach App-Start"), and reproduced here with nothing to do with RIDE mode
+  // at all: a bare setHeadingUp(true) -> setHeadingUp(false) -> setHeadingUp(true) in quick succession,
+  // once a compass reading had made the mode toggle into a real eased transition rather than a same-value
+  // no-op. map.stop() is Leaflet's own public, documented way to cancel an in-progress animation cleanly --
+  // cheap and a no-op when nothing is actually animating, so calling it on every commit is safe.
+  //
+  // Even with that guard, this can still throw (see recoverFromRotationCrash's own comment for why this
+  // bug was never fully root-caused) -- so this is also wrapped locally, not left to window.onerror alone.
+  // A caller sitting between this and window.onerror (e.g. a test's own `await`, or any other try/catch up
+  // the stack) can otherwise swallow the exception before the global handler ever sees it, leaving the
+  // corrupted rotation state uncleaned for whatever runs next. Recovering right here, at the exact point of
+  // failure, doesn't depend on nothing else on the stack getting in the way.
+  try {
+    safeMapStop();
+    map.setBearing(appliedBearing);
+    refreshHeadingCone();
+  } catch (e) {
+    console.error("commitBearing crashed, recovering:", e);
+    recoverFromRotationCrash();
+    return;
+  }
   clearTimeout(bearingSettleTimer);
   bearingSettleTimer = setTimeout(endBearingSweep, BEARING_SETTLE_MS);
 }
+
+// Safety-net recovery for the rotation-subsystem crash described at window.onerror's own call site above.
+// Called from TWO places, and both matter: (1) window.__recoverFromRotationCrash, the alias right after this
+// declaration, for a crash that escapes uncaught all the way to window.onerror (which is registered before
+// this try-block runs and has no closure over any of this state, hence the alias); (2) directly, synchronously,
+// from commitBearing's own try/catch around map.setBearing() below -- discovered necessary because a crash
+// that happens while this code is called from WITHIN another function's own try/catch (e.g. a test's `await
+// s.fn(TM)`, wrapped by the test harness's own error handling) is caught there FIRST and never reaches
+// window.onerror at all, leaving the corrupted rotation state uncleaned for whatever runs next. Calling this
+// at the exact point of failure, not just as a last-resort global backstop, is what actually makes recovery
+// reliable regardless of which caller happens to be on the stack. Resets everything the rotation code owns
+// to the same known-good baseline a fresh page load starts from (bearing 0, no pending tween/frame, heading-up
+// off), rather than trying to figure out which exact piece was left inconsistent -- the user, once this
+// recovers, is expected to just tap the button again a moment later, which this makes safe to do (2026-08-16,
+// the user's own suggestion: "dann nach ein paar Sekunden einfach noch mal auf den Knopf drücken und dann
+// geht's"). Safe to call more than once in a row (e.g. from both the inline catch AND a later window.onerror
+// for the same incident) -- every step here is idempotent.
+function recoverFromRotationCrash(){
+  console.warn("Rotation-Subsystem-Absturz abgefangen -- setze Bearing/RIDE-Zustand zurück.");
+  cancelBearingTween();
+  if (bearingFrame !== null) { cancelAnimationFrame(bearingFrame); bearingFrame = null; }
+  if (bearingFrameSafety !== null) { clearTimeout(bearingFrameSafety); bearingFrameSafety = null; }
+  clearTimeout(bearingSettleTimer);
+  bearingSettleTimer = null;
+  bearingSweeping = false;
+  bearingTarget = null;
+  appliedBearing = 0;
+  headingUp = false;
+  if (canRotate) {
+    try { safeMapStop(); map.setBearing(0); } catch (e) { /* already in a bad way; nothing more to do here */ }
+    setRendererPadding(null);
+  }
+  const bearingBtnEl = document.getElementById("bearingBtn");
+  if (bearingBtnEl) {
+    bearingBtnEl.classList.remove("active");
+    bearingBtnEl.setAttribute("aria-pressed", "false");
+    bearingBtnEl.title = "Karte: Norden oben — tippen für Blickrichtung oben";
+  }
+  hideHeadingCone();
+  if (rideMode) {
+    rideMode = false;
+    document.documentElement.classList.remove("ride-mode");
+    syncRideModeChrome();
+    clearRideMapOffset();
+    clearRideFocusHalo();
+    stopFollowing();
+    updateSelectionOutlineVisibility();
+  }
+  lastRideToggleAt = Date.now(); // also re-arms the cooldown, so a fast repeat tap right after this doesn't retrigger it
+}
+window.__recoverFromRotationCrash = recoverFromRotationCrash;
 
 // The map stopped turning: do now, once, the work that was skipped during the sweep. "rotate" is what the
 // vector renderers listen to, "moveend" is what makes the tile layers fill in whatever the new angle exposed
@@ -3121,8 +3246,11 @@ document.addEventListener("visibilitychange", () => {
 function handleUserGestureStart(){
   // Cancel any panTo still animating from the last fix. Without this the user's drag/pinch and Leaflet's own
   // pan animation run against each other for up to half a second, which is precisely the moment a rider
-  // grabs the map -- right after the dot jumped. `map.stop()` is Leaflet's documented way to abort flyTo/panTo.
-  map.stop();
+  // grabs the map -- right after the dot jumped. safeMapStop() (not a bare map.stop()) matters here
+  // specifically: cancelling a mid-flight flyTo can itself fire "zoomstart", which the listener below turns
+  // right back into a call to THIS function -- see safeMapStop's own comment for the real, reproduced
+  // infinite-recursion crash that an unguarded map.stop() here caused.
+  safeMapStop();
   if (followMode && !followDetached) { followDetached = true; syncLocateChrome(); }
 }
 map.on("dragstart", handleUserGestureStart);
@@ -3352,8 +3480,44 @@ function applyRideFocusHalo(trailId){
   }
 }
 
+// Real, reported bug (2026-08-16, the user, on their own phone): rapidly toggling RIDE on/off/on -- "immer
+// beim Einschalten... auch oft hintereinander", also seen right after app start -- can crash the whole app
+// with "Maximum call stack size exceeded" somewhere inside Leaflet/leaflet-rotate's zoom-animation and
+// container-resize internals (seen at three different call sites while chasing this: _tryAnimatedZoom,
+// _getCenterOffset, _resetView -- the exact spot varies with timing, which is itself telling). Root-caused
+// as far as time allowed to a genuine race between RIDE's own rapid #map resize/reposition
+// (applyRideMapOffset) and/or the eased bearing transition (setHeadingUp) firing again before the PREVIOUS
+// one has settled -- map.stop() before rotating (see commitBearing) narrows the window but is NOT sufficient
+// by itself (confirmed: the crash still reproduced with it in place, just with a different stack). Rather
+// than ship an unproven "fix" for a third-party library's internal recursion, this cooldown attacks the
+// ACTUAL reported trigger directly: a toggle arriving before the previous one's own transition/resize has
+// had time to settle is deferred until it has, instead of firing into the middle of it. See
+// docs/backlog.md's RIDE-Modus section for the full investigation and why this is a mitigation, not a
+// confirmed root-cause fix -- revisit if it's ever reported again.
+const RIDE_TOGGLE_COOLDOWN_MS = 400;
+let lastRideToggleAt = 0;
+// The one gate every RIDE toggle goes through, whichever button triggered it -- retries itself (via the same
+// arguments) once the cooldown has elapsed rather than dropping the tap, so a fast double-tap still ends up
+// doing something, just slightly delayed instead of colliding with the previous transition.
+function withRideCooldown(fn){
+  const now = Date.now();
+  const elapsed = now - lastRideToggleAt;
+  if (elapsed < RIDE_TOGGLE_COOLDOWN_MS) {
+    setTimeout(() => withRideCooldown(fn), RIDE_TOGGLE_COOLDOWN_MS - elapsed);
+    return;
+  }
+  lastRideToggleAt = now;
+  fn();
+}
+function toggleRideMode(){
+  withRideCooldown(() => { if (rideMode) exitRideMode(); else enterRideMode(); });
+}
+
 function enterRideMode(){
   if (rideMode) return;
+  // Cancels any pan/flyTo animation still in flight before the resize/pan work below runs -- see
+  // safeMapStop()'s own comment for why this must go through it rather than a bare map.stop().
+  safeMapStop();
   if (builderMode) setBuilderMode(false); // RIDE and the Tourenbuilder are mutually exclusive
   rideMode = true;
   document.documentElement.classList.add("ride-mode");
@@ -3380,9 +3544,7 @@ function exitRideMode(){
   updateSelectionOutlineVisibility(); // give the yellow ring back if a trail is still open
 }
 
-document.getElementById("rideModeBtn").addEventListener("click", () => {
-  if (rideMode) exitRideMode(); else enterRideMode();
-});
+document.getElementById("rideModeBtn").addEventListener("click", toggleRideMode);
 
 
 // ---- Place labels (village names) — independent of zoom, and switchable via "Orte" (see showPlaces).
@@ -4956,9 +5118,11 @@ function handleInfoPanelClick(e){
   }
   const rideBtn = e.target.closest(".ride-btn");
   if (rideBtn) {
-    if (rideMode) { exitRideMode(); return; }
-    const t = lineTrails.find(tr => tr.id === rideBtn.dataset.id);
-    if (t) { if (openTrailId !== t.id) showTrailInfo(t); enterRideMode(); }
+    withRideCooldown(() => {
+      if (rideMode) { exitRideMode(); return; }
+      const t = lineTrails.find(tr => tr.id === rideBtn.dataset.id);
+      if (t) { if (openTrailId !== t.id) showTrailInfo(t); enterRideMode(); }
+    });
   }
 }
 ipContent.addEventListener("click", handleInfoPanelClick);
