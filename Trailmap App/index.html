@@ -157,7 +157,7 @@
           </div>
           <div class="toggle-row-group">
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showNamesToggle"><span class="slider"></span></span>Namen</label>
-            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showPlacesToggle" checked><span class="slider"></span></span>Orte</label>
+            <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showPlacesToggle"><span class="slider"></span></span>Orte</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDirectionArrowsToggle" checked><span class="slider"></span></span>Richtungspfeile</label>
           </div>
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
@@ -1416,9 +1416,10 @@ let showLoop = true; // hides/shows trails flagged loop:true (Trailrunden) — i
 let showDownhill = true; // hides/shows "regular" trails (neither uphill nor loop) — independent of diff
 let showLifts = true; // hides/shows bike lifts (see LIFTS) — one global switch, no per-difficulty axis
 // Village labels used to be unconditional whenever their region was active (user, 2026-07-28: "Können wir
-// eine Kartenoption einbauen um Orte zu filtern"). One global switch, default on, because a `places` entry
-// carries no sub-region — it belongs to a whole region group, so there is nothing finer to filter on.
-let showPlaces = true;
+// eine Kartenoption einbauen um Orte zu filtern"). One global switch, default off (2026-08-17, user), because
+// a `places` entry carries no sub-region — it belongs to a whole region group, so there is nothing finer to
+// filter on.
+let showPlaces = false;
 // Direction arrows (added 2026-07-25) are off by default -- per the user, "so gefallen sie mir noch
 // nicht" (not happy with how they look yet) -- kept in the app as a Kartenoptionen toggle rather than
 // removed outright, in case the look gets refined later. Persisted like the other Kartenoptionen/
@@ -6252,7 +6253,7 @@ function restoreActiveState(){
     if (typeof saved.showLoop !== "boolean") saved.showLoop = true;
     if (typeof saved.showDownhill !== "boolean") saved.showDownhill = true;
     if (typeof saved.showLifts !== "boolean") saved.showLifts = true;
-    if (typeof saved.showPlaces !== "boolean") saved.showPlaces = true;
+    if (typeof saved.showPlaces !== "boolean") saved.showPlaces = false;
     if (typeof saved.liveStatusOpen !== "boolean") saved.liveStatusOpen = true;
     if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = true;
     if (!STRASSE_CONTRAST_FILTERS.hasOwnProperty(saved.strasseContrast)) saved.strasseContrast = "a";
