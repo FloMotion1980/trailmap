@@ -24,9 +24,8 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     if (dialog().classList.contains("visible")) TM.$("#regionDialogClose").click();
     await TM.wait(200);
   };
-  // Each row carries a 📍 fly button and the .rd-toggle; only the latter activates. Selecting on the toggle's
-  // own class rather than "the buttons in the row" matters: the first version picked the 📍 and clicked it,
-  // which flies the map and silently does nothing else -- a test that looked like a failing app.
+  // Each row's only clickable control is now the .rd-toggle (the row's own 📍 fly button was removed
+  // 2026-08-17 -- see the "no locate button in the dialog rows any more" case below).
   const rows = () => TM.$$("#regionDialogList > *").filter((r) => r.querySelector(".rd-toggle"));
   const toggle = (row) => row.querySelector(".rd-toggle");
   const inactiveRows = () => rows().filter((r) => !toggle(r).classList.contains("active"));
@@ -64,6 +63,11 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
           t.click();
           await TM.until(() => !TM.$("#regionDialogList").textContent.includes("Lädt…"), 20000, 200);
           await TM.wait(400);
+          // A successful activation now closes the dialog on its own (2026-08-17) -- reopen it so the NEXT
+          // pass's `rows()` reads a freshly rebuilt list instead of the stale one left behind by a click that
+          // skipped renderRegionDialog() on the way out. The already-clicked nodes in `current` stay usable for
+          // the rest of THIS pass regardless (their handlers close over groupKey/state, not DOM attachment).
+          if (!dialog().classList.contains("visible")) { TM.$("#regionsBtn").click(); await TM.wait(200); }
         }
       }
     }
@@ -290,6 +294,19 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
   T.eq("the limit it publishes is the real one", MAX_GROUPS, 3);
   await closeDialog();
 
+  T.test("no locate button in the dialog rows any more, and the name is not clipped");
+  await openDialog();
+  {
+    const r = rows()[0];
+    T.ok("no .rd-locate-btn left in a row", !r.querySelector(".rd-locate-btn"), false, false);
+    const label = r.querySelector(".rd-label");
+    const cs = getComputedStyle(label);
+    T.ok("the label can wrap instead of being clipped",
+         cs.whiteSpace !== "nowrap" && cs.textOverflow !== "ellipsis",
+         [cs.whiteSpace, cs.textOverflow], "not nowrap/ellipsis");
+  }
+  await closeDialog();
+
   T.test("the header button names exactly the active regions, never a hardcoded list");
   const label = TM.$("#regionsBtn").textContent;
   const groupNames = TM.$$("#regionChips .region-group-label").map((b) => b.textContent.replace(/\s*\(\d+\)\s*$/, "").trim());
@@ -332,9 +349,17 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     paneObserver.observe(TM.$(".leaflet-tooltip-pane") || document.body, { childList: true, subtree: true });
     await openDialog();
     toggle(candidates[0]).click();
+    // showBusy() runs synchronously before activateRegionGroup's first `await fetch(...)`, so the bar is
+    // already lit by the time .click() returns control here -- no polling needed for the "on" half.
+    T.ok("the global busy indicator switches on immediately", TM.$("#globalBusyBar").classList.contains("active"),
+         true, true);
     // Region data is fetched, so wait for the group to actually appear rather than guessing.
     const grew = await TM.until(() => activeGroupCount() === startGroups + 1, 15000, 200);
     T.ok("the new group is active", grew, activeGroupCount(), startGroups + 1);
+    T.ok("...and switches off again once activation settles",
+         !TM.$("#globalBusyBar").classList.contains("active"), false, false);
+    T.ok("a successful activation closes the dialog on its own (2026-08-17)",
+         !dialog().classList.contains("visible"), dialog().classList.contains("visible"), false);
     await TM.wait(600);
     paneObserver.disconnect();
     T.eq("its place labels stayed off, as the switch says", TM.map.placeLabels(), placesOffBefore);

@@ -21,9 +21,15 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=178" />
+<link rel="stylesheet" href="style.css?v=179" />
 </head>
 <body>
+<!-- Global busy indicator (2026-08-17, user): a thin animated bar at the very top of the viewport, shown
+     whenever a region (de)activation or a visibility filter (difficulty/sub-region/uphill-loop-downhill/lifts)
+     is rebuilding the map -- both can iterate hundreds of trail layers (Pfälzer Wald alone has 805) and used to
+     run fully silently, leaving the user staring at an unresponsive app with no sign anything was happening.
+     See showBusy()/hideBusy()/runBusy() further down. -->
+<div id="globalBusyBar" aria-hidden="true"></div>
 <div id="fatalError">
   <div class="box">
     <h2>Karte konnte nicht geladen werden</h2>
@@ -1496,7 +1502,7 @@ function rebuildRegionChips(){
       subKeys.forEach(k => { if (allActive) activeRegions.delete(k); else activeRegions.add(k); });
       persistActiveState();
       rebuildRegionChips();
-      render();
+      runBusy(render);
     });
     groupRow.appendChild(groupLabel);
 
@@ -1512,8 +1518,10 @@ function rebuildRegionChips(){
     closeBtn.title = "Diese Region schließen";
     closeBtn.setAttribute("aria-label", "Region " + groupInfo.label + " schließen");
     closeBtn.addEventListener("click", () => {
-      deactivateRegionGroup(groupKey);   // rebuilds these chips and re-renders on its own
-      if (regionDialogEl.classList.contains("visible")) renderRegionDialog();
+      runBusy(() => {
+        deactivateRegionGroup(groupKey);   // rebuilds these chips and re-renders on its own
+        if (regionDialogEl.classList.contains("visible")) renderRegionDialog();
+      });
     });
 
     // Its own button, with its own generous touch target, so one tap target never does two unrelated things
@@ -1570,7 +1578,7 @@ function rebuildRegionChips(){
         else { activeRegions.add(key); btn.classList.add("active"); btn.style.background = r.color; btn.style.color = "#fff"; }
         syncAllActive(); // keep the group label's filled/outline state in sync with individual chip toggles too
         persistActiveState();
-        render();
+        runBusy(render);
       });
       chipsRow.appendChild(btn);
     });
@@ -1605,7 +1613,7 @@ document.querySelectorAll("#diffChips .chip").forEach(btn => {
     if (activeDiffs.has(d)) { activeDiffs.delete(d); btn.classList.remove("active"); }
     else { activeDiffs.add(d); btn.classList.add("active"); }
     persistActiveState();
-    render();
+    runBusy(render);
   });
 });
 
@@ -1623,25 +1631,25 @@ document.getElementById("showDirectionArrowsToggle").addEventListener("change", 
 document.getElementById("showUphillToggle").addEventListener("change", (e) => {
   showUphill = e.target.checked;
   persistActiveState();
-  render();
+  runBusy(render);
 });
 
 document.getElementById("showLoopToggle").addEventListener("change", (e) => {
   showLoop = e.target.checked;
   persistActiveState();
-  render();
+  runBusy(render);
 });
 
 document.getElementById("showDownhillToggle").addEventListener("change", (e) => {
   showDownhill = e.target.checked;
   persistActiveState();
-  render();
+  runBusy(render);
 });
 
 document.getElementById("showLiftsToggle").addEventListener("change", (e) => {
   showLifts = e.target.checked;
   persistActiveState();
-  render();
+  runBusy(render);
 });
 
 document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
@@ -1945,6 +1953,49 @@ function closeSidebar(){
   asideEl.classList.remove('open');
   sidebarBackdrop.classList.remove('visible');
   syncSearchFieldLocation();
+}
+
+// ---- Global busy indicator (2026-08-17) ----
+// A region (de)activation or a visibility filter (difficulty/sub-region/uphill-loop-downhill/lifts toggle) can
+// each rebuild hundreds of map layers via render()/activateRegionGroup/deactivateRegionGroup -- Pfälzer Wald
+// alone has 805 trails -- and none of that ever showed any feedback; the app just looked frozen for however
+// long it took (user: "es ist für den Nutzer eine Wartezeit, in der er die Applikation nicht nutzen kann").
+// A counter, not a boolean, because two of these can overlap in principle (e.g. a filter toggle firing while a
+// region fetch is still in flight) -- the bar should stay visible until the LAST one finishes, not disappear
+// the moment either one does.
+const globalBusyBarEl = document.getElementById("globalBusyBar");
+let busyDepth = 0;
+function showBusy(){
+  busyDepth++;
+  globalBusyBarEl.classList.add("active");
+}
+function hideBusy(){
+  busyDepth = Math.max(0, busyDepth - 1);
+  if (busyDepth === 0) globalBusyBarEl.classList.remove("active");
+}
+// For synchronous work (deactivateRegionGroup, render() from a filter toggle): showBusy() alone is not enough,
+// because the browser never gets a chance to actually PAINT the bar before a long synchronous call blocks the
+// main thread right behind it -- the indicator and the freeze would start on the same frame, defeating the
+// point. Two nested rAFs guarantee at least one real paint (the first rAF fires before the next paint but
+// after the current one is scheduled; the second is what actually runs after that paint lands) between
+// showing the bar and running `fn`, PROVIDED the tab is actually visible/foregrounded -- a backgrounded or
+// unfocused tab throttles/withholds rAF callbacks (the same effect `tests/README.md` already documents for
+// Leaflet's tooltip-fade timers: "a hidden tab throttles its timers to ~1/minute"), which would otherwise
+// leave a filter toggle stuck for as long as the tab stays out of focus. The 100ms `setTimeout` is a fallback
+// that fires regardless of visibility, so `run` always happens within a bounded time either way; the `done`
+// guard stops it firing twice if both timers land. Async work (activateRegionGroup's own fetch) doesn't need
+// this trick -- the network wait already yields to the event loop, so a plain showBusy()/hideBusy() pair
+// around the await is enough there.
+function runBusy(fn){
+  showBusy();
+  let done = false;
+  const run = () => {
+    if (done) return;
+    done = true;
+    try { fn(); } finally { hideBusy(); }
+  };
+  requestAnimationFrame(() => requestAnimationFrame(run));
+  setTimeout(run, 100);
 }
 // Touch-only in effect, not just in appearance (2026-08-09, found by the user right after the title became
 // permanently visible on desktop too): the click handler itself used to run on every layout, so a desktop
@@ -6294,6 +6345,7 @@ async function activateRegionGroup(groupKey){
   const catalogEntry = REGION_CATALOG[groupKey];
   if (!catalogEntry) return "unknown-region";
 
+  showBusy(); // covers the fetch AND the layer-building below -- hidden in the `finally` further down
   const promise = (async () => {
     let data;
     try {
@@ -6337,6 +6389,7 @@ async function activateRegionGroup(groupKey){
     return await promise;
   } finally {
     delete pendingActivation[groupKey];
+    hideBusy();
   }
 }
 
@@ -6445,7 +6498,7 @@ function renderRegionSlots(){
     drop.textContent = "✕";
     drop.title = "Diese Region schließen";
     drop.setAttribute("aria-label", REGION_CATALOG[key].label + " schließen");
-    drop.addEventListener("click", () => { deactivateRegionGroup(key); renderRegionDialog(); });
+    drop.addEventListener("click", () => { runBusy(() => { deactivateRegionGroup(key); renderRegionDialog(); }); });
     slot.appendChild(drop);
     regionSlotsEl.appendChild(slot);
   }
@@ -6519,46 +6572,48 @@ function buildRegionRow(groupKey, entry, atLimit){
     }
     row.appendChild(info);
 
-    // Lets you peek at where a region actually is before deciding to activate it (or just re-locate
-    // one that's already active) straight from this dialog, without closing it first -- the dialog's
-    // own backdrop is a translucent overlay (not fully opaque), so the map really is visible moving
-    // underneath. Added 2026-07-25 per the user: the sidebar's own region-group fly button does the
-    // same thing once a region is active, but isn't discoverable ("nicht eingängig") for someone who
-    // hasn't activated anything yet -- this dialog is the first thing every user sees.
-    const locateBtn = document.createElement("button");
-    locateBtn.className = "rd-locate-btn";
-    locateBtn.textContent = "📍";
-    locateBtn.title = "Zu dieser Region springen";
-    locateBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      flyToTrailBounds(L.latLngBounds(entry.bounds));
-    });
-    row.appendChild(locateBtn);
+    // The dialog's own 📍 fly button was removed 2026-08-17 (user) -- the sidebar's own
+    // .region-group-fly-btn already does this once a region is active, and activating one now flies
+    // there automatically (see below), so this was a second control doing a job the flow no longer needs.
 
     const isActive = activeRegionGroups.has(groupKey);
     const isPending = !!pendingActivation[groupKey];
     const btn = document.createElement("button");
-    btn.className = "rd-toggle" + (isActive ? " active" : "");
+    btn.className = "rd-toggle" + (isActive ? " active" : "") + (isPending ? " is-loading" : "");
     btn.textContent = isPending ? "Lädt…" : (isActive ? "Aktiv" : "Aktivieren");
     btn.disabled = isPending || (!isActive && atLimit);
     btn.addEventListener("click", async () => {
       if (isActive) {
-        deactivateRegionGroup(groupKey);
-        renderRegionDialog();
+        runBusy(() => {
+          deactivateRegionGroup(groupKey);
+          renderRegionDialog();
+        });
         return;
       }
       btn.disabled = true;
       btn.textContent = "Lädt…";
+      btn.classList.add("is-loading");
       const result = await activateRegionGroup(groupKey);
       if (result === "fetch-failed") {
         regionActivationErrors[groupKey] = (location.protocol === "file:")
           ? "Laden fehlgeschlagen — diese Seite muss über einen lokalen Server (nicht als Datei geöffnet) laufen, damit Regionen nachgeladen werden können."
           : "Laden fehlgeschlagen — offline oder Netzwerkfehler.";
-      } else if (result === "activated") {
+        renderRegionDialog();
+        return;
+      }
+      if (result === "activated") {
         delete regionActivationErrors[groupKey];
-        // Same jump the dialog's own 📍 button already does -- per the user, activating a region should
+        // Same jump the dialog's own 📍 button used to do -- per the user, activating a region should
         // land you looking at it, not leave the map wherever it happened to be before (2026-08-02).
         flyToTrailBounds(L.latLngBounds(entry.bounds));
+        // Closes the dialog (and, on a phone, the drawer it lives in) once a region has actually
+        // finished loading (user, 2026-08-17: "Nach erfolgreichem Laden schließt sich die
+        // Regionsauswahl") -- activating used to leave you staring at the still-open list you just
+        // finished with. Only on success: a failed fetch keeps the dialog open so the inline error above
+        // is visible, and "already-active"/"limit-reached"/"unknown-region" never reach this branch.
+        regionDialogEl.classList.remove("visible");
+        if (isMobileLayout() && asideEl.classList.contains("open")) closeSidebar();
+        return;
       }
       renderRegionDialog();
     });
@@ -7601,7 +7656,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v178"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v179"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

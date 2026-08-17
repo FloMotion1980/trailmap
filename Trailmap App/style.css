@@ -15,6 +15,25 @@
   --select-yellow: #fff200;
   --card-bg: #ffffff;
 }
+/* Global busy indicator (2026-08-17) -- see the HTML comment above #globalBusyBar for why. Fixed at the very
+   top of the viewport, above everything (z-index above the region dialog's own 3000-ish stack) so it's visible
+   whether the dialog is open or not -- filter toggles that trigger it live in the sidebar, not the dialog. An
+   indeterminate sweep (not a real progress percentage) since none of the triggering operations expose a byte-
+   or item-count progress cheaply enough to be worth wiring up -- see runBusy()/showBusy() in index.html. */
+#globalBusyBar{
+  position:fixed; top:0; left:0; width:100%; height:3px; z-index:4000;
+  background:transparent; overflow:hidden; opacity:0; pointer-events:none;
+  transition:opacity .15s ease;
+}
+#globalBusyBar.active{ opacity:1; }
+#globalBusyBar::before{
+  content:""; position:absolute; top:0; left:-35%; width:35%; height:100%;
+  background:var(--rust-light); animation:tm-busy-sweep 1.1s ease-in-out infinite;
+}
+@keyframes tm-busy-sweep{
+  0%{ left:-35%; }
+  100%{ left:100%; }
+}
 *{ box-sizing:border-box; }
 html,body{ margin:0; padding:0; height:100%; background:var(--paper); color:var(--ink);
   font-family: 'Iowan Old Style','Palatino Linotype',Georgia,serif; }
@@ -1156,8 +1175,10 @@ html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
 }
 .region-dialog-row:last-child{ border-bottom:none; }
 .rd-info{ flex:1; min-width:0; }
-.rd-label{ font-size:14px; font-weight:600; color:var(--ink);
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+/* Wraps instead of clipping (2026-08-17, user: "Der Name einer Region sollte komplett angezeigt werden") --
+   a region's full label matters more here than a tidy single line, and .rd-info is already flex:1 with its
+   own min-width:0, so a longer name just grows the row's height instead of overflowing. */
+.rd-label{ font-size:14px; font-weight:600; color:var(--ink); }
 .rd-count{ font-size:11.5px; color:var(--stone); margin-top:1px; }
 .rd-error{ font-size:11px; color:var(--rust); margin-top:2px; }
 .rd-toggle{
@@ -1167,11 +1188,17 @@ html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
 }
 .rd-toggle.active{ background: var(--forest); color:#fff; }
 .rd-toggle:disabled{ opacity:0.45; cursor:default; }
-.rd-locate-btn{
-  flex-shrink:0; border:none; background:none; cursor:pointer; font-size:17px; line-height:1;
-  padding:6px; border-radius:50%;
+/* Loading state (2026-08-17): a diagonal sweeping stripe reads as "still working" rather than just a dimmed,
+   inert-looking button -- the same "Lädt…" text stays, this just gives it visible motion, most noticeable on
+   a slow region like Pfälzer Wald (805 trails) where the plain disabled/dimmed state used to look identical
+   whether it was about to finish in 200ms or was still 4s away. */
+.rd-toggle.is-loading{
+  background: repeating-linear-gradient(45deg, var(--forest) 0 8px, #3c5c48 8px 16px);
+  background-size: 200% 200%;
+  color:#fff; opacity:1; border-color:var(--forest);
+  animation: rd-toggle-sweep 1s linear infinite;
 }
-.rd-locate-btn:hover{ background:#e4ece0; }
+@keyframes rd-toggle-sweep{ from{ background-position:0 0; } to{ background-position:-32px 0; } }
 .region-dialog-limit-note{ font-size:11.5px; color:var(--rust); margin:2px 0 10px; display:none; }
 .region-dialog-limit-note.visible{ display:block; }
 @media (max-width: 768px), (pointer: coarse){
