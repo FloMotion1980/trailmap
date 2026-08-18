@@ -127,29 +127,13 @@
     cardNamed: (list, re) => TM.ui[list]().find((c) => re.test(c.textContent)),
     names: (list) => TM.ui[list]().map((c) => c.querySelector(".trail-name").textContent.replace("👁", "").trim()),
     hubTitles: (sel) => TM.$$(sel + " .hub-title").map((e) => e.textContent.trim()),
-    // A filter toggle that actually rebuilds the map (uphill/loop/downhill/lifts, difficulty chips) now defers
-    // its render() through the global busy indicator (2026-08-17, see runBusy() in index.html) instead of
-    // running it in the same tick -- waiting for #globalBusyBar to clear, rather than a flat delay, is what
-    // keeps this robust regardless of how long that particular render() takes (e.g. with several regions
-    // active at once). Toggles that don't call render() at all (Namen, Richtungspfeile, Orte) just never light
-    // the bar, so this resolves immediately for them.
-    waitForBusy: () => TM.until(() => !TM.$("#globalBusyBar").classList.contains("active"), 15000, 50),
     setSwitch: async function (id, on) {
       const box = TM.$("#" + id);
-      if (box.checked !== on) {
-        box.click();
-        await TM.until(() => box.checked === on, 1500);
-        await TM.ui.waitForBusy();
-        await TM.wait(180);
-      }
+      if (box.checked !== on) { box.click(); await TM.until(() => box.checked === on, 1500); await TM.wait(180); }
     },
     setDiff: async function (d, on) {
       const chip = TM.$('#diffChips [data-diff="' + d + '"]');
-      if (chip.classList.contains("active") !== on) {
-        chip.click();
-        await TM.ui.waitForBusy();
-        await TM.wait(200);
-      }
+      if (chip.classList.contains("active") !== on) { chip.click(); await TM.wait(200); }
     },
     builderMode: async function (on) {
       const isOn = TM.$("#builderSheet").classList.contains("visible");

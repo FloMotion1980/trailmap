@@ -349,15 +349,9 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     paneObserver.observe(TM.$(".leaflet-tooltip-pane") || document.body, { childList: true, subtree: true });
     await openDialog();
     toggle(candidates[0]).click();
-    // showBusy() runs synchronously before activateRegionGroup's first `await fetch(...)`, so the bar is
-    // already lit by the time .click() returns control here -- no polling needed for the "on" half.
-    T.ok("the global busy indicator switches on immediately", TM.$("#globalBusyBar").classList.contains("active"),
-         true, true);
     // Region data is fetched, so wait for the group to actually appear rather than guessing.
     const grew = await TM.until(() => activeGroupCount() === startGroups + 1, 15000, 200);
     T.ok("the new group is active", grew, activeGroupCount(), startGroups + 1);
-    T.ok("...and switches off again once activation settles",
-         !TM.$("#globalBusyBar").classList.contains("active"), false, false);
     T.ok("a successful activation closes the dialog on its own (2026-08-17)",
          !dialog().classList.contains("visible"), dialog().classList.contains("visible"), false);
     await TM.wait(600);

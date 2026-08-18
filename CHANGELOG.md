@@ -27,8 +27,7 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   module-level `let showPlaces` default, and `restoreActiveState()`'s fallback for an old saved state that
   predates the field. A user who already switched it on/off explicitly keeps that choice either way — only the
   brand-new-visitor default changed.
-- **Optimized the region picker (`#regionDialog`) and added a global busy indicator for slow filter rebuilds**
-  (user feedback, several points at once):
+- **Optimized the region picker (`#regionDialog`)** (user feedback, several points at once):
   - Removed the dialog row's own 📍 fly button (`.rd-locate-btn`) — the sidebar's `.region-group-fly-btn`
     already does this once a region is active, and activating one now flies there automatically anyway, so it
     was a second control for a job the flow no longer needs.
@@ -36,27 +35,24 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
     `white-space:nowrap`/`overflow:hidden`/`text-overflow:ellipsis`) — it wraps instead.
   - **Activating a region now closes the dialog itself once loading actually finishes** (and, on a phone,
     closes the drawer it lives in) — it used to leave the just-finished list sitting open. Only on success: a
-    failed fetch keeps the dialog open so the inline error stays visible.
-  - **New global busy indicator** (`#globalBusyBar`, a thin animated bar fixed at the top of the viewport):
-    shown for any operation that can rebuild hundreds of map layers with no other feedback — region
-    activate/deactivate (Pfälzer Wald alone has 805 trails) and the difficulty/sub-region/uphill-loop-downhill/
-    lifts visibility toggles. `showBusy()`/`hideBusy()` track a depth counter (not a boolean, so two overlapping
-    operations don't hide the bar early); `runBusy(fn)` additionally defers a *synchronous* rebuild (`render()`,
-    `deactivateRegionGroup()`) via `requestAnimationFrame` so the bar actually gets to paint before the
-    blocking work starts, with a 100ms `setTimeout` fallback for when the tab is backgrounded/unfocused and rAF
-    callbacks are throttled or withheld (found while testing this exact feature — a rAF-only version stalled
-    every filter toggle for as long as the tab stayed out of focus). The dialog's own "Aktivieren" button also
-    got a `.is-loading` sweep animation while pending, on top of the existing "Lädt…" text.
+    failed fetch keeps the dialog open so the inline error stays visible. The dialog's own "Aktivieren" button
+    also got a `.is-loading` sweep animation while pending, on top of the existing "Lädt…" text.
   - `tests/browser/regions.js`: new case "no locate button in the dialog rows any more, and the name is not
-    clipped"; the "activating a third region works…" case now also asserts the busy bar switches on
-    immediately on click and off again once activation settles, and that a successful activation closes the
-    dialog on its own. `restoreRegions()`'s own cleanup loop had to learn to reopen the dialog after a click
+    clipped"; the "activating a third region works…" case now also asserts that a successful activation closes
+    the dialog on its own. `restoreRegions()`'s own cleanup loop had to learn to reopen the dialog after a click
     that closed it, since it used to assume the dialog stayed open across every click in a pass.
-    `tests/browser/_harness.js`: `TM.ui.setSwitch`/`setDiff` now wait for `#globalBusyBar` to clear (new
-    `TM.ui.waitForBusy()`) instead of a flat delay, since a toggle's `render()` can now finish anywhere from a
-    couple of frames to however long a big rebuild takes.
-  - Style version bumped (`style.css?v=179`, `CACHE_NAME`/`PRELOAD_CACHE_NAME` → `trailmap-v179`) for the new
-    `#globalBusyBar`/`.rd-toggle.is-loading` rules and the `.rd-label` wrap fix.
+  - Style version bumped (`style.css?v=180`, `CACHE_NAME`/`PRELOAD_CACHE_NAME` → `trailmap-v180`) for the
+    `.rd-toggle.is-loading` rule and the `.rd-label` wrap fix.
+  - **Tried and reverted the same day: a global "busy bar" indicator** (`#globalBusyBar`, a thin animated bar at
+    the top of the viewport) meant to cover region (de)activation and the difficulty/sub-region/
+    uphill-loop-downhill/lifts visibility toggles, which can each rebuild hundreds of map layers with no other
+    feedback (Pfälzer Wald alone has 805 trails). Removed after the user tested it on phone and desktop: the
+    sweep animation barely showed — most of these rebuilds finish faster than its 1.1s animation cycle, so it
+    read as one unreliable, barely-visible flash of colour rather than a genuine progress indicator, not worth
+    keeping. Worth remembering if this is revisited: a `requestAnimationFrame`-only version of the deferral this
+    relied on (to let the browser paint the bar before a long synchronous rebuild blocks the main thread) also
+    stalled every filter toggle for as long as the tab was backgrounded/unfocused — rAF callbacks are throttled
+    or withheld then, the same effect `tests/README.md` documents for Leaflet's own tooltip-fade timers.
 
 ## 2026-08-16
 - **Fixed a real app-crashing bug the user hit repeatedly on their phone: toggling RIDE mode (or "Blickrichtung
