@@ -8,17 +8,27 @@
 // cannot answer. Bump CACHE_NAME only to force every cached asset to be re-fetched. v6-v15 were all
 // "style.css changed" bumps, back when the URL was constant -- and the last of those did not reach the
 // user's phone, which left the pinned builder sheet invisible there (2026-07-27).
-const CACHE_NAME = "trailmap-v180";
+const CACHE_NAME = "trailmap-v181";
 // Must stay identical to the href of the <link rel="stylesheet"> in index.html.
-const STYLE_URL = "./style.css?v=180";
+const STYLE_URL = "./style.css?v=181";
 // Same deal as STYLE_URL, for the vendored map-rotation plugin: cache-first with a version in the URL, and
 // precached below so it is there on a first-ever offline visit. Must match the <script> src in index.html.
 const ROTATE_URL = "./leaflet-rotate.js?v=1";
+// Must match the <link rel="manifest"> href in index.html.
+const MANIFEST_URL = "./manifest.json?v=1";
 const APP_SHELL = [
   "./",
   "./index.html",
   STYLE_URL,
   ROTATE_URL,
+  MANIFEST_URL,
+  // Home-screen icons (2026-08-18) -- precached so adding the app to the home screen still works offline,
+  // same reasoning as the default region below. iOS's apple-touch-icon links point at these same paths.
+  "./icons/icon-120.png",
+  "./icons/icon-152.png",
+  "./icons/icon-167.png",
+  "./icons/icon-180.png",
+  "./icons/icon-192.png",
   "./regions/paznaun.json" // default region on a first-ever visit — precached so it works offline
                             // immediately; other regions are cached opportunistically (cache-first
                             // fetch handler below) once the user activates them via the region dialog.
