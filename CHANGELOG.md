@@ -21,6 +21,15 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-20
+- **„Kurztour 1 – Rodalben" vollständig geschlossen: alle 25 Segment-Lücken, 32,98 km**, 0 m abseits
+  gemappter Wege. Dritte Tour mit `nearbyTrailConnector`, und die erste, die das Verfahren breiter
+  beansprucht: 17× ein verketteter Weg erreicht beide Seiten, 6× Schnittpunkt zweier Wege, 2× Weg folgen +
+  Trail kappen, 1× Wegekette. Vier auffällige Stellen wurden gesondert vorgelegt und bestätigt (Brücke mit
+  Faktor 3,7; eine Kappung von 164 m gegen 351 m ohne Kappung; eine Kappung von 200 m ohne Alternative; eine
+  219-m-Lücke im Hin-und-zurück-Muster). Fall 4 (Projektion) kam auch hier nicht vor — dessen Grenzwerte
+  bleiben nur an Rodalben Felsentrails geprüft.
+
 ## 2026-08-19
 - **Zwei neue Regionen: Nordvogesen (483 Trails, 592 km) und Südvogesen (474 Trails, 533 km)** — zusammen
   957 Trails, 44 Orte, 2 Lifte, aus **Trailforks' eigenem `encodedpath` plus dem `ElevationChart`, das
@@ -65,15 +74,6 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   Region gegen alle anderen auf gemeinsames Gelände. Fand drei Nordvogesen-Trails, die vier
   Pfälzerwald-Stücke vollständig enthalten (derselbe Waldrücken beidseits der Grenze); nach Entscheidung
   des Nutzers behält der Pfälzerwald seine, die drei sind aus Nordvogesen entfernt.
-
-## 2026-08-20
-- **„Kurztour 1 – Rodalben" vollständig geschlossen: alle 25 Segment-Lücken, 32,98 km**, 0 m abseits
-  gemappter Wege. Dritte Tour mit `nearbyTrailConnector`, und die erste, die das Verfahren breiter
-  beansprucht: 17× ein verketteter Weg erreicht beide Seiten, 6× Schnittpunkt zweier Wege, 2× Weg folgen +
-  Trail kappen, 1× Wegekette. Vier auffällige Stellen wurden gesondert vorgelegt und bestätigt (Brücke mit
-  Faktor 3,7; eine Kappung von 164 m gegen 351 m ohne Kappung; eine Kappung von 200 m ohne Alternative; eine
-  219-m-Lücke im Hin-und-zurück-Muster). Fall 4 (Projektion) kam auch hier nicht vor — dessen Grenzwerte
-  bleiben nur an Rodalben Felsentrails geprüft.
 
 ## 2026-08-17
 - **„Kurztour 1 – Leimen" vollständig geschlossen: alle 14 Segment-Lücken, 23,66 km** — erste Anwendung von

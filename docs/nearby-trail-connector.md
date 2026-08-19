@@ -236,6 +236,21 @@ tragende Schritt ist: sobald eine Straße als Ganzes sichtbar ist, erreicht sie 
 Fall 4 und 5 wurden hier gar nicht gebraucht, ebenso keine Verhältnismäßigkeits-Ablehnung — die noch
 unbewährten Grenzwerte (`PROJ_MIN_SECOND_M`, die 15-m-Schwellen) sind also weiterhin nur an Rodalben geprüft.
 
+## Dritte Tour: „Kurztour 1 – Rodalben" (2026-08-20)
+
+**Alle 25 Lücken geschlossen, 32,98 km, weglos 0 m.** Vom Nutzer bestätigt. Verteilung: 17× Fall 1, 6× Fall 3,
+2× Fall 2, 1× Fall 5.
+
+Diese Tour hat das Verfahren erstmals breiter beansprucht als Leimen — **Fall 3 (Schnittpunkt) sechsmal und
+Fall 5 (Wegekette) einmal**, bei Leimen beide gar nicht. Vier Stellen wurden dem Nutzer gesondert vorgelegt
+und bestätigt: eine 184-m-Brücke bei 50 m Lücke (Faktor 3,7), eine mit 164 m Kappung gegen eine Alternative
+mit 351 m ohne Kappung, eine mit 200 m Kappung **ohne jede Alternative** (derselbe Trail und dieselbe Gegend
+wie `seg0` der Felsentrails, wo dasselbe Muster bestätigt wurde), und eine 219-m-Lücke im
+Hin-und-zurück-Muster.
+
+**Fall 4 (Projektion) blieb auch hier ungenutzt** — seine Grenzwerte (`PROJ_MIN_SECOND_M`, `PROJ_MAX_MEAN_M`)
+sind damit weiterhin nur an Rodalben Felsentrails geprüft.
+
 ## Offen
 
 - **Andere Trailrunden.** Bisher nur `pw_rodalben_felsentrails` behandelt; jede andere Tour mit
