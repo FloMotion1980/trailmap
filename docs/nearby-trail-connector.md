@@ -224,6 +224,18 @@ Einzelabfrage pro Lücke zurück (20–80 s pro Fall statt 0,9 s für vier).
 
 ---
 
+## Zweite Tour: „Kurztour 1 – Leimen" (2026-08-17)
+
+Erste Anwendung auf eine Tour, mit der das Verfahren nicht entwickelt wurde. **Alle 14 Lücken geschlossen,
+23,66 km, weglos 0 m, kein einziges Mal gekappt — 14 von 14 über Fall 1**, ohne dass ein Grenzwert angefasst
+werden musste. Vom Nutzer bestätigt („Sieht perfekt aus").
+
+Die Tour hat einen anderen Charakter als Rodalben (Wanderweg-Abschnitte statt MTB-Trails, Lücken bis 185 m)
+und trotzdem greift dasselbe Muster. Das stützt die Vermutung, dass das **Verketten der Way-Objekte** der
+tragende Schritt ist: sobald eine Straße als Ganzes sichtbar ist, erreicht sie meist beide Lücken-Enden.
+Fall 4 und 5 wurden hier gar nicht gebraucht, ebenso keine Verhältnismäßigkeits-Ablehnung — die noch
+unbewährten Grenzwerte (`PROJ_MIN_SECOND_M`, die 15-m-Schwellen) sind also weiterhin nur an Rodalben geprüft.
+
 ## Offen
 
 - **Andere Trailrunden.** Bisher nur `pw_rodalben_felsentrails` behandelt; jede andere Tour mit

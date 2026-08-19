@@ -22,6 +22,11 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-17
+- **„Kurztour 1 – Leimen" vollständig geschlossen: alle 14 Segment-Lücken, 23,66 km** — erste Anwendung von
+  `nearbyTrailConnector` auf eine Tour, mit der das Verfahren nicht entwickelt wurde. 14 von 14 Lücken über
+  den einfachsten Fall (ein verketteter OSM-Weg erreicht beide Seiten), 0 m abseits gemappter Wege, kein
+  Trail gekappt, kein Grenzwert angepasst. Bestätigt die Vermutung, dass das Zusammenfügen der OSM-Way-Objekte
+  der tragende Schritt ist. Siehe `docs/nearby-trail-connector.md`.
 - **Reworked the "Orte" map option to default off** (user preference). `showPlaces` now starts `false` in three
   places that all had to move together: the `#showPlacesToggle` checkbox's own `checked` attribute, the
   module-level `let showPlaces` default, and `restoreActiveState()`'s fallback for an old saved state that
