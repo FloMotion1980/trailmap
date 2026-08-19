@@ -42,10 +42,50 @@ TOWN_MAX_KM = 5.0
 VILLAGE_MAX_KM = 2.5
 HAMLET_MAX_KM = 1.2
 MAX_PLACES = 10
+#: Two kept labels must be at least this far apart. Without it the population ranking hands a whole
+#: agglomeration's suburbs a place each -- Suedvogesen gave six of its slots to Mulhouse/Illzach/
+#: Kingersheim/Pfastatt/Lutterbach/Richwiller, which on screen is one blob and costs six mountain
+#: villages their label. The higher-ranked of a close pair wins, which is why this is applied after the
+#: sort rather than during it.
+MIN_SEPARATION_KM = 4.0
+#: Per-region override of MAX_PLACES. The default suits a resort-sized region (Brandnertal is 3x4 km);
+#: it does not suit one that spans a whole massif, where ten labels leave most sub-regions anonymous.
+#: Keyed by region, with the reason, so the numbers stay arguable instead of arbitrary.
+MAX_PLACES_BY_REGION = {
+    # 483 trails over 115 x 80 km and 7 sub-regions from Wissembourg to Ribeauville. The Pfaelzerwald
+    # next door carries 27 labels for a comparable trail count and a smaller area.
+    "nordvogesen": 22,
+    # 475 trails over 85 x 65 km and 9 sub-regions, from Colmar to the Ballon d'Alsace and out to Epinal.
+    "suedvogesen": 22,
+}
 MIN_VILLAGE_POP = 600     # see the note below
 KNOWN_MAX_KM = 2.0        # for places that carry a wikidata/wikipedia tag but are small
 RANK = {"city": 0, "town": 1, "village": 2, "hamlet": 3}
 BBOX_MARGIN_DEG = 0.06          # ~6 km, so a town just outside the trails' box can still qualify
+
+
+def build_script_labels(key):
+    """Sub-region labels from `tools/build_<key>.py`'s own SUBREGIONS table.
+
+    For a region that is fully built but not yet in REGION_CATALOG -- which is the normal state while
+    index.html is being worked on elsewhere -- the build script is the authoritative statement of what the
+    sub-regions are called. Without this the catalog lookup returns nothing, and every "named after one of
+    the region's own sub-regions" qualifier silently stops firing, which is exactly the check that keeps
+    the useful villages and drops the farmsteads.
+    """
+    try:
+        mod = __import__("build_" + key)
+    except Exception:
+        return []
+    subs = getattr(mod, "SUBREGIONS", None) or {}
+    labels = []
+    for entry in subs.values():
+        label = entry[0] if isinstance(entry, (list, tuple)) else entry
+        # "Barr / Mont Sainte-Odile" and "Kaysersberg / Lac Blanc" name two things each; split them, or
+        # the substring test only ever matches the first.
+        labels.extend(part.strip() for part in str(label).replace("(", "/").replace(")", "/").split("/")
+                      if part.strip())
+    return labels
 
 
 def sub_region_labels(key):
@@ -94,7 +134,7 @@ def fetch_places(data):
     return overpass(query)["elements"]
 
 
-def pick(data, elements, sub_labels, allow_hamlets):
+def pick(data, elements, sub_labels, allow_hamlets, cap=None):
     """Which OSM place nodes deserve a label on this region's map.
 
     Distance alone is not enough. Austria in particular tags a lot of tiny hamlet-sized settlements as
@@ -153,7 +193,15 @@ def pick(data, elements, sub_labels, allow_hamlets):
     # Sub-region namesakes first, then bigger before smaller, then nearer before further: what survives the
     # cap should be what a rider would use to orient themselves.
     out.sort(key=lambda p: (not p["_named"], RANK[p["_kind"]], -p["_pop"], p["_km"]))
-    return out[:MAX_PLACES]
+    kept = []
+    for cand in out:
+        if len(kept) >= (cap or MAX_PLACES):
+            break
+        if any(haversine_m((cand["lat"], cand["lng"]), (k["lat"], k["lng"])) / 1000.0
+               < MIN_SEPARATION_KM for k in kept):
+            continue
+        kept.append(cand)
+    return kept
 
 
 def main(argv):
@@ -172,10 +220,11 @@ def main(argv):
         except Exception as err:
             print("%-16s OVERPASS FAILED: %s" % (key, err))
             continue
-        labels = sub_region_labels(key) or [key]
-        picked = pick(data, elements, labels, allow_hamlets=False)
+        labels = sub_region_labels(key) or build_script_labels(key) or [key]
+        cap = MAX_PLACES_BY_REGION.get(key, MAX_PLACES)
+        picked = pick(data, elements, labels, allow_hamlets=False, cap=cap)
         if len(picked) < 2:      # a park whose valley village is tagged as a hamlet would end up empty
-            picked = pick(data, elements, labels, allow_hamlets=True)
+            picked = pick(data, elements, labels, allow_hamlets=True, cap=cap)
         print("%-16s %2d von %3d Kandidaten: %s" % (
             key, len(picked), len(elements),
             ", ".join("%s (%s, %.1f km, pop %d%s%s)" % (

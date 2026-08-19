@@ -21,6 +21,60 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-19
+- **Zwei neue Regionen: Nordvogesen (483 Trails, 592 km) und Südvogesen (474 Trails, 533 km)** — zusammen
+  957 Trails, 44 Orte, 2 Lifte, aus **Trailforks' eigenem `encodedpath` plus dem `ElevationChart`, das
+  jede Trail-Seite einbettet**, geerntet durch das eingeloggte Chrome des Nutzers. Dieses Profil bringt
+  lat/lng **und echte Höhe und** die kumulierte Distanz pro Punkt mit, deshalb brauchte keine der beiden
+  Regionen eine Elevation-API — und weil Trailforks dieselbe Linie damit zweimal ausliefert (Polyline +
+  Profil), prüft jeder Build beide Längen gegeneinander: alle 957 stimmen auf 60 m. `build_harz.py`s
+  Docstring behauptet noch, Trailforks binde kein Profil ein; das gilt nicht mehr. Quelldaten in
+  `Material/Vogesen/`, Details in `docs/nordvogesen.md` und `docs/suedvogesen.md`.
+- **Zwei Erntefehler gefunden, die still bleiben würden** — beide gelten für jede künftige
+  Trailforks-Region: (1) die `difficulty=`-Liste der Tabellen-URL muss **jeden** Code nennen, denn
+  **Code 10 ist `Severe / Black`** — ohne ihn fehlte die komplette schwarze Stufe, 38 Trails, darunter alle
+  8 schwarzen in Barr (derselbe Fehler wie bei Finale, zum zweiten Mal; eine ungefilterte URL ist nicht der
+  Ausweg, sie liefert *weniger* Zeilen). (2) Die Kind-Regionen-Liste einer Trailforks-Eltern-Region ist
+  **nicht vollständig**: neun Gemeinden hatten keinen Link, darunter Gérardmer und der komplette Bikepark
+  du Markstein — nur gefunden, indem die abgeschnittene Département-Tabelle gegen die Vereinigung der
+  Kinder gediffed wurde.
+- **Regionsgrenze aus einer gezeichneten Linie** — der Nutzer hat die Trennung zwischen Nord und Süd auf
+  einem Trailforks-Screenshot eingezeichnet; `tools/vogesen_boundary.py` rechnet sie in eine Regel um
+  (Pixel-Transformation aus bekannten Orten gefittet, ca. ±4 km genau) und jeder Build prüft jeden Trail
+  dagegen. Das hat drei echte Platzierungsfehler gefunden: sechs Trails 65 km neben ihrer Klammer
+  (Trailforks' `dambach` ist Dambach-Neunhoffen, nicht Dambach-la-Ville), einen Trail, den der
+  Schwerpunkt-Fallback 38 km auf die falsche Seite gezwungen hatte, und einen Trail, dessen zwei Hälften in
+  zwei verschiedenen Regionen lagen.
+- **Bikepark-Schwierigkeiten von den Betreiberseiten** (Standing Rule) für Lac Blanc und La Bresse: 16
+  Trails geprüft, **eine Änderung** (Lac Blancs `La FAT` ist *rouge/noir* → schwarz). Markstein bleibt auf
+  Trailforks, weil die als offiziell geführte Betreiberseite heute eine Alterssperre statt eines Bikeparks
+  liefert. **2 Lifte**: Montjoie (Lac Blanc) und Vologne Express (La Bresse), über `tools/add_lifts.py`;
+  Markstein bekommt bewusst keinen, da OSM dort keinen Sessellift kennt.
+- **44 Orte** über `tools/add_region_places.py`, das dafür drei allgemeine Erweiterungen bekam:
+  Sub-Region-Labels aus dem Build-Skript, wenn die Region noch nicht im Katalog steht; `MAX_PLACES` pro
+  Region überschreibbar (10 passt zu einem Resort, nicht zu einem Massiv); und ein **Mindestabstand von
+  4 km zwischen zwei Labels** — ohne den vergab Südvogesen sechs seiner 22 Plätze an die Agglomeration
+  Mulhouse, weil ein Vorort mit 10 000 Einwohnern ein Bergdorf mit 4 000 überholt. Dieselbe Suche legte
+  einen Datenfehler offen: drei dieser Labels hingen an einem einzigen flachen Trail in Mulhouses
+  Stadtwald, 23 km außerhalb des Massivs — der ist jetzt raus.
+- **Ein Rebuild löscht `places`/`lifts` nicht mehr** (beide Vogesen-Builds): `add_region_places.py` und
+  `add_lifts.py` schreiben nach dem Region-Build, `write_region()` gibt nur aus, was es bekommt. Die beiden
+  Builds lesen ein vorhandenes Array jetzt ein und reichen es durch, statt die Reihenfolge zu dokumentieren
+  wie bei Bike Kingdom.
+- Neu: `tools/region_dupe_check.py` (generisch, ersetzt die region-spezifische Erstfassung) — prüft eine
+  Region gegen alle anderen auf gemeinsames Gelände. Fand drei Nordvogesen-Trails, die vier
+  Pfälzerwald-Stücke vollständig enthalten (derselbe Waldrücken beidseits der Grenze); nach Entscheidung
+  des Nutzers behält der Pfälzerwald seine, die drei sind aus Nordvogesen entfernt.
+
+## 2026-08-20
+- **„Kurztour 1 – Rodalben" vollständig geschlossen: alle 25 Segment-Lücken, 32,98 km**, 0 m abseits
+  gemappter Wege. Dritte Tour mit `nearbyTrailConnector`, und die erste, die das Verfahren breiter
+  beansprucht: 17× ein verketteter Weg erreicht beide Seiten, 6× Schnittpunkt zweier Wege, 2× Weg folgen +
+  Trail kappen, 1× Wegekette. Vier auffällige Stellen wurden gesondert vorgelegt und bestätigt (Brücke mit
+  Faktor 3,7; eine Kappung von 164 m gegen 351 m ohne Kappung; eine Kappung von 200 m ohne Alternative; eine
+  219-m-Lücke im Hin-und-zurück-Muster). Fall 4 (Projektion) kam auch hier nicht vor — dessen Grenzwerte
+  bleiben nur an Rodalben Felsentrails geprüft.
+
 ## 2026-08-17
 - **„Kurztour 1 – Leimen" vollständig geschlossen: alle 14 Segment-Lücken, 23,66 km** — erste Anwendung von
   `nearbyTrailConnector` auf eine Tour, mit der das Verfahren nicht entwickelt wurde. 14 von 14 Lücken über

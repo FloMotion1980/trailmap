@@ -644,6 +644,62 @@ const REGION_CATALOG = {
       // (fernwege_felsentouren) per the user, leaving the bucket empty.
     }
   },
+  // The Vosges, in two regions, added 2026-08-19. Both are Trailforks harvests through the user's own
+  // logged-in Chrome; geometry AND elevation come from the `ElevationChart` config embedded in each
+  // trail page, so neither needed an elevation API. Two things about the method are worth knowing before
+  // touching either: the table URL's `difficulty=` list must name EVERY code (10 is `Severe / Black`, and
+  // omitting it silently dropped the whole schwarz tier -- 38 trails), and a parent region's own page is
+  // NOT a complete index of its children (nine communes, including Gerardmer and the Markstein bike park,
+  // had no link and were only found by diffing the departement table against the children). Full detail:
+  // docs/nordvogesen.md and docs/suedvogesen.md.
+  //
+  // THE BOUNDARY BETWEEN THE TWO is a red line the user drew on a Trailforks map ("alles unter der
+  // eingezeichneten roten Linie" is Suedvogesen), turned into a rule in tools/vogesen_boundary.py: it
+  // runs 48.260 N/6.567 E in the west to 48.124 N/7.352 E in the east, and each sub-region is assigned by
+  // its own centroid, every one of them clearing the line by at least 7 km. Both builds audit every trail
+  // against it. That is why Lac Blanc is in the SOUTH (7 km below the line) although it sits north of
+  // Colmar, and why Saint-Die is in the NORTH.
+  //
+  // Difficulty: Trailforks' own rating, which is the documented FALLBACK -- correct here because these are
+  // Club-Vosgien/community trails in a natural park with no operator publishing a scale. The three bike
+  // parks are the exception and all three are in Suedvogesen, where the operator's own grades were taken
+  // (see OPERATOR_DIFF in tools/build_suedvogesen.py; only Markstein could not be verified, its operator
+  // page now serves an age gate instead of a bike park).
+  nordvogesen: {
+    countries: ["FR", "DE"], label: "Nordvogesen", file: "regions/nordvogesen.json", trailCount: 483,
+    bounds: [[48.10768, 6.81610], [49.13417, 7.93934]],
+    subRegions: {
+      wissembourg: { label: "Wissembourg / Nordvogesen", color: "#3a6ea5" },
+      niederbronn: { label: "Niederbronn / Heidenkopf", color: "#a8452f" },
+      saverne: { label: "Saverne / Dabo / Wangenbourg", color: "#8a6a2f" },
+      bruche: { label: "Bruche-Tal", color: "#2f8a7a" },
+      sainteodile: { label: "Barr / Mont Sainte-Odile", color: "#6a3a8a" },
+      ville: { label: "Val de Villé / Ribeauvillé", color: "#c2185b" },
+      // On the Lorraine side and north of the line, so this region's, despite an earlier cut having put
+      // it in the south -- see tools/vogesen_boundary.py.
+      vosges_ouest: { label: "Vogesen West (Saint-Dié)", color: "#7a7a2f" }
+    }
+  },
+  // `countries` is FR only: unlike Nordvogesen this one never reaches the German border. Three bike parks
+  // (Lac Blanc, La Bresse, Markstein) and the region's two lifts, Montjoie and Vologne Express -- Markstein
+  // deliberately has none, since OSM has no chairlift there and which of its T-bars takes bikes is unknown.
+  suedvogesen: {
+    countries: ["FR"], label: "Südvogesen", file: "regions/suedvogesen.json", trailCount: 474,
+    bounds: [[47.74454, 6.36278], [48.17171, 7.28295]],
+    subRegions: {
+      colmar: { label: "Colmar / Hohlandsbourg", color: "#a03a8a" },
+      kaysersberg: { label: "Kaysersberg / Lac Blanc", color: "#a8452f" },
+      munstertal: { label: "Münstertal", color: "#3a6ea5" },
+      guebwiller: { label: "Guebwiller / Markstein", color: "#c1440e" },
+      thann: { label: "Thann / Saint-Amarin", color: "#8a6a2f" },
+      masevaux: { label: "Masevaux / Ballon d'Alsace", color: "#2f8a7a" },
+      labresse: { label: "La Bresse / Hautes-Vosges", color: "#6a3a8a" },
+      gerardmer: { label: "Gérardmer", color: "#4a7d3f" },
+      // 65 km west of Colmar in the Lorraine plain rather than the massif, but below the line and 76 real
+      // trails -- kept as its own bracket so it can be switched off in the sidebar instead of dropped.
+      epinal: { label: "Épinal / Vallon d'Olima", color: "#7a3a2f" }
+    }
+  },
   // Source: https://www.bergstrasse-odenwald.de/mountainbiking/mountainkbikestrecken -- Durchstich
   // pilot for this brand-new region, 2026-07-24, per the user. Started with Eberbach specifically
   // ("wohl die bekannteste" MTB spot in the Odenwald) rather than the region's official tour list --

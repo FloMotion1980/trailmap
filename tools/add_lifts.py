@@ -38,6 +38,47 @@ ELEV_CACHE = os.path.join(ROOT, "Material", "elevation_cache.json")
 
 LIFTS = {
     # ---------------------------------------------------------------------------------------------
+    # Suedvogesen (FR). Three bike parks, but only TWO lifts -- and the third one's absence is the
+    # interesting part, so read the note.
+    #
+    # * Lac Blanc: the station's own bike-park page says the park is served by "un telesiege
+    #   debrayable et le systeme des porte-velos" without naming it. OSM has exactly one chair_lift at
+    #   Lac Blanc, `Montjoie`, and its top station is 22 m from the top of all seven DH pistes --
+    #   unambiguous. (A platter of the SAME name sits beside it, hence the `aerialway=` filter.)
+    # * La Bresse-Hohneck: the operator and France Montagnes both name the `Vologne Express` chairlift
+    #   as the park's lift; OSM's way of that name ends 9 m from the park trails' tops.
+    # * **Markstein has no lift here on purpose.** kelbikepark.fr says "1" lift is open to bikers and a
+    #   France 3 piece mentions a chairlift running in summer, but OSM has NO chair_lift at Markstein at
+    #   all -- only telekis and rope tows, the nearest being `Tremplin 1`, 78 m from the park's trail
+    #   tops. And the operator page kelbikepark names as official
+    #   (alsacefreerideacademy.fr/bikepark-markstein) now serves an "18+ ONLY" age gate rather than a
+    #   bike park, while lemarkstein.net and the valley tourism site publish no lift detail. Membership
+    #   comes from the operator, never from a guess (docs/lifts-feature.md), so nothing is added until
+    #   someone can confirm WHICH lift takes bikes.
+    # * Gerardmer (La Mauselaine) and Ballon d'Alsace have chairlifts/telekis but no operator statement
+    #   about summer bike transport anywhere, and no lift-served DH park -- excluded, see below.
+    # ---------------------------------------------------------------------------------------------
+    "suedvogesen": dict(bbox="47.99,6.94,48.17,7.12", lifts=[
+        dict(id="lift_sv_montjoie", name="Montjoie", region="kaysersberg",
+             osm=r"^Montjoie$", aerialway="chair_lift",
+             note="the Lac Blanc bike park's own lift -- the station calls it only 'un telesiege "
+                  "debrayable'; it is the single chair_lift there and its top is 22 m from every DH "
+                  "piste's start. A platter of the same name is a different lift"),
+        dict(id="lift_sv_vologne_express", name="Vologne Express", region="labresse",
+             osm=r"^Vologne Express$",
+             note="the lift for Bike Park La Bresse-Hohneck's 10 pistes, named as such by the operator; "
+                  "its top is 9 m from the park trails' tops"),
+    ], excluded=[
+        ("Markstein (all lifts)", "1 lift is open to bikers per kelbikepark, but OSM has no chair_lift "
+                                  "there and the operator page is gone -- which lift is unknown"),
+        ("Gerardmer / La Mauselaine", "chairlifts run, but no operator statement on summer bike "
+                                      "transport and no lift-served DH park"),
+        ("Ballon d'Alsace", "no operator statement on summer bike transport"),
+        ("Le Chitelet (La Bresse)", "chair_lift beside Vologne Express; the operator names only Vologne "
+                                    "Express as the bike park's lift"),
+    ]),
+
+    # ---------------------------------------------------------------------------------------------
     # Brandnertal (Vorarlberg). Source: bikepark-brandnertal.at/betriebszeiten -- it names exactly three
     # lifts as the ones serving the park and the trails, all three running 14.5.-1.11.2026.
     # ---------------------------------------------------------------------------------------------
@@ -175,8 +216,16 @@ def resolve(bbox, specs, verbose=True):
     for spec in specs:
         rx = re.compile(spec["osm"])
         hits = [w for w in ways if rx.search(w[0]["name"])]
+        # Optional `aerialway=` on a spec, for a resort that gives two DIFFERENT lifts the same name --
+        # Lac Blanc has a chair_lift and a platter both called exactly "Montjoie". This keeps the
+        # "two matches is an error" rule intact instead of weakening it to a longest-wins guess.
+        if spec.get("aerialway"):
+            hits = [w for w in hits
+                    if (w[0].get("aerialway") or w[0].get("railway")) == spec["aerialway"]]
         if not hits:
-            raise SystemExit("%s: no OSM way matches %r" % (spec["id"], spec["osm"]))
+            raise SystemExit("%s: no OSM way matches %r%s" % (
+                spec["id"], spec["osm"],
+                " with aerialway=%s" % spec["aerialway"] if spec.get("aerialway") else ""))
         if len(hits) > 1:
             raise SystemExit("%s: %r matches %d ways: %s"
                              % (spec["id"], spec["osm"], len(hits), [h[0]["name"] for h in hits]))

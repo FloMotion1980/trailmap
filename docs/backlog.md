@@ -359,6 +359,32 @@ like two sections of one lift to an endpoint-distance check** (St. Andreasberg's
 stations 36 m apart, and joining them produced an 850 m "lift" climbing 14 m). Orient each section
 bottom-first by elevation and require the join to keep climbing.
 
+13. ~~**Vogesen**~~ — requested 2026-08-19 ("Die Nördlichen Vogesen. Vor allem die Region rund um
+    Wissembourg. Also ungefähr alles nördlich von Colmar"), **built and live the same day as TWO regions**:
+    `nordvogesen` (483 trails, 592 km, 7 sub-regions, 22 places) and `suedvogesen` (474 trails, 533 km,
+    9 sub-regions, 22 places, 2 lifts). Source: Trailforks, harvested through the user's own logged-in
+    Chrome; raw inputs in `Material/Vogesen/`, full writeups in `docs/nordvogesen.md` and
+    `docs/suedvogesen.md`.
+    - **The split is a line the user drew on a map**, turned into a rule in `tools/vogesen_boundary.py`;
+      each sub-region is assigned by its own centroid and every build audits every trail against it. Lac
+      Blanc is in the SOUTH (7 km below the line) despite being north of Colmar; Saint-Dié is in the NORTH.
+    - **Two harvesting traps worth carrying to the next Trailforks region**: the table URL's `difficulty=`
+      list must name code 10 (`Severe / Black`) or the whole black tier vanishes silently, and a parent
+      region's own page is not a complete index of its children (nine communes had no link, including
+      Gérardmer and the Markstein bike park). Both are recorded in `build_nordvogesen.py`'s docstring.
+    - **Known gaps, deliberate**: no Touren/Trailrunden in either region — Trailforks has "Routes" for
+      several of these areas (e.g. "Enduro VTT De La Scherhol" at Wissembourg, and "Enduro Bressaud" which
+      appears as its own 27-trail Trailforks region), and segmenting them would be a `gpx_map_match.py`
+      job against the 957 trails. Markstein's difficulties are unverified (its operator page now serves an
+      age gate) and it probably has two pistes we do not hold. Markstein has no lift in the data because
+      OSM knows no chairlift there and which T-bar takes bikes is unconfirmed. Two trails (`dahus`,
+      `mansuy`) have no geometry on Trailforks at all.
+    - **Pfälzerwald overlap resolved** the user's way ("Lass die doppelten Trails im Pfälzer Wald"):
+      Zeppelinhalde, Sindelsberg ZickZack and Kühnenkopf were removed from Nordvogesen. Note this cost
+      ~1.8 km of line the Pfälzerwald does not have (the Trailforks versions are the longer ones) — listed
+      with per-trail coverage figures in `DUPLICATE_OF_PFAELZERWALD` in `tools/build_nordvogesen.py` if it
+      is ever worth reversing.
+
 Sourcing order for each of these: **try the operator's own site for direct per-trail GPX before
 falling back to OSM + a rate-limited elevation API.** Austrian/Swiss resort sites in particular have
 repeatedly turned out to expose per-trail GPX with real elevation, which beats the OSM path. See
