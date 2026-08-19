@@ -195,6 +195,17 @@ Mängel waren unsichtbar, solange nur einzelne neue Fälle gerechnet wurden.
 
 ---
 
+## Feste Regel: immer die ganze Region vorab laden
+
+Nutzer, 2026-08-17: *„Bitte immer die Region komplett laden, wenn unser TrailConnector läuft."*
+
+`prefetch()` holt alle Wege im Umfeld der kompletten Tour in **einem** Overpass-Abruf und legt sie als Datei
+ab; `fetch()` schneidet daraus nur noch lokal aus und geht nicht mehr ins Netz. `main()` ruft das unbedingt
+auf. Wer `solve()` direkt benutzt, muss `prefetch()` selbst vorher aufrufen — sonst fällt `fetch()` auf eine
+Einzelabfrage pro Lücke zurück (20–80 s pro Fall statt 0,9 s für vier).
+
+---
+
 ## Handwerkliche Regeln, jede aus einem echten Fehler
 
 - **Way-Objekte verketten, bevor irgendetwas gesucht wird** (siehe oben).

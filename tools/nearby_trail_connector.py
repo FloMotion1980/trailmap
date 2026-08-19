@@ -61,9 +61,13 @@ PROJ_MIN_RATIO = 3.0       # der zweitbeste Weg muss mindestens so viel weiter w
 PROJ_MIN_SECOND_M = 40.0   # ... und zusaetzlich absolut so weit
 PROJ_NO_BRANCH_M = 25.0    # am Anschlusspunkt darf kein anderer Weg so nah abzweigen
 
-# Ein einziger Overpass-Abruf fuer die GANZE Tour statt einer pro Luecke. Der Nutzer, 2026-08-16: pro Fall
-# 20-80s Wartezeit war der eigentliche Bremsklotz ("Komoot macht das in Echtzeit"). Das Ergebnis liegt als
-# Datei daneben und wird wiederverwendet, solange sie existiert.
+# FESTE REGEL (Nutzer, 2026-08-17): "Bitte immer die Region komplett laden, wenn unser TrailConnector laeuft."
+# Ein einziger Overpass-Abruf fuer die GANZE Tour statt einer pro Luecke -- pro Fall 20-80s Wartezeit war der
+# eigentliche Bremsklotz ("Komoot macht das in Echtzeit"), 1 min 35 s wurden dadurch zu 0,9 s. `main()` ruft
+# prefetch() unbedingt vor der ersten Luecke auf; das Ergebnis liegt als Datei daneben und wird
+# wiederverwendet. `fetch()` schneidet daraus nur noch lokal aus und geht NIE ins Netz, solange _WAYS steht.
+# Wer solve() direkt benutzt, muss prefetch() selbst vorher aufrufen -- sonst faellt fetch() auf eine
+# Einzelabfrage pro Luecke zurueck und alles ist wieder langsam.
 WAY_CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".tmpwork", "osm_ways_cache.json")
 _WAYS = None
 
