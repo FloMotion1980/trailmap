@@ -162,70 +162,41 @@ before implementing any of these.
 
 ## Trailrunden-Lückenschließen (tools/close_loop_gaps.py)
 
-Neues Tool (2026-08-16), das echte Segment-Grenz-Lücken in einer Trailrunde (siehe die
-`buildTrailLayer`-Doku in `CLAUDE.md` für WARUM diese Lücken überhaupt entstehen) automatisch
-schließt, statt sie von Hand zu flicken. Probiert pro Lücke mehrere Kandidaten (wiederverwendeter
-Connector aus einer anderen Tour, "entlang des schon passenden OSM-Wegs laufen" — die Idee des
-Nutzers, nachdem der reine Dijkstra-Kürzeste-Pfad-Ansatz einen 7,6-fachen Umweg produzierte — und
-Dijkstra als Fallback) und nimmt die kürzeste echte Route. Erstmals angewendet auf
-`pw_rodalben_felsentrails`: alle 29 Lücken über 30m geschlossen, Ø Routenfaktor 1,02, committed.
+**Die Methodik steht jetzt in `docs/trailrunden-lueckenschliessen.md`** — Leitgedanken, Prioritätsstufen,
+Befahrbarkeitsprüfung, Wegtyp-Präferenz, die zwei Fallen des ersten Durchlaufs und das gemessene Ergebnis.
+Dort nachlesen, bevor das Tool erneut angefasst oder auf eine weitere Tour angewendet wird; hier steht nur
+noch, was davon offen ist.
 
-**Bekannte Lücke im Tool, vom Nutzer live am Ergebnis gefunden (2026-08-16): keine
-Befahrbarkeits-/Zugangsprüfung des gematchten Wegs.** Am Rodalben-Startpunkt (seg0→seg1, die
-zuerst gemeldete 181m-Lücke) folgt die gewählte `matched_way_b`-Route einem OSM-Weg, der als
-`highway=track`, `vehicle=forestry` getaggt ist — geometrisch nah genug, um als Kandidat zu
-gewinnen, aber real nicht für öffentlichen Durchgangsverkehr gedacht ("Auf OSM ist klar, dass man
-da nicht hochfahren kann", der Nutzer nach Ansicht der Live-Karte). Das Tool prüft aktuell NUR die
-Entfernung, nicht die OSM-Tags (`access`/`vehicle`/`bicycle`/`highway`-Typ) des gewählten Wegs.
+**Stand 2026-08-16:** `pw_rodalben_felsentrails` ist mit dem überarbeiteten Verfahren komplett neu gerechnet
+und hat **null Lücken über 2 m** (vorher: 38, obwohl der erste Report 29 Schließungen gemeldet hatte). Alle
+29 Ziel-Lücken wurden allein durch OSM-Weg-Matching gelöst (Stufe 1), 22 davon auf echten `path`-Wegen; 11
+hatten gesperrte Nachbarwege, die jetzt korrekt verworfen werden. Ein zweiter Durchlauf mit Schwelle 12 m
+hat auch die verbliebenen kleinen Sprünge geschlossen.
 
-**Nutzers eigener Vorschlag für den Fix, noch nicht umgesetzt:** statt den Connector zurück zu
-einem nahen Punkt zu verlängern, stattdessen ein Stück vom TRAIL selbst abschneiden (die
-Segment-Geometrie an einer früheren Stelle kappen), bis eine wirklich sauber befahrbare Verbindung
-entsteht — d.h. die "Lösungsraum"-Erweiterung ist nicht nur "connector verlängern" sondern auch
-"trail-Segment kürzen" als gleichwertige Kandidaten-Klasse.
+### Offen
 
-**Vor der nächsten Anwendung dieses Tools (auf Rodalben erneut oder eine andere Tour):**
-1. Nach dem Best-Match eine Tag-Prüfung des gewählten Wegs einbauen (mindestens `access=private`,
-   `vehicle=forestry`/`agricultural`, `bicycle=no` als Rot-Flagge behandeln, nicht nur Distanz).
-2. Die "Trail kürzen"-Kandidatenklasse ergänzen (zusätzlich zu reused_connector/matched_way/
-   osm_route).
-3. Jedes Ergebnis, dessen gewählter Weg eine verdächtige Zugangsbeschränkung trägt, im Report
-   gesondert markieren (wie schon für hohen Routenfaktor), nicht nur nach Streckenlänge urteilen —
-   der Rodalben-Fall hatte einen völlig unauffälligen Faktor (1,1), das Problem war rein inhaltlich
-   (befahrbar oder nicht), nicht geometrisch.
-4. Erst NACH dieser Erweiterung erneut über Rodalben (und andere Touren) laufen lassen; der
-   aktuelle Rodalben-Stand ist committed/gepusht, aber mit diesem bekannten Makel an mindestens
-   einer Stelle.
+- **Alle übrigen Trailrunden durchgehen.** Bislang wurde das Tool nur auf Rodalben angewendet; jede andere
+  Tour mit `trailSegments` hat ihre Lücken unverändert. Der Nutzer hat beim Durchsehen der App mindestens
+  eine weitere betroffene Tour gefunden (Screenshot bei „Eisenbahnschienen" / „Wiesental Wildgehege",
+  vermutlich eine weitere Pfälzerwald-Runde — noch nicht identifiziert). Das war immer der Plan: Rodalben war
+  nur der Testfall.
+  **Kosten im Blick behalten:** jede Lücke ist eine eigene Overpass-Abfrage, Rodalben brauchte ~29 min für 29
+  Lücken. Der Cache (`--cache`) macht Läufe fortsetzbar; `CACHE_VERSION` bumpen, wenn sich die Routing-Logik
+  ändert, sonst spielt der Cache die alten Ergebnisse zurück.
+- **Touren, die gar nicht auf OSM-Wegen liegen.** Der Nutzer hat beim Durchsehen Touren gefunden, deren
+  Trailabschnitte neben jedem gemappten Weg verlaufen — „in so einem Fall wird uns die OSM-Strategie keinen
+  Erfolg bringen". Das Verfahren erkennt das inzwischen (`MATCH_MAX_MEAN_M`) und gibt in Stufe 1 auf, statt
+  zu raten; ob die Stufen 2/3 dort brauchbare Ergebnisse liefern, ist noch **nicht** an einer echten solchen
+  Tour geprüft worden — Rodalben hat Stufe 1 nie verlassen.
+- **Kandidatenklasse „Trail kürzen" statt nur „Connector verlängern"** (eigener Vorschlag des Nutzers): die
+  Segment-Geometrie an einer früheren Stelle kappen, bis eine sauber befahrbare Verbindung entsteht. Noch
+  nicht gebaut — der Lösungsraum ist bisher rein additiv.
+- **Für den Tourenbuilder wiederverwenden.** Der Nutzer hat ausdrücklich darauf hingewiesen, dass dieselbe
+  Aufgabe dort ansteht („das hilft uns auch für den Tourenbuilder später noch"): Weg-Matching,
+  Befahrbarkeitsprüfung und Verbindungslogik sind dieselben Bausteine, wenn zwei gewählte Elemente verbunden
+  werden sollen. Aktuell liegt alles in `tools/close_loop_gaps.py` (Python, Build-Zeit) — der Tourenbuilder
+  läuft im Browser, es ist also noch offen, ob die Logik portiert oder vorberechnet wird.
 
-**2026-08-16, zweite Runde Nutzer-Feedback, nachdem der obige Stand gepusht war — noch NICHT
-umgesetzt, "machen wir gleich":**
-
-- **Nur `pw_rodalben_felsentrails` wurde bisher behandelt.** Der Nutzer hat beim weiteren
-  Durchschauen der App eine ANDERE Tour gefunden (Screenshot zeigt eine Stelle bei "Eisenbahnschienen"
-  / "Wiesental Wildgehege" — welche Tour/Region das genau ist, noch nicht identifiziert, vermutlich
-  eine weitere Pfälzerwald-Trailrunde), bei der praktisch keine der Segment-Grenzen geschlossen sind
-  ("wenn ich mir das weiter anschaue, sind fast keine Lücken geschlossen"). Das ist erwartbar, nicht
-  überraschend — `close_loop_gaps.py` wurde bislang nur für Rodalben aufgerufen, für alle anderen
-  Touren mit `trailSegments` gilt der Zustand von vorher unverändert. **Nächster Schritt: jede
-  Trailrunde mit Lücken über der Schwelle durchgehen und dasselbe Tool anwenden** (sobald die
-  Erweiterungen unten eingebaut sind) — nicht nur Rodalben war das Ziel, das war nur der erste Test.
-- **Priorität der Kandidaten-Methoden umkehren**: aktuell probiert `best_bridge_for_gap` alle
-  Kandidaten (reused_connector, matched_way_a, matched_way_b, osm_route) gleichberechtigt und nimmt
-  die kürzeste Route. Der Nutzer möchte stattdessen **zuerst konsequent versuchen, beide Enden auf
-  echte OSM-Wege zu mappen und zu verbinden** (das ist im Kern schon `matched_way_a`/`b`), mit den
-  anderen Methoden nur als Fallback, wenn das nicht klappt — nicht als gleichwertige Konkurrenz nach
-  Streckenlänge. Grund: die Trail-eigene Geometrie stimmt bekanntlich nicht exakt mit OSM überein
-  (das ist ja der ganze Grund, warum die Lücke entsteht), also ist "kürzeste Route unter allen
-  Methoden" nicht dasselbe Kriterium wie "folgt echten, zusammenhängenden Wegen".
-- **Neue Kandidaten-Variante: BEIDE Seiten auf ihre jeweils passenden OSM-Wege mappen und prüfen, ob
-  sich ein Schnittpunkt ergibt**, statt wie aktuell nur EINE Seite zu matchen und stur bis zum
-  rohen Endpunkt der anderen Seite zu laufen. Konkret: für jede Seite der Lücke (Trail-Ende UND
-  Connector-Anfang) den best-passenden Weg identifizieren (wie `walk_along_matched_way` das schon pro
-  Seite tut), dann BEIDE Wege in Richtung der Lücke weiterlaufen und schauen, ob/wo sie sich
-  schneiden oder nah genug aneinander kommen — das wäre der eigentliche, geometrisch fundierte
-  Anschlusspunkt, nicht nur "der nächste Punkt auf EINEM der beiden Wege zum rohen Endpunkt der
-  anderen Seite". Sollte die aktuelle `matched_way_a`/`matched_way_b`-Unterscheidung ablösen bzw.
-  ergänzen.
 
 ## Regionen
 

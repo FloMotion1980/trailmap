@@ -55,6 +55,29 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
     or withheld then, the same effect `tests/README.md` documents for Leaflet's own tooltip-fade timers.
 
 ## 2026-08-16
+- **„Rodalben Felsentrails" ist vollständig geschlossen: alle 36 Segment-Lücken, 41,81 km, jede Lösung am
+  Kartenbild bestätigt.** Das Verfahren heißt **nearbyTrailConnector** (`tools/nearby_trail_connector.py`)
+  und wurde fallweise mit dem Nutzer erarbeitet — Methodik, Fallkatalog und die Unterscheidung
+  akzeptabel/perfekt in `docs/nearby-trail-connector.md`. Kern sind **zwei Ebenen von Verkettung**: OSM
+  zerlegt eine Straße in mehrere Way-Objekte, die zusammengefügt werden müssen (das brachte 27 von 34 Fällen
+  auf „einem Weg folgen"), und Ketten über echte Abzweigungen für die schwierigen Fälle. Fünf Fälle:
+  ein Weg erreicht beide Seiten (27×), Weg folgen + Trail kappen (3×), Schnittpunkt zweier Wege (2×),
+  Projektion des Trailabschnitts auf seinen Weg (2×), Wegekette (2×) — alle mit 0 m abseits gemappter Wege.
+  Zwei Regeln, die je einen Fehlversuch gekostet haben: ein Weg, auf dem die Tour ohnehin liegt, darf nie
+  wegen Zugangs-Tags ausgeschlossen werden, und die Trail-Geometrie wird nie verschoben, nur gekappt.
+  Ein einziger Overpass-Abruf für die ganze Tour statt einer pro Lücke: von 1 min 35 s auf 0,9 s.
+- **Trailrunden-Lückenschließen überarbeitet (Zwischenschritt zum Obigen).** Das Verfahren
+  arbeitet nicht mehr als Wettbewerb aller Methoden nach kürzester Strecke, sondern in Prioritätsstufen:
+  erst beide Lücken-Enden auf echte OSM-Wege mappen (inkl. neuer Variante, die beide Seiten mappt und den
+  tatsächlichen Treffpunkt der zwei Wege sucht), dann vorhandene Connector-Geometrie, dann Dijkstra. Dazu
+  eine **Befahrbarkeitsprüfung** (`vehicle=forestry`, `bicycle=no`, `access=private/customers` … werden
+  verworfen — genau der Fehler, den der Nutzer live auf der Karte gefunden hatte), eine **Wegtyp-Präferenz**
+  (Trail schlägt Forstweg bei vergleichbarem Match) und ein **Abbruchkriterium**, wenn ein Abschnitt gar
+  nicht auf einem OSM-Weg liegt. Zwei stille Fehler des ersten Durchlaufs mitbehoben: auf den nächsten
+  Stützpunkt schnappen statt auf die Wegstrecke zu projizieren (ließ 16 von 29 Lücken faktisch offen, während
+  der Report `route_factor 1.00` meldete), und eine leere Brücke, die gar nichts einfügte. Ergebnis nach
+  komplettem Neu-Rechnen: 29/29 Lücken allein durch OSM-Weg-Matching, 22 davon auf echten `path`-Wegen,
+  **0 verbleibende Lücken über 2 m** (vorher 38). Methodik in `docs/trailrunden-lueckenschliessen.md`.
 - **Fixed a real app-crashing bug the user hit repeatedly on their phone: toggling RIDE mode (or "Blickrichtung
   oben") could throw "Maximum call stack size exceeded" and show the fatal panel.** Root cause: a `map.stop()`
   added earlier the same day (to cancel an in-flight pan/zoom animation before rotating) could itself fire
