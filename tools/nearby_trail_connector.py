@@ -39,7 +39,11 @@ MEET_M = 15.0       # "der Weg trifft die Linie der anderen Seite"
 BBOX_PAD_M = 500.0
 # Verhaeltnismaessigkeit: eine 23m-Luecke darf nicht 416m Trail kosten. Ohne diese Grenze gewinnt eine
 # formal saubere (weglos 0m) Loesung, die den halben Trail wegschneidet -- bei seg4/seg6 genau passiert.
-MAX_TRIM_FACTOR = 3.0    # gekappte Meter, bezogen auf die Luftlinie der Luecke
+# 4.0, nicht 3.0: die vom Nutzer bestaetigte Hilschberghaus-Loesung kappt 186m bei 61,5m Luecke, also
+# Faktor 3,02 -- sie wurde von der 3,0-Grenze um 1,5 Meter verworfen. Genau daran ist der erste
+# Stabilitaetstest gescheitert. Die unsinnigen Faelle lagen bei Faktor 18 und 3,8 und werden weiter
+# abgefangen; letzterer zusaetzlich dadurch, dass weniger Kappung bei gleichem weglos jetzt vorgeht.
+MAX_TRIM_FACTOR = 4.0    # gekappte Meter, bezogen auf die Luftlinie der Luecke
 MAX_BRIDGE_FACTOR = 6.0  # Brueckenlaenge, bezogen auf die Luftlinie
 
 # --- Fall 4: Projektion des Trailabschnitts auf "seinen" OSM-Weg -------------------------------------
@@ -151,6 +155,24 @@ def solve(A, B, trail_A=False, trail_B=False):
     beeline = haversine_m(a, b)
     out = []
 
+    # Der Querversatz an den beiden Anschluessen ist GPS-Rauschen zwischen Trail-Aufzeichnung und OSM-Weg,
+    # kein Umweg -- der Nutzer hat ihn ausdruecklich akzeptiert ("Die Spruenge sind zwar unschoen, aber
+    # unvermeidbar mit der Praemisse, dass wir Trailgeo nicht veraendern"). Er wird deshalb aus dem
+    # weglos-Mass herausgerechnet: nur was DAZWISCHEN abseits der Wege laeuft, ist ein echter Mangel.
+    # Ohne diese Trennung lehnte die 5m-Toleranz vier vom Nutzer bestaetigte Loesungen ab, alle mit 12-13m
+    # -- also genau der Versatz und nichts sonst.
+    def off_way_core(bridge):
+        if len(bridge) < 3:
+            return 0.0
+        inner = bridge[1:-1]
+        if len(inner) < 2:
+            return 0.0
+        return C.off_way_metres(inner, idx)
+
+    def ends_off(bridge):
+        """Der Querversatz an den beiden Anschluessen -- Trail-Aufzeichnung gegen OSM-Weg."""
+        return C.off_way_metres(bridge, idx) - off_way_core(bridge)
+
     def score(name, bridge, newA, newB, extra):
         trimmed = 0.0
         if len(newA) < len(A):
@@ -158,7 +180,13 @@ def solve(A, B, trail_A=False, trail_B=False):
         if len(newB) < len(B):
             trimmed += C.line_len_m(B[:len(B) - len(newB) + 1])
         out.append({"name": name, "bridge": bridge, "newA": newA, "newB": newB,
-                    "len": C.line_len_m(bridge), "off": C.off_way_metres(bridge, idx),
+                    "len": C.line_len_m(bridge),
+                    # weglos = was INNEN abseits der Wege laeuft, plus der Teil des Anschluss-Versatzes, der
+                    # ueber die GPS-Ungenauigkeit hinausgeht. 13m Versatz sind Rauschen und zaehlen nicht;
+                    # die 21,9m querab am Hilschberghaus sind ein echtes Gelaendestueck und zaehlen -- genau
+                    # der Unterschied, den der Nutzer auf der Karte gesehen hat.
+                    "off": off_way_core(bridge) + max(0.0, ends_off(bridge) - PROJ_MAX_MEAN_M),
+                    "off_ends": round(ends_off(bridge), 1),
                     "trim": trimmed, "beeline": beeline, "extra": extra})
 
     # --- Fall 1: EIN verketteter Weg erreicht beide Seiten
@@ -272,6 +300,14 @@ def solve(A, B, trail_A=False, trail_B=False):
         if r["name"].startswith("4_"):
             r["off_note"] = "davon %.0fm Querversatz zum Trail" % min(r["off"], PROJ_MAX_MEAN_M)
     # weglos zaehlt zuerst, dann Reihenfolge der Faelle, dann kurze Bruecke -- Unverhaeltnismaessige zuletzt
+    # Rangfolge: verworfene zuletzt; dann weglos (das eigentliche Qualitaetsmass); dann WENIGER Kappung,
+    # weil eine Loesung ohne Kappung eine reale Trail-Geometrie erhaelt; dann Fallnummer, dann Laenge.
+    # Die Kappung erst nach weglos zu werten ist wichtig: am Hilschberghaus ist die Loesung MIT der
+    # groesseren Kappung die richtige, weil nur sie durchgehend auf der Strasse bleibt.
+    # Rangfolge: verworfene zuletzt; dann weglos; dann Fallnummer; dann kurze Bruecke. Die Kappung NICHT
+    # vor die Laenge stellen -- damit hatte der Neulauf bei seg0 eine 637m-Kette ohne Kappung der bestaetigten
+    # 406m-Loesung mit 230m Kappung vorgezogen. Kappung ist die Reparatur, kein Kostenfaktor; sie wird nur
+    # noch ueber MAX_TRIM_FACTOR begrenzt.
     out.sort(key=lambda r: (bool(r["reject"]), round(r["off"]), r["name"][0], r["len"]))
     return out
 
@@ -332,8 +368,6 @@ def main():
               % (n, C.line_len_m(line) / 1000, sum(1 for x in gaps if x > 2)))
 
 
-if __name__ == "__main__":
-    main()
 
 
 # --- Fall 5: Kette aus mehreren Wegen ueber ECHTE Kreuzungen -----------------------------------------
@@ -451,3 +485,7 @@ def chain_bridges_trim(A, B, M, idx, trail_is_A=True):
                 seen.add(nxt)
                 queue.append((nxt, path + [(nxt, jp)]))
     return out
+
+
+if __name__ == "__main__":
+    main()

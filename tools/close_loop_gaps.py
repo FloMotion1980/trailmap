@@ -110,7 +110,12 @@ COST_W_TRIMMED = 0.3      # metres of existing trail/connector geometry thrown a
 MAX_TRIM_M = 250.0        # beyond this a candidate is rejected outright, not merely penalised
 COST_W_DETOUR = 1.0       # route length minus beeline
 COST_W_RESIDUAL = 5.0     # metres still left open at the join after the bridge
-OFF_WAY_TOL_M = 20.0      # further than this from any way = "not on a way"
+# 5m, nicht 20m. Bei 20m sahen am Hilschberghaus VIER Kandidaten identisch gut aus (alle weglos 0m),
+# obwohl drei davon 20m querab durchs Gelaende sprangen -- die Auswahl war damit zufaellig, und der Nutzer
+# hat den Unterschied auf der Karte sofort gesehen ("akzeptabel aber nicht perfekt ... einfach der Strasse
+# folgen"). Bei 5m trennt die Kennzahl sauber: nur die Loesung, die durchgehend auf der Strasse bleibt,
+# behaelt weglos 0m. Gemessen an genau diesem Fall.
+OFF_WAY_TOL_M = 5.0       # further than this from any way = "not on a way"
 SAMPLE_STEP_M = 10.0      # how finely a bridge is sampled for the off-way measurement
 
 

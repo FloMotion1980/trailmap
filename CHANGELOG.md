@@ -66,6 +66,14 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   Zwei Regeln, die je einen Fehlversuch gekostet haben: ein Weg, auf dem die Tour ohnehin liegt, darf nie
   wegen Zugangs-Tags ausgeschlossen werden, und die Trail-Geometrie wird nie verschoben, nur gekappt.
   Ein einziger Overpass-Abruf für die ganze Tour statt einer pro Lücke: von 1 min 35 s auf 0,9 s.
+- **Verfahren gegen die bestätigten Ergebnisse nachgerechnet — und dabei drei Mängel gefunden.** Nach dem
+  Einbau der Wegeketten wurde alles neu von der Original-Geometrie gerechnet und verglichen: es war zunächst
+  *nicht* stabil. (1) Die Verhältnismäßigkeitsgrenze verwarf eine bestätigte Lösung um 1,5 m. (2) Die
+  verschärfte Weglos-Toleranz zählte den bewusst akzeptierten GPS-Querversatz von 12–13 m als Mangel. (3) Eine
+  Regel „weniger Kappung zuerst" zog eine 637-m-Kette einer 406-m-Lösung vor. Das Qualitätsmaß ist jetzt
+  **weglos nach Projektion** (Vorschlag des Nutzers): was innen abseits der Wege läuft, plus der Anteil des
+  Anschluss-Versatzes über 15 m — damit ist GPS-Rauschen frei, ein echtes Geländestück zählt. Der vierte
+  Durchlauf reproduziert den bestätigten Stand (41,81 km, 36 von 38 Segmenten identisch).
 - **Trailrunden-Lückenschließen überarbeitet (Zwischenschritt zum Obigen).** Das Verfahren
   arbeitet nicht mehr als Wettbewerb aller Methoden nach kürzester Strecke, sondern in Prioritätsstufen:
   erst beide Lücken-Enden auf echte OSM-Wege mappen (inkl. neuer Variante, die beide Seiten mappt und den

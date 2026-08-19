@@ -20,12 +20,33 @@ schließt.
    ist die Reparatur, nicht der Schaden.
 4. **Möglichst 100 % auf OSM-Wegen bleiben.** Das ist das Kriterium, das perfekt von akzeptabel trennt.
 
-### Qualitätsmaß
+### Qualitätsmaß: weglos nach Projektion
 
-`weglos` = Meter der Brücke, die weiter als 20 m von jedem gemappten Weg entfernt liegen.
-**perfekt = weglos 0 m UND kein Stück abseits eines Wegs**, auch nicht kurz. Ein Ergebnis kann weglos 0 m
-haben und trotzdem nur akzeptabel sein, wenn es z. B. 20 m quer durch den Wald springt, die zufällig nah an
-einem anderen Weg liegen.
+Vorschlag des Nutzers, und die Größe, an der alles hängt. Weil die Brücken **aus** Weg-Geometrie gebaut sind
+(`slice_way_between`), liegt ihr Inneres per Konstruktion exakt auf dem Weg — abseits kann nur an den zwei
+Anschlüssen entstehen, also im Querversatz zwischen Trail-Aufzeichnung und OSM-Weg. Deshalb:
+
+    weglos = (was INNEN abseits der Wege läuft, Toleranz 5 m)
+           + max(0, Anschluss-Versatz − 15 m)
+
+Beide Zahlen sind an echten Fällen kalibriert, nicht geraten:
+
+- **Innen 5 m statt 20 m.** Bei 20 m sahen am Hilschberghaus *vier* Kandidaten identisch gut aus (alle
+  weglos 0 m), obwohl drei davon 20 m querab durchs Gelände sprangen — die Auswahl war damit zufällig.
+- **Anschluss-Versatz bis 15 m frei.** 10–15 m sind GPS-Ungenauigkeit und vom Nutzer ausdrücklich akzeptiert
+  („Die Sprünge sind zwar unschön, aber unvermeidbar"). Die 21,9 m querab am Hilschberghaus sind dagegen ein
+  echtes Geländestück und zählen — genau der Unterschied, den der Nutzer auf der Karte gesehen hat und den
+  ein einheitliches 20-m-Maß nicht sehen konnte.
+
+**perfekt = weglos 0 m.** Akzeptabel ist ein Ergebnis, das die Lücke schließt, aber ein Stück abseits der
+Wege enthält.
+
+### Rangfolge
+
+`(verworfen, weglos, Fallnummer, Brückenlänge)`. **Die Kappung gehört nicht in die Sortierung** — sie ist die
+Reparatur, kein Kostenfaktor, und wird nur über `MAX_TRIM_FACTOR` begrenzt. Ein Versuch, „weniger Kappung"
+vorzuziehen, hat bei `seg0` eine 637-m-Kette ohne Kappung der bestätigten 406-m-Lösung mit 230 m Kappung
+vorgezogen.
 
 ---
 
@@ -149,6 +170,28 @@ Alle mit weglos 0 m.
 
 **Geschwindigkeit:** ein einziger Overpass-Abruf für die ganze Tour (`prefetch`, Ergebnis als Datei) statt
 einer Abfrage pro Lücke — von 1 min 35 s auf **0,9 s** für vier Lücken.
+
+---
+
+## Stabilitätstest: vier Durchläufe, drei Mängel
+
+Nach dem Einbau von Fall 5 wurde das Verfahren komplett neu auf die Original-Geometrie angewendet und mit dem
+bestätigten Ergebnis verglichen — auf Wunsch des Nutzers, weil das Verfahren sich verändert hatte. Es war
+**nicht** stabil, und jeder Durchlauf legte einen eigenen Mangel offen:
+
+| Lauf | Ergebnis | Mangel |
+|---|---|---|
+| 1 | 1 Lücke offen, 41,72 km | `MAX_TRIM_FACTOR` 3,0 verwarf die bestätigte Hilschberghaus-Lösung um **1,5 m** (Faktor 3,02) → auf 4,0 erhöht |
+| 2 | 4 Lücken offen, 42,20 km | Weglos-Toleranz 5 m zählte den akzeptierten Querversatz (12–13 m) als Mangel → Anschluss-Versatz getrennt bewertet |
+| 3 | 0 Lücken, 42,27 km | „weniger Kappung zuerst" zog bei `seg0` eine 637-m-Kette vor → Kappung aus der Sortierung entfernt |
+| 4 | **0 Lücken, 41,81 km** | reproduziert den bestätigten Stand |
+
+Lauf 4 gegen den bestätigten Stand: gleiche Länge, gleiche Segmentzahl, **36 von 38 Segmenten identisch**.
+Die zwei Abweichungen (`seg3`/`seg4`, zusammen +13 m) sind eine gleichwertige Entscheidung — Fall 1 mit 47 m
+Brücke ohne Kappung statt Fall 2 mit 75 m und 41 m Kappung, beide weglos 0 m.
+
+**Lehre: ein geändertes Verfahren muss gegen die bestätigten Ergebnisse nachgerechnet werden.** Alle drei
+Mängel waren unsichtbar, solange nur einzelne neue Fälle gerechnet wurden.
 
 ---
 
