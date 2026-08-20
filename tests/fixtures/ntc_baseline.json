@@ -7,7 +7,7 @@
     },
     "closed": 16,
     "gaps": 16,
-    "length_m": 45677,
+    "length_m": 45717,
     "per_gap": [
       {
         "applied": "1_ein-Weg-beide-Seiten",
@@ -83,7 +83,7 @@
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
-        "bridge": 108,
+        "bridge": 107,
         "gap": 88.1,
         "relaxed": false,
         "seg": 7,
@@ -119,7 +119,7 @@
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
-        "bridge": 26,
+        "bridge": 68,
         "gap": 21.5,
         "relaxed": false,
         "seg": 3,
@@ -174,11 +174,12 @@
     "cases": {
       "1_ein-Weg-beide-Seiten": 15,
       "3_Schnittpunkt": 3,
-      "5_Wegekette+kappen": 2
+      "5_Wegekette": 1,
+      "5_Wegekette+kappen": 1
     },
     "closed": 20,
     "gaps": 20,
-    "length_m": 35708,
+    "length_m": 35710,
     "per_gap": [
       {
         "applied": "3_Schnittpunkt",
@@ -208,13 +209,13 @@
         "trim": 0
       },
       {
-        "applied": "5_Wegekette+kappen(A)",
-        "bridge": 70,
+        "applied": "5_Wegekette",
+        "bridge": 62,
         "gap": 46.6,
         "relaxed": false,
         "seg": 18,
         "skipped": null,
-        "trim": 10
+        "trim": 0
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
@@ -310,7 +311,7 @@
         "applied": "5_Wegekette+kappen(B)",
         "bridge": 202,
         "gap": 57.1,
-        "relaxed": true,
+        "relaxed": false,
         "seg": 5,
         "skipped": null,
         "trim": 60
@@ -361,9 +362,7 @@
         "trim": 0
       }
     ],
-    "relaxed": [
-      5
-    ],
+    "relaxed": [],
     "segments": 23,
     "still_open": [],
     "trail_m": {
@@ -372,7 +371,7 @@
       "Pfälzerwald Grün-Gelbes Kreuz 3": 473,
       "Pfälzerwald Grün-Gelbes Kreuz 4": 1444,
       "Schopp Trail 4": 355,
-      "Schopp Trail 5": 563,
+      "Schopp Trail 5": 573,
       "Schopp Trail 6": 231,
       "Zum Walzwerk": 1511
     }
@@ -386,7 +385,7 @@
     },
     "closed": 21,
     "gaps": 21,
-    "length_m": 33656,
+    "length_m": 33677,
     "per_gap": [
       {
         "applied": "2_Weg-folgen-und-kappen(B)",
@@ -399,7 +398,7 @@
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
-        "bridge": 32,
+        "bridge": 43,
         "gap": 19.3,
         "relaxed": false,
         "seg": 20,
@@ -534,7 +533,7 @@
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
-        "bridge": 39,
+        "bridge": 49,
         "gap": 35.6,
         "relaxed": false,
         "seg": 4,

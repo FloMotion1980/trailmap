@@ -662,6 +662,52 @@ und 2 m im Odenwald -- unter einem Pixel bei jeder Zoomstufe, die die App zeichn
 
 ---
 
+## Paralleler Weg ist kein Nachfahren -- Bremberg-Loop (2026-08-20)
+
+Der Nutzer: „Beim Bremberg Loop gibt es eine grosse Luecke. Aber da kann man eine Verbindung herstellen, da
+dort direkt ein Waldweg ist (Nach dem Trail Little Fluff)." Genau den Waldweg hatte das Verfahren gefunden --
+`1_ein-Weg-beide-Seiten`, **254 m Bruecke fuer 253 m Luecke, Faktor 1,0** -- und dann verworfen, weil das
+Doppelt-Mass dort 142 m sah.
+
+Nachgemessen trennen sich die zwei Faelle sauber, und zwar am ABSTAND:
+
+| Fall | Abstand der Bruecke zur Trail-Linie |
+|---|---|
+| Bremberg, paralleler Waldweg | 10-15 m: 63 m, 15-20 m: 79 m, darueber 64 m, **unter 10 m: nichts** |
+| Ost-West seg50, echtes Nachfahren | **unter 5 m: 59 m**, 5-10 m: 14 m, darueber nichts |
+
+Wer auf dem Trail faehrt, ist auf dem Trail; wer daneben faehrt, ist daneben. Das Doppelt-Mass hat deshalb
+eine eigene, engere Toleranz (`DOUBLE_NEAR_M = 10`) statt `OVERLAP_M` (20 m) mitzubenutzen. Nebeneffekt:
+Kurztour 3 Schopp braucht eine Lockerung weniger und eine Kappung weniger.
+
+## Ein Sporn INNERHALB eines Abschnitts -- und warum es dafuer keinen Suchlauf gibt (2026-08-20)
+
+Der Nutzer, zur „Crest la Siala Tour": „Da wo Crest la Siala Trail auf Plaun Larisch Trail [trifft] muesste
+letzterer eigentlich gekuerzt werden." Die Naht selbst ist 0,0 m -- es ist keine Luecke, sondern ein Fehler
+INNERHALB eines Segments, und den sieht die Lueckenpruefung nie, weil sie nur Segmentgrenzen misst.
+
+Gemessen: „Crest la Siala" endet ZWISCHEN zwei Stuetzpunkten von „Plaun Larisch" (bei rund 1400 m von
+2025 m). Der Abschnitt beginnt am Treffpunkt, springt dann **191 m zurueck** auf den Stuetzpunkt davor und
+laeuft erst von dort vorwaerts -- ein 381-m-Umweg durch einen einzigen Punkt. Behoben durch Entfernen dieses
+Punktes; der Abschnitt ist jetzt 564 m statt 945 m, die Tour 13,52 km statt 13,90 km, groesster Umweg durch
+einen Punkt 11 m.
+
+**Drei Suchlaeufe fuer denselben Fehler wurden gebaut und alle drei sind unbrauchbar**, jeder aus demselben
+Grund -- legitime Geometrie sieht genauso aus:
+
+| Mass | Treffer | Warum unbrauchbar |
+|---|---|---|
+| Rueckwaertsschritt entlang der eigenen Trail-Linie, > 50 m | 23 | verfehlt genau den gemeldeten Fall: dort ist der Rueckwaertsschritt entlang des Trails nur 30 m, im Raum aber 191 m |
+| Hin-und-zurueck im Raum innerhalb eines Abschnitts | 221 | schlaegt fuer jeden Trail an, dessen Anfang neben dem Ende liegt (bei „Monte Corno" fuer den ganzen Trail) |
+| Umweg durch einen einzelnen Punkt, > 100 m | 80 | eine duenn abgetastete Serpentine erzeugt dasselbe Bild |
+
+Der gemeldete Fall steht im dritten Lauf auf Platz 5 (381 m). Die vier ueber ihm sind alle „Ude's Trail" in
+Paganella (988, 543, 477, 285 m) -- **Kandidaten fuer denselben Fehler, aber unbestaetigt**. Ohne ein Mass,
+das die Gruppen trennt, waere ein Sweep ueber 80 Stellen ein Blindflug; deshalb wurde nur die gemeldete Stelle
+angefasst.
+
+---
+
 ## Regressionstest (2026-08-20)
 
 `python tests/run.py --suite ntcregression` — 12 Fälle, ~60 s. Rechnet drei Touren aus ihrem Stand **vor** dem

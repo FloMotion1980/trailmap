@@ -22,6 +22,18 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Bremberg-Loop geschlossen: ein paralleler Waldweg ist kein Nachfahren.** Der Nutzer hat den Waldweg auf
+  der Karte gesehen; das Verfahren hatte ihn gefunden (254m Bruecke fuer 253m Luecke, Faktor 1,0) und wegen
+  angeblich 142m doppelt verworfen. Nachgemessen trennen sich die Faelle am ABSTAND: dort liegt die Bruecke
+  zu 10-20+m neben der Trail-Linie und nichts unter 10m, bei einem echten Nachfahren liegen 59 von 73m unter
+  5m. Das Doppelt-Mass hat jetzt eine eigene engere Toleranz (DOUBLE_NEAR_M = 10). Nebeneffekt: Kurztour 3
+  Schopp braucht eine Lockerung und eine Kappung weniger.
+- **"Crest la Siala Tour": ein 381-m-Sporn INNERHALB eines Abschnitts behoben.** Die Naht ist 0,0m, es war
+  also keine Luecke -- "Crest la Siala" endet zwischen zwei Stuetzpunkten von "Plaun Larisch", und der
+  Abschnitt sprang erst 191m zurueck, bevor er vorwaerts lief. Drei Suchlaeufe fuer denselben Fehler wurden
+  gebaut und ALLE verworfen (23, 221 und 80 Treffer, jeder dominiert von legitimer Geometrie wie duenn
+  abgetasteten Serpentinen) -- deshalb nur die gemeldete Stelle angefasst, mit vier unbestaetigten Kandidaten
+  in Paganella notiert. Siehe docs/nearby-trail-connector.md.
 - **Alle uebrigen Regionen geschlossen: 190 von 217 Luecken (88 %)** in Odenwald, Sauerland, Waldmeister,
   Bike Circus, Naheland, Donnersberg, Livigno, Soelden und Bike Kingdom -- ohne Einzelfall-Vorlage, weil das
   Verfahren inzwischen traegt. Im ganzen Stapel gibt es EINE Kappung ueber 15 %. Die beiden

@@ -144,6 +144,14 @@ MAX_GAP_M = 1500.0
 # standen zwei Fall-2-Loesungen, 80m Bruecke ohne Kappung mit 38m doppelt gegen 37m Bruecke mit 64m Kappung
 # und 18m doppelt. Nach Laenge allein gewinnt die erste; der Nutzer hat fuer diese Stelle ausdruecklich das
 # Kappen verlangt ("Da muss man halt auch den Trail kuerzen").
+# Das Doppelt-Mass braucht eine ENGERE Toleranz als OVERLAP_M (20m). Mit 20m zaehlte ein Waldweg, der bloss
+# PARALLEL zum Trail laeuft, als Nachfahren -- beim Bremberg-Loop im Sauerland verwarf das eine Bruecke mit
+# Faktor 1,0 (254m fuer 253m Luecke, genau der Waldweg, den der Nutzer auf der Karte gesehen hat) wegen
+# angeblich 142m doppelt. Nachgemessen trennen sich die Faelle sauber: dort liegt die Bruecke zu 10-20+m
+# neben der Trail-Linie und NICHTS unter 10m, waehrend bei einem echten Nachfahren (Ost-West seg50, vom
+# Nutzer beanstandet) 59 von 73m unter 5m liegen und der Rest bei 5-10m. Wer auf dem Trail faehrt, ist auf
+# dem Trail; wer daneben faehrt, ist daneben.
+DOUBLE_NEAR_M = 10.0
 MAX_DOUBLE_M = 60.0
 # NTC_PREFER erlaubt es, an EINER Stelle die Fallwahl vorzugeben: "25:2_,31:3_" heisst "nimm bei Luecke 25 den
 # besten nicht verworfenen Fall-2-Kandidaten". Das ist bewusst ein Handeingriff und keine Regel -- eingebaut
@@ -197,7 +205,7 @@ PROJ_NO_BRANCH_M = 25.0    # am Anschlusspunkt darf kein anderer Weg so nah abzw
 for _k in ("ON_WAY_M", "MEET_M", "MAX_TRIM_FACTOR", "MAX_BRIDGE_FACTOR", "MAX_SEG_TRIM_FRACTION",
            "MIN_SEG_POINTS", "OFF_TOL_M", "OVERLAP_M", "MIN_OVERLAP_M", "PROJ_MAX_MEAN_M",
            "RELAX_BRIDGE_FACTOR", "RELAX_SEG_TRIM_FRACTION", "MAX_GAP_M", "MAX_DOUBLE_M",
-           "MAX_TRIM_ABS_M", "RELAX_DOUBLE_M",
+           "MAX_TRIM_ABS_M", "RELAX_DOUBLE_M", "DOUBLE_NEAR_M",
            "PROJ_MIN_RATIO", "PROJ_MIN_SECOND_M", "PROJ_NO_BRANCH_M", "MERGE_ONLY", "CASE1_FIRST_ONLY"):
     if os.environ.get("NTC_" + _k) is not None:
         globals()[_k] = float(os.environ["NTC_" + _k])
@@ -391,7 +399,7 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False, budget_A=None, budget
         tot = 0.0
         for k in range(1, len(bridge) - 2):
             mid = [(bridge[k][0] + bridge[k + 1][0]) / 2.0, (bridge[k][1] + bridge[k + 1][1]) / 2.0]
-            if min(point_to_line(mid, newA)[0], point_to_line(mid, newB)[0]) <= OVERLAP_M:
+            if min(point_to_line(mid, newA)[0], point_to_line(mid, newB)[0]) <= DOUBLE_NEAR_M:
                 tot += haversine_m(bridge[k], bridge[k + 1])
         return tot
 
