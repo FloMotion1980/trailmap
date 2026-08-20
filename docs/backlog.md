@@ -201,8 +201,12 @@ this section in the same commit as the code**, the same standing rule `CHANGELOG
     demonstrably not closed the crash. 0.938 → 0.65 takes roughly a third off every remaining surface.
   - **The original entry's own options (a)–(d) still stand** for the elongation itself.
 - **Original entry, kept for the reasoning (its numbers are superseded above): RIDE mode more than doubles the
-  vector-renderer memory, and that is why zooming far out could kill the app.** **The crash is NOT closed.** A `RIDE_MIN_ZOOM` of 10 was tried and removed the same day: it stopped the
-  user's zoom-OUT reproduction, then the crash returned zoomed far IN, but the underlying overhead is untouched and will matter again for a bigger
+  vector-renderer memory, and that is why zooming far out could kill the app.** **The crash is NOT closed, and "it did not happen today" is not evidence that it is.** A `RIDE_MIN_ZOOM`
+  of 10 was tried and removed the same day: it stopped the user's zoom-OUT reproduction — confirmed on
+  their phone, recorded as fixed — and then the crash returned zoomed far IN. After the empty builder pane
+  came out (126 → 86 MB) the user tested again, zooming freely with no clamp, and reported no crash so far
+  (2026-08-20). Treat that as encouraging and nothing more: a memory kill needs enough to accumulate, so a
+  short session proves less than it feels like, and the same wording was already wrong once today, but the underlying overhead is untouched and will matter again for a bigger
   region or an older phone. Measured on a 375x812 viewport at a fixed 45° bearing:
 
   | | container | ratio | `rotationPadding()` | painted box | 3 renderer panes |
