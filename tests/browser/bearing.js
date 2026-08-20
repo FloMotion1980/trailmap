@@ -288,29 +288,41 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     T.near("and switching back to north-up does not move it either",
            Math.hypot(back.x - atNorth.x, back.y - atNorth.y), 0, 2);
 
-    T.test("centring survives a container whose size Leaflet has not noticed yet");
+    T.test("tapping the position button repairs a size Leaflet has not noticed yet");
     // The landscape half of the same report: after a portrait/landscape flip iOS settles the layout later than
-    // Leaflet's own debounced resize handler runs, so map.getSize() can still hold the previous orientation.
-    // Reproduced exactly here by putting a stale size back: with 375x757 cached against a real 768x320 container,
-    // panTo placed the position 58 px BELOW the bottom edge of the screen. The iOS timing is not reproducible;
-    // the stale size is, and it is the actual cause.
+    // Leaflet's own debounced resize handler runs, so map.getSize() can still hold the previous orientation, and
+    // this is exactly the button a rider taps right after turning the phone. What is asserted here is the REPAIR
+    // (the size is back, and the pill says so, both just below the `finally`) -- deliberately NOT where the dot
+    // ends up.
+    //
+    // WHY NOT THE DOT. This case fabricates the stale size by writing to `map._size`, which is the only way to
+    // produce it on demand -- and that state is not the real one, in a way that changes the right answer.
+    // Measured here, on a 930x805 container with 403x1395 cached: invalidateSize's compensation `_rawPanBy`s the
+    // pane by half the difference and leaves Leaflet's own `getCenter()` UNCHANGED (preserving the centre is the
+    // whole point of it), so the pixels are displaced by (+261, -293) while the model says nothing moved. The
+    // panTo that follows then has ~170 m to travel, `_tryAnimatedPan` applies that as a DELTA on the already
+    // displaced pane, and the displacement survives. Under a REAL container change there is no such residual:
+    // the change itself displaces the pixels and the compensation removes them. So a "the dot is centred" check
+    // here fails against a correct app -- which is the same trap ensureMapSizeCurrent's own comment records
+    // ("it only looked right against a fabricated state"), one level up: a fabricated size is fine for asking
+    // whether the repair RAN, and worthless for asking where the repair left the view.
+    //
+    // The real-container version of that question is the second half of this case, below the `finally`: it
+    // resizes the element for real and demands the position back on the centre within 3 px.
     realSize = L.point(TM.$("#map").clientWidth, TM.$("#map").clientHeight);
     map._size = L.point(Math.round(realSize.y / 2), Math.round(realSize.x * 1.5));   // plausibly "the other orientation"
     T.ok("the map is now holding a size that is not its container's",
          map.getSize().y !== realSize.y, JSON.stringify(map.getSize()), "different from " + JSON.stringify(realSize));
     map.fire("dragstart");                 // detach again -- the earlier reattach reset this to false
     await TM.wait(50);
+    T.ok("and the button is showing, because the follow is detached",
+         TM.$("#locateCluster").classList.contains("is-detached"), TM.$("#locateCluster").className, "is-detached");
     TM.$("#locateBtn").click();
-    // Wait out the settle BURST before measuring, not just for the pixels to stop moving. onViewportSettled is
-    // deliberately re-run at 150/400/900/1500 ms after a size change (iOS settles a flip in steps), so a reading
-    // taken between two of those checks can catch the view mid-repair — which is exactly what happened when this
-    // case was measured 96 px low in a combined run while passing on its own. The property under test is where the
-    // position ends up, so the measurement has to be after the last scheduled check.
+    // Wait out the settle BURST before measuring: onViewportSettled is deliberately re-run at 150/400/900/1500 ms
+    // after a size change (iOS settles a flip in steps), so a reading taken between two of those can catch the
+    // repair half done.
     await TM.wait(1700);
     await TM.settle(dotScreen, 3000);
-    const healed = dotScreen(), c2 = mapCentreScreen();
-    T.near("the position still lands on the container centre, x", healed.x, c2.x, 2);
-    T.near("the position still lands on the container centre, y", healed.y, c2.y, 2);
   } finally {
     if (typeof stopFollowing === "function") stopFollowing();
     navigator.geolocation.watchPosition = pivotRealWatch;
@@ -495,20 +507,36 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   const arrowPath = () => TM.$$("#map .leaflet-overlay-pane path")
     .find((p) => p.getAttribute("stroke-width") === "1.2" && p.getAttribute("fill") !== "none" &&
                  /z$/i.test((p.getAttribute("d") || "").trim()));
-  const gotArrow = await TM.until(() => !!arrowPath(), 3000);
-  if (!gotArrow) {
+  // Poll for the arrow AFTER northAgain(), not before it, and never dereference the result of a find()
+  // without having just polled for it: going back north re-cuts the renderer's viewBox and rescales every
+  // arrow layer for the new zoom, so the one arrow this case measures can genuinely be absent for a frame
+  // or leave the view altogether. The first version checked once, before the turn, and then read
+  // `arrowPath().getAttribute("d")` after it -- which threw `Cannot read properties of undefined` often
+  // enough to abort the WHOLE suite roughly one run in two, taking the six cases below it with it and
+  // leaving the map mid-turn for whichever suite ran next. That is what the `controls` and `infopanel`
+  // "flakes" were: this throw's blast radius, not three independent problems.
+  if (!await TM.until(() => !!arrowPath(), 3000)) {
     T.skip("no arrow rendered near this trail at zoom 17 -- nothing to measure");
   } else {
     await northAgain();
-    const dNorth = arrowPath().getAttribute("d");
-    setHeadingUp(true);
-    applyMapBearing(45, true);
-    await TM.wait(200);
-    const afterTurn = arrowPath();
-    T.ok("an arrow chevron is actually drawn (a real path, not an empty M0 0)", dNorth.length > 10, dNorth, "a real path");
-    T.ok("turning the map changes its rendered shape", !!afterTurn && afterTurn.getAttribute("d") !== dNorth,
-         afterTurn && afterTurn.getAttribute("d"), "!= " + dNorth);
-    T.eq("and the labels are still upright", angleOf(".leaflet-norotate-pane"), 0);
+    if (!await TM.until(() => !!arrowPath(), 3000)) {
+      T.skip("the arrow left the view when the map went back north -- nothing to measure");
+    } else {
+      const dNorth = arrowPath().getAttribute("d");
+      setHeadingUp(true);
+      applyMapBearing(45, true);
+      // Wait for the property under test rather than for a fixed 200 ms, so a slow frame cannot fail it and a
+      // shape that never changes still does: TM.until returns false on timeout, and that boolean IS the check.
+      const turned = await TM.until(() => {
+        const p = arrowPath();
+        return !!p && p.getAttribute("d") !== dNorth;
+      }, 3000);
+      const afterTurn = arrowPath();
+      T.ok("an arrow chevron is actually drawn (a real path, not an empty M0 0)", dNorth.length > 10, dNorth, "a real path");
+      T.ok("turning the map changes its rendered shape", turned,
+           afterTurn && afterTurn.getAttribute("d"), "!= " + dNorth);
+      T.eq("and the labels are still upright", angleOf(".leaflet-norotate-pane"), 0);
+    }
     await northAgain();
   }
 
@@ -516,30 +544,59 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   // The user's own report: the old real-metre-sized chevrons visibly grew/shrank while zooming, unlike the
   // trail line's own constant-pixel `weight`. rescaleDirectionArrows() re-derives each chevron's real-world
   // size from the CURRENT zoom's metresPerPixel on every real "zoomend" (fired by map.setZoom below, no manual
-  // call needed), so its SVG bounding box -- drawn in screen/container pixels by Leaflet's SVG renderer, not
-  // real-world units -- should measure about the same at two very different zoom levels.
+  // call needed), so ONE ARROW measured in screen pixels should come out the same size at any zoom.
+  //
+  // MEASURE ONE TRIANGLE, NOT THE LAYER. A trail's arrows are all sub-rings of a SINGLE polygon, so the
+  // element's own getBBox() is the extent of the whole trail -- measured here at 509 px on one Bike Kingdom
+  // trail against a 15 px triangle. The first version of this case used exactly that, so what it compared
+  // across two zooms was "how much of this trail is on screen", which happens to be roughly stable and made
+  // the case look like it was passing. The `d` attribute's first three points ARE the first triangle, so
+  // parse them instead; the max over every visible arrow is the most orientation-independent number available
+  // (a triangle's bbox shrinks toward its short side as the line it sits on turns), and the bug being guarded
+  // against is worth 8x, not 10%.
+  const ringSpan = (p) => {
+    const n = (p.getAttribute("d") || "").split(/[^0-9.\-]+/).filter((x) => x.length).slice(0, 6).map(Number);
+    if (n.length < 6 || n.some(isNaN)) return 0;
+    const xs = [n[0], n[2], n[4]], ys = [n[1], n[3], n[5]];
+    return Math.max(Math.max.apply(null, xs) - Math.min.apply(null, xs),
+                    Math.max.apply(null, ys) - Math.min.apply(null, ys));
+  };
+  const biggestArrow = () => {
+    const spans = TM.$$("#map .leaflet-overlay-pane path")
+      .filter((p) => p.getAttribute("stroke-width") === "1.2" && p.getAttribute("fill") !== "none" &&
+                     /z$/i.test((p.getAttribute("d") || "").trim()))
+      .map(ringSpan).filter((v) => v > 0);
+    return spans.length ? Math.max.apply(null, spans) : 0;
+  };
+  // ZOOM AROUND THE ARROW, not around the map centre. Arrows sit 300 m apart and z17 shows ~200 m, so
+  // holding the centre and zooming in leaves one in view by luck -- which is what made this case skip on two
+  // of three runs. setZoomAround keeps a given container point fixed across the zoom, so the very arrow just
+  // measured is still on screen afterwards by construction. (Re-centring on it via containerPointToLatLng was
+  // tried first and is strictly worse: it needs the latlng round trip to be exact, and it still moves the
+  // view.)
   map.setZoom(15, { animate: false });
   await TM.wait(200);
-  const gotArrow15 = await TM.until(() => !!arrowPath(), 3000);
-  if (!gotArrow15) {
-    T.skip("no arrow rendered at zoom 15 -- nothing to measure");
-  } else {
-    const bbox15 = arrowPath().getBBox();
-    map.setZoom(18, { animate: false });
+  const span15 = await TM.until(() => biggestArrow() > 0, 3000) ? biggestArrow() : 0;
+  let span17 = 0;
+  if (span15) {
+    const a = TM.$$("#map .leaflet-overlay-pane path")
+      .filter((p) => p.getAttribute("stroke-width") === "1.2" && p.getAttribute("fill") !== "none" &&
+                     /z$/i.test((p.getAttribute("d") || "").trim()))
+      .sort((x, y) => ringSpan(y) - ringSpan(x))[0];
+    const ab = a.getBoundingClientRect(), mb = TM.$("#map").getBoundingClientRect();
+    map.setZoomAround(L.point(ab.left + ab.width / 2 - mb.left, ab.top + ab.height / 2 - mb.top),
+                      17, { animate: false });
     await TM.wait(250);
-    const gotArrow18 = await TM.until(() => !!arrowPath(), 3000);
-    if (!gotArrow18) {
-      T.skip("no arrow rendered at zoom 18 -- nothing to measure");
-    } else {
-      const bbox18 = arrowPath().getBBox();
-      const size15 = Math.max(bbox15.width, bbox15.height), size18 = Math.max(bbox18.width, bbox18.height);
-      // A real-metre chevron would roughly OCTUPLE in screen size over these 3 zoom levels (2^3); constant
-      // screen-pixel sizing keeps it within a generous 60% band instead -- wide enough for rounding/projection
-      // noise, nowhere near wide enough for the old bug to slip through unnoticed.
-      T.ok("chevron size (screen px) stays roughly constant across a 3-level zoom change, not scaling with it",
-           size15 > 0 && size18 > 0 && Math.abs(size18 - size15) < size15 * 0.6,
-           [size15, size18], "within 60% of each other");
-    }
+    span17 = await TM.until(() => biggestArrow() > 0, 3000) ? biggestArrow() : 0;
+  }
+  if (!span15 || !span17) {
+    T.skip("no arrow triangle on screen at zoom " + (span15 ? 17 : 15) + " -- nothing to measure");
+  } else {
+    // A real-metre chevron would QUADRUPLE over these two zoom levels (2^2); constant screen-pixel sizing
+    // keeps it within a generous 60% band -- wide enough for the orientation spread, nowhere near wide
+    // enough for the old bug to slip through.
+    T.ok("one arrow triangle is the same size in screen px at zoom 15 and 17, not 4x bigger",
+         Math.abs(span17 - span15) < span15 * 0.6, [span15, span17], "within 60% of each other");
   }
   map.setZoom(17, { animate: false });
   await TM.wait(200);
@@ -585,6 +642,19 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
     return { ok: false, probed: probed };
   };
   await northAgain();
+  // And then make sure a probe point is REALLY inside the container, without relying on the fly having got
+  // there. Two things can leave the view empty: the previous case ends at zoom 17 somewhere with no trail
+  // nearby, and flyToTrailBounds is animated -- so wherever animation frames do not run (a background tab;
+  // this project's own preview pane measures 0 frames in 250 ms) the fly never arrives and every probe point
+  // lands outside. That skipped the case silently, which is the one outcome worse than a failure. The
+  // condition has to be probeHit's OWN count, not "some line has a length": Leaflet clips against PADDED
+  // bounds, so a path can carry real geometry while every point of it is off screen -- a weaker check
+  // sitting here broke out of the loop immediately and the case skipped anyway.
+  for (const z of [15, 13, 11]) {
+    if (probeHit().probed) break;
+    map.setZoom(z, { animate: false });
+    await TM.wait(250);
+  }
   const hitNorth = probeHit();
   setHeadingUp(true);
   applyMapBearing(90, true);

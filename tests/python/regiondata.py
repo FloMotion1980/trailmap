@@ -134,6 +134,43 @@ def run(t):
             bad_url.append(key)
     t.eq("no url fields", bad_url, [])
 
+    t.case("no region silently lost its trailSegments")
+    # `donnersberg.json` lost its ENTIRE `trailSegments` key in commit b881699 (a rebuild that regenerated
+    # lineTrails/trailGeo without carrying it forward) and stayed that way for several commits, until the user
+    # noticed "Wasser & Holz" drawing with none of its coloured component-trail stretches. Nothing caught it:
+    # validate_region checks segment/geometry CONSISTENCY when the key is present, and says nothing about a
+    # key that is gone.
+    #
+    # Why a committed expectation and not a derived invariant. The obvious derived rule -- "a loop:true trail
+    # must have a trailSegments entry" -- is false: 15 loops across 6 regions legitimately have none (a
+    # published round with no component-trail breakdown; see buildTrailLayer's own "no TRAIL_SEGMENTS data"
+    # branch). A geometric version ("this loop retraces other trails in its own region") was measured against
+    # the real data and flagged 3 of those 15, which is a check people would learn to ignore. A count that may
+    # only go UP has no false positives at all, and the one time it is wrong -- a region deliberately losing a
+    # Tour -- the fix is a one-line, deliberate edit here, which is exactly the moment of attention the bug
+    # above went through without.
+    expected = json.load(io.open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                              "segments_expected.json"), encoding="utf-8"))
+    lost = []
+    for key, want in sorted(expected.items()):
+        path = os.path.join(REGIONS, key + ".json")
+        if not os.path.exists(path):
+            lost.append("%s: the region file is gone" % key)
+            continue
+        got = len(json.load(io.open(path, encoding="utf-8")).get("trailSegments") or {})
+        if got < want:
+            lost.append("%s: %d trailSegments entries, had %d -- if a Tour was really dropped, say so in "
+                        "tests/python/segments_expected.json" % (key, got, want))
+    t.eq("every region still has at least the Touren it had", lost, [])
+    # And the other direction, so the file cannot quietly fall behind reality: a region that GAINED segments
+    # is fine, but one that has them while the manifest has never heard of it is a manifest that is not
+    # watching it.
+    unwatched = sorted(k for k in on_disk
+                       if k not in expected
+                       and (json.load(io.open(os.path.join(REGIONS, k + ".json"), encoding="utf-8"))
+                            .get("trailSegments")))
+    t.eq("and every region that has segments is watched here", unwatched, [])
+
     t.case("every region a phone could load has place labels and plausible geometry")
     # Not covered by the per-catalog-key run above if a file ever exists without a catalog entry.
     thin = []

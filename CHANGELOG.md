@@ -22,6 +22,59 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-21
+- **Two new regions, both Trailforks-only: Gardasee & Trentino (911 trails) and Madeira (158).** Source is
+  Trailforks end to end — geometry from each trail page's `encodedpath` polyline, elevation from the same
+  page's `ElevationChart` (so no elevation API at all; the two lengths cross-check and agreed within 60 m on
+  every one of 1 153 pages), and the difficulty from Trailforks' own rating. That last part is a recorded
+  exception to the "operator difficulty wins" rule, on the user's own instruction for both regions ("Rein
+  Trailforks, keine Betreiber-Recherche"; for Madeira "Nimm alles von Trailforks. Hab auch keine andere Quelle
+  da"). Neither region gets a `lifts` array: Madeira is a shuttle island, and the Garda's Malcesine cable car
+  needs the operator's own summer page, which this scope excluded. See `docs/gardasee.md` and
+  `docs/madeira.md` — including the Garda's scope decision (the widest of three offered, "bis Trento,
+  Brescia, Valsugana"), what is deliberately excluded (the Dolomites north of Trento, since Dolomiti
+  Paganella is its own region, plus Lago d'Iseo and the Val Camonica), and Madeira's levada question.
+- **Two new repo-tracked tools replace ad-hoc harvest scripts.** `tools/harvest_trailforks.py` does both
+  halves of a Trailforks harvest — the region trail tables *and* the per-trail pages — where the previous
+  script only ever did the second and the first was hand-written and lost. Three source rules that are
+  invisible in the HTML are pinned in it: the listing pages at 100 rows via `?page=N` with no pager markup,
+  a region's table includes every descendant region's trails (but `madeira` is NOT an ancestor of
+  `madeira-island`, so seeds are a list and get deduped), and `difficulty=` must name every code including
+  10. `tools/build_trailforks_region.py` turns such a harvest into a region for any Trailforks-only region,
+  with everything region-specific — anchors, sub-region labels, id prefix — as data in one `CONFIGS` dict.
+- **Two data rules the Garda forced out into the open.** "Easiest / White Circle" is a SIXTH Trailforks
+  difficulty tier the project had never met (78 trails here, absent from the Vogesen and the Schwarzwald);
+  it maps to `gruen`, and a tier missing from that table is silent, so `tests/python/trailforks.py` now
+  checks the mapping against every harvested table rather than a hand-written list. And paved cycle
+  INFRASTRUCTURE now gets dropped by name: a municipal cycle path is not graded "Access Trail", it gets a
+  real White Circle and sails through — 60 entries here, including Trento's whole urban "Bicipolitana"
+  network and the three longest lines in the region (54/51/47 km of the Ciclovia dell'Adige).
+- **A region can no longer silently lose its `trailSegments`.** `donnersberg.json` lost that whole key in a
+  rebuild in commit `b881699` and nobody noticed for several commits — `validate_region.py` checks segment
+  consistency when the key is present and says nothing about one that is gone. `tests/python/regiondata.py`
+  now holds a committed per-region count that may only go up, with the reasoning for why the two obvious
+  derived rules do not work (15 loops across 6 regions legitimately have no segments, and the geometric
+  "this loop retraces its region's own trails" test flags 3 of those 15). Mutation-checked.
+- **The fatal-error panel's copy and the vector focus ring are now pinned by tests**, both in
+  `tests/python/appshell.py`: no platform-specific advice may appear in the static box (the iPhone tip the
+  user had removed on 2026-08-04 would fail it, and on a home-screen PWA that panel cannot be dismissed),
+  and `.leaflet-interactive:focus{outline:none}` must stay in `style.css` — without it a clicked trail
+  paints a stray black rectangle around its own SVG bounding box.
+- **Three `bearing` cases that had been lying were fixed, and with them the "flaky suite" reports.** The
+  worst was a real defect rather than flake: the direction-arrow case dereferenced a `find()` result after
+  turning the map, threw `Cannot read properties of undefined` on roughly every other run, and that throw
+  **aborted the whole suite** — taking six cases with it and leaving the map mid-turn for whichever suite ran
+  next, which is what the `controls` and `infopanel` "flakes" actually were. The arrow-size case was
+  measuring the wrong quantity entirely (a trail's arrows are sub-rings of ONE polygon, so the element's
+  bbox is the extent of the whole trail — 509 px against a 15 px triangle); it parses the first ring out of
+  the `d` attribute now and zooms with `setZoomAround` so the arrow it just measured cannot leave the view.
+  And the hit-testing case skipped silently whenever an animated fly had not arrived, which is always in an
+  environment with no animation frames; it now zooms out until its own probe has a point on screen.
+- **A `bearing` case was asserting something that cannot be true.** "centring survives a container whose
+  size Leaflet has not noticed yet" fabricated the stale size by writing to `map._size` — and under THAT
+  state `invalidateSize`'s compensation moves the pixels while Leaflet's own `getCenter()` stays put, so the
+  panTo that follows has nothing left to correct and the dot legitimately ends up off centre. Measured, not
+  reasoned about. It asserts the repair now (the size is back, the pill reports it) and leaves "the position
+  ends up centred" to the second half of the same case, which changes the container for real.
 - **The ⬆️ and 🔁 badges can no longer be separated from the trail's name.** An ordinary space in front of them
   is a break opportunity, so a long name could break right before the badge and leave it starting the next
   line — where the only other thing is the button group, making it read as belonging to the buttons rather

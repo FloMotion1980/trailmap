@@ -1505,6 +1505,49 @@ const REGION_CATALOG = {
       nord:            { label: "Nordschwarzwald",              color: "#be185d" },
       enztal:          { label: "Enztal & Nordrand",            color: "#4d7c0f" }
     }
+  },
+  // Madeira, 2026-08-21: Trailforks only, end to end -- geometry, elevation AND difficulty. The user has
+  // ridden the island themselves but had no source of their own to hand ("Nimm alles von Trailforks. Hab
+  // auch keine andere Quelle da"), and the guiding/shuttle operators publish descriptions without grades,
+  // so there is no operator rating for the standing rule to prefer. NO `lifts` array on purpose: every
+  // classic descent here starts from a van drop, the same as Odenwald/Pfälzerwald/Donnersberg.
+  // Porto Santo is the second island and its own sub-region, which is why the bounds cover open sea.
+  madeira: {
+    countries: ["PT"], label: "Madeira", file: "regions/madeira.json", trailCount: 158,
+    bounds: [[32.64482, -17.2628], [33.10392, -16.30393]],
+    subRegions: {
+      md_east:        { label: "Machico & Santo da Serra",    color: "#3a7a4a" },
+      md_funchal:     { label: "Funchal & Pico do Arieiro",   color: "#3a6b8a" },
+      md_north:       { label: "Santana & São Vicente",       color: "#8a3a63" },
+      md_west:        { label: "Calheta & Paul da Serra",     color: "#8a6a2a" },
+      md_northwest:   { label: "Porto Moniz & Ponta do Pargo", color: "#2a7a7a" },
+      md_porto_santo: { label: "Porto Santo",                 color: "#6b4a8a" }
+    }
+  },
+  // Gardasee & Trentino, 2026-08-21: Trailforks only, on the user's own instruction ("Rein Trailforks, keine
+  // Betreiber-Recherche") -- so the grades here are Trailforks' community rating throughout, including for
+  // the handful of bikepark runs whose operator does publish one. Given the choice of scope they asked for
+  // the wider one, "bis Trento, Brescia, Valsugana", with the lake in the region's name: hence both shores,
+  // the Sarca and Ledro valleys, Vallagarina, Trento, the Valsugana and Altopiani, Verona's Lessinia, the
+  // Valle Sabbia and Brescia. Deliberately OUT: the Dolomites/Val di Sole/Val di Non/Primiero group north of
+  // Trento (Dolomiti Paganella is its own region already) and Lago d'Iseo plus the whole Val Camonica.
+  // At 957 trails this is by far the largest region in the app -- see docs/gardasee.md on why that is a
+  // deliberate one-group decision and what it costs.
+  gardasee: {
+    countries: ["IT"], label: "Gardasee & Trentino", file: "regions/gardasee.json", trailCount: 911,
+    bounds: [[45.44359, 10.10792], [46.22794, 11.38366]],
+    subRegions: {
+      gd_garda_trentino: { label: "Riva, Torbole & Arco",       color: "#0f766e" },
+      gd_sarca:          { label: "Valle del Sarca & Laghi",    color: "#0891b2" },
+      gd_baldo:          { label: "Monte Baldo & Gardaostufer", color: "#be185d" },
+      gd_garda_west:     { label: "Gardawestufer",              color: "#c2410c" },
+      gd_valsabbia:      { label: "Valle Sabbia & Idrosee",     color: "#7c3aed" },
+      gd_brescia:        { label: "Brescia & Val Trompia",      color: "#475569" },
+      gd_verona:         { label: "Verona & Lessinia",          color: "#7f1d1d" },
+      gd_trento:         { label: "Trento & Monte Bondone",     color: "#1d4ed8" },
+      gd_rovereto:       { label: "Rovereto & Vallagarina",     color: "#b45309" },
+      gd_valsugana:      { label: "Valsugana & Altopiani",      color: "#4d7c0f" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;

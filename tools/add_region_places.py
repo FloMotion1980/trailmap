@@ -69,6 +69,11 @@ MAX_PLACES_BY_REGION = {
     "nordvogesen": 18,
     "suedvogesen": 18,
     "schwarzwald": 18,
+    # Gardasee & Trentino (2026-08-21) is the largest region in the app -- 957 trails in 10 brackets from
+    # Brescia to the Valsugana. At the default 10 the population ranking spent every label on the four big
+    # cities and left the lake itself anonymous: no Riva del Garda, no Torbole, no Malcesine, no Salò, on a
+    # region named after that lake. 20 is what gives each of the ten brackets its own two.
+    "gardasee": 20,
 }
 MIN_VILLAGE_POP = 600     # see the note below
 KNOWN_MAX_KM = 2.0        # for places that carry a wikidata/wikipedia tag but are small

@@ -121,6 +121,37 @@ def run(t):
     t.ok("boot() has a .catch", re.search(r"boot\(\)\s*\.catch\(", html) is not None, True, True)
     t.ok("window.onerror still shows the panel", "window.onerror" in html, True, True)
 
+    t.case("the fatal-error panel's own copy stays generic")
+    # It used to carry two paragraphs from the era when this was a file opened out of the Files app -- a
+    # "preview-opened file" explanation and an iPhone "In Safari öffnen" tip -- neither of which is true of an
+    # installed PWA served over HTTPS. The user called the tip out on 2026-08-04 ("Diese iPhone Tipp solltest
+    # du aus der Fehlermeldung entfernen. Er stimmt nicht"), and on a home-screen PWA this panel is not
+    # something a rider can dismiss, so wrong advice here is worse than none. The one case those paragraphs
+    # described writes its OWN message into #fatalErrorMsg from boot(), which is why the static markup needs
+    # nothing case-specific -- and that is the property checked: platform advice belongs in the dynamic
+    # message, never in the static box.
+    html = read("index.html")
+    box = html[html.index('<div id="fatalError">'):html.index('<div id="regionDialog">')]
+    visible = re.sub(r"<!--.*?-->", "", box, flags=re.S)          # the comment explains the history; ignore it
+    strayed = [w for w in ("iPhone", "Safari", "Vorschau", "Files", "Chrome", "Android", "iOS")
+               if w.lower() in visible.lower()]
+    t.eq("no platform-specific advice in the static box", strayed, [])
+    t.ok("it still says what to do", "Neu laden" in visible, visible.count("<p"), "mentions reloading")
+    # The file:// case still has to carry its own explanation, or removing the static advice would leave the
+    # one situation it was written for with nothing at all.
+    t.ok("and the file:// case writes its own specific message",
+         "http.server" in html and "fatalErrorMsg" in html, True, True)
+
+    t.case("a clickable vector layer does not draw the browser's own focus box")
+    # Leaflet gives every interactive polyline a tabindex, and the native focus ring follows the path's
+    # RECTANGULAR SVG bounding box rather than its shape -- on an irregular trail that paints a stray black
+    # frame across the map, most visibly after clicking a Trailrunde segment (2026-07-23). One CSS rule
+    # suppresses it, and nothing else in the app would notice if it were dropped.
+    css = read("style.css")
+    rule = re.search(r"\.leaflet-interactive:focus\s*\{[^}]*\}", css)
+    t.ok("style.css still suppresses it", rule and re.search(r"outline\s*:\s*none", rule.group(0)),
+         rule.group(0) if rule else "no .leaflet-interactive:focus rule at all", "outline:none")
+
     t.case("the app folder contains only app files")
     # The whole folder is the Pages artifact, so anything in it is published and reachable by URL. One-off
     # editors, review pages and debug artifacts belong in tools/.

@@ -479,9 +479,20 @@ bottom-first by elevation and require the join to keep climbing.
       with per-trail coverage figures in `DUPLICATE_OF_PFAELZERWALD` in `tools/build_nordvogesen.py` if it
       is ever worth reversing.
 
-14. **Gardasee** (Riva del Garda / Torbole / Arco / Monte Baldo / Ledrotal, IT) — requested by the user
-    2026-08-20, "Das sollte noch auf jeden Fall in die App". Nothing researched yet; noted here so it
-    survives a device change. What to expect when it is picked up:
+14. ~~**Gardasee**~~ — **BUILT 2026-08-21 as "Gardasee & Trentino", 911 trails in 10 sub-regions.**
+    Trailforks only, on the user's own instruction; the scope they picked was the widest of three offered
+    ("bis Trento, Brescia, Valsugana"), with the lake in the name. See `docs/gardasee.md` for what is in,
+    what is deliberately out (the Dolomites north of Trento, Lago d'Iseo, the Val Camonica) and the two new
+    data rules it forced out (the White Circle tier, paved cycle infrastructure). **Still open here:**
+    - **The Malcesine–Monte Baldo cable car is missing**, and it is a genuine summer bike lift. Deliberate:
+      a lift's data comes from the operator's own summer page (`docs/lifts-feature.md`), never from OSM's
+      `aerialway:bicycle` tag, and this build was scoped to Trailforks only. Same for anything at Prada.
+    - **Coverage gaps with famous names**: Pernici, Tremalzo and Busatte are not in the region. The first
+      two are on Trailforks mainly as *routes* rather than trails and the harvester reads trail pages only;
+      the 601 is present in pieces. A per-trail addition, not a re-harvest.
+    - **Nobody has measured RIDE mode on a 911-trail region on a phone.** With Gardasee and Madeira both
+      active the map paints 2 138 vector paths, against the 655 the RIDE memory work was measured against.
+    The original research notes are kept below, since they still describe the area accurately:
     - **It is big and it is spread over several valleys** — Riva/Torbole (Monte Brione, Busatte,
       Pregasina), Arco (Monte Velo, Bocca di Trat, Dosso Gorai), Monte Baldo/Malcesine on the eastern
       shore (with a cable car that carries bikes in summer), the Ledrotal and Tremalzo, plus Monte Stivo
@@ -501,11 +512,13 @@ bottom-first by elevation and require the join to keep climbing.
       shuttle/lift leg as a straight line — exclude those or build them as Touren with segments, never as
       a trail.
 
-15. **Madeira** (PT) — requested by the user 2026-08-20, alongside the Gardasee. Nothing researched
-    yet. **The user has ridden there themselves** — so ask them about difficulties and the sub-region split
-    before falling back on Trailforks for either, the same way their own visit settled both for Bike Kingdom
-    (see `Material/BikeKingdom/Trails Lenzerheide.ods`, authoritative for exactly those two fields). What to
-    know before starting:
+15. ~~**Madeira**~~ — **BUILT 2026-08-21, 158 trails in 6 sub-regions** (including Porto Santo as its own
+    bracket). The "ask the user first" note below was followed and answered: they had no source of their own
+    to hand ("Nimm alles von Trailforks. Hab auch keine andere Quelle da"), so difficulty and the split are
+    both Trailforks/anchor-derived. No lifts, as predicted. See `docs/madeira.md`, including the levada
+    question — sixteen entries run on irrigation-channel or old-road infrastructure and are in the region
+    because Trailforks lists them as BIKE trails; if the user reports one as illegal to ride, remove that
+    trail rather than re-litigating the filter. The original notes, still accurate:
     - **It is a shuttle island, not a lift island** — the classic descents (Pico do Arieiro, Pico Ruivo,
       Encumeada, Fanal/Ribeira da Janela, Ponta do Pargo, Santo da Serra) all start from a van drop, so
       expect NO lifts and no `lifts` array at all, like Odenwald/Pfälzerwald/Donnersberg. Say so
