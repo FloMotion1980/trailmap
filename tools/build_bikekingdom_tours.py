@@ -633,8 +633,14 @@ def match_components(track, trails, geo, lifts, verbose=True):
     return out
 
 
-def build_tour(spec, trails, geo, lifts, verbose=True):
-    """Returns (lineTrails entry, loop coords, profile, segments)."""
+def build_tour(spec, trails, geo, lifts, verbose=True, ele=None):
+    """Returns (lineTrails entry, loop coords, profile, segments).
+
+    `ele` is the shared ElevationLookup -- the profile needs it because it is built from the DRAWN geometry
+    (see the comment at the build_profile call), which carries no elevation of its own.
+    """
+    if ele is None:
+        ele = ElevationLookup(os.path.join(MAT, "elevation_cache.json"))
     raw = parse_gpx(io.open(os.path.join(MAT, spec["gpx"]), encoding="utf-8", errors="replace").read())
     pts = douglas_peucker(dedupe_points(raw))
     own = [[round(p[0], 6), round(p[1], 6)] for p in pts]
@@ -699,11 +705,22 @@ def build_tour(spec, trails, geo, lifts, verbose=True):
 
     loop_geo = [c for s in segs for c in s["coords"]]
 
-    # The profile comes from the tour's OWN track, which is the only thing carrying elevation; its total
-    # differs a little from the substituted geometry's, so the segment distances are rescaled onto it.
-    prof, gain, loss = build_profile(own, own_ele)
+    # The profile has to describe the line that is DRAWN, so it comes from loop_geo -- the substituted
+    # geometry -- and its elevation from the same lookup the component trails' own profiles use.
+    #
+    # It used to come from the tour's own GPX track instead, on the reasoning that the track is the only
+    # thing carrying elevation, with a scale factor to stretch it onto the drawn geometry's total length.
+    # That is wrong wherever the two diverge, and they diverge by more than "a little": the scale fixes only
+    # the TOTAL, never the alignment inside it. The user found it on the map (2026-08-20) -- the
+    # E-Biketicket tour's profile began at 1761m where its line really starts at 1518m, so a descent's first
+    # metres read as a climb. Measured point for point, three of the four tours were off by up to 381m, and
+    # the fourth was correct only because a later gap-closing run had rebuilt its profile from the line.
+    #
+    # A cross-check over every Trailrunde in every region (58 that could be verified against the elevation
+    # cache) found these three and nothing else, so this was the only place with the defect.
+    prof, gain, loss = build_profile(loop_geo, ele([[q[0], q[1]] for q in loop_geo]))
     geo_total = cumulative_km(loop_geo)[-1]
-    scale = (prof[-1][0] / geo_total) if geo_total else 1.0
+    scale = 1.0            # profile and geometry are the same line now, so there is nothing to rescale
     cum = cumulative_km(loop_geo)
     # Segment i occupies loop_geo[off : off+n], and because it repeats its predecessor's last point,
     # cum[off] == cum[off-1] -- so distEnd of one segment and distStart of the next come out equal, as they
@@ -767,10 +784,13 @@ def run():
     lifts = build_lifts()
     report_lift_regions(lifts, trails, geo)
 
+    # EINE Instanz fuer alle vier Touren: der Cache liegt auf der Platte, und vier eigene Instanzen wuerden
+    # ihn viermal laden und sich beim Schreiben in die Quere kommen.
+    ele = ElevationLookup(os.path.join(MAT, "elevation_cache.json"))
     line_trails = list(trails)
     segments = {}
     for spec in TOURS:
-        entry, coords, prof, segs = build_tour(spec, trails, geo, lifts)
+        entry, coords, prof, segs = build_tour(spec, trails, geo, lifts, ele=ele)
         line_trails.append(entry)
         geo[entry["id"]] = coords
         profs[entry["id"]] = prof
