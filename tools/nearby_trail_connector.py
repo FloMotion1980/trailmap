@@ -75,6 +75,30 @@ MIN_SEG_POINTS = 2
 # der OSM-Geometrie selbst liegt darueber. EINE Schwelle fuer Tor, Vorauswahl und Sortierung.
 OFF_TOL_M = 0.5
 
+# ZWEITER DURCHGANG mit gelockerter Verhaeltnismaessigkeit -- gleiche Bauform wie Fall 5, der auch nur
+# anlaeuft, wenn die einfacheren Faelle nichts Brauchbares liefern. Grund: Rodalben Felsentrails seg0 und
+# seg34 sind vom Nutzer auf der Karte bestaetigt, aber unter den strengen Grenzen unerreichbar -- seg0
+# braucht Bruecke 6,9x und Kappung 6,6x der Luecke, seg34 kappt 95m eines nur 150m langen Abschnitts (63%).
+# Am Hilschberghaus (seg34) ist die Loesung MIT der groesseren Kappung die richtige, weil nur sie durchgehend
+# auf der Strasse bleibt; die kappungsfreie Alternative dort ist eine 1459m-Kette, Faktor 66.
+#
+# Warum ein zweiter Durchgang und nicht einfach hoehere Grenzen: global gelockert wechselt Landstuhl (Ost)
+# seg21 von einer Schnittpunkt-Loesung mit Faktor 1,02 und OHNE Kappung auf eine, die 76m von 151m eines
+# benannten Abschnitts wegschneidet -- weil die Fallnummer vor der Brueckenlaenge rangiert und Fall 2 damit
+# eine fast perfekte Fall-3-Loesung ueberholt, sobald er viel kappen darf. Die Fallhierarchie kodiert
+# Vertrauen, nicht Laenge; sie umzusortieren war der andere Versuch und brach zwei weitere Stellen auf
+# (darunter eine, die von Fall 1 auf Fall 3 rutschte -- fuer wenige Meter Bruecke schlechteres Vertrauen).
+# Wer eine brauchbare strenge Loesung hat, behaelt sie also. Nur wo es keine gibt, wird gelockert.
+#
+# Die zwei Werte sind aus genau diesen zwei bestaetigten Faellen abgeleitet und liegen knapp darueber -- sie
+# sind NICHT breit geprueft. Ein so geschlossener Uebergang wird deshalb als "gelockert" gemeldet und gehoert
+# angesehen. MAX_TRIM_FACTOR faellt im zweiten Durchgang ganz weg: nachgemessen bringt er nichts, was
+# MAX_SEG_TRIM_FRACTION (schuetzt den Abschnitt) und MAX_BRIDGE_FACTOR (schuetzt vor Umwegen) nicht schon
+# leisten -- die Kopplung "gekappte Meter gegen Lueckengroesse" sagt ohnehin nichts darueber, ob das Kappen
+# an dieser Stelle richtig ist.
+RELAX_BRIDGE_FACTOR = 7.0
+RELAX_SEG_TRIM_FRACTION = 0.65
+
 OVERLAP_M = 20.0          # so nah muss ein Punkt an der Linie der anderen Seite liegen, um als "darauf" zu gelten
 MIN_OVERLAP_M = 25.0      # kuerzere Ueberlappungen sind Endpunkt-Rauschen, kein doppelt gefahrenes Stueck
 
@@ -103,6 +127,7 @@ PROJ_NO_BRANCH_M = 25.0    # am Anschlusspunkt darf kein anderer Weg so nah abzw
 # gefaehrlichste Variante, weil der Ablationslauf dann "kein Unterschied" meldet und man das glaubt.
 for _k in ("ON_WAY_M", "MEET_M", "MAX_TRIM_FACTOR", "MAX_BRIDGE_FACTOR", "MAX_SEG_TRIM_FRACTION",
            "MIN_SEG_POINTS", "OFF_TOL_M", "OVERLAP_M", "MIN_OVERLAP_M", "PROJ_MAX_MEAN_M",
+           "RELAX_BRIDGE_FACTOR", "RELAX_SEG_TRIM_FRACTION",
            "PROJ_MIN_RATIO", "PROJ_MIN_SECOND_M", "PROJ_NO_BRANCH_M", "MERGE_ONLY", "CASE1_FIRST_ONLY"):
     if os.environ.get("NTC_" + _k) is not None:
         globals()[_k] = float(os.environ["NTC_" + _k])
@@ -208,9 +233,17 @@ def _clean(pts):
     return out
 
 
-def solve(A, B, trail_A=False, trail_B=False):
+def solve(A, B, trail_A=False, trail_B=False, relax=False):
     """Beste Loesung fuer die Luecke zwischen A (endet) und B (beginnt), Kandidaten nach Kosten sortiert.
-    trail_A/trail_B sagen, welche Seite ein benannter Trailabschnitt ist -- nur dort darf Fall 5 kappen."""
+
+    trail_A/trail_B sagen, welche Seite ein benannter Trailabschnitt ist -- nur dort darf Fall 5 kappen.
+    relax lockert die Verhaeltnismaessigkeit fuer den zweiten Durchgang (siehe RELAX_* oben); die
+    Kandidatensuche selbst und das Mass weglos sind davon unberuehrt, es aendert sich nur, was als
+    unverhaeltnismaessig gilt.
+    """
+    lim_trim = float("inf") if relax else MAX_TRIM_FACTOR
+    lim_bridge = RELAX_BRIDGE_FACTOR if relax else MAX_BRIDGE_FACTOR
+    lim_seg = RELAX_SEG_TRIM_FRACTION if relax else MAX_SEG_TRIM_FRACTION
     a, b = A[-1], B[0]
     W = fetch(a, b)
     idx = C.WayIndex(W)
@@ -250,7 +283,7 @@ def solve(A, B, trail_A=False, trail_B=False):
             if cut <= 0.5:
                 continue
             trimmed += cut
-            if len(new) < MIN_SEG_POINTS or cut > MAX_SEG_TRIM_FRACTION * full:
+            if len(new) < MIN_SEG_POINTS or cut > lim_seg * full:
                 seg_over.append("kappt %.0fm von %.0fm des Segments %s" % (cut, full, side))
         blen = C.line_len_m(bridge)
         # Der Ablehnungsgrund wird HIER bestimmt, nicht erst am Ende. Er stand vorher zweimal im Code --
@@ -259,9 +292,9 @@ def solve(A, B, trail_A=False, trail_B=False):
         # (Kappung 242m < 4x133m Luecke), also lief die Kettensuche nicht an, und danach verwarf ihn die
         # Segment-Grenze doch. Ergebnis: Luecke offen, obwohl Fall 5 sie ueber Pfad + Forstweg schliesst.
         reject = list(seg_over)
-        if trimmed > MAX_TRIM_FACTOR * max(beeline, 1.0):
+        if trimmed > lim_trim * max(beeline, 1.0):
             reject.append("kappt %.0fm bei %.0fm Luecke" % (trimmed, beeline))
-        if blen > MAX_BRIDGE_FACTOR * max(beeline, 1.0):
+        if blen > lim_bridge * max(beeline, 1.0):
             reject.append("Bruecke %.0fm bei %.0fm Luecke" % (blen, beeline))
         out.append({"name": name, "bridge": bridge, "newA": newA, "newB": newB,
                     "reject": "; ".join(reject), "len": blen,
@@ -454,6 +487,13 @@ def close_gaps(s, gaps, names=None, write=False, report=None):
         if report:
             report("seg%-2d %6.1fm  %-22s -> %s" % (i, rec["gap"], rec["from"], rec["to"]))
         res = solve(A, B, trail_A=bool(s[i].get("trailId")), trail_B=bool(s[j].get("trailId")))
+        usable = res and res[0]["off"] <= OFF_TOL_M and not res[0]["reject"]
+        if res and not usable:
+            # Zweiter Durchgang: nur wo streng nichts Brauchbares uebrig bleibt (siehe RELAX_* oben). Ein
+            # Uebergang mit einer brauchbaren strengen Loesung kommt hier nie an und aendert sich also nicht.
+            alt = solve(A, B, trail_A=bool(s[i].get("trailId")), trail_B=bool(s[j].get("trailId")), relax=True)
+            if alt and alt[0]["off"] <= OFF_TOL_M and not alt[0]["reject"]:
+                res, rec["relaxed"] = alt, True
         if not res:
             rec["skipped"] = "keine Loesung gefunden"
         else:
@@ -478,7 +518,8 @@ def close_gaps(s, gaps, names=None, write=False, report=None):
                     C.close_gap(s, i, j, [list(q) for q in best["bridge"][1:-1]],
                                 best["newA"][-1], best["newB"][0])
         if report and rec["applied"]:
-            report("    -> angewendet: %s" % rec["applied"])
+            report("    -> angewendet: %s%s" % (rec["applied"],
+                                                "  [GELOCKERT -- ansehen]" if rec.get("relaxed") else ""))
         elif report and res:
             report("    -> %s, nichts angewendet" % rec["skipped"])
         elif report:

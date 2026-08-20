@@ -115,8 +115,10 @@ def run_fixture(loop):
             "cases": {k: sum(1 for r in recs if (r["applied"] or "").split("(")[0] == k)
                       for k in sorted({(r["applied"] or "").split("(")[0] for r in recs if r["applied"]})},
             "trail_m": {k: round(v) for k, v in sorted(trails.items())},
+            "relaxed": sorted(r["seg"] for r in recs if r.get("relaxed")),
             "per_gap": [{"seg": r["seg"], "gap": r["gap"], "applied": r["applied"],
                          "bridge": r.get("bridge"), "trim": r.get("trim"),
+                         "relaxed": bool(r.get("relaxed")),
                          "skipped": r.get("skipped")} for r in recs]}
 
 

@@ -360,6 +360,52 @@ verantwortbar war — und sie brauchte erst eine brauchbare Referenz:
 
 ---
 
+## Zweiter Durchgang mit gelockerter Verhältnismäßigkeit (2026-08-20)
+
+`seg0` und `seg34` von Rodalben Felsentrails waren vom Nutzer auf der Karte bestätigt, aber unter den strengen
+Grenzen unerreichbar. Genau gemessen:
+
+| Lücke | bestätigte Lösung | scheitert an |
+|---|---|---|
+| `seg0`, 34,9 m | Brücke 240 m, kappt 230 m von 711 m | Kappungsfaktor 6,6 > 4,0 **und** Brückenfaktor 6,9 > 6,0 |
+| `seg34`, 22,0 m | Brücke 116 m, kappt 95 m von **150 m** | Kappungsfaktor 4,3 > 4,0 **und** Segment-Grenze 63 % > 50 % |
+
+Der zweite Punkt ist der lehrreiche: **63 % eines kurzen Abschnitts war die richtige Antwort.** Am
+Hilschberghaus bleibt nur diese Lösung durchgehend auf der Straße; die kappungsfreie Alternative dort ist eine
+1459-m-Kette, Faktor 66. Meine 50-%-Grenze hat sie also zu Unrecht verboten.
+
+**Global lockern war der falsche Weg, und das war messbar.** Mit 7/7/0,65 schließen beide Lücken mit genau den
+bestätigten Kappungen — aber Landstuhl (Ost) `seg21` wechselt dann von einer Schnittpunkt-Lösung mit Faktor
+1,02 und **ohne** Kappung auf eine, die 76 m von 151 m eines benannten Abschnitts wegschneidet. Ursache: die
+Fallnummer rangiert vor der Brückenlänge, also überholt Fall 2 eine fast perfekte Fall-3-Lösung, sobald er
+viel kappen darf.
+
+Die Rangfolge umzusortieren (nach Brücke + Kappung als gemeinsamem Maß) war der zweite Versuch und **wurde
+verworfen**: `seg21` war damit behoben, aber zwei andere Stellen brachen auf, darunter eine, die von Fall 1 auf
+Fall 3 rutschte — für wenige Meter kürzere Brücke schlechteres Vertrauen. **Die Fallhierarchie kodiert
+Vertrauen, nicht Länge; Kosten dürfen sie nicht überstimmen.**
+
+Was funktioniert, hat dieselbe Bauform wie Fall 5: **gelockert wird nur, wo streng gar nichts Brauchbares übrig
+bleibt.** `RELAX_BRIDGE_FACTOR = 7.0`, `RELAX_SEG_TRIM_FRACTION = 0.65`, und `MAX_TRIM_FACTOR` fällt im zweiten
+Durchgang ganz weg — nachgemessen bringt er nichts, was die anderen zwei nicht schon leisten, und die Kopplung
+„gekappte Meter gegen Lückengröße" sagt ohnehin nichts darüber, ob das Kappen an dieser Stelle richtig ist.
+
+Ergebnis: Felsentrails 38/38, Landstuhl Ost und West **unverändert**, drei weitere Touren bytegleich
+nachgerechnet. Ein so geschlossener Übergang wird als `[GELOCKERT -- ansehen]` gemeldet, und *welche* Lücken
+den zweiten Durchgang brauchen, ist Teil der festgeschriebenen Erwartung — eine Lücke, die neu darin auftaucht,
+hat ihre verhältnismäßige Lösung verloren, und das ist ein Befund.
+
+Die zwei Werte stammen aus genau diesen zwei bestätigten Fällen und liegen knapp darüber. Sie sind **nicht**
+breit geprüft.
+
+Zur Einordnung: in der ausgelieferten Region hatte Felsentrails schon vorher 0 Lücken. Die zwei „offenen"
+Lücken gab es nur beim Neurechnen vom Ausgangsstand — es ging also um das Können des Verfahrens für künftige
+Touren, nicht um fehlende Daten in der App. Die Region wurde deshalb **nicht** neu geschrieben: das Ergebnis
+weicht in 16 Verbindern von dem bestätigten Stand ab (anders geroutet, teils kürzer), und dafür gibt es keinen
+Anlass, der eine erneute Durchsicht rechtfertigt.
+
+---
+
 ## Regressionstest (2026-08-20)
 
 `python tests/run.py --suite ntcregression` — 12 Fälle, ~60 s. Rechnet drei Touren aus ihrem Stand **vor** dem

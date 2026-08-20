@@ -22,6 +22,18 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **`nearbyTrailConnector` erreicht die zwei letzten Rodalben-Felsentrails-Loesungen wieder** (38/38 statt
+  36/38), ueber einen zweiten Durchgang mit gelockerter Verhaeltnismaessigkeit — gleiche Bauform wie Fall 5,
+  der auch nur anlaeuft, wenn die einfacheren Faelle nichts liefern. Beide Luecken sind vom Nutzer bestaetigt,
+  waren aber unerreichbar: `seg0` braucht Bruecke 6,9x und Kappung 6,6x der Luecke, `seg34` kappt 95m eines nur
+  150m langen Abschnitts — 63 %, und das war am Hilschberghaus die richtige Antwort, weil nur sie durchgehend
+  auf der Strasse bleibt (die kappungsfreie Alternative ist eine 1459m-Kette, Faktor 66). Global lockern war
+  messbar falsch: Landstuhl Ost `seg21` waere dann von einer kappungsfreien Schnittpunkt-Loesung mit Faktor
+  1,02 auf eine mit 50 % Kappung gewechselt. Die Rangfolge nach Brueckenlaenge-plus-Kappung umzusortieren
+  wurde ebenfalls verworfen — sie behob `seg21`, brach aber zwei andere Stellen auf, darunter eine, die von
+  Fall 1 auf Fall 3 rutschte. Die Fallhierarchie kodiert Vertrauen, nicht Laenge. Landstuhl Ost und West
+  bleiben unveraendert, drei weitere Touren bytegleich nachgerechnet; die ausgelieferte Region wurde NICHT neu
+  geschrieben (sie hatte dort schon 0 Luecken). Siehe `docs/nearby-trail-connector.md`.
 - **Regressionstest fuer `nearbyTrailConnector` (`tests/python/ntcregression.py`, 12 Faelle / 39 Pruefungen).**
   Das Verfahren war zweimal still schlechter geworden, und beide Male fiel es erst auf, als der Nutzer auf die
   Karte sah: `MAX_TRIM_FACTOR` wurde mit 3.0 eingefuehrt, *nachdem* Rodalben Felsentrails damit geschlossen

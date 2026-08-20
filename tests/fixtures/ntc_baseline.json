@@ -15,6 +15,7 @@
         "applied": "3_Schnittpunkt",
         "bridge": 145,
         "gap": 141.7,
+        "relaxed": false,
         "seg": 21,
         "skipped": null,
         "trim": 0
@@ -23,6 +24,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 22,
         "gap": 19.3,
+        "relaxed": false,
         "seg": 20,
         "skipped": null,
         "trim": 0
@@ -31,6 +33,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 18,
         "gap": 13.9,
+        "relaxed": false,
         "seg": 19,
         "skipped": null,
         "trim": 0
@@ -39,6 +42,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 80,
         "gap": 70.0,
+        "relaxed": false,
         "seg": 18,
         "skipped": null,
         "trim": 0
@@ -47,6 +51,7 @@
         "applied": "2_Weg-folgen-und-kappen(A)",
         "bridge": 265,
         "gap": 92.3,
+        "relaxed": false,
         "seg": 17,
         "skipped": null,
         "trim": 196
@@ -55,6 +60,7 @@
         "applied": "3_Schnittpunkt",
         "bridge": 128,
         "gap": 74.6,
+        "relaxed": false,
         "seg": 16,
         "skipped": null,
         "trim": 0
@@ -63,6 +69,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 95,
         "gap": 70.6,
+        "relaxed": false,
         "seg": 15,
         "skipped": null,
         "trim": 0
@@ -71,6 +78,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 94,
         "gap": 88.0,
+        "relaxed": false,
         "seg": 14,
         "skipped": null,
         "trim": 0
@@ -79,6 +87,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 38,
         "gap": 36.1,
+        "relaxed": false,
         "seg": 13,
         "skipped": null,
         "trim": 0
@@ -87,6 +96,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 48,
         "gap": 44.9,
+        "relaxed": false,
         "seg": 12,
         "skipped": null,
         "trim": 0
@@ -95,6 +105,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 80,
         "gap": 74.5,
+        "relaxed": false,
         "seg": 11,
         "skipped": null,
         "trim": 0
@@ -103,6 +114,7 @@
         "applied": "0_Ueberlappung(B gekappt)",
         "bridge": 6,
         "gap": 82.3,
+        "relaxed": false,
         "seg": 10,
         "skipped": null,
         "trim": 82
@@ -111,6 +123,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 112,
         "gap": 107.7,
+        "relaxed": false,
         "seg": 9,
         "skipped": null,
         "trim": 0
@@ -119,6 +132,7 @@
         "applied": "5_Wegekette",
         "bridge": 480,
         "gap": 133.4,
+        "relaxed": false,
         "seg": 8,
         "skipped": null,
         "trim": 0
@@ -127,6 +141,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 20,
         "gap": 19.8,
+        "relaxed": false,
         "seg": 6,
         "skipped": null,
         "trim": 0
@@ -135,6 +150,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 35,
         "gap": 29.1,
+        "relaxed": false,
         "seg": 5,
         "skipped": null,
         "trim": 0
@@ -143,6 +159,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 39,
         "gap": 35.6,
+        "relaxed": false,
         "seg": 4,
         "skipped": null,
         "trim": 0
@@ -151,6 +168,7 @@
         "applied": "2_Weg-folgen-und-kappen(B)",
         "bridge": 163,
         "gap": 169.8,
+        "relaxed": false,
         "seg": 3,
         "skipped": null,
         "trim": 23
@@ -159,6 +177,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 30,
         "gap": 25.1,
+        "relaxed": false,
         "seg": 2,
         "skipped": null,
         "trim": 0
@@ -167,6 +186,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 51,
         "gap": 50.1,
+        "relaxed": false,
         "seg": 1,
         "skipped": null,
         "trim": 0
@@ -175,11 +195,13 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 101,
         "gap": 100.2,
+        "relaxed": false,
         "seg": 0,
         "skipped": null,
         "trim": 0
       }
     ],
+    "relaxed": [],
     "segments": 30,
     "still_open": [],
     "trail_m": {
@@ -210,6 +232,7 @@
         "applied": "2_Weg-folgen-und-kappen(B)",
         "bridge": 0,
         "gap": 63.4,
+        "relaxed": false,
         "seg": 11,
         "skipped": null,
         "trim": 66
@@ -218,6 +241,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 29,
         "gap": 20.8,
+        "relaxed": false,
         "seg": 10,
         "skipped": null,
         "trim": 0
@@ -226,6 +250,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 88,
         "gap": 77.0,
+        "relaxed": false,
         "seg": 9,
         "skipped": null,
         "trim": 0
@@ -234,6 +259,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 94,
         "gap": 84.8,
+        "relaxed": false,
         "seg": 8,
         "skipped": null,
         "trim": 0
@@ -242,6 +268,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 98,
         "gap": 97.9,
+        "relaxed": false,
         "seg": 7,
         "skipped": null,
         "trim": 0
@@ -250,6 +277,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 65,
         "gap": 62.9,
+        "relaxed": false,
         "seg": 6,
         "skipped": null,
         "trim": 0
@@ -258,6 +286,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 30,
         "gap": 29.9,
+        "relaxed": false,
         "seg": 5,
         "skipped": null,
         "trim": 0
@@ -266,6 +295,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 42,
         "gap": 39.4,
+        "relaxed": false,
         "seg": 4,
         "skipped": null,
         "trim": 0
@@ -274,6 +304,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 98,
         "gap": 89.7,
+        "relaxed": false,
         "seg": 3,
         "skipped": null,
         "trim": 0
@@ -282,6 +313,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 38,
         "gap": 37.3,
+        "relaxed": false,
         "seg": 2,
         "skipped": null,
         "trim": 0
@@ -290,6 +322,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 87,
         "gap": 85.9,
+        "relaxed": false,
         "seg": 1,
         "skipped": null,
         "trim": 0
@@ -298,11 +331,13 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 16,
         "gap": 15.5,
+        "relaxed": false,
         "seg": 0,
         "skipped": null,
         "trim": 0
       }
     ],
+    "relaxed": [],
     "segments": 12,
     "still_open": [],
     "trail_m": {
@@ -316,16 +351,19 @@
   },
   "pw_rodalben_felsentrails": {
     "cases": {
-      "1_ein-Weg-beide-Seiten": 36
+      "1_ein-Weg-beide-Seiten": 36,
+      "2_Weg-folgen-und-kappen": 1,
+      "5_Wegekette+kappen": 1
     },
-    "closed": 36,
+    "closed": 38,
     "gaps": 38,
-    "length_m": 41645,
+    "length_m": 41676,
     "per_gap": [
       {
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 3,
         "gap": 2.7,
+        "relaxed": false,
         "seg": 37,
         "skipped": null,
         "trim": 0
@@ -334,6 +372,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 7,
         "gap": 6.6,
+        "relaxed": false,
         "seg": 36,
         "skipped": null,
         "trim": 0
@@ -342,22 +381,25 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 43,
         "gap": 27.7,
+        "relaxed": false,
         "seg": 35,
         "skipped": null,
         "trim": 0
       },
       {
-        "applied": null,
-        "bridge": null,
+        "applied": "5_Wegekette+kappen(A)",
+        "bridge": 116,
         "gap": 22.0,
+        "relaxed": true,
         "seg": 34,
-        "skipped": "unverhaeltnismaessig",
-        "trim": null
+        "skipped": null,
+        "trim": 95
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 9,
         "gap": 8.6,
+        "relaxed": false,
         "seg": 33,
         "skipped": null,
         "trim": 0
@@ -366,6 +408,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 49,
         "gap": 48.8,
+        "relaxed": false,
         "seg": 32,
         "skipped": null,
         "trim": 0
@@ -374,6 +417,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 53,
         "gap": 45.6,
+        "relaxed": false,
         "seg": 31,
         "skipped": null,
         "trim": 0
@@ -382,6 +426,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 17,
         "gap": 16.6,
+        "relaxed": false,
         "seg": 30,
         "skipped": null,
         "trim": 0
@@ -390,6 +435,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 27,
         "gap": 19.1,
+        "relaxed": false,
         "seg": 29,
         "skipped": null,
         "trim": 0
@@ -398,6 +444,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 30,
         "gap": 29.0,
+        "relaxed": false,
         "seg": 28,
         "skipped": null,
         "trim": 0
@@ -406,6 +453,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 49,
         "gap": 47.5,
+        "relaxed": false,
         "seg": 27,
         "skipped": null,
         "trim": 0
@@ -414,6 +462,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 11,
         "gap": 11.5,
+        "relaxed": false,
         "seg": 26,
         "skipped": null,
         "trim": 0
@@ -422,6 +471,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 6,
         "gap": 4.3,
+        "relaxed": false,
         "seg": 25,
         "skipped": null,
         "trim": 0
@@ -430,6 +480,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 21,
         "gap": 15.2,
+        "relaxed": false,
         "seg": 24,
         "skipped": null,
         "trim": 0
@@ -438,6 +489,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 10,
         "gap": 7.5,
+        "relaxed": false,
         "seg": 23,
         "skipped": null,
         "trim": 0
@@ -446,6 +498,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 10,
         "gap": 10.0,
+        "relaxed": false,
         "seg": 22,
         "skipped": null,
         "trim": 0
@@ -454,6 +507,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 90,
         "gap": 88.3,
+        "relaxed": false,
         "seg": 21,
         "skipped": null,
         "trim": 0
@@ -462,6 +516,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 18,
         "gap": 13.8,
+        "relaxed": false,
         "seg": 20,
         "skipped": null,
         "trim": 0
@@ -470,6 +525,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 11,
         "gap": 10.6,
+        "relaxed": false,
         "seg": 19,
         "skipped": null,
         "trim": 0
@@ -478,6 +534,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 11,
         "gap": 11.2,
+        "relaxed": false,
         "seg": 18,
         "skipped": null,
         "trim": 0
@@ -486,6 +543,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 11,
         "gap": 11.4,
+        "relaxed": false,
         "seg": 17,
         "skipped": null,
         "trim": 0
@@ -494,6 +552,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 40,
         "gap": 40.3,
+        "relaxed": false,
         "seg": 16,
         "skipped": null,
         "trim": 0
@@ -502,6 +561,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 21,
         "gap": 21.1,
+        "relaxed": false,
         "seg": 15,
         "skipped": null,
         "trim": 0
@@ -510,6 +570,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 12,
         "gap": 12.0,
+        "relaxed": false,
         "seg": 14,
         "skipped": null,
         "trim": 0
@@ -518,6 +579,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 85,
         "gap": 84.5,
+        "relaxed": false,
         "seg": 13,
         "skipped": null,
         "trim": 0
@@ -526,6 +588,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 19,
         "gap": 19.2,
+        "relaxed": false,
         "seg": 12,
         "skipped": null,
         "trim": 0
@@ -534,6 +597,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 29,
         "gap": 24.3,
+        "relaxed": false,
         "seg": 11,
         "skipped": null,
         "trim": 0
@@ -542,6 +606,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 26,
         "gap": 24.6,
+        "relaxed": false,
         "seg": 10,
         "skipped": null,
         "trim": 0
@@ -550,6 +615,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 51,
         "gap": 50.7,
+        "relaxed": false,
         "seg": 9,
         "skipped": null,
         "trim": 0
@@ -558,6 +624,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 64,
         "gap": 64.5,
+        "relaxed": false,
         "seg": 8,
         "skipped": null,
         "trim": 0
@@ -566,6 +633,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 7,
         "gap": 6.7,
+        "relaxed": false,
         "seg": 7,
         "skipped": null,
         "trim": 0
@@ -574,6 +642,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 66,
         "gap": 45.6,
+        "relaxed": false,
         "seg": 6,
         "skipped": null,
         "trim": 0
@@ -582,6 +651,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 27,
         "gap": 23.6,
+        "relaxed": false,
         "seg": 5,
         "skipped": null,
         "trim": 0
@@ -590,6 +660,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 32,
         "gap": 22.6,
+        "relaxed": false,
         "seg": 4,
         "skipped": null,
         "trim": 0
@@ -598,6 +669,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 47,
         "gap": 36.1,
+        "relaxed": false,
         "seg": 3,
         "skipped": null,
         "trim": 0
@@ -606,6 +678,7 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 16,
         "gap": 11.9,
+        "relaxed": false,
         "seg": 2,
         "skipped": null,
         "trim": 0
@@ -614,31 +687,34 @@
         "applied": "1_ein-Weg-beide-Seiten",
         "bridge": 6,
         "gap": 5.7,
+        "relaxed": false,
         "seg": 1,
         "skipped": null,
         "trim": 0
       },
       {
-        "applied": null,
-        "bridge": null,
+        "applied": "2_Weg-folgen-und-kappen(A)",
+        "bridge": 240,
         "gap": 34.9,
+        "relaxed": true,
         "seg": 0,
-        "skipped": "unverhaeltnismaessig",
-        "trim": null
+        "skipped": null,
+        "trim": 230
       }
     ],
-    "segments": 38,
-    "still_open": [
-      22.0,
-      34.9
+    "relaxed": [
+      0,
+      34
     ],
+    "segments": 38,
+    "still_open": [],
     "trail_m": {
       "Clauser Haweweg 1": 192,
       "Clauser Haweweg 2": 196,
       "Clauser Haweweg 3": 611,
       "Clauser Haweweg 4": 499,
-      "Felsenweg Nord": 980,
-      "Felsenweg Süd": 150,
+      "Felsenweg Nord": 750,
+      "Felsenweg Süd": 55,
       "Gipfelstürmer": 816,
       "Rodalben Felsentrails Trail 1": 371,
       "Rodalben Felsentrails Trail 2": 243,

@@ -12,7 +12,9 @@ until a rider looked at the map.
 Felsentrails had already been closed with it. Two of that tour's confirmed solutions need factor 6.6, so from
 that commit on the tool could no longer produce them, and nobody noticed for four days: the tour was already
 closed in the region file, so nothing on screen changed. It only surfaced when the user asked why those two
-gaps were suddenly being reported as unclosable.
+gaps were suddenly being reported as unclosable. Both are reachable again through the relaxed second pass
+(`RELAX_*`), and the two gaps that need it are pinned by name below -- which is the point: needing the second
+pass is a result, not an implementation detail.
 
 The second one shipped. The proportionality limit measured trimming against the GAP only, so a 133m gap was
 allowed to cut 242m -- and "Steps Heidenfelsen" happened to be exactly 242m long, so a whole named trail
@@ -47,32 +49,34 @@ Coverage gaps, stated rather than papered over:
   the thirteen tours closed since -- under the current procedure both of those gaps go through case 1. So
   `PROJ_MAX_MEAN_M`, `PROJ_MIN_RATIO`, `PROJ_MIN_SECOND_M` and `PROJ_NO_BRANCH_M` stay unpinned; overriding
   any of them changes nothing here.
-* **`MAX_TRIM_FACTOR` is only pinned from below.** Nothing in these tours trims between factor 3 and 7, so
-  tightening to 3 or loosening to 7 is invisible; 1.5 bites. Worth knowing why loosening cannot help: the one
-  solution that needs a bigger limit, Felsentrails `seg0`, needs trim factor 6.6 AND bridge factor 6.9, so
-  raising either alone leaves it rejected by the other.
+* **`MAX_TRIM_FACTOR` is only pinned from below**, and `MAX_BRIDGE_FACTOR` only from below as well. Nothing
+  trims between factor 3 and 7, and loosening either one alone does not move `seg0` out of the relaxed pass,
+  because it exceeds both. 1.5 and 3 respectively do bite.
 * **`MEET_M` and `OFF_TOL_M` are pinned coarsely** -- 20 -> 8 and 0.5 -> 0 fail, 20 -> 15 and 0.5 -> 20 do not.
 
 If a change to the procedure is intended, regenerate the baseline with
 `python tools/make_ntc_fixture.py --baseline` and read the diff -- that diff IS the review. A shrinking
-`closed` count or a shrinking `trail_m` entry is the signal this suite was written for.
+`closed` count, a shrinking `trail_m` entry, or a gap newly appearing in `relaxed` is the signal this suite
+was written for.
 
 Verified by mutation (2026-08-20), all through `NTC_*` overrides so no source edit is needed. Baseline is
-12 cases / 39 checks; the column is how many cases each mutation breaks:
+12 cases / 45 checks; the column is how many cases each mutation breaks:
 
 | mutation | cases failing |
 |---|---|
+| the `break` back in case 1 (`NTC_CASE1_FIRST_ONLY=1`) | 8 |
 | `ON_WAY_M` 20 -> 15 (the threshold two real cases missed by 0.2m and 0.9m) | 7 |
-| the `break` back in case 1 (`NTC_CASE1_FIRST_ONLY=1`) | 7 |
-| merging replaces the unmerged candidates again (`NTC_MERGE_ONLY=1`) | 6 |
-| `MIN_SEG_POINTS` 2 -> 99 | 4 |
+| merging replaces the unmerged candidates again (`NTC_MERGE_ONLY=1`) | 7 |
+| `MIN_SEG_POINTS` 2 -> 99 | 6 |
 | `MAX_SEG_TRIM_FRACTION` 0.5 -> 99 (the "Steps Heidenfelsen" bug) | 3 |
+| `MAX_BRIDGE_FACTOR` 6 -> 3 | 2 |
+| `MAX_TRIM_FACTOR` 4 -> 1.5 | 2 |
 | `OFF_TOL_M` 0.5 -> 0 | 2 |
 | `MEET_M` 20 -> 8 | 2 |
-| `MAX_TRIM_FACTOR` 4 -> 1.5 | 2 |
-| `MAX_BRIDGE_FACTOR` 6 -> 3 | 2 |
 | `OVERLAP_M` 20 -> 1 | 2 |
 | `MIN_OVERLAP_M` 25 -> 200 | 2 |
+| `RELAX_BRIDGE_FACTOR` 7 -> 6 | 2 |
+| `RELAX_SEG_TRIM_FRACTION` 0.65 -> 0.5 | 2 |
 
 One claim in the first version of this table was wrong and is worth remembering: it asserted that
 `MAX_TRIM_FACTOR` 4 -> 3 would stop Landstuhl's `seg17` from closing. That gap trims 196m over 92m, i.e.
@@ -114,6 +118,9 @@ def run(t):
         t.eq("gaps closed", got["closed"], want["closed"])
         t.eq("gaps left open (metres)", got["still_open"], want["still_open"])
         t.eq("segments afterwards", got["segments"], want["segments"])
+        # Which gaps needed the relaxed second pass is itself a result worth pinning: a transition that
+        # quietly starts needing it has stopped having a proportionate solution, and that is a finding.
+        t.eq("gaps that needed the relaxed second pass", got["relaxed"], want["relaxed"])
         # A metre of tolerance here would hide exactly the drift this suite is for.
         t.eq("total length (m)", got["length_m"], want["length_m"])
 
@@ -128,6 +135,9 @@ def run(t):
         cut = [(g["seg"], g["trim"], w["trim"]) for g, w in zip(got["per_gap"], want["per_gap"])
                if g["trim"] != w["trim"]]
         t.eq("every trim the same", cut, [])
+        lax = [(g["seg"], g["relaxed"], w["relaxed"]) for g, w in zip(got["per_gap"], want["per_gap"])
+               if g["relaxed"] != w["relaxed"]]
+        t.eq("the same gaps relaxed", lax, [])
 
         t.case("%s: no named trail section loses more than it did" % short)
         worse = {k: (v, want["trail_m"].get(k)) for k, v in got["trail_m"].items()
@@ -147,5 +157,10 @@ def run(t):
                 full[k] = full.get(k, 0) + ntc.C.line_len_m([list(q) for q in seg["coords"]])
         gone = sorted(k for k in full if got["trail_m"].get(k, 0) < 1)
         t.eq("nothing trimmed to nothing", gone, [])
-        halved = sorted(k for k, v in full.items() if got["trail_m"].get(k, 0) < 0.5 * v - 1)
-        t.eq("nothing trimmed below half its own length", halved, [])
+        # Measured against the procedure's OWN loosest limit, not a hardcoded fraction, so this stays a
+        # statement about the guard being applied at all rather than about one particular number. Hardcoding
+        # 0.5 here made it fail the moment the relaxed second pass legitimately took 63% of a 150m section --
+        # a check that has to be edited whenever a threshold moves is not pinning an invariant.
+        loosest = max(ntc.MAX_SEG_TRIM_FRACTION, ntc.RELAX_SEG_TRIM_FRACTION)
+        over = sorted(k for k, v in full.items() if got["trail_m"].get(k, 0) < (1.0 - loosest) * v - 1)
+        t.eq("nothing trimmed past the loosest limit (%.0f%%)" % (loosest * 100), over, [])
