@@ -679,14 +679,12 @@ html.landscape-compact .search-overlay-summary{
 #infoPanel h3 .ip-btns > button:hover{ background: var(--forest-dark); }
 #infoPanel h3 .ip-btns .locate-btn,
 #infoPanel h3 .ip-btns .solo-btn,
-#infoPanel h3 .ip-btns .reverse-btn,
-#infoPanel h3 .ip-btns .ride-btn{ width:22px; border-radius:50%; font-size:12px; }
-/* RIDE only makes sense on a phone actually being ridden with -- hidden on desktop by default (2026-08-16,
-   the user's own catch), shown again in the touch-only media query below alongside #locateCluster, which
-   is the other RIDE entry point gated the same way. Must repeat `.ip-btns > button`'s own display:inline-flex
-   there, not just override to visible -- an id/class alone loses to that more specific rule, the same trap
-   #locateBtn's own comment already documents for the map-controls cluster. */
-#infoPanel h3 .ip-btns .ride-btn{ display:none; }
+#infoPanel h3 .ip-btns .reverse-btn{ width:22px; border-radius:50%; font-size:12px; }
+/* RIDE left this group on 2026-08-20 and is a full-width bar under the elevation chart now (.ip-ride-bar,
+   further down) -- it is the most important control on a phone and was the smallest and last thing in the
+   row. It only ever makes sense on a phone actually being ridden with, so it stays hidden on desktop
+   exactly as it was before the move (2026-08-16, the user's own catch); the group above is four buttons
+   again on every layout, which is also what its own comment describes. */
 #infoPanel h3 .ip-btns .gpx-download-btn{
   border-radius:11px; padding:0 8px; font-size:10.5px; font-family:Arial, sans-serif; font-weight:700;
 }
@@ -696,8 +694,7 @@ html.landscape-compact .search-overlay-summary{
    already this app's own colour for exactly that meaning elsewhere (#builderModeBtn.on). Has to beat the
    group's own green fill above. */
 #infoPanel h3 .ip-btns .solo-btn.active,
-#infoPanel h3 .ip-btns .reverse-btn.active,
-#infoPanel h3 .ip-btns .ride-btn.active{ background: var(--highlight); color: var(--ink); }
+#infoPanel h3 .ip-btns .reverse-btn.active{ background: var(--highlight); color: var(--ink); }
 /* No bottom margin: it separated this block from .ip-actions, the row that used to hold the GPX button, and both
    are gone -- so it was 10px of empty panel under the elevation chart, on top of the panel's own 10px of padding
    (user, 2026-08-02: "die InfoBox hat jetzt unten recht viel Whitespace"). */
@@ -720,6 +717,21 @@ html.landscape-compact .search-overlay-summary{
 .ele-chart .ele-hover-dot{ fill:var(--blau); stroke:#fff; stroke-width:1.4; vector-effect: non-scaling-stroke; }
 /* .ip-actions is gone (2026-08-02): its one button moved up onto the stats line, where there was already room,
    and a container that exists to hold a single inline button is a line of layout for nothing. */
+/* RIDE's own bar (2026-08-20, the user picked this over four other drafts): full panel width, under the
+   chart rather than in the heading, and the only control here that says a word instead of showing a glyph.
+   Touch-only, like the map's own #rideModeBtn -- desktop keeps exactly the panel it had, since RIDE has
+   never been shown there. Amber rather than the group's green: this is the panel's one primary action, and
+   the "toggle is on" reading --highlight normally carries cannot collide with it here, because RIDE mode
+   hides #infoPanel outright -- nobody ever sees this bar in its own active state. The label carries that
+   state instead (syncRideModeChrome keeps it in step). */
+#infoPanel .ip-ride-bar{
+  display:none;
+  width:100%; height:48px; margin-top:9px;
+  border:none; border-radius:10px; padding:0; cursor:pointer;
+  background:var(--highlight); color:var(--ink);
+  font-family:Arial, sans-serif; font-size:16px; font-weight:700; line-height:1;
+  align-items:center; justify-content:center; gap:8px;
+}
 #infoPanel .ip-segment-info{ margin-top:8px; padding:4px 0 4px 8px; font-size:11.5px; line-height:1.4; }
 #infoPanel .ip-segment-info b{ font-size:12.5px; }
 /* Base -> top station and height gained, in a lift's own (much sparser) info panel. */
@@ -1191,8 +1203,20 @@ html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
        360px wide depending on the name -- and since it is centred, both its edges moved every time you tapped a
        different trail. The value is the old max-width, so nothing that fitted before gets tighter. */
     width:min(92vw, 360px);
-    max-height:min(38vh, 300px);
+    /* Grew from min(38vh, 300px) on 2026-08-20, in the same change that put RIDE on its own bar and took the
+       heading's buttons from 22 to 34px: together those cost ~69px, and the user's own call was to spend the
+       height rather than squeeze the chart ("am Handy gönnen wir uns dann etwas mehr Höhe"). Still a fraction
+       of the screen, and the panel scrolls when a Tour's segment info makes it longer. */
+    max-height:min(48vh, 370px);
   }
+  /* 34px, not the desktop 22px: 22 is far under any touch target, and this is the layout that is used with a
+     glove on a handlebar. GPX keeps matching on height and shape family only -- a file format has to be named,
+     so it takes the width its label needs (same reasoning as the base rule). */
+  #infoPanel h3 .ip-btns > button{ height:34px; }
+  #infoPanel h3 .ip-btns .locate-btn,
+  #infoPanel h3 .ip-btns .solo-btn,
+  #infoPanel h3 .ip-btns .reverse-btn{ width:34px; font-size:16px; }
+  #infoPanel h3 .ip-btns .gpx-download-btn{ border-radius:17px; padding:0 11px; font-size:12px; }
   /* Keeps the touch chart at its original size -- the desktop-only bump to 72px (see the base rule) would
      otherwise apply here too, and a phone's vertical space is the one thing this app has never had room
      to spare (2026-08-13). */
@@ -1201,9 +1225,8 @@ html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
      as `grid` it silently overrode a flex column and stretched the control container to the width of the
      widest sibling: 232px instead of 44px, measured. */
   #locateCluster{ display:flex; }
-  /* RIDE's other entry point -- see the base rule's own comment. Must repeat inline-flex for the same
-     specificity reason as #locateCluster above. */
-  #infoPanel h3 .ip-btns .ride-btn{ display:inline-flex; }
+  /* RIDE's other entry point -- see the .ip-ride-bar rule's own comment for why it is touch-only. */
+  #infoPanel .ip-ride-bar{ display:flex; }
 }
 html.is-standalone #infoPanel{
   bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
@@ -1221,6 +1244,11 @@ html.landscape-compact #infoPanel{
   overflow-y: auto;
 }
 html.landscape-compact .ele-chart{ height:40px; }
+/* A landscape phone has 320-375px of height for a panel capped at 100vh-90px, and the bar arrived on top of
+   a heading whose buttons also grew -- measured, the tallest panels there (a Tour with its segment info) end
+   up a few px over the cap and scroll, which would put the bar itself below the fold. 44px is the smallest
+   this may be and still be a full touch target, and it buys back most of that. */
+html.landscape-compact #infoPanel .ip-ride-bar{ height:44px; margin-top:6px; font-size:15px; }
 
 /* ---- RIDE mode (2026-08-14) -----------------------------------------------------
    Full-screen riding: header, sidebar drawer and the trail info panel are hidden, and this app's own

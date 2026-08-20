@@ -1,7 +1,7 @@
 // @suite   infopanel
 // @area    Info panel: trail, lift, Tour segments, reverse, GPX, elevation chart
-// @files   Trailmap App/index.html
-// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight, DIFF_LABEL
+// @files   Trailmap App/index.html, Trailmap App/style.css
+// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight, DIFF_LABEL, syncRideModeChrome, ip-ride-bar
 // @needs   region=bikekingdom, builder=off
 //
 // The panel is a custom div rather than a Leaflet popup so nothing covers the trail, which means every piece
@@ -430,4 +430,44 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   }
   T.ok("and the touch layout's own rule is a fixed width, not max-content",
        touchWidth !== null && !/content/.test(touchWidth), touchWidth, "a length");
+
+  T.test("RIDE is a labelled bar under the chart, and the touch layout's buttons are finger-sized");
+  // 2026-08-20: RIDE used to be the LAST and smallest thing in .ip-btns, at 22px, on the layout it is the
+  // most important control of. It is a full-width bar under the elevation chart now, and the four glyph
+  // buttons grow to 34px on touch. Both are touch-only, so this case cannot measure geometry -- a desktop
+  // run has the bar in the DOM and never painted, reporting zeroes -- and reads the rules out of the CSSOM
+  // instead, the same technique (and the same reason) as the panel-width check above.
+  const ruleValue = (selector, prop, inMedia) => {
+    let found = null;
+    for (const sheet of document.styleSheets) {
+      let rules; try { rules = sheet.cssRules; } catch (e) { continue; }
+      for (const rule of rules || []) {
+        const isMedia = !!(rule.media && /coarse|max-width/.test(rule.conditionText || ""));
+        if (isMedia !== inMedia) continue;
+        for (const r of (isMedia ? (rule.cssRules || []) : [rule])) {
+          if (r.selectorText === selector && r.style && r.style[prop]) found = r.style[prop];
+        }
+      }
+    }
+    return found;
+  };
+  await openFirstTrail();
+  const bar = content().querySelector(".ip-ride-bar");
+  T.ok("the panel has a RIDE bar", !!bar, !!bar, true);
+  T.ok("it is not in the glyph group any more", !!bar && !bar.closest(".ip-btns"), true, true);
+  T.ok("it follows the stats/chart block", !!bar && bar.previousElementSibling.classList.contains("ip-trail"), true, true);
+  T.ok("it says what it does", !!bar && /RIDE/.test(bar.textContent), bar ? bar.textContent.trim() : null, "names RIDE");
+  // handleInfoPanelClick and syncRideModeChrome both find this button by .ride-btn, nothing else -- moving it
+  // in the DOM must not move it out of their reach.
+  T.ok("and still answers to .ride-btn", !!bar && bar.classList.contains("ride-btn"), true, true);
+  T.eq("hidden on desktop, exactly as the button it replaced was", ruleValue("#infoPanel .ip-ride-bar", "display", false), "none");
+  T.eq("shown on touch", ruleValue("#infoPanel .ip-ride-bar", "display", true), "flex");
+  const barH = parseFloat(ruleValue("#infoPanel .ip-ride-bar", "height", false) || "0");
+  T.ok("and it is a full touch target tall", barH >= 44, barH, ">= 44");
+  const btnH = parseFloat(ruleValue("#infoPanel h3 .ip-btns > button", "height", true) || "0");
+  T.ok("the glyph buttons grow on touch", btnH >= 34, btnH, ">= 34");
+  // The heading's own group must stay ONE row of EQUAL buttons after the move (the case above measures that
+  // where it can be painted); here it is only the count that changed, and a stray fifth child would mean the
+  // bar was rendered in both places.
+  T.eq("the group is four buttons again", content().querySelectorAll(".ip-btns > button").length, 4);
 });

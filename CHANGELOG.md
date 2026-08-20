@@ -22,6 +22,13 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **RIDE ist in der Infobox jetzt ein eigener, beschrifteter Balken; die Glyph-Buttons wachsen auf dem Handy
+  auf 34px.** RIDE war bisher der letzte und kleinste Knopf (22px) in `.ip-btns` — auf genau dem Layout, auf
+  dem er der wichtigste ist. Vier Entwuerfe wurden vorab als Mockup gezeigt, der Nutzer hat B gewaehlt:
+  `.ip-ride-bar`, volle Panelbreite, 48px hoch (44px in `landscape-compact`), amber, mit Wort statt Glyphe.
+  Bleibt touch-only wie der ersetzte Button — **am Desktop aendert sich nichts**. Das touch-`max-height` des
+  Panels waechst von `min(38vh,300px)` auf `min(48vh,370px)` (gemessen: normaler Trail 209px, hoechste Tour
+  276px auf 375x812, nichts scrollt). Neuer Testfall in `tests/browser/infopanel.js`, per Mutation geprueft.
 - **Bremberg-Loop geschlossen: ein paralleler Waldweg ist kein Nachfahren.** Der Nutzer hat den Waldweg auf
   der Karte gesehen; das Verfahren hatte ihn gefunden (254m Bruecke fuer 253m Luecke, Faktor 1,0) und wegen
   angeblich 142m doppelt verworfen. Nachgemessen trennen sich die Faelle am ABSTAND: dort liegt die Bruecke

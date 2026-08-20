@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=181" />
+<link rel="stylesheet" href="style.css?v=182" />
 </head>
 <body>
 <div id="fatalError">
@@ -3470,6 +3470,11 @@ function syncRideModeChrome(){
     b.classList.toggle("active", rideMode);
     b.setAttribute("aria-pressed", rideMode ? "true" : "false");
     b.title = rideMode ? "RIDE-Modus beenden" : "RIDE-Modus starten";
+    // The info panel's own bar (2026-08-20) is the one RIDE entry point that carries a WORD, so its label
+    // has to be re-synced here too and not just at build time: selecting a different trail while riding
+    // rebuilds the panel with "RIDE beenden" -- and since RIDE hides the panel, that stale label would
+    // only become visible again after exiting, on a panel whose button now means the opposite.
+    if (b.classList.contains("ip-ride-bar")) b.textContent = rideMode ? "🚴‍♂️ RIDE beenden" : "🚴‍♂️ RIDE starten";
   });
 }
 
@@ -5816,14 +5821,14 @@ function buildInfoPanelHtml(t){
       <button class="solo-btn${isSolo ? " active" : ""}" data-id="${t.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button>
       <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">⏪</button>
       <button class="gpx-download-btn" data-id="${t.id}" title="GPX herunterladen">GPX</button>
-      <button class="ride-btn${rideMode ? " active" : ""}" data-id="${t.id}" title="${rideMode ? "RIDE-Modus beenden" : "RIDE-Modus für diesen Trail starten"}">🚴‍♂️</button>
     </span></h3>
     <div class="ip-trail">
       <span class="dot-start">●</span> → ${t.len} km → <span class="dot-end">●</span><span
         class="ip-gap"></span>${upShown} m ⬆️<span class="ip-gap"></span>${downShown} m ⬇️
       ${profile ? buildElevationSvg(profile, highlight, diffColor[t.diff], t.id, isReversed, chartSegments) : ""}
       ${segmentInfoHtml}
-    </div>`;
+    </div>
+    <button class="ride-btn ip-ride-bar${rideMode ? " active" : ""}" data-id="${t.id}" title="${rideMode ? "RIDE-Modus beenden" : "RIDE-Modus für diesen Trail starten"}">🚴‍♂️ ${rideMode ? "RIDE beenden" : "RIDE starten"}</button>`;
 }
 
 // A lift's own info panel. Deliberately much sparser than a trail's: no difficulty, no elevation
@@ -7684,7 +7689,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v181"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v182"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
