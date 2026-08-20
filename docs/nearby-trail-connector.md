@@ -631,6 +631,37 @@ eines zu verbessern. Wenn irgendwann ein Mass gefunden wird, das die Gruppen tre
 
 ---
 
+## Alle uebrigen Regionen (2026-08-20)
+
+Der Nutzer: „Die Qualitaet des Verfahrens ist mittlerweile gut" -- also ohne Einzelfall-Vorlage durchgezogen.
+**190 von 217 Luecken geschlossen (88 %)** in zehn Regionen: Odenwald, Sauerland, Waldmeister, Bike Circus,
+Naheland, Donnersberg, Livigno, Soelden, Bike Kingdom.
+
+Bemerkenswert ist, wie ruhig es lief: im ganzen Stapel gibt es **eine einzige Kappung ueber 15 %**
+(Poppenberg-Loop, „Butzhols Bests", 343 -> 269 m). Nach dreiundzwanzig Faellen, sechs Grenzwerten und vier
+Regelversuchen ist das der beste Beleg dafuer, dass die Kalibrierung an echten Zahlen -- und nicht an
+gewaehlten Zahlen -- der richtige Weg war.
+
+**Die Tourenbuilder-Touren gingen glatt durch.** „THE CHALLENGE" (10 Luecken) und „BIG-5 Bike Challenge" (8)
+waren absichtlich mit offenen Luecken angelegt, weil es beim ersten Wurf des Builders kein Schliessverfahren
+gab. Beide sind jetzt lueckenlos, mit 1-2 % Kappung.
+
+**Zwei Sachbefunde, die keine Lueckenarbeit sind:**
+
+- **Drei Soelden-Touren sind Punkt-zu-Punkt**, nicht Runden: „Long Line Rotkogl" (3990 m zwischen Anfang und
+  Ende), „Long Line Giggijoch" (3936 m), „Long Line Gaislachkogl" (1874 m) und „Long Trail Fernar" (6242 m).
+  Das sind liftbediente Abfahrten -- `MAX_GAP_M` meldet sie korrekt als Strecke statt sie zu ueberbruecken.
+- **Zwei entartete Ein-Punkt-Verbinder im Odenwald** (MIL1 `seg14`, GH1 `seg8`) haben Fall 0 mit einem
+  TypeError abstuerzen lassen: `project_onto_way` laeuft ueber die KANTEN und gibt bei einem einzigen Punkt
+  `None` zurueck. Jetzt abgefangen. Ein Segment mit einem Punkt zeichnet ohnehin nichts -- `validate_region.py`
+  pruefte das bisher nicht.
+
+Die 28 offenen verteilen sich auf 17 Touren, davon 20 im Pfaelzerwald (unveraendert, siehe oben). Neu offen
+sind nur: Livigno „Tutti Frutti" (62 m, 53 m), Sauerland „Bremberg-Loop" (253 m) und zwei Restluecken von 3 m
+und 2 m im Odenwald -- unter einem Pixel bei jeder Zoomstufe, die die App zeichnet.
+
+---
+
 ## Regressionstest (2026-08-20)
 
 `python tests/run.py --suite ntcregression` — 12 Fälle, ~60 s. Rechnet drei Touren aus ihrem Stand **vor** dem

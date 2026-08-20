@@ -22,6 +22,15 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Alle uebrigen Regionen geschlossen: 190 von 217 Luecken (88 %)** in Odenwald, Sauerland, Waldmeister,
+  Bike Circus, Naheland, Donnersberg, Livigno, Soelden und Bike Kingdom -- ohne Einzelfall-Vorlage, weil das
+  Verfahren inzwischen traegt. Im ganzen Stapel gibt es EINE Kappung ueber 15 %. Die beiden
+  Tourenbuilder-Touren ("THE CHALLENGE", "BIG-5") waren absichtlich mit offenen Luecken angelegt und sind
+  jetzt lueckenlos, mit 1-2 % Kappung. Zwei Sachbefunde: drei Soelden-Touren sind PUNKT-ZU-PUNKT (liftbediente
+  Abfahrten, 1,9-6,2 km zwischen Anfang und Ende), korrekt als Strecke gemeldet; und zwei entartete
+  Ein-Punkt-Verbinder im Odenwald (MIL1 seg14, GH1 seg8) liessen Fall 0 mit einem TypeError abstuerzen, weil
+  `project_onto_way` ueber die Kanten laeuft und bei einem einzigen Punkt None liefert -- jetzt abgefangen.
+  `validate_region.py` prueft solche Segmente bisher nicht.
 - **Tour 8 Annweiler: eine Stelle per Handeingriff gekappt, weil keine Regel die Gruppen trennt.** Der Nutzer
   wollte an `seg25` gekappt haben; die Zahlen waren 84m Bruecke mit 31m doppelt und ohne Kappung (Fall 1) gegen
   27m Bruecke mit 8m doppelt und 52m Kappung (Fall 2). Drei Verallgemeinerungen sind an echten Zahlen

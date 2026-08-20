@@ -453,8 +453,13 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False, budget_A=None, budget
     # Zeitpunkt schon gefahren -- als Ende des vorigen Abschnitts, dessen Geometrie es ja auch enthaelt.
     # Die umgekehrte Variante (den vorigen kappen) ist absichtlich NICHT eingebaut: sie ist an keinem Fall
     # geprueft, und ein nicht geprueftes Muster hat hier schon sechs Anlaeufe gekostet.
-    _i, _t, P, dproj = C.project_onto_way([list(q) for q in B], a)
-    if dproj <= OVERLAP_M:
+    # `project_onto_way` laeuft ueber die KANTEN und gibt None zurueck, wenn es keine gibt. Im Odenwald
+    # stehen zwei entartete Verbinder mit nur EINEM Punkt in den Daten (MIL1 seg14, GH1 seg8) -- ohne diese
+    # Abfrage stirbt Fall 0 dort mit einem TypeError mitten in der Tour.
+    proj = C.project_onto_way([list(q) for q in B], a) if len(B) >= 2 else None
+    if proj is not None:
+        _i, _t, P, dproj = proj
+    if proj is not None and dproj <= OVERLAP_M:
         ahead = C.line_len_m([list(q) for q in B[:_i + 1]] + [P])
         # Laufen beide dasselbe Stueck in DERSELBEN Richtung? A's letzte Punkte, soweit sie auf B liegen,
         # muessen auf B immer weiter nach vorne projizieren. Bei entgegengesetzter Richtung ist es ein
