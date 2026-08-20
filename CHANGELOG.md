@@ -22,6 +22,25 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **The focused trail's direction arrows during RIDE are filled white triangles on the centreline now, instead
+  of the thin chevrons beside it.** The report (user): "durch die dickere Linie wird der komplett verdeckt und
+  die Pfeilchen sind eh zu klein und dünn" — and it was not a near miss: `ARROW_OFFSET_PX` is 9 and the RIDE
+  focus ring is 18px wide, i.e. reaches exactly 9px from the centreline, so the chevron sat precisely on the
+  ring's outer edge. Five variants were mocked up with the `visualize` tool first (per the user's standing
+  preference) and the user picked the filled-triangle one: rather than push the arrow further OUT, put it
+  INSIDE the ring, where the ring's own orange is the contrast and no space has to be negotiated with
+  neighbouring trails. **The geometry needed no new code** — `buildChevron`'s three points (back-left, tip,
+  back-right) ARE a triangle once the side offset is zero, so this is the same sampling loop with a second
+  size spec (`RIDE_ARROW_SPEC`) and `L.polygon` instead of `L.polyline`. Only the focused trail is affected;
+  every other trail keeps its normal chevrons, and the focused trail's own are suppressed while the ring is up
+  (measured: 61 → 53 chevron shapes on the map, replaced by 8 triangles). **Performance was measured before
+  choosing between the variants**, since RIDE is where this app already hit a memory ceiling: with 15,385
+  chevrons force-added — ~10x a realistic load — one renderer pass cost 4.0ms with nothing, 11.7ms as 3.4px
+  strokes and 9.9ms as filled polygons, i.e. filling is CHEAPER than a wide stroke at this size. The count is
+  what matters, and this layer only ever exists for one trail. Two mutation-checked checks in
+  `tests/browser/ride.js` (13 cases now), one of which pins a z-order bug found by measurement:
+  `highlightSelectedTrail` fronts the selected line AFTER the halo is built, so without a counter-call the
+  trail's own line paints a stripe through every triangle.
 - **Schwarzwald, second pass: the Trailforks sweep takes it from 119 trails to 619, and from 7
   sub-regions to 10.** `tools/harvest_schwarzwald_tf.py` (new) harvests the trail table of every
   Schwarzwald district and then one page per trail; `tools/build_schwarzwald.py` integrates them.

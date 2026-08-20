@@ -10,7 +10,9 @@
 //          RIDE_GAP_BRIDGE_MIN_M, rideModeBtn, rideInfoPanel, rideInfoSpeed, rideInfoAlt, rideInfoName,
 //          rideInfoStats, rideInfoTrail, lastSpeedKmh, lastAltitudeM, startFollowing, stopFollowing,
 //          updateUserLocation, RIDE_MIN_ZOOM, preRideMinZoom, preRideMinZoomSaved,
-//          recoverFromRotationCrash, rotationPadding
+//          recoverFromRotationCrash, rotationPadding, syncRideArrows, buildRideArrowLayer, rideArrowLayer,
+//          RIDE_ARROW_SPEC, RIDE_ARROW_FILL, RIDE_ARROW_EDGE, ARROW_SPEC, buildChevron,
+//          buildDirectionArrowShapes, highlightSelectedTrail, updateStartDotVisibility
 // @needs   region=bikekingdom, builder=off
 //
 // Added 2026-08-16, once the RIDE infobox redesign settled (per the user's own phone-tested refinements the
@@ -239,6 +241,94 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
     }
   } finally {
     L.Map.prototype.setMinZoom = realSetMinZoom;
+  }
+
+  T.test("the focused trail swaps its buried offset chevrons for filled triangles inside the ring");
+  // The normal chevron sits 9px to the side and the focus ring is 18px wide, i.e. reaches exactly 9px from
+  // the centreline -- so it is not partly covered, it is precisely on the ring's outer edge (user,
+  // 2026-08-20: "durch die dickere Linie wird der komplett verdeckt"). RIDE therefore replaces that trail's
+  // own arrows with filled white triangles ON the centreline, where the ring's own colour is the contrast.
+  // Every other trail keeps its normal chevrons, which is why this counts the SHAPES that disappear rather
+  // than just looking for triangles: a version that added triangles without suppressing the buried pair
+  // would look identical to this test if it only checked for their presence.
+  const realFlyTo2 = L.Map.prototype.flyTo;
+  const realSetMinZoom2 = L.Map.prototype.setMinZoom;
+  let m2 = null;
+  L.Map.prototype.flyTo = function (c, z) { return this.setView(c, z, { animate: false }); };
+  L.Map.prototype.setMinZoom = function (z) { m2 = this; return realSetMinZoom2.apply(this, arguments); };
+  const arrowBox = TM.$("#showDirectionArrowsToggle");
+  const arrowsWereOn = arrowBox.checked;
+  try {
+    exitRideMode();
+    await TM.wait(400);
+    await TM.ui.setSwitch("showDirectionArrowsToggle", true);
+    enterRideMode();
+    await TM.wait(500);
+    T.ok("captured the map instance", !!m2, !!m2, true);
+    if (!m2) {
+      T.skip("no map instance to drive the zoom with");
+    } else {
+      const paths = () => TM.map.overlay();
+      // A normal chevron is the only 1.6px unfilled stroke on the map; a triangle is the only #ffffff fill.
+      const chevronShapes = () => paths().filter((p) => p.getAttribute("fill") === "none" &&
+        p.getAttribute("stroke-width") === "1.6" && (p.getAttribute("d") || "").length > 10)
+        .reduce((a, p) => a + ((p.getAttribute("d") || "").match(/M/g) || []).length, 0);
+      const triNodes = () => paths().filter((p) => p.getAttribute("fill") === "#ffffff");
+      TM.ui.trailCards()[0].click();
+      await TM.until(() => TM.$("#infoPanel").classList.contains("visible"), 3000);
+      m2.setZoom(16, { animate: false });
+      await TM.wait(700);
+      const withFocus = chevronShapes(), tri = triNodes();
+      T.eq("exactly one triangle layer, holding several arrows in one node", tri.length, 1);
+      T.ok("it is a filled polygon with a dark edge, not a stroke-only chevron",
+           tri[0].getAttribute("stroke") === "#2a2a2a" && (tri[0].getAttribute("d") || "").indexOf("z") > -1,
+           tri[0].getAttribute("stroke") + " / " + (tri[0].getAttribute("d") || "").slice(-2), "#2a2a2a / closed");
+      const triShapes = ((tri[0].getAttribute("d") || "").match(/M/g) || []).length;
+      T.ok("it carries more than one arrow", triShapes > 1, triShapes, "> 1");
+      // The regression this case exists for as much as the feature: highlightSelectedTrail brings the
+      // selected trail's own line to the front AFTER showTrailInfo has built the halo, so without a
+      // counter-call the 3.5px line paints a stripe straight through every 16px triangle. Measured at DOM
+      // index 643 against the arrows' 642 before the fix.
+      const all = paths();
+      const focusLine = all.filter((p) => p.getAttribute("stroke-opacity") === "0.9" && p.getAttribute("fill") === "none");
+      T.ok("the triangles are painted ON TOP of the focused trail's own line",
+           focusLine.every((p) => all.indexOf(p) < all.indexOf(tri[0])),
+           focusLine.map((p) => all.indexOf(p)).join(",") + " vs " + all.indexOf(tri[0]), "line index < arrows");
+      // Suppression: dropping the focus must hand that trail's own chevrons back, and taking it again must
+      // remove them. Same view throughout, so the counts are comparable.
+      clearRideFocusHalo();
+      await TM.wait(600);
+      const noFocus = chevronShapes();
+      T.eq("no triangles once the focus is gone", triNodes().length, 0);
+      T.ok("and the trail's own chevrons came back", noFocus > withFocus, noFocus + " vs " + withFocus,
+           "more than while focused");
+      TM.ui.trailCards()[0].click();
+      await TM.wait(800);
+      T.eq("re-focusing suppresses them again", chevronShapes(), withFocus);
+      T.eq("and the triangles are back", triNodes().length, 1);
+      // Below ARROW_MIN_ZOOM nothing is drawn at all, exactly like the normal arrows.
+      m2.setZoom(13, { animate: false });
+      await TM.wait(700);
+      T.eq("below the arrow zoom threshold there are no triangles", triNodes().length, 0);
+      T.eq("and no chevrons either", chevronShapes(), 0);
+      m2.setZoom(16, { animate: false });
+      await TM.wait(700);
+      T.eq("zooming back in brings the triangles back", triNodes().length, 1);
+      // This is the check that pins the suppression term in updateStartDotVisibility's own loop, and it has
+      // to come AFTER a zoom: applyRideFocusHalo removes the focused trail's chevrons itself, so up to here
+      // everything passes even without that term. It is the zoomend re-evaluation that would put the buried
+      // pair back on the map alongside the triangles, and only a count taken after one can see it.
+      T.eq("and the zoom did not quietly restore the buried chevrons underneath them",
+           chevronShapes(), withFocus);
+      exitRideMode();
+      await TM.wait(700);
+      T.eq("leaving RIDE removes them", triNodes().length, 0);
+      T.ok("and the trail has its normal chevrons again", chevronShapes() > 0, chevronShapes(), "> 0");
+    }
+  } finally {
+    L.Map.prototype.flyTo = realFlyTo2;
+    L.Map.prototype.setMinZoom = realSetMinZoom2;
+    if (!arrowsWereOn) await TM.ui.setSwitch("showDirectionArrowsToggle", false);
   }
 
   T.test("teardown: leave RIDE mode, restore the real geolocation API");

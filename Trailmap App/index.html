@@ -3543,6 +3543,10 @@ function updateRideInfoPanel(){
 let rideHaloLayers = [];
 let rideHaloOriginalConnectorStyles = []; // [{layer, weight, color}]
 let rideHaloTrailId = null;
+// Declared here with the other halo state rather than beside its own builder further down: clearRideFocusHalo
+// reads it, and a `let` is in its temporal dead zone until its declaration runs (the same trap
+// preRideMinZoomSaved and bearingSweeping carry their own notes about).
+let rideArrowLayer = null;
 
 function clearRideFocusHalo(){
   rideHaloLayers.forEach(l => { if (map.hasLayer(l)) map.removeLayer(l); });
@@ -3550,6 +3554,50 @@ function clearRideFocusHalo(){
   rideHaloOriginalConnectorStyles.forEach(({ layer, weight, color }) => layer.setStyle({ weight, color }));
   rideHaloOriginalConnectorStyles = [];
   rideHaloTrailId = null;
+  if (rideArrowLayer) { map.removeLayer(rideArrowLayer); rideArrowLayer = null; }
+  // Hand the normal chevrons back to whoever the current filters/zoom say should have them -- including
+  // the trail this halo was just on, whose own layer applyRideFocusHalo took off the map.
+  updateStartDotVisibility();
+}
+
+// The focused trail's own direction arrows during RIDE: filled white triangles ON the centreline, inside
+// the orange ring, replacing that trail's normal offset chevrons (which the ring buries -- see
+// RIDE_ARROW_SPEC). One L.polygon holding every triangle as a sub-ring, exactly the way the normal arrows
+// are one L.polyline holding every chevron as a sub-path: one DOM node per trail, not one per arrow.
+// (`rideArrowLayer` itself is declared up with the rest of the halo state, see there.)
+
+function buildRideArrowLayer(coords, reversed, zoom){
+  const shapes = buildDirectionArrowShapes(coords, reversed, zoom, RIDE_ARROW_SPEC);
+  if (!shapes.length) return null;
+  return L.polygon(shapes, { color: RIDE_ARROW_EDGE, weight: RIDE_ARROW_EDGE_WEIGHT,
+    fillColor: RIDE_ARROW_FILL, fillOpacity: 1, opacity: 1,
+    interactive: false, bubblingMouseEvents: false });
+}
+
+// Whether the focused trail's RIDE arrows should be on the map right now, and at the right size for the
+// current zoom. Called from updateStartDotVisibility (which already owns the zoomend hook and the
+// ARROW_MIN_ZOOM rule for every other trail) and from applyRideFocusHalo itself. Obeys the same two gates
+// the normal arrows do -- the "Richtungspfeile" switch and ARROW_MIN_ZOOM -- so turning arrows off turns
+// these off too, rather than leaving RIDE with a second, unswitchable set.
+function syncRideArrows(){
+  const want = rideMode && rideHaloTrailId && showDirectionArrows && map.getZoom() >= ARROW_MIN_ZOOM;
+  if (!want) {
+    if (rideArrowLayer) { map.removeLayer(rideArrowLayer); rideArrowLayer = null; }
+    return;
+  }
+  const layer = lineLayers[rideHaloTrailId];
+  if (!layer) return;
+  const shapes = buildDirectionArrowShapes(layer.coords, reversedId === rideHaloTrailId, map.getZoom(), RIDE_ARROW_SPEC);
+  if (!shapes.length) return;
+  if (rideArrowLayer) rideArrowLayer.setLatLngs(shapes);
+  else {
+    rideArrowLayer = buildRideArrowLayer(layer.coords, reversedId === rideHaloTrailId, map.getZoom());
+    if (rideArrowLayer) rideArrowLayer.addTo(map);
+  }
+  // Last in the pane, so neither the orange ring (added with bringToBack) nor the trail's own line (which
+  // highlightSelectedTrail brings to the front on every selection, AFTER showTrailInfo has already built
+  // this) can end up painted over the arrows. Cheap: bringToFront only moves one SVG node.
+  if (rideArrowLayer) rideArrowLayer.bringToFront();
 }
 
 function applyRideFocusHalo(trailId){
@@ -3603,6 +3651,10 @@ function applyRideFocusHalo(trailId){
   } else if (layer.styleTarget) {
     addRing(layer.coords, (t.loop && !segments) ? "connector" : t.diff, layer.styleTarget);
   }
+  syncRideArrows();
+  // This trail's NORMAL offset chevrons would otherwise sit buried in the ring alongside the new ones --
+  // updateStartDotVisibility's own loop knows about this and will not put them back while the ring is up.
+  if (layer.directionArrowLayer && map.hasLayer(layer.directionArrowLayer)) map.removeLayer(layer.directionArrowLayer);
 }
 
 // Real, reported bug (2026-08-16, the user, on their own phone): rapidly toggling RIDE on/off/on -- "immer
@@ -5125,14 +5177,20 @@ function updateStartDotVisibility(){
   // meant by "nur wenn ziemlich nah rangezoomt ist". Plus its own dedicated on/off toggle on top of that.
   const arrowZoomOk = map.getZoom() >= ARROW_MIN_ZOOM;
   if (arrowZoomOk) rescaleDirectionArrows();
-  Object.values(lineLayers).forEach(layer => {
+  Object.entries(lineLayers).forEach(([id, layer]) => {
     syncStartDot(layer);
     if (!layer.directionArrowLayer) return;
-    const arrowsShouldShow = map.hasLayer(layer.line) && arrowZoomOk && showDirectionArrows;
+    // The focused trail during RIDE is the one exception: its own offset chevrons sit exactly on the outer
+    // edge of the 18px focus ring and are invisible there, so applyRideFocusHalo replaces them with the
+    // filled centreline triangles instead (see RIDE_ARROW_SPEC). Without this term the zoomend that
+    // triggered a rescale would quietly put the buried pair back on the map alongside them.
+    const ridingThisOne = rideMode && id === rideHaloTrailId;
+    const arrowsShouldShow = map.hasLayer(layer.line) && arrowZoomOk && showDirectionArrows && !ridingThisOne;
     const arrowShown = map.hasLayer(layer.directionArrowLayer);
     if (arrowsShouldShow && !arrowShown) map.addLayer(layer.directionArrowLayer);
     else if (!arrowsShouldShow && arrowShown) map.removeLayer(layer.directionArrowLayer);
   });
+  syncRideArrows();
 }
 
 // ---- Info panel logic (replaces Leaflet popups so nothing covers the trail) ----
@@ -5532,6 +5590,30 @@ const ARROW_OFFSET_PX = 9, ARROW_LEN_PX = 6, ARROW_HALF_WIDTH_PX = 3.5;
 // Higher than START_DOT_MIN_ZOOM (13): the user wanted these appearing only once quite close in, not at the
 // zoom where the Start/Ziel dot already earns its keep.
 const ARROW_MIN_ZOOM = 15;
+// The three sizes above, as one object, so the same sampling loop and the same three-point shape can be built
+// at a second size without duplicating either (see RIDE_ARROW_SPEC).
+const ARROW_SPEC = { offsetPx: ARROW_OFFSET_PX, lenPx: ARROW_LEN_PX, halfWidthPx: ARROW_HALF_WIDTH_PX };
+// The focused trail's arrows during RIDE. Two things differ and both come from the same report (user,
+// 2026-08-20: "Durch die dickere Linie wird der komplett verdeckt und die Pfeilchen sind eh zu klein und
+// dünn"). First, `offsetPx: 0` -- the RIDE focus halo is 18px wide, i.e. it reaches +/-9px from the
+// centreline, and ARROW_OFFSET_PX is exactly 9, so the normal chevron does not merely overlap the orange
+// ring, it sits precisely on its outer edge and is completely buried. Moving the arrow further OUT was the
+// obvious fix and was shown to the user as a mockup alongside this one; putting it INSIDE the ring won,
+// because the ring already owns that space, white-on-orange is the strongest contrast available on this map
+// regardless of the basemap underneath, and nothing has to be re-checked against neighbouring trails.
+// Second, it is drawn as a FILLED triangle rather than an open V: on a moving handlebar a solid shape reads
+// faster, and at this size an outline alone starts to look like a piece of the trail. Note the geometry
+// needs no new code at all -- buildChevron's own three points (back-left, tip, back-right) ARE a triangle
+// once the side offset is zero; only the Leaflet layer type changes, polygon instead of polyline.
+//
+// Performance was checked before choosing this over the open-chevron variant, because RIDE is where this
+// app has already hit a memory ceiling once (see RIDE_MIN_ZOOM). Measured on Bike Kingdom with 15,385
+// chevrons force-added -- roughly ten times a realistic load -- one renderer pass cost 4.0ms with nothing,
+// 11.7ms as 3.4px strokes, and 9.9ms as filled polygons: filling is CHEAPER than a wide stroke at this size,
+// since stroke width drives the painted area more than the fill does. What actually matters is the COUNT,
+// and this layer only ever exists for the one focused trail, so it is ~40 shapes, not 15,000.
+const RIDE_ARROW_SPEC = { offsetPx: 0, lenPx: 16, halfWidthPx: 7.5 };
+const RIDE_ARROW_FILL = "#ffffff", RIDE_ARROW_EDGE = "#2a2a2a", RIDE_ARROW_EDGE_WEIGHT = 1.2;
 
 // Metres per screen pixel at a given latitude/zoom, standard Web Mercator (the projection Leaflet's default CRS
 // and this app's tile grid both use) -- equatorial circumference / 256, scaled by zoom and by cos(lat) for the
@@ -5561,8 +5643,9 @@ function destinationPoint(lat, lon, bearingDegVal, distanceM){
 // the other) and pointing along `angleDeg`. `mpp` (metres-per-pixel at `pos`'s latitude and the current zoom)
 // converts the fixed on-screen PX sizes to the real-world metres destinationPoint needs -- that conversion,
 // redone at whatever zoom is current, is what keeps the shape a constant size on screen.
-function buildChevron(pos, angleDeg, sideSign, mpp){
-  const offsetM = ARROW_OFFSET_PX * mpp, lenM = ARROW_LEN_PX * mpp, halfWidthM = ARROW_HALF_WIDTH_PX * mpp;
+function buildChevron(pos, angleDeg, sideSign, mpp, spec){
+  const sz = spec || ARROW_SPEC;
+  const offsetM = sz.offsetPx * mpp, lenM = sz.lenPx * mpp, halfWidthM = sz.halfWidthPx * mpp;
   const anchor = destinationPoint(pos[0], pos[1], angleDeg + 90 * sideSign, offsetM);
   const tip = destinationPoint(anchor[0], anchor[1], angleDeg, lenM / 2);
   const back = destinationPoint(anchor[0], anchor[1], angleDeg + 180, lenM / 2);
@@ -5575,7 +5658,7 @@ function buildChevron(pos, angleDeg, sideSign, mpp){
 // its own position for a smoothed angle rather than a single noisy segment. `reversed` flips the direction the
 // SAME way applyReversedEndpoints already reads coords backwards elsewhere -- see buildDirectionArrowLayer.
 // `zoom` feeds metresPerPixel so the resulting shapes are sized for THAT zoom's screen-pixel scale.
-function buildDirectionArrowShapes(coords, reversed, zoom){
+function buildDirectionArrowShapes(coords, reversed, zoom, spec){
   const cumDist = cumulativeDistanceKm(coords);
   const totalKm = cumDist[cumDist.length - 1];
   if (totalKm <= 0) return [];
@@ -5587,7 +5670,7 @@ function buildDirectionArrowShapes(coords, reversed, zoom){
     const behind = latLngAtDistance(coords, cumDist, Math.max(0, targetKm - 0.02), reversed);
     const ahead = latLngAtDistance(coords, cumDist, Math.min(totalKm, targetKm + 0.02), reversed);
     const mpp = metresPerPixel(pos[0], zoom);
-    shapes.push(buildChevron(pos, bearingDeg(behind, ahead), 1, mpp));
+    shapes.push(buildChevron(pos, bearingDeg(behind, ahead), 1, mpp, spec));
   }
   return shapes;
 }
@@ -6968,6 +7051,12 @@ function highlightSelectedTrail(id){
   // Layers are rebuilt by render(), which resets every _tmBaseWeight -- re-apply the selected
   // stretch's emphasis here so it survives a filter change or a region being added.
   syncSelectedSegmentWeight();
+  // Counter to the layer.line.bringToFront() a few lines up: during RIDE the selected trail IS the focused
+  // one, and applyRideFocusHalo has already built its arrows -- selecting runs AFTER that (makeTrailCard
+  // calls showTrailInfo, then selectTrail), so without this the trail's own 3.5px line ends up painted as a
+  // stripe straight through each 16px white triangle. Measured, not guessed: the line landed at DOM index
+  // 643 against the arrows' 642.
+  if (rideArrowLayer) rideArrowLayer.bringToFront();
 }
 
 function clearSelection(){
