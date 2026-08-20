@@ -315,7 +315,7 @@ def _clean(pts):
     return out
 
 
-def solve(A, B, trail_A=False, trail_B=False, relax=False):
+def solve(A, B, trail_A=False, trail_B=False, relax=False, budget_A=None, budget_B=None):
     """Beste Loesung fuer die Luecke zwischen A (endet) und B (beginnt), Kandidaten nach Kosten sortiert.
 
     trail_A/trail_B sagen, welche Seite ein benannter Trailabschnitt ist -- nur dort darf Fall 5 kappen.
@@ -327,6 +327,13 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
     lim_bridge = RELAX_BRIDGE_FACTOR if relax else MAX_BRIDGE_FACTOR
     lim_seg = RELAX_SEG_TRIM_FRACTION if relax else MAX_SEG_TRIM_FRACTION
     lim_dbl = RELAX_DOUBLE_M if relax else MAX_DOUBLE_M
+    # Die Grenzen oben rechnen pro VORGANG. Ein Segment kann aber von ZWEI benachbarten Luecken gekappt
+    # werden, je an einem Ende, und dann haelt jede einzelne die Grenze ein, waehrend zusammen viel zu viel
+    # weggeht: bei Tour 12 Hauenstein West verlor "Roemerfels" 214m am einen und 113m am anderen Ende, also
+    # 327m von 512m -- 64 %, und beide Vorgaenge fuer sich waren erlaubt (42 % und dann 38 % der schon
+    # verkuerzten Laenge). budget_A/budget_B sagen deshalb, wie viele Meter dieses Segments insgesamt noch
+    # gekappt werden duerfen; close_gaps() fuehrt das pro Segment ueber die ganze Tour mit.
+    budgets = {"A": budget_A, "B": budget_B}
     a, b = A[-1], B[0]
     W = fetch(a, b)
     idx = C.WayIndex(W)
@@ -380,8 +387,11 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
             if cut <= 0.5:
                 continue
             trimmed += cut
+            budget = budgets.get(side)
             if len(new) < MIN_SEG_POINTS or cut > lim_seg * full or cut > MAX_TRIM_ABS_M:
                 seg_over.append("kappt %.0fm von %.0fm des Segments %s" % (cut, full, side))
+            elif budget is not None and cut > budget:
+                seg_over.append("kappt %.0fm, aber von Segment %s sind nur noch %.0fm frei" % (cut, side, budget))
         blen = C.line_len_m(bridge)
         # Der Ablehnungsgrund wird HIER bestimmt, nicht erst am Ende. Er stand vorher zweimal im Code --
         # einmal in acceptable() als Tor fuer Fall 5, einmal in der Schlussrunde fuer den Report -- und
@@ -610,6 +620,11 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
     return out
 
 
+def _orig_lengths(s):
+    """Urspruengliche Laenge je Segment, gemerkt VOR dem ersten Schnitt -- Grundlage des Kappungs-Budgets."""
+    return [C.line_len_m(x["coords"]) for x in s]
+
+
 def close_gaps(s, gaps, names=None, write=False, report=None):
     """Die Luecken einer Tour der Reihe nach schliessen -- der EINE Kern, den Werkzeug und Regressionstest
     gemeinsam benutzen.
@@ -621,6 +636,24 @@ def close_gaps(s, gaps, names=None, write=False, report=None):
     """
     names = names or {}
     out = []
+    # Budget je Segment: hoechstens MAX_SEG_TRIM_FRACTION seiner URSPRUENGLICHEN Laenge, ueber die ganze Tour
+    # summiert. Die Zuordnung laeuft ueber die Identitaet des coords-Objekts, weil `close_gap` Segmente
+    # einfuegt und Indizes damit verschiebt -- ein Index-basiertes Budget waere nach dem ersten Einschub falsch.
+    orig = {}
+    for x in s:
+        orig[id(x)] = C.line_len_m(x["coords"])
+    trimmed_so_far = {}
+
+    def budget_for(x, relax=False):
+        # Der Bruchteil MUSS derselbe sein, den der jeweilige Durchgang erlaubt. Mit dem strengen Wert
+        # gerechnet sperrte das Budget zwei vom Nutzer bestaetigte Loesungen, die genau von der Lockerung
+        # leben: Felsentrails seg34 kappt 95m von 150m (63 %) und Landstuhl (Ost) seg21 76m von 151m (50,3 %).
+        base = orig.get(id(x))
+        if base is None:
+            return None
+        frac = RELAX_SEG_TRIM_FRACTION if relax else MAX_SEG_TRIM_FRACTION
+        return max(0.0, min(frac * base, MAX_TRIM_ABS_M) - trimmed_so_far.get(id(x), 0.0))
+
     for i in sorted(gaps, reverse=True):
         j = (i + 1) % len(s)
         A, B = s[i]["coords"], s[j]["coords"]
@@ -635,12 +668,18 @@ def close_gaps(s, gaps, names=None, write=False, report=None):
                 report("    -> %s" % rec["skipped"])
             out.append(rec)
             continue
-        res = solve(A, B, trail_A=bool(s[i].get("trailId")), trail_B=bool(s[j].get("trailId")))
+        bud_A = budget_for(s[i]) if s[i].get("trailId") else None
+        bud_B = budget_for(s[j]) if s[j].get("trailId") else None
+        lax_A = budget_for(s[i], relax=True) if s[i].get("trailId") else None
+        lax_B = budget_for(s[j], relax=True) if s[j].get("trailId") else None
+        res = solve(A, B, trail_A=bool(s[i].get("trailId")), trail_B=bool(s[j].get("trailId")),
+                    budget_A=bud_A, budget_B=bud_B)
         usable = res and res[0]["off"] <= OFF_TOL_M and not res[0]["reject"]
         if res and not usable:
             # Zweiter Durchgang: nur wo streng nichts Brauchbares uebrig bleibt (siehe RELAX_* oben). Ein
             # Uebergang mit einer brauchbaren strengen Loesung kommt hier nie an und aendert sich also nicht.
-            alt = solve(A, B, trail_A=bool(s[i].get("trailId")), trail_B=bool(s[j].get("trailId")), relax=True)
+            alt = solve(A, B, trail_A=bool(s[i].get("trailId")), trail_B=bool(s[j].get("trailId")),
+                        relax=True, budget_A=lax_A, budget_B=lax_B)
             if alt and alt[0]["off"] <= OFF_TOL_M and not alt[0]["reject"]:
                 res, rec["relaxed"] = alt, True
         if not res:
@@ -658,6 +697,11 @@ def close_gaps(s, gaps, names=None, write=False, report=None):
                 rec["skipped"] = "unverhaeltnismaessig"
             else:
                 rec["applied"] = best["name"]
+                for side, seg_obj, orig_c in (("A", s[i], A), ("B", s[j], B)):
+                    got = best["newA"] if side == "A" else best["newB"]
+                    cut = C.line_len_m(orig_c) - C.line_len_m(got)
+                    if cut > 0.5 and id(seg_obj) in orig:
+                        trimmed_so_far[id(seg_obj)] = trimmed_so_far.get(id(seg_obj), 0.0) + cut
                 rec["bridge"] = round(best["len"])
                 rec["trim"] = round(best["trim"])
                 rec["best"] = best

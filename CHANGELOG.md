@@ -22,6 +22,18 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Die 25 uebrigen Pfaelzerwald-Trailrunden geschlossen: 683 von 705 Luecken, 97 %** (Tour 1-20 plus die
+  fuenf Community-Runden). Die 22 verbleibenden sind nach Grund aufgeschluesselt, weil das die Konsequenz
+  bestimmt: 10 unverhaeltnismaessig (Kandidaten da, alle zu teuer), 9 weglos ueber Toleranz und 4 ohne jeden
+  Kandidaten -- die letzten 13 sind fehlende OSM-Daten, kein Werkzeugfehler. Die "Haardt Runde" ist vermutlich
+  gar keine Runde (Anfang 332m vom Ende, dazu eine 976-m-Luecke) und gehoert angesehen statt geschlossen.
+- **Neuer Fall: Kappungs-Budget je Segment.** Bei Tour 12 Hauenstein West verlor "Roemerfels" 327m von 512m
+  (64 %) -- durch ZWEI benachbarte Luecken, je eine an einem Ende, von denen jede fuer sich die Grenze einhielt
+  (42 %, dann 38 % der schon verkuerzten Laenge). `close_gaps()` fuehrt jetzt pro Segment mit, wie viel schon
+  gekappt wurde. Zwei Feinheiten, jede aus einem Fehlversuch: die Zuordnung laeuft ueber die Objekt-Identitaet
+  der Koordinatenliste (Indizes verschieben sich, wenn ein Segment eingefuegt wird), und der Bruchteil muss dem
+  jeweiligen Durchgang folgen -- mit dem strengen Wert sperrte das Budget zwei bestaetigte Loesungen, die genau
+  von der Lockerung leben.
 - **„Felsenwanderweg Rodalben" umgebaut: die Runde beginnt und endet jetzt an der Jakobsweg-Kreuzung, der
   Bahnhofs-Zubringer wird hin und zurueck gefahren** (Vorgabe des Nutzers). Vorher lag das Ende des
   Rueckweg-Verbinders 379m vom Anfang der Runde weg, und der Connector hatte diese 379m mit einer

@@ -549,6 +549,63 @@ sie betritt. Kappen wuerde sie von beiden Seiten aufessen.
 
 ---
 
+## Die 25 uebrigen Pfaelzerwald-Touren (2026-08-20)
+
+**683 von 705 Luecken geschlossen, 97 %.** Zwanzig offizielle Touren (Tour 1-20) und fuenf Community-Runden,
+in einem Durchgang mit dem endgueltigen Verfahren.
+
+Die 22 verbleibenden sind nach Grund aufgeschluesselt -- das ist wichtiger als die Zahl, weil die drei Gruppen
+verschiedene Konsequenzen haben:
+
+| Grund | Anzahl | Bedeutung |
+|---|---|---|
+| unverhaeltnismaessig | 10 | Kandidaten gibt es, aber alle kappen zu viel oder bauen zu grosse Umwege |
+| weglos ueber Toleranz | 9 | die Verbindung laeuft nicht auf gemappten Wegen |
+| kein Kandidat | 4 | dort ist ueberhaupt kein OSM-Weg |
+
+Die vier ohne jeden Kandidaten und die neun weglosen sind **keine Werkzeugfehler**, sondern fehlende
+OSM-Daten -- der Nutzer hatte das von Anfang an als moeglich benannt („Dabei sind welche wo Trailabschnitte
+oder die Tour selbst nicht direkt auf OSM Wegen liegen").
+
+**Die „Haardt Runde" ist vermutlich gar keine Runde**: ihr Anfang liegt 332 m von ihrem Ende, und sie hat
+zusaetzlich eine 976-m-Luecke mit 16 Kandidaten, die alle unverhaeltnismaessig sind. Das sieht nach demselben
+Fall aus wie die zwei Fernwege -- Punkt-zu-Punkt, moeglicherweise in zwei Teilen. Gehoert angesehen, nicht
+geschlossen.
+
+### Neuer Fall: das Kappungs-Budget je Segment
+
+Bei Tour 12 Hauenstein West verlor „Roemerfels" **327 m von 512 m (64 %)** -- aber nicht durch eine Kappung,
+sondern durch **zwei benachbarte Luecken**, je eine an einem Ende: 214 m am Ende, 113 m am Anfang. Jeder
+Vorgang fuer sich hielt die Grenze ein (42 %, dann 38 % der schon verkuerzten Laenge), zusammen nicht.
+
+`close_gaps()` fuehrt deshalb pro Segment mit, wie viel schon gekappt wurde, und gibt `solve()` das
+verbleibende Budget mit (`budget_A`/`budget_B`). Zwei Feinheiten, jede aus einem Fehlversuch:
+
+- **Die Zuordnung laeuft ueber die Objekt-Identitaet der Koordinatenliste, nicht ueber den Index** --
+  `close_gap` fuegt Segmente ein und verschiebt damit alle hoeheren Indizes, ein index-basiertes Budget waere
+  nach dem ersten Einschub falsch.
+- **Der Bruchteil muss dem jeweiligen Durchgang folgen.** Mit dem strengen Wert gerechnet sperrte das Budget
+  zwei vom Nutzer bestaetigte Loesungen, die genau von der Lockerung leben (Felsentrails `seg34`: 95 m von
+  150 m, Landstuhl (Ost) `seg21`: 76 m von 151 m).
+
+Mit dem Budget verliert Roemerfels 214 m statt 327 m -- dafuer bleibt eine Luecke offen, was hier die
+ehrlichere Antwort ist.
+
+### Kappungen ueber 20 %, die angesehen werden sollten
+
+| Tour | Abschnitt | vorher -> nachher |
+|---|---|---|
+| Tour 2 Waldfischbach-Burgalben | Waldfischbach Trail 1 | 172 -> 60 m (-65 %) |
+| Uni-Wohnstadt Runde | Weltachs | 508 -> 239 m (-53 %) |
+| Tour 12 Hauenstein West | Roemerfels | 508 -> 294 m (-42 %) |
+| Tour 8 Annweiler | Quellenweg Klingenmuenster | 312 -> 186 m (-40 %) |
+| Tour 12 Hauenstein West | Hauensteiner Nr. 4 2 | 414 -> 248 m (-40 %) |
+
+Tour 12 taucht zweimal auf und ist insgesamt die schwierigste Tour im Bestand: viel Kappung, Bruecken-Faktoren
+bis 5,6, zwei offene Luecken.
+
+---
+
 ## Regressionstest (2026-08-20)
 
 `python tests/run.py --suite ntcregression` — 12 Fälle, ~60 s. Rechnet drei Touren aus ihrem Stand **vor** dem
