@@ -2,6 +2,7 @@
 // @area    The three sidebar list sections and their cards
 // @files   Trailmap App/index.html, Trailmap App/style.css
 // @touches makeTrailCard, renderTourList, renderLiftList, render, selectTrail, selectLiftCard, selectCardFor, clearSelection, highlightSelectedTrail, trail-card, lift-card, card-solo-btn, hub-title, region-group-title, card-tint, buildTrailListDom, appendTrailGroup, trailGroupMode, trailSortMode, trailSortDir, trailViewGearBtn, trailViewSettings, trailViewResetBtn, syncTrailViewChips, persistTrailListView, TRAIL_SORT_COMPARE, TRAIL_SORT_DEFAULT_DIR, TRAIL_VIEW_DEFAULTS, categoryBadge, badge-uphill, SORT_LABELS, sidebarScroll, sidebar-search-footer, syncSidebarToggleA11y, isMobileLayout, openSidebar, closeSidebar, wireCardHover, syncStartDot, updateStartDotVisibility,
+//          buildDirectionArrowLayer, directionArrowLayer, DIFF_TINT, ARROW_SPEC,
 //          showEndpoints, hideEndpoints, startDot, startMarker, START_DOT_MIN_ZOOM
 // @needs   region=bikekingdom, builder=off
 //
@@ -481,6 +482,48 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
     }
   } finally {
     L.Map.prototype.flyTo = realFlyTo;
+  }
+
+  T.test("selecting a trail does not paint its own line through its direction arrows");
+  // highlightSelectedTrail brings the selected trail's line to the front so it sits above its neighbours.
+  // Since the arrows became filled triangles ON the line (2026-08-20) that also paints the line straight
+  // through every one of them -- a coloured stripe across each arrow that never went away, because nothing
+  // put them back on top (user, 2026-08-21). Fixed by re-fronting that trail's arrow layer immediately
+  // after, NOT by giving the arrows their own pane: a pane costs a whole renderer surface (~40 MB on a
+  // phone, see the builder-pane note in CLAUDE.md), moving one node inside the existing one costs nothing.
+  //
+  // After the fronting, the last unfilled long path in the pane IS the selected trail's line -- only filled
+  // things (its endpoint markers and its arrows) are ordered after it -- so "some arrow sits later than
+  // that" is the whole property, and it is what a missing re-front would break.
+  {
+    const arrowsOn = TM.$("#showDirectionArrowsToggle");
+    const wereOn = arrowsOn.checked;
+    await TM.ui.setSwitch("showDirectionArrowsToggle", true);
+    closeInfoPanelAndDeselect();
+    await TM.wait(300);
+    TM.ui.trailCards()[0].click();
+    await TM.until(() => TM.$("#infoPanel").classList.contains("visible"), 3000);
+    await TM.wait(800);
+    const all = TM.map.overlay();
+    const longD = (p) => (p.getAttribute("d") || "").length > 40;
+    const lines = all.filter((p) => p.getAttribute("fill") === "none" && longD(p));
+    const arrows = all.filter((p) => p.getAttribute("stroke-width") === "1.2" &&
+                                     p.getAttribute("fill") !== "none" && longD(p));
+    if (!lines.length || !arrows.length) {
+      T.skip("no trail line and arrow pair on screen at this view");
+    } else {
+      const selectedLine = Math.max.apply(null, lines.map((p) => all.indexOf(p)));
+      const lastArrow = Math.max.apply(null, arrows.map((p) => all.indexOf(p)));
+      T.ok("the selected trail's arrows are drawn after its own line, not under it",
+           lastArrow > selectedLine, lastArrow + " vs line at " + selectedLine, "arrow index > line index");
+      // The fill carries the difficulty again since 2026-08-21 -- a light tint of the trail's own colour
+      // rather than one fixed white, which is the cue the white-only version had given up.
+      const tints = ["#a8e8ba", "#a9cdf5", "#f5aa9d", "#c7c7c7"];
+      T.ok("and they are filled with a light difficulty tint, not one fixed colour",
+           arrows.every((p) => tints.indexOf(p.getAttribute("fill")) > -1),
+           [...new Set(arrows.map((p) => p.getAttribute("fill")))].join(","), tints.join(","));
+    }
+    if (!wereOn) await TM.ui.setSwitch("showDirectionArrowsToggle", false);
   }
 
   T.test("a filter that hides the selected trail closes its panel and clears everything");

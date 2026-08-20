@@ -3940,7 +3940,11 @@ const RIDE_OUTER_OPACITY = 1;
 // though we don't have the exact path". Below this many metres it's just the usual sub-metre slop every
 // boundary has and not worth a visible bridge.
 const RIDE_GAP_BRIDGE_MIN_M = 2;
-const RIDE_MIDDLE_TINT = { gruen:"#a8e8ba", blau:"#a9cdf5", rot:"#f5aa9d", schwarz:"#c7c7c7" };
+// The light version of each difficulty colour. One set, three users: the Satellit/Relief halo, RIDE's middle
+// tint, and (since 2026-08-21) the direction arrows' fill. Deliberately the same values -- they answer the
+// same question, "a paler form of this trail's own colour that still reads against it".
+const DIFF_TINT = { gruen:"#a8e8ba", blau:"#a9cdf5", rot:"#f5aa9d", schwarz:"#c7c7c7" };
+const RIDE_MIDDLE_TINT = DIFF_TINT;
 const RIDE_MIDDLE_WEIGHT = 8;
 const RIDE_MIDDLE_OPACITY = 0.9;
 const RIDE_CONNECTOR_CORE_WEIGHT = 5;
@@ -5760,9 +5764,14 @@ function buildDirectionArrowShapes(coords, reversed, zoom, spec){
 // An L.polygon, not an L.polyline: buildChevron's three points close into a triangle once the side offset is
 // zero, so the shape itself needed no new code -- only the layer type and the fill. Still ONE node per trail
 // holding every arrow as a sub-ring, exactly as before.
-function buildDirectionArrowLayer(coords, reversed, zoom){
+// `fill` is the light version of the trail's own difficulty colour (user, 2026-08-21) -- the difficulty cue
+// the 2026-08-20 white-only version had given up, brought back in the one form that keeps the contrast the
+// dark edge provides. It needs no per-basemap palette entry for the same reason white did not: a pale fill
+// inside a near-black outline reads on every basemap we ship. Falls back to white for a trail whose `diff`
+// is not one of the four (a connector-styled loop), so a caller can never end up with no fill at all.
+function buildDirectionArrowLayer(coords, reversed, zoom, fill){
   return L.polygon(buildDirectionArrowShapes(coords, reversed, zoom),
-    { color: ARROW_EDGE, weight: ARROW_EDGE_WEIGHT, fillColor: ARROW_FILL, fillOpacity: 1, opacity: 1,
+    { color: ARROW_EDGE, weight: ARROW_EDGE_WEIGHT, fillColor: fill || ARROW_FILL, fillOpacity: 1, opacity: 1,
       interactive: false, bubblingMouseEvents: false });
 }
 // Rebuilds every visible trail's arrow geometry for the CURRENT zoom -- called on zoomend (see
@@ -5971,8 +5980,9 @@ function applyReversedEndpoints(id){
     // dimmed trail's arrows sitting there at full white.
     const wasOpacity = layer.directionArrowLayer.options.opacity;
     const wasFill = layer.directionArrowLayer.options.fillOpacity;
+    const wasTint = layer.directionArrowLayer.options.fillColor;   // this trail's own light difficulty tint
     map.removeLayer(layer.directionArrowLayer);
-    layer.directionArrowLayer = buildDirectionArrowLayer(coords, isReversed, map.getZoom());
+    layer.directionArrowLayer = buildDirectionArrowLayer(coords, isReversed, map.getZoom(), wasTint);
     layer.directionArrowLayer.setStyle({ opacity: wasOpacity, fillOpacity: wasFill });
     if (wasShown) layer.directionArrowLayer.addTo(map);
   }
@@ -6528,7 +6538,7 @@ function buildTrailLayer(t){
   const startDot = L.circleMarker(coords[0], { radius:5, color:"#22301f", weight:1.5, fillColor:"#fff", fillOpacity:1, bubblingMouseEvents:false }).addTo(map);
   const startMarker = L.circleMarker(coords[0], { radius:5, color:"#0d3d1a", weight:1.5, fillColor:"#3fbf5e", fillOpacity:1, bubblingMouseEvents:false });
   const endMarker = L.circleMarker(coords[coords.length - 1], { radius:5, color:"#5c0f0a", weight:1.5, fillColor:"#e0392b", fillOpacity:1, bubblingMouseEvents:false });
-  const directionArrowLayer = buildDirectionArrowLayer(coords, false, map.getZoom());
+  const directionArrowLayer = buildDirectionArrowLayer(coords, false, map.getZoom(), DIFF_TINT[t.diff]);
   if (showDirectionArrows && map.getZoom() >= ARROW_MIN_ZOOM) {
     directionArrowLayer.addTo(map);
   }
@@ -7198,6 +7208,13 @@ function highlightSelectedTrail(id){
   // calls showTrailInfo, then selectTrail), so without this the trail's own 3.5px line ends up painted as a
   // stripe straight through each 16px white triangle. Measured, not guessed: the line landed at DOM index
   // 643 against the arrows' 642.
+  // Same counter for the NORMAL arrows, and for the same reason: they are filled triangles ON the line since
+  // 2026-08-20, so the bringToFront above paints the selected trail's own line straight through every one of
+  // them -- reported as a coloured stripe through the arrows that never went away, because nothing ever put
+  // them back on top (user, 2026-08-21). No extra pane for this, deliberately: a pane costs a whole renderer
+  // surface (see eachVectorRenderer's note on the 40 MB the empty builder pane was holding), while moving one
+  // node inside the pane that already exists costs nothing.
+  if (layer.directionArrowLayer && map.hasLayer(layer.directionArrowLayer)) layer.directionArrowLayer.bringToFront();
   if (rideArrowLayer) rideArrowLayer.bringToFront();
 }
 

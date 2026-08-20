@@ -21,6 +21,24 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-21
+- **The direction arrows are filled with a light tint of the trail's own difficulty colour**, not one fixed
+  white (user). That restores the difficulty cue the previous day's redesign had given up, in the one form
+  that keeps the contrast the dark edge provides. The tints are the SAME set already used by the
+  Satellit/Relief halo and RIDE's middle ring — one constant, `DIFF_TINT`, three users, because they answer
+  the same question. No per-basemap palette entry is needed for the same reason white needed none: a pale
+  fill inside a near-black outline reads on every basemap we ship.
+- **Fixed: clicking a trail painted its own line straight through its arrows, and it never went away.**
+  `highlightSelectedTrail` brings the selected line to the front so it sits above its neighbours, which since
+  the arrows moved onto the line also puts it above them — a coloured stripe across every arrow of the trail
+  you just tapped, permanent because nothing ever re-ordered them back. Fixed by re-fronting that trail's own
+  arrow layer immediately after, the same one-line counter the RIDE arrows already had. **Deliberately not a
+  new pane**, which the user also asked about: a pane costs a whole renderer surface — measured at ~40 MB on
+  a phone for the empty builder pane — while moving one node inside the pane that already exists costs
+  nothing. Mutation-checked in `tests/browser/lists.js`: without the re-front the line lands at DOM index 654
+  against the arrows' 653, and nothing about the arrows' own attributes changes, so only the pane order can
+  see it.
+
 ## 2026-08-20
 - **The normal-mode direction arrows moved ONTO the line: filled white triangles with a dark edge, the same
   design RIDE uses, one size smaller.** This reverses the 2026-08-05 design knowingly — that one put a thin

@@ -234,11 +234,11 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
     } else {
       const paths = () => TM.map.overlay();
       // A normal chevron is the only 1.6px unfilled stroke on the map; a triangle is the only #ffffff fill.
-      // The NORMAL arrows became filled white triangles on the line too (2026-08-20), so they are no longer
-      // "the unfilled 1.6px strokes" -- they are white polygons like the RIDE ones and differ only in edge
-      // weight: 1.2 normal, 1.6 in RIDE. That one attribute is what separates them here, and it is why the
-      // RIDE arrows carry the heavier edge in the first place (a bigger shape, a heavier outline).
-      const chevronShapes = () => paths().filter((p) => p.getAttribute("fill") === "#ffffff" &&
+      // The NORMAL arrows became filled triangles on the line too (2026-08-20) and took the trail's own
+      // light difficulty tint the next day, so neither "unfilled 1.6px stroke" nor a fixed fill colour
+      // identifies them. The edge weight does: 1.2 normal against RIDE's 1.6, which is why the RIDE arrows
+      // carry the heavier edge in the first place (a bigger shape, a heavier outline).
+      const chevronShapes = () => paths().filter((p) => p.getAttribute("fill") !== "none" &&
         p.getAttribute("stroke-width") === "1.2" && (p.getAttribute("d") || "").length > 10)
         .reduce((a, p) => a + ((p.getAttribute("d") || "").match(/M/g) || []).length, 0);
       const triNodes = () => paths().filter((p) => p.getAttribute("fill") === "#ffffff" && p.getAttribute("stroke-width") === "1.6");
