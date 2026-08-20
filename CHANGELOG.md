@@ -39,7 +39,9 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   own RIDE teardown. **The alternative fix — capping `rotationPadding()` — was offered and deliberately not
   taken**: that padding exists because the same user reported the rotation stutter, and capping it would trade
   their own fix back for memory. The 2.3x overhead is recorded in `docs/backlog.md` instead, since it will
-  matter again for a bigger region. New mutation-checked case in `tests/browser/ride.js` (12 cases now).
+  matter again for a bigger region. New mutation-checked case in `tests/browser/ride.js` (12 cases now). **Confirmed by the user on their own
+  phone the same day: "Stürzt nicht mehr ab"** — which is the only proof available for this one, since a memory
+  kill throws nothing there is no failing test to turn green.
 - **New region: Schwarzwald — 119 trails, 1 lift, 7 sub-regions, built but NOT yet in `REGION_CATALOG`.**
   `regions/schwarzwald.json` plus `tools/build_schwarzwald.py`; `index.html` was deliberately left
   untouched (another session was editing it), so the region is invisible in the app until the catalog entry

@@ -172,7 +172,7 @@ this section in the same commit as the code**, the same standing rule `CHANGELOG
   trailhead and that coordinate holds another trail's dot either way.
 - **Open, measured, not fixed: RIDE mode more than doubles the vector-renderer memory, and that is why zooming
   far out could kill the app.** The crash itself is closed (a `RIDE_MIN_ZOOM` of 10 now blocks the trigger — see
-  `CHANGELOG.md` 2026-08-20), but the underlying overhead is untouched and will matter again for a bigger
+  `CHANGELOG.md` 2026-08-20; confirmed on the user's own phone the same day), but the underlying overhead is untouched and will matter again for a bigger
   region or an older phone. Measured on a 375x812 viewport at a fixed 45° bearing:
 
   | | container | ratio | `rotationPadding()` | painted box | 3 renderer panes |
