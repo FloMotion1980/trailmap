@@ -194,14 +194,22 @@ TRAIL_SUB = {
     "deadmansfirstride": "hochschwarzwald",
 }
 
-#: Bikepark Todtnau. Geometry per trail from whichever of the two sources is the more complete line --
-#: they trace the same corridor (median deviation 2.5 m for Downhill, 5.1 m for Wildride), so this is a
-#: choice about coverage, not about which line is right. OSM's Downhill starts 200 m below the top
-#: station but reaches the valley station; Trailforks' stops 100 m short of the valley but starts at the
-#: top. For Wildride, Trailforks' line CONTAINS OSM's and adds 800 m at the bottom.
-#: Both still fall well short of the operator's own stated distance (see docs/schwarzwald.md).
+#: Bikepark Todtnau. Both runs come from Trailforks, and the OSM lines are NOT used.
+#:
+#: The first build took the Downhill from OSM (way 35830938) because that line reaches the valley station
+#: while Trailforks' `bikepark-todtnau-racetrack` stops 100 m short of it. Then the district sweep built
+#: the Trailforks one too, as its own trail under its own name, and the user settled it (2026-08-20):
+#: "Bikepark Todtnau Racetrack ist eigentlich der gleiche Trail wie Downhill in Todtnau. Loesch den
+#: jetzigen Downhill und nenn den anderen schwarzen dann einfach Downhill." So the OSM copy is gone and
+#: the swept Trailforks line carries the name -- see TF_RENAME below, which also keeps the old id
+#: `sw_todtnau_downhill` so nothing that referenced it breaks.
+#:
+#: Worth knowing why the duplicate check did not catch this pair by itself: the two lines trace the same
+#: corridor (median deviation 2.5 m) but each covers ~100-200 m the other does not, at OPPOSITE ends, and
+#: the containment metric with the "subsumed" shape test is deliberately strict about exactly that. The
+#: Wildride pair, where Trailforks' line contains OSM's outright, WAS caught and dropped automatically.
+#: Both runs still fall well short of the operator's stated distance (see docs/schwarzwald.md).
 TODTNAU = [
-    ("todtnau_downhill", "Downhill", "schwarz", "osm", 35830938, (None, None, None)),
     ("todtnau_wildride", "Wildride", "rot", "trailforks", "trailforks_wildride.json", (None, None, None)),
 ]
 
@@ -216,11 +224,11 @@ NOT_BUILT = [
     # region (they exist on the ground and Trailforks holds their lines) but they carry Trailforks
     # grades, not an operator's, and no lift -- the bike transport was part of the closed operation.
     "Bikepark Bad Wildbad as an operating park -- operator ceased 2025-12-31, runs kept, no lift",
-    # Trailforks calls it a MULTI TRAIL, i.e. a route stitched from other trails rather than a trail of
-    # its own -- 2 756 m that would draw a second line over the trails it is made of. That makes it a
-    # Trailrunde candidate (`loop: true` plus `trailSegments`, matched with tools/gpx_map_match.py), not
-    # a plain trail, and the region has no Touren yet at all.
-    "Schauinsland Enduro (Trailforks, MTB Freiburg e.V.) -- multi-trail route, Tour candidate",
+    # NOTE, corrected 2026-08-20: "Schauinsland Enduro" is NOT excluded and is not a route. Trailforks'
+    # "Multi Trail" label means multi-USE (its own alternateName list reads "Schauinsland Enduro
+    # Multi-Use Trail"), not "assembled from several trails" -- it is a plain 2,8 km descent, and the
+    # district sweep builds it as `sw_schauinsland_enduro`. The region's Touren come from Trailforks'
+    # own ROUTES instead; see tools/build_schwarzwald_tours.py.
     "Trimm-Dich-Pfad (Trailforks, MTB Freiburg e.V.) -- tagged as a hiking trail, not mtb",
 ]
 
@@ -262,6 +270,13 @@ TF_GEO = os.path.join(MATERIAL, "trailforks_geo.json")
 
 #: Trailforks' own difficulty titles, exactly as the region table renders them, onto our four colours.
 #: Same table as build_nordvogesen.py's -- the mapping is a project-wide convention, not per region.
+#: Swept trails that get a different name and/or id than Trailforks' own. Keyed by slug.
+#: `bikepark-todtnau-racetrack` IS the park's "Downhill" (the user's call, see TODTNAU above); it keeps
+#: the id the OSM-sourced copy had, so the region's ids stay stable across this change.
+TF_RENAME = {
+    "bikepark-todtnau-racetrack": ("sw_todtnau_downhill", "Downhill"),
+}
+
 TF_DIFF = {
     "Easy / Green Circle": "gruen",
     "Intermediate / Blue Square": "blau",
@@ -501,7 +516,8 @@ def main():
             stats["dupe_geo"].append("%s = %s (%.0f%%)" % (name, dup[0], dup[1] * 100))
             continue
         up = looks_uphill(pts)
-        entry, coords, prof = build_trail("sw_" + tf_slug.replace("-", "_"), name, sub,
+        tid, name = TF_RENAME.get(tf_slug, ("sw_" + tf_slug.replace("-", "_"), name))
+        entry, coords, prof = build_trail(tid, name, sub,
                                          TF_DIFF[diff], pts, uphill=up, descend=not up,
                                          elevation=ele_lookup)
         trails.append(entry)

@@ -22,6 +22,31 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **The Schwarzwald gets four Touren, and Todtnau's Downhill changes source.**
+  `tools/build_schwarzwald_tours.py` (new, runs AFTER the trail build, which would otherwise overwrite
+  its `trailSegments`) builds Trailrunden from Trailforks' own recorded **routes** for the Freiburg area:
+  Canadian & Borderline (21,4 km), Hubbelfuchs · Kammweg · Borderline (40,0), Schlossberg · Nesselplatz ·
+  Rosskopf (29,2) and Freiburger Dreierlei (35,4), matched against the region's own trails and lifts with
+  `tools/gpx_map_match.py`. A fifth, "Banden Ride", is deliberately NOT built: its recording jumps 2 593 m
+  in one step -- 6,9 % of the Tour, drawn as a straight line across Freiburg -- which is the same reason
+  three Paganella marathon routes were left out of that region. **The Tour the user asked for does not exist as a
+  Tour**: Trailforks' "Multi Trail" on "Schauinsland Enduro" means multi-USE, not "assembled from several
+  trails" — it is a plain 2,8 km descent and the district sweep already built it as one. Three findings
+  worth keeping: a **route page renders its ElevationChart config twice**, so every parsed line came out
+  at exactly twice its stated distance with every segment list doubled (an exact
+  first-half-equals-second-half test cuts it; trail pages do not do this); **snapping named stretches
+  onto their trail's own geometry was measured and rejected** here, because it opened joints of up to
+  746 m and inflated two Tours past their stated distance, so the segments keep the recording's own
+  points and every Tour now matches Trailforks' distance to within 100 m; and **direction settles what
+  distance cannot** — on the Rosskopf the club's uphill route runs beside the trail it serves, so the
+  matcher alternated between "Borderline" and "Borderline Uphill" down the whole descent, and tightening
+  the threshold from 12 m to 8 and 6 m fixed nothing while lowering how much got named. Rejecting an
+  attribution to an `uphill: true` trail on a stretch that loses height removed exactly the wrong labels.
+- **Todtnau: the OSM-sourced "Downhill" is gone; the Trailforks `bikepark-todtnau-racetrack` carries the
+  name** (and keeps the id `sw_todtnau_downhill`), on the user's own call — the sweep had built it as a
+  second trail beside the OSM copy. The duplicate check had not caught the pair because the two lines
+  trace the same corridor but each covers 100–200 m the other does not, at opposite ends, which the
+  "subsumed" shape test is deliberately strict about. The region is 622 trails now.
 - **The focused trail's direction arrows during RIDE are filled white triangles on the centreline now, instead
   of the thin chevrons beside it.** The report (user): "durch die dickere Linie wird der komplett verdeckt und
   die Pfeilchen sind eh zu klein und dünn" — and it was not a near miss: `ARROW_OFFSET_PX` is 9 and the RIDE

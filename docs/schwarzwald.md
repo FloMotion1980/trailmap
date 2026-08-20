@@ -141,11 +141,17 @@ Geometry per trail from whichever source has the more complete line. They trace 
 median deviation 2,5 m for Downhill, 5,1 m for Wildride — so this is a coverage choice, not a
 which-line-is-right one:
 
-- **Downhill → OSM** (way 35830938, 1 657 m). Trailforks' `bikepark-todtnau-racetrack` starts exactly at
-  the top station but stops 100 m short of the valley; OSM starts 200 m below the top station and reaches
-  the valley station.
 - **Wildride → Trailforks** (`bikepark-todtnau-wildride`, 2 339 m). It *contains* OSM's way 128871487 and
-  adds 800 m at the bottom.
+  adds 800 m at the bottom, so OSM's copy was dropped automatically as a duplicate.
+- **Downhill → Trailforks** (`bikepark-todtnau-racetrack`, 1 525 m), **on the user's own call**
+  (2026-08-20): "Bikepark Todtnau Racetrack ist eigentlich der gleiche Trail wie Downhill in Todtnau.
+  Lösch den jetzigen Downhill und nenn den anderen schwarzen dann einfach Downhill." The first build had
+  used OSM's way 35830938 (1 657 m) because it reaches the valley station while Trailforks' line stops
+  100 m short of it; the sweep then built the Trailforks line as a second trail under its own name. The
+  Trailforks one now carries the name and keeps the old id `sw_todtnau_downhill`.
+  Worth knowing why the duplicate check did not catch that pair by itself: the two lines trace the same
+  corridor (median deviation 2,5 m) but each covers 100–200 m the other does not, at **opposite** ends,
+  and the containment metric with its "subsumed" shape test is deliberately strict about exactly that.
 
 **Both are well short of the operator's stated distance** (1,64 km against 2,7; 2,34 km against 2,6–3,0)
 and `len`/`down` are therefore the measured figures of the line we actually draw, not the operator's — the
@@ -211,15 +217,64 @@ each case the operator publishes both lines:
 - **Trailguide's "Hardheim" (4 trails)** is Odenwald and this app already ships an `odenwald` region —
   worth a look next time that one is touched.
 
+## Touren — four, from Trailforks' own recorded routes
+
+`tools/build_schwarzwald_tours.py`, run **after** the trail build (which would otherwise overwrite the
+`trailSegments` it adds).
+
+The user asked for "die Schauinsland Enduro Tour", from a report of mine that had called it a Trailrunde
+candidate. **That was wrong**: Trailforks' "Multi Trail" label means multi-USE (its own alternateName list
+reads "Schauinsland Enduro Multi-Use Trail"), not "assembled from several trails". It is a plain 2,8 km
+descent and the sweep already built it as one. What this region does have is Trailforks **routes** —
+recorded rides, each with an `encodedpath` and an `ElevationChart` like a trail page, and each genuinely a
+combination of the region's own trails:
+
+| Tour | km | named | segments |
+|---|---|---|---|
+| Canadian & Borderline | 21,4 | 55 % | Canadian Uphill 1 → Canadian Trail → Borderline Uphill → Borderline |
+| Hubbelfuchs · Kammweg · Borderline | 40,0 | 79 % | 13 named stretches incl. Hubbelfuchs, Fritzis Ende, Kammweg (5,7 km), Jägerwegle, Borderline |
+| Schlossberg · Nesselplatz · Rosskopf | 29,2 | 35 % | 8 named stretches around the Rosskopf |
+| Freiburger Dreierlei | 35,4 | 46 % | the event route: Borderline, Badish Moon Rising, Canadian |
+| ~~Banden Ride~~ | 37,8 | 59 % | **not built**: its recording jumps 2 593 m in one step — 6,9 % of the Tour, drawn as a straight line across Freiburg. Same call as the three Paganella marathon routes. The other four have no step over 619 m (1,5 %) |
+
+Four things about the method are worth keeping:
+
+- **`fill_connectors`, not `build_segments`.** Both were measured. Snapping each named stretch onto its
+  trail's own stored geometry (what the Pfälzerwald rederive does) opened joints of up to **746 m**
+  between consecutive segments — each is drawn as its own polyline, so that is a hole in the Tour — and
+  inflated two of the five past their own stated distance (Canadian & Borderline came out 26,4 km against
+  21,3). Keeping the recording's own points means every Tour's length now matches Trailforks' stated
+  distance to within 100 m, the concatenation invariant holds trivially, and the remaining "joints" are
+  just the recording's own point spacing. The price is the one snapping exists to avoid: where recording
+  and trail differ by a few metres, the Tour draws its own line beside the trail's.
+- **A route page renders its ElevationChart config TWICE**, so the parsed points come out doubled. Every
+  route's line was exactly twice its stated distance and every segment list printed twice — which on the
+  map would be a Tour riding each trail twice. `dedupe_halves()` cuts it, with an exact
+  first-half-equals-second-half test so a real out-and-back is unaffected. Trail pages do not do this,
+  which is why the sweep never hit it.
+- **Direction settles what distance cannot.** On the Rosskopf the club's uphill route repeatedly crosses
+  and runs beside the trail it serves, so a distance-only matcher alternates between "Borderline" and
+  "Borderline Uphill" all the way down the descent. Tightening the strict threshold from 12 m to 8 and to
+  6 m was measured and fixed nothing — it only lowered how much got named at all. `drop_wrong_direction()`
+  rejects an attribution to an `uphill: true` trail on a stretch where the route loses more than 20 m,
+  which removed exactly the wrong labels (2 in the first Tour, 1 in the second) at a cost of four points
+  of named share.
+- **A single straight step over 800 m rejects the route.** The three clean routes have no step over
+  300 m at all; two have one of 355 m and 619 m, which read as an unmapped connection between two
+  recorded points. Banden Ride's 2 593 m does not.
+- **A candidate list of 618 trails does not finish.** The matcher measures every route point against every
+  point of every candidate, so each route is first restricted to the trails whose bounding box overlaps
+  its own (`near_route`, ~30 of 621). No result changes; without it the match does not complete.
+
 ## Still open
 
-- **Touren/Trailrunden: none built.** No operator here publishes a combination route, and the long
-  Trailguide entries ("Schauinsland-Staufen" 14,9 km, "Ganterweg & Brosiweg" 22,8 km) are single
-  descents/traverses, not routes assembled from named trails — so they are plain trails, not
-  `loop: true`. The one real candidate is **"Schauinsland Enduro"**, which Trailforks itself calls a
-  *multi trail*: with 619 trails now in the region it is a good `tools/gpx_map_match.py` job.
-- **Trailforks "Routes"** were not harvested at all — only its trails. Several of these districts have
-  them, and they are the same Trailrunde-shaped work as the item above.
+- **More Trailforks routes.** Four of the five found were built, all from the two Freiburg-area regions' own
+  `/routes/` listings; the other districts' listings were not read. `Schauinslandstaufen` and `Titisee` are two more
+  that exist. Note the long Trailguide entries ("Schauinsland-Staufen" 14,9 km, "Ganterweg & Brosiweg"
+  22,8 km) are single descents, not assembled routes, so they stay plain trails.
+- **The Tours ride no lift.** All five climb by bike, which is why none has a lift segment even though
+  lifts were in the candidate list. A Tour riding the Schauinslandbahn would be a genuinely different
+  kind of route for this region and none of the five is one.
 - **Two trails disagree badly with OSM** and are the ones to look at first if anything looks wrong on the
   map: `sw_mullerweg` (13 % of its points within 25 m of any OSM way, median 99 m off) and
   `sw_lotenbachklamm_1` (24 %, median 60 m). Every other Hochschwarzwald trail is at 87 % or better, and
