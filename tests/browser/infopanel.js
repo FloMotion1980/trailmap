@@ -1,7 +1,7 @@
 // @suite   infopanel
 // @area    Info panel: trail, lift, Tour segments, reverse, GPX, elevation chart
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight, DIFF_LABEL, syncRideModeChrome, ip-ride-bar
+// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, categoryBadge, badge-uphill, ip-segment-info, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight, DIFF_LABEL, syncRideModeChrome, ip-ride-bar
 // @needs   region=bikekingdom, builder=off
 //
 // The panel is a custom div rather than a Leaflet popup so nothing covers the trail, which means every piece
@@ -140,6 +140,33 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
     T.ok("naming the lift that stretch is ridden by", block && /🚡/.test(block.textContent),
          block ? block.textContent.replace(/\s+/g, " ").trim() : null, "a lift");
     T.ok("and the chart highlights that stretch", !!content().querySelector("svg rect"), true, true);
+
+    // An UPHILL component trail has to carry the ⬆️ here too. It is named in four places -- the sidebar
+    // card, the map label, the panel's own heading and this block -- and this was the one that dropped it
+    // (user, 2026-08-20). Checked against a real uphill segment of a real Tour rather than a synthetic one,
+    // since the badge comes from that trail's own `uphill` flag via categoryBadge().
+    selectTourSegment({ id: "bk_tour_b2r_schwarz", name: "Biketicket 2 RIDE schwarz", loop: true,
+                        diff: "schwarz", len: 1, up: 1, down: 1 }, "bk_aufstieg_praetschli");
+    await TM.wait(400);
+    const upBlock = content().querySelector(".ip-segment-info");
+    T.ok("an uphill segment block appeared", !!upBlock, !!upBlock, true);
+    if (upBlock) {
+      T.ok("it carries the uphill badge after the trail's name",
+           !!upBlock.querySelector(".badge-uphill"),
+           upBlock.innerHTML.replace(/\s+/g, " ").slice(0, 120), "a .badge-uphill");
+      // After the name, not before it and not inside the <b> -- same order the heading uses.
+      const b = upBlock.querySelector("b"), badge = upBlock.querySelector(".badge-uphill");
+      T.ok("and it comes after the name, outside the bold",
+           !!(b && badge) && (b.compareDocumentPosition(badge) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0 &&
+           !b.contains(badge),
+           b ? b.textContent.trim() + " | badge inside <b>: " + b.contains(badge) : null, "after, outside");
+    }
+    // A non-uphill segment must NOT get one, or the check above would pass on a badge printed unconditionally.
+    selectTourSegment({ id: "bk_tour_615_blau", name: tourName, loop: true, diff: "blau", len: 1, up: 1, down: 1 },
+                      "lift_bk_tgantieni");
+    await TM.wait(400);
+    const liftBlock = content().querySelector(".ip-segment-info");
+    T.eq("a lift stretch gets no uphill badge", liftBlock ? liftBlock.querySelectorAll(".badge-uphill").length : -1, 0);
   }
 
   T.test("the elevation chart stamps everything its map hover-sync needs");

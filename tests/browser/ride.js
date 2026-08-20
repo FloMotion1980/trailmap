@@ -9,8 +9,7 @@
 //          RIDE_MIDDLE_TINT, RIDE_MIDDLE_WEIGHT, RIDE_CONNECTOR_CORE_WEIGHT, RIDE_CONNECTOR_CORE_COLOR,
 //          RIDE_GAP_BRIDGE_MIN_M, rideModeBtn, rideInfoPanel, rideInfoSpeed, rideInfoAlt, rideInfoName,
 //          rideInfoStats, rideInfoTrail, lastSpeedKmh, lastAltitudeM, startFollowing, stopFollowing,
-//          updateUserLocation, RIDE_MIN_ZOOM, preRideMinZoom, preRideMinZoomSaved,
-//          recoverFromRotationCrash, rotationPadding, syncRideArrows, buildRideArrowLayer, rideArrowLayer,
+//          updateUserLocation, //          recoverFromRotationCrash, rotationPadding, syncRideArrows, buildRideArrowLayer, rideArrowLayer,
 //          RIDE_ARROW_SPEC, RIDE_ARROW_FILL, RIDE_ARROW_EDGE, ARROW_SPEC, buildChevron,
 //          buildDirectionArrowShapes, highlightSelectedTrail, updateStartDotVisibility,
 //          eachVectorRenderer, setRendererPadding, BUILDER_PANE, LIFT_BAND_PANE
@@ -197,53 +196,6 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
   const statsText = TM.$("#rideInfoStats").textContent;
   T.ok("its stats mention km/climb/descent", /km/.test(statsText) && /⬆️/.test(statsText) && /⬇️/.test(statsText), statsText, "km + ⬆️ + ⬇️");
 
-  T.test("RIDE clamps how far out the map may zoom, and exiting gives the old limit back");
-  // A memory guard, not a UX preference: RIDE's look-ahead makes #map ~30% taller, the container more
-  // elongated, and rotationPadding()'s short-axis rule then roughly doubles the painted vector surface
-  // (measured on a 375x812 viewport at bearing 45: ~38 MB -> ~89 MB across the three renderer panes).
-  // Zooming far out lands a multi-tile-level burst on top of that, and on iOS the WebKit content process
-  // gets killed -- a WHITE PAGE, not the fatal panel, so nothing throws and no suite could ever catch it
-  // after the fact. What IS checkable is the guard itself. See enterRideMode's own comment.
-  //
-  // The map instance is a `const` inside the app's own try{} block and unreachable from here (same reason
-  // lineLayers/soloId are) -- but the app hands it to us itself: setMinZoom is called on it by
-  // enterRideMode, so wrapping the prototype captures the very instance the app uses. Restored immediately;
-  // leaving a prototype patched would follow every later suite in the bundle.
-  exitRideMode();
-  await TM.wait(400);
-  const realSetMinZoom = L.Map.prototype.setMinZoom;
-  let theMap = null;
-  L.Map.prototype.setMinZoom = function (z) { theMap = this; return realSetMinZoom.apply(this, arguments); };
-  let beforeMin;
-  try {
-    enterRideMode();
-    await TM.wait(500);
-    T.ok("entering RIDE set a minimum zoom on the map", !!theMap, !!theMap, true);
-    if (theMap) {
-      beforeMin = theMap.getMinZoom();
-      T.ok("the limit is a real one, not the world view", beforeMin >= 8, beforeMin, ">= 8");
-      // Through the map's own public API, so this covers every route a rider can take: leaflet-rotate's
-      // pinch handler runs the same _limitZoom on both its move and end branches (bounceAtZoomLimits is
-      // false), and scrollWheelZoom does too.
-      theMap.setZoom(2, { animate: false });
-      await TM.wait(400);
-      T.eq("asking for zoom 2 while riding lands on the limit instead", theMap.getZoom(), beforeMin);
-    }
-    exitRideMode();
-    await TM.wait(500);
-    if (theMap) {
-      T.ok("leaving RIDE lifts the limit again", theMap.getMinZoom() < beforeMin,
-           theMap.getMinZoom(), "< " + beforeMin);
-      theMap.setZoom(4, { animate: false });
-      await TM.wait(400);
-      T.eq("and zoom 4 is reachable once more", theMap.getZoom(), 4);
-      theMap.setZoom(13, { animate: false });
-      await TM.wait(300);
-    }
-  } finally {
-    L.Map.prototype.setMinZoom = realSetMinZoom;
-  }
-
   T.test("the focused trail swaps its buried offset chevrons for filled triangles inside the ring");
   // The normal chevron sits 9px to the side and the focus ring is 18px wide, i.e. reaches exactly 9px from
   // the centreline -- so it is not partly covered, it is precisely on the ring's outer edge (user,
@@ -253,10 +205,17 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
   // than just looking for triangles: a version that added triangles without suppressing the buried pair
   // would look identical to this test if it only checked for their presence.
   const realFlyTo2 = L.Map.prototype.flyTo;
-  const realSetMinZoom2 = L.Map.prototype.setMinZoom;
-  let m2 = null;
   L.Map.prototype.flyTo = function (c, z) { return this.setView(c, z, { animate: false }); };
-  L.Map.prototype.setMinZoom = function (z) { m2 = this; return realSetMinZoom2.apply(this, arguments); };
+  // The map is a `const` inside the app's own try{} block and unreachable from here (same reason
+  // lineLayers/soloId are), but the app hands it over itself: wrap a prototype method it calls, trigger one
+  // call, unwrap. getZoom() rather than something rarer -- updateStartDotVisibility asks for it immediately,
+  // so the capture is one synchronous call and the patch is off again before anything else can see it. (This
+  // used to hook setMinZoom, which enterRideMode called for the RIDE zoom clamp -- that clamp was removed on
+  // 2026-08-20, and the case then silently skipped its whole body because nothing called it any more.)
+  const realGetZoom = L.Map.prototype.getZoom;
+  let m2 = null;
+  L.Map.prototype.getZoom = function () { m2 = this; return realGetZoom.apply(this, arguments); };
+  try { updateStartDotVisibility(); } finally { L.Map.prototype.getZoom = realGetZoom; }
   const arrowBox = TM.$("#showDirectionArrowsToggle");
   const arrowsWereOn = arrowBox.checked;
   try {
@@ -334,7 +293,6 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
     }
   } finally {
     L.Map.prototype.flyTo = realFlyTo2;
-    L.Map.prototype.setMinZoom = realSetMinZoom2;
     if (!arrowsWereOn) await TM.ui.setSwitch("showDirectionArrowsToggle", false);
   }
 

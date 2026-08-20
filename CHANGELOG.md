@@ -22,6 +22,21 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **The RIDE zoom restriction is gone again, at the user's request**, hours after it went in: the crash it was
+  meant to stop came back with the map zoomed far IN, so the guard was treating one route to the cliff rather
+  than the cliff. With 40 MB of the real cause removed (the empty builder pane), the user would rather have
+  the zoom back and find out whether the remaining 86 MB is enough. If a white screen returns, do NOT simply
+  reinstate it — the honest next steps are the lift pane and `rotationPadding()`, both quantified in
+  `docs/backlog.md`. **Note for next time: this could not be reverted.** A `git revert` of the guard's commit
+  conflicts on all six of its files, because two later commits touched the same regions — and it would also
+  have deleted the measurements that commit recorded, which are still valid; only the conclusion drawn from
+  them was wrong. A change that might be reversed belongs in its own commit, separate from the findings that
+  motivated it.
+- **The uphill badge was missing from a Tour's per-segment block in the info panel.** An uphill component trail
+  carries the ⬆️ on its sidebar card, its map label and the panel's own heading; `.ip-segment-info` was the one
+  place that printed a bare name (user, 2026-08-20). Two new checks in `tests/browser/infopanel.js`, including
+  a negative one (a lift stretch must not get a badge) so the positive one cannot pass on a badge printed
+  unconditionally.
 - **The empty builder pane no longer costs 40 MB in RIDE (126 MB → 86 MB of vector surface, no visual
   change).** Found while diagnosing a SECOND white-screen crash the user hit — this time zoomed far IN, in
   Donnersberg — which disproved part of the earlier diagnosis: the direction of the zoom was never the driver,

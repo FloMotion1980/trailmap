@@ -197,12 +197,12 @@ this section in the same commit as the code**, the same standing rule `CHANGELOG
     cannot simply be dropped: the lift's grey mask must sit UNDER the trails and OVER the tiles, and Leaflet
     offers no z-index between its own tilePane (200) and overlayPane (400), which is the entire reason for a
     third pane at 350.
-  - **Cap `rotationPadding()`** — declined once (see below) and worth re-raising now that the zoom guard has
+  - **Cap `rotationPadding()`** — declined twice (see below) and worth re-raising now that the zoom guard has
     demonstrably not closed the crash. 0.938 → 0.65 takes roughly a third off every remaining surface.
   - **The original entry's own options (a)–(d) still stand** for the elongation itself.
 - **Original entry, kept for the reasoning (its numbers are superseded above): RIDE mode more than doubles the
-  vector-renderer memory, and that is why zooming far out could kill the app.** The crash itself is closed (a `RIDE_MIN_ZOOM` of 10 now blocks the trigger — see
-  `CHANGELOG.md` 2026-08-20; confirmed on the user's own phone the same day), but the underlying overhead is untouched and will matter again for a bigger
+  vector-renderer memory, and that is why zooming far out could kill the app.** **The crash is NOT closed.** A `RIDE_MIN_ZOOM` of 10 was tried and removed the same day: it stopped the
+  user's zoom-OUT reproduction, then the crash returned zoomed far IN, but the underlying overhead is untouched and will matter again for a bigger
   region or an older phone. Measured on a 375x812 viewport at a fixed 45° bearing:
 
   | | container | ratio | `rotationPadding()` | painted box | 3 renderer panes |
