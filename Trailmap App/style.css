@@ -668,25 +668,31 @@ html.landscape-compact .search-overlay-summary{
   display:inline-flex; align-items:center; gap:5px; white-space:nowrap; vertical-align:middle;
   letter-spacing:0; line-height:1;
 }
-/* One size for all four (22px, the round buttons' own size), which is the other half of the request. GPX is the
-   one that cannot be square -- a file format has to be named, an icon cannot say "GPX" -- so it matches on
-   height and shape family instead and takes only the width its label needs. */
+/* One size for all four, which is the other half of the request. GPX is the one that cannot be square -- a
+   file format has to be named, an icon cannot say "GPX" -- so it matches on height and shape family instead
+   and takes only the width its label needs.
+   34px on EVERY layout since 2026-08-21 (user: "die groesseren Buttons koennen wir am Desktop nachziehen").
+   It was 22 here and 34 only under touch, where the reason was the touch target. Desktop does not need a
+   bigger target, but it does need the two layouts to look like the same app -- and 22px round buttons read
+   as an afterthought next to a 340px panel. The atomic .ip-btns box then drops onto its own line under the
+   name more often (measured: on the widest trail names it always did anyway), which is exactly the
+   behaviour inline-flex was chosen for. */
 #infoPanel h3 .ip-btns > button{
-  height:22px; border:none; cursor:pointer; padding:0; margin:0;
+  height:34px; border:none; cursor:pointer; padding:0; margin:0;
   background: var(--forest); color:#fff; line-height:1;
   display:inline-flex; align-items:center; justify-content:center;
 }
 #infoPanel h3 .ip-btns > button:hover{ background: var(--forest-dark); }
 #infoPanel h3 .ip-btns .locate-btn,
 #infoPanel h3 .ip-btns .solo-btn,
-#infoPanel h3 .ip-btns .reverse-btn{ width:22px; border-radius:50%; font-size:12px; }
+#infoPanel h3 .ip-btns .reverse-btn{ width:34px; border-radius:50%; font-size:16px; }
 /* RIDE left this group on 2026-08-20 and is a full-width bar under the elevation chart now (.ip-ride-bar,
    further down) -- it is the most important control on a phone and was the smallest and last thing in the
    row. It only ever makes sense on a phone actually being ridden with, so it stays hidden on desktop
    exactly as it was before the move (2026-08-16, the user's own catch); the group above is four buttons
    again on every layout, which is also what its own comment describes. */
 #infoPanel h3 .ip-btns .gpx-download-btn{
-  border-radius:11px; padding:0 8px; font-size:10.5px; font-family:Arial, sans-serif; font-weight:700;
+  border-radius:17px; padding:0 11px; font-size:12px; font-family:Arial, sans-serif; font-weight:700;
 }
 /* --highlight (amber/gold), not --select-yellow (2026-08-09, user) -- pure yellow is reserved for trail
    SELECTION everywhere else (the map highlight, the selected list entry), and reusing it here for an
@@ -1209,14 +1215,9 @@ html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
        of the screen, and the panel scrolls when a Tour's segment info makes it longer. */
     max-height:min(48vh, 370px);
   }
-  /* 34px, not the desktop 22px: 22 is far under any touch target, and this is the layout that is used with a
-     glove on a handlebar. GPX keeps matching on height and shape family only -- a file format has to be named,
-     so it takes the width its label needs (same reasoning as the base rule). */
-  #infoPanel h3 .ip-btns > button{ height:34px; }
-  #infoPanel h3 .ip-btns .locate-btn,
-  #infoPanel h3 .ip-btns .solo-btn,
-  #infoPanel h3 .ip-btns .reverse-btn{ width:34px; font-size:16px; }
-  #infoPanel h3 .ip-btns .gpx-download-btn{ border-radius:17px; padding:0 11px; font-size:12px; }
+  /* The 34px button sizing that used to live here moved into the base rule on 2026-08-21 -- desktop matches
+     touch now, so this block would only have restated it. The touch reason it was written for (a glove on a
+     handlebar) is still why 34 is the number. */
   /* Keeps the touch chart at its original size -- the desktop-only bump to 72px (see the base rule) would
      otherwise apply here too, and a phone's vertical space is the one thing this app has never had room
      to spare (2026-08-13). */

@@ -22,6 +22,15 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-21
+- **The info panel's four action buttons are 34px on the desktop too**, not 22 (user: "die grösseren Buttons
+  können wir am Desktop nachziehen"). The size was touch-only, where the reason was the touch target; desktop
+  does not need a bigger target but does need the two layouts to look like the same panel, and 22px round
+  buttons read as an afterthought beside a 345px panel. **The point of the change is that a rule disappeared,
+  not that one was added**: the touch block's copy of the sizing is gone, so there is one definition instead
+  of two that had to be kept in step. Measured afterwards on the desktop panel: short names keep a one-line
+  heading (41px), the fourteen longest push the button group whole onto a second line (57px) — which is
+  exactly what `.ip-btns` being an atomic `inline-flex` box was chosen for, and never a name broken mid-way.
+  Stylesheet bumped to v183 in all three places.
 - **The direction arrows are filled with a light tint of the trail's own difficulty colour**, not one fixed
   white (user). That restores the difficulty cue the previous day's redesign had given up, in the one form
   that keeps the contrast the dark edge provides. The tints are the SAME set already used by the
