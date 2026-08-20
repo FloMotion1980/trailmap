@@ -62,10 +62,13 @@ SUB_QUOTA_MAX = 4
 #: it does not suit one that spans a whole massif, where ten labels leave most sub-regions anonymous.
 #: Keyed by region, with the reason, so the numbers stay arguable instead of arbitrary.
 MAX_PLACES_BY_REGION = {
-    # Both span a whole massif, so the default 10 would leave brackets anonymous -- but the per-sub-region
-    # quota below is what actually shapes the result now, and both land well under this ceiling.
+    # All three span a whole massif, so the default 10 would leave brackets anonymous -- but the
+    # per-sub-region quota below is what actually shapes the result now, and all land well under this
+    # ceiling. The Schwarzwald joined them on 2026-08-20, when the Trailforks sweep took it from 119
+    # trails in 7 brackets to 619 in 10, reaching from Loerrach to Pforzheim.
     "nordvogesen": 18,
     "suedvogesen": 18,
+    "schwarzwald": 18,
 }
 MIN_VILLAGE_POP = 600     # see the note below
 KNOWN_MAX_KM = 2.0        # for places that carry a wikidata/wikipedia tag but are small

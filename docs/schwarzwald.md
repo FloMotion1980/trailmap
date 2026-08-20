@@ -4,20 +4,26 @@ Built 2026-08-20 from the three links the user had left in `docs/backlog.md` ite
 turned up while working (Trailguide's own API). `tools/build_schwarzwald.py` is the whole build; this file
 is the *why*, and the list of things left open.
 
-The region is **one group with seven sub-regions**, spanning the whole range from Baiersbronn in the north
-to Bonndorf in the south (bounds ~47.75–48.63 N). The user named the two brackets that had to exist
-(Freiburg and Todtnau), asked for the club's own name to be one of them, and delegated the rest of the
-subdivision (see the standing note that a region's borders are the assistant's call to settle and record).
+The region is **one group with ten sub-regions and 619 trails**, spanning the whole range from Lörrach to
+Pforzheim (bounds 47.554–48.965 N). It was built in two passes on the same day: 119 trails from the
+operator/Trailguide sources below, then a **Trailforks sweep** that added 500 more and forced the
+subdivision to be redrawn — the original "Südschwarzwald" had been holding everything from the
+Markgräflerland to Bonndorf, 60 km apart. The user named the two brackets that had to exist (Freiburg and
+Todtnau), asked for the club's own name to be one of them, and delegated the rest (see the standing note
+that a region's borders are the assistant's call to settle and record).
 
-| sub-region | label | what is in it |
-|---|---|---|
-| `mtbfr` | Mountainbike Freiburg e.V. | the club's own network: everything on its site plus everything in its Trailforks association (see below) |
-| `freiburg` | Freiburg & Umgebung | the other trails around the city — Kybfelsensteig gelbe Raute, Hirzberg, Brombergsattel, Nessel, Schnute, Rappeneck, Hexenwald XC … |
-| `todtnau` | Bikepark Todtnau | Hasenhorn: the park runs and its chairlift |
-| `elztal` | Elztal & Kandel | Waldkirch (a network of ~20 short trails), Glottertal/Kandel, Simonswald, the Vorbergzone castles |
-| `sued` | Südschwarzwald | Münstertal, Staufen, Sulzburg, Zastler, Bonndorf |
-| `mitte` | Mittlerer Schwarzwald | Triberg, Hornberg, Schonach, Kinzigtal |
-| `nord` | Nordschwarzwald | Baiersbronn, Sasbachwalden, Seebach, Hornisgrinde |
+| sub-region | label | trails | what is in it |
+|---|---|---|---|
+| `mtbfr` | MTB Freiburg e.V. | 31 | the club's own network: its site plus its Trailforks association |
+| `freiburg` | Freiburg & Umgebung | 39 | the other trails around the city — Kybfelsensteig, Hirzberg, Brombergsattel, Rappeneck, Hexenwald XC … plus the Schauinslandbahn |
+| `todtnau` | Bikepark Todtnau | 3 | Hasenhorn: the park runs and its chairlift |
+| `elztal` | Elztal & Kandel | 52 | Waldkirch, Glottertal/Kandel, Elzach, Simonswald, the Vorbergzone castles |
+| `markgraefler` | Markgräflerland & Hotzenwald | 69 | Lörrach, Wiesental, Badenweiler, Münstertal, Bad Säckingen, Waldshut |
+| `hochschwarzwald` | Hochschwarzwald | 28 | Feldberg, Titisee, Schluchsee, St. Blasien, Bonndorf, Wutach |
+| `ortenau` | Ortenau & Kinzigtal | 104 | Offenburg, Gengenbach, Oberkirch, Oppenau, Haslach, Wolfach, Lahr |
+| `mitte` | Mittlerer Schwarzwald | 57 | Triberg, Hornberg, Schonach, St. Georgen, and the Baar to Rottweil |
+| `nord` | Nordschwarzwald | 133 | Baiersbronn, Freudenstadt, Baden-Baden, Murgtal, Sasbachwalden, Kniebis |
+| `enztal` | Enztal & Nordrand | 103 | Bad Wildbad, Calw, Pforzheim, Dobel, Bad Herrenalb, Nagold, Neuenbürg |
 
 **`mtbfr` is the one organisational bracket among six geographic ones**, on the user's own call
 (2026-08-20): "Das gehört alles mindestens zum Mountainbike Freiburg e.V., was auch ein guter Name für die
@@ -72,6 +78,40 @@ Two more association entries are deliberately out: **Schauinsland Enduro**, whic
 `trailSegments`, matched with `tools/gpx_map_match.py`) and not a trail of its own — and
 **Trimm-Dich-Pfad**, tagged `hike`.
 
+**1c. The Trailforks sweep — 500 of the region's 619 trails.** `tools/harvest_schwarzwald_tf.py` takes the
+trail table of every Schwarzwald district (paginated; a district table DOES include its communities'
+trails, verified against the child regions) and then one page per trail. Two things make this cheap and
+self-checking, both carried over from the Vogesen build:
+
+- A trail page carries the line **twice** — the `encodedpath` polyline and an `ElevationChart` config
+  whose points hold lat/lng, real elevation and cumulative distance. The profile is what gets built, so
+  the sweep needed **no elevation API at all**; the two lengths are compared per trail and **all 602
+  agreed within 60 m**. Watch the point pattern: `lat`/`lng` come **quoted** in this config, and an
+  unquoted-number regex silently returns no profile at all — 12 trails were harvested that way before it
+  was noticed.
+- The `difficulty=` list in the table URL must name **every** code including 10 (`Severe / Black`), or the
+  whole black tier disappears silently. This build passes `3,4,9,5,1,7,2,6,8,10,11,12`.
+
+Anonymous `curl` worked throughout (~700 pages) — but `urllib` gets a 403 with the identical User-Agent,
+so fetch with curl and do not spend time on which header it dislikes.
+
+**How the sweep decides what is in and where it goes.** A district is an administrative box, not a
+massif: the Enzkreis reaches into the Stromberg, the Ortenaukreis into the Rhine plain, Emmendingen onto
+the Kaiserstuhl. So the sweep ignores the district it came from and assigns every trail to the sub-region
+of the **nearest anchor town** (`tools/schwarzwald_anchors.py`, 103 anchors), dropping anything further
+than 12 km from every anchor as "not in the Schwarzwald". One rule does the assigning and the excluding at
+once, which is what makes the exclusions reviewable — the build prints all 30, and they are the
+Kraichgau/Stromberg cluster east of Pforzheim (the whole "Eppinger-Linie" set), two Rhine-plain trails and
+three isolated Hotzenwäld/Heckengäu ones.
+
+Duplicates are caught twice: by **name** (only within 5 km — there are three separate "Jägerpfad"s, two
+"Kammweg"s and two "Woody"s in these tables, and matching on the name alone dropped the far ones as
+duplicates of the near one) and by **geometry** (the project's containment metric: 60 % of the shorter
+line's points within 25 m, shape "subsumed"). 40 name and 36 geometry duplicates were dropped this way,
+the already-built trail always winning because it came from the operator or from Trailguide's cropped
+line. Four trails under 80 m and three whose pages carry no line at all are also out, all listed by the
+build.
+
 **2. Trailguide (trailguide.net) for every trail no operator publishes.** Its own API answers
 anonymously, no key and no login:
 
@@ -116,16 +156,35 @@ same call the Harz's Braunlage Freeride already carries (2,11 km of line against
 Trailforks region `todtnau` carries only the two runs above. Same decision as the four Harz runs dropped
 on 2026-08-14: no line rather than an invented one. Add it when a real track turns up.
 
-The **Hasenhorn-Sessellift** is in the data on the operator's word (the park sells bike tickets for it);
-OSM way 28436489 supplies the geometry only, and also happens to tag `aerialway:bicycle=yes`. Stored
-bottom-first, 0,85 km, 663 → 1 013 m — which matches the tourism figures (662 / 1 026) within the DEM's
-own error.
+## Lifts — three in, two out, each on the operator's word
+
+OSM's `aerialway:bicycle` tag decides nothing here (it was wrong in both directions in Serfaus); the
+operator's own summer page does. 52 aerialways over 500 m sit in this bounding box, and four were worth
+checking:
+
+| lift | | why |
+|---|---|---|
+| **Hasenhorn-Sessellift** (Todtnau) | in | the bikepark's own uplift, bike tickets sold. 0,85 km, 663 → 1 013 m, matching the tourism figures (662/1 026) within the DEM's error |
+| **Schauinslandbahn** (Freiburg) | in | its own "Biking" page states the fare — "12,00 € zzgl. Tarif pro Person. Pro Kabine können maximal 2 Fahrräder mitgenommen werden" — and it is the uplift for Badish Moon Rising and the Canadian. 3,52 km, 477 → 1 210 m |
+| **Feldbergbahn** (Seebuck) | in | the Liftverbund's own summer page: 8-seat cabins with room for "Kinderwagen, Rollstuhl, Fahrrad". 0,91 km, 1 282 → 1 442 m. Note OSM still tags it `chair_lift` while the operator describes cabins — same line either way |
+| **Belchen-Seilbahn** | **out** | this is the case the rule exists for: OSM tags it `aerialway:bicycle=yes`, but the operator's price list carries no bike fare and its site says nothing about carrying bikes |
+| **Sommerbergbahn** (Bad Wildbad) | **out** | it carried bikes two days a week *for the bikepark*, and that park's operating company stopped on 2025-12-31 (below) |
+
+## Bikepark Bad Wildbad: the runs are in, the park is not
+
+Adventure-Bikepark GmbH, which ran the six runs at Bad Wildbad, **ceased operating on 2025-12-31** — the
+investor's decision, a surprise to the park's own management, with the town since looking at a
+club/community model. The runs exist on the ground and Trailforks holds their lines, so they are in the
+region (in `enztal`) — but they carry **Trailforks grades, not an operator's**, and the park has no lift
+in the data, because the bike transport was part of the operation that stopped. If it reopens, its own
+published grades take precedence over Trailforks', per the standing rule.
 
 ## Overlapping pairs — reported, not silently resolved
 
-An intra-region containment scan (the method from `tools/pfaelzerwald_containment.py`) found four pairs
-sharing ground. All four are still in the file; three are almost certainly legitimate and one needs a
-decision:
+An intra-region containment scan (the method from `tools/pfaelzerwald_containment.py`) over the first
+119 trails found four pairs sharing ground; the Trailforks sweep then ran the same test against every
+candidate and dropped 36 more (listed by the build). These four are deliberately still in the file — in
+each case the operator publishes both lines:
 
 | pair | containment | reading |
 |---|---|---|
@@ -144,22 +203,37 @@ decision:
   *are* our "Canadian Sektion 0" and the rest is the approach "Kybfelsensteig" already covers.
 - **Geißkopf** stays out — it is in the Bayerischer Wald, 300 km east, and was only ever bracketed with
   these two links by accident of when they were collected (backlog item 10).
+- **30 Trailforks trails east and west of the range**, dropped by the anchor rule and each printed by the
+  build with its distance: the Kraichgau/Stromberg cluster beyond Pforzheim (the whole "Eppinger-Linie"
+  set, Maulbronn, Sternenfels, Knittlingen, Zaberfeld), two Rhine-plain trails near Kenzingen, and three
+  isolated ones in the Heckengäu and above the Klettgau. Widening `MAX_ANCHOR_KM` would pull the
+  Stromberg in; adding an anchor there would be the honest way to include it, and it is not Schwarzwald.
+- **Trailguide's "Hardheim" (4 trails)** is Odenwald and this app already ships an `odenwald` region —
+  worth a look next time that one is touched.
 
 ## Still open
 
-- **Trailforks harvest** — the user's own next step ("dann können wir Trailforks abgrasen"). Only the
-  club's own association (12404) has been worked in so far, not the Trailforks *regions*, so expect more:
-  Bikepark Todtnau's Downhill Flow, **Bikepark Bad Wildbad** (one of Germany's biggest parks, in *none* of
-  the sources used here — Trailguide has no Bad Wildbad at all), and more around Freiburg itself, which the
-  user already expects ("sicher gibt es weitere Trails, die auch im Gebiet Freiburg sind"). Anonymous
-  Trailforks page fetches worked throughout 2026-08-20 (seven trail pages plus two listings), contrary to
-  the earlier "hard login wall after ~1 trail" note — but do not count on it; the
-  harvest-from-the-user's-logged-in-Chrome method in `docs/backlog.md`'s Harz entry is the reliable one.
-- **Schauinsland Enduro as the region's first Tour**, per the note above.
-- **Touren/Trailrunden: none built.** Neither the club nor the bikepark publishes a combination route, and
-  Trailguide's long entries ("Schauinsland-Staufen" 14,9 km, "Ganterweg & Brosiweg" 22,8 km) are single
-  descents/traverses, not routes assembled from named trails — so they are plain trails, not `loop: true`.
-- **Lifts beyond Hasenhorn.** The Schwarzwald's other summer lifts (Schauinsland-Bahn, Kandel, the
-  Belchen cable car) were not researched; whether any of them carries bikes in summer is an operator
-  question, and OSM's `aerialway:bicycle` tag is not an answer (it was wrong in both directions in
-  Serfaus).
+- **Touren/Trailrunden: none built.** No operator here publishes a combination route, and the long
+  Trailguide entries ("Schauinsland-Staufen" 14,9 km, "Ganterweg & Brosiweg" 22,8 km) are single
+  descents/traverses, not routes assembled from named trails — so they are plain trails, not
+  `loop: true`. The one real candidate is **"Schauinsland Enduro"**, which Trailforks itself calls a
+  *multi trail*: with 619 trails now in the region it is a good `tools/gpx_map_match.py` job.
+- **Trailforks "Routes"** were not harvested at all — only its trails. Several of these districts have
+  them, and they are the same Trailrunde-shaped work as the item above.
+- **Two trails disagree badly with OSM** and are the ones to look at first if anything looks wrong on the
+  map: `sw_mullerweg` (13 % of its points within 25 m of any OSM way, median 99 m off) and
+  `sw_lotenbachklamm_1` (24 %, median 60 m). Every other Hochschwarzwald trail is at 87 % or better, and
+  all 31 of the club's are at 98 %+. A low score means "look at this one", not "this one is wrong" — a
+  purpose-built line OSM has not mapped scores low legitimately.
+- **Three Trailforks trails carry no line on their own page** (`Buhlbachwegle`, `Hof Dicke Downhill`,
+  `Ottenbronn Downhill`) and four are under 80 m; both sets are printed by the build and stay out.
+- **Bikepark Todtnau's "Downhill Flow"** still has no geometry in any source checked (operator, OSM,
+  Trailforks). Add it when a real track turns up; do not draw one.
+- **Difficulty for the swept trails is Trailforks' own rating**, which is the documented fallback and
+  correct here — these are community trails without an operator. The exceptions to keep an eye on are
+  the ones with a real operator: Todtnau (grades taken from the operator) and Bad Wildbad (operator gone,
+  see above). If a park publishes its grades again, they win.
+- **Two overlap questions the sweep raised but did not settle**: "Präsident Thoma Weg" reads as 98 %
+  contained in "El Presidente" and "Kandel Cruise" as 98 % in "Bodyguard" — both were dropped as
+  duplicates, but the Kandel has several named lines running close together and it is worth a look on the
+  map whether those are really one trail each.

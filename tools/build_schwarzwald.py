@@ -32,7 +32,10 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from trailmap_pipeline import (ElevationLookup, build_trail, haversine_m,  # noqa: E402
-                               parse_gpx, region_summary, write_region)
+                               osm_aerialway_survey, parse_gpx, region_summary, write_region)
+from pfaelzerwald_containment import (bbox, bbox_overlaps, dist_profile,  # noqa: E402
+                                     line_len_m, profile_shape)
+from schwarzwald_anchors import ANCHORS  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 MATERIAL = os.path.join(ROOT, "Material", "Schwarzwald")
@@ -50,9 +53,18 @@ SUBREGIONS = {
     "freiburg": ("Freiburg & Umgebung", "#0891b2"),  # everything else around the city
     "todtnau":  ("Bikepark Todtnau", "#7c3aed"),  # Hasenhorn
     "elztal":   ("Elztal & Kandel", "#0f766e"),   # Waldkirch, Glottertal, Simonswald
-    "sued":     ("Südschwarzwald", "#b45309"),    # Münstertal, Staufen, Sulzburg, Zastler, Bonndorf
-    "mitte":    ("Mittlerer Schwarzwald", "#1d4ed8"),  # Triberg, Hornberg, Schonach, Kinzigtal
-    "nord":     ("Nordschwarzwald", "#be185d"),   # Baiersbronn, Sasbachwalden, Seebach, Hornisgrinde
+    # The five brackets below were added/reshaped by the Trailforks sweep (2026-08-20), which raised the
+    # region from 119 trails to several hundred and made the original "Südschwarzwald" catch-all useless:
+    # it had held everything from the Markgräflerland to Bonndorf, 60 km apart. It is gone, split into
+    # `markgraefler` (Rhine-facing slope plus the Hotzenwald) and `hochschwarzwald` (Feldberg, the lakes,
+    # the Wutach). `ortenau` and `enztal` are new for the same reason -- Ortenau/Kinzigtal and the Enz
+    # valley are each bigger than the whole region was before the sweep.
+    "markgraefler":    ("Markgräflerland & Hotzenwald", "#b45309"),
+    "hochschwarzwald": ("Hochschwarzwald", "#0e7490"),
+    "ortenau":         ("Ortenau & Kinzigtal", "#7f1d1d"),
+    "mitte":           ("Mittlerer Schwarzwald", "#1d4ed8"),
+    "nord":            ("Nordschwarzwald", "#be185d"),
+    "enztal":          ("Enztal & Nordrand", "#4d7c0f"),
 }
 
 #: `mtbfr` is the one ORGANISATIONAL bracket among six geographic ones -- the user's own call
@@ -168,17 +180,18 @@ PLACE_SUB = {
     "Gutach im Breisgau": "elztal", "Herbolzheim": "elztal", "Kenzingen": "elztal",
     "Malterdingen": "elztal",
     "Triberg (Schwarzwald)": "mitte", "Triberg im Schwarzwald": "mitte", "Hornberg": "mitte",
-    "Schonach im Schwarzwald": "mitte", "Haslach im Kinzigtal": "mitte",
+    "Schonach im Schwarzwald": "mitte",
     "Sasbach": "nord", "Sasbachwalden": "nord", "Seebach": "nord", "Baiersbronn": "nord",
-    "Münstertal/Schwarzwald": "sued", "Staufen": "sued", "Sulzburg": "sued",
-    "Bonndorf im Schwarzwald": "sued",
+    "Haslach im Kinzigtal": "ortenau",
+    "Münstertal/Schwarzwald": "markgraefler", "Staufen": "markgraefler", "Sulzburg": "markgraefler",
+    "Bonndorf im Schwarzwald": "hochschwarzwald",
 }
 #: Per-trail overrides where the municipality name is not where the trail is ridden. Oberried reaches
 #: from the Schauinsland (a Freiburg hub the city's own trails share) to the Zastler under the Feldberg.
 TRAIL_SUB = {
     "Schauinsland Gipfel - Kohlerhau": "freiburg",
-    "Zastler Steig": "sued",
-    "deadmansfirstride": "sued",
+    "Zastler Steig": "hochschwarzwald",
+    "deadmansfirstride": "hochschwarzwald",
 }
 
 #: Bikepark Todtnau. Geometry per trail from whichever of the two sources is the more complete line --
@@ -197,6 +210,12 @@ TODTNAU = [
 #: dropped on 2026-08-14 -- do not invent a line for it; add it when a real track turns up.
 NOT_BUILT = [
     "Downhill Flow (Bikepark Todtnau) -- 2,6 km / 450 hm, red, no geometry in any source",
+    # Not a trail but worth stating with the rest: the park itself stopped. Adventure-Bikepark GmbH,
+    # which ran Bikepark Bad Wildbad's six runs and had the Sommerbergbahn carry bikes two days a week,
+    # ceased operating on 2025-12-31; the town is looking at a club/community model. The RUNS are in the
+    # region (they exist on the ground and Trailforks holds their lines) but they carry Trailforks
+    # grades, not an operator's, and no lift -- the bike transport was part of the closed operation.
+    "Bikepark Bad Wildbad as an operating park -- operator ceased 2025-12-31, runs kept, no lift",
     # Trailforks calls it a MULTI TRAIL, i.e. a route stitched from other trails rather than a trail of
     # its own -- 2 756 m that would draw a second line over the trails it is made of. That makes it a
     # Trailrunde candidate (`loop: true` plus `trailSegments`, matched with tools/gpx_map_match.py), not
@@ -231,6 +250,84 @@ def looks_uphill(points):
     gain = sum(max(0.0, ele[i + 1] - ele[i]) for i in range(len(ele) - 1))
     loss = sum(max(0.0, ele[i] - ele[i + 1]) for i in range(len(ele) - 1))
     return ele[-1] - ele[0] > 30 and gain > 1.5 * loss
+
+
+# --------------------------------------------------------------------------------------------------
+# 4. The Trailforks sweep: every trail in the Schwarzwald districts' own Trailforks tables.
+#    Harvested by tools/harvest_schwarzwald_tf.py (table + per-trail polyline AND elevation profile);
+#    read its docstring before touching any of this.
+# --------------------------------------------------------------------------------------------------
+TF_TABLE = os.path.join(MATERIAL, "trailforks_table.json")
+TF_GEO = os.path.join(MATERIAL, "trailforks_geo.json")
+
+#: Trailforks' own difficulty titles, exactly as the region table renders them, onto our four colours.
+#: Same table as build_nordvogesen.py's -- the mapping is a project-wide convention, not per region.
+TF_DIFF = {
+    "Easy / Green Circle": "gruen",
+    "Intermediate / Blue Square": "blau",
+    "Difficult / Red": "rot",
+    "Severe / Black": "schwarz",
+    "Very Difficult / Black Diamond": "schwarz",
+    "Extremely Difficult & dangerous, pros only!": "schwarz",
+}
+#: Rows carrying these instead of a grade are fireroads/uplift, not rated descents.
+ACCESS_DIFF = {"Access Trail, Road or Doubletrack", "Secondary Access Road/Trail",
+               "Chairlifts & gondolas"}
+
+#: A district is an administrative box, not a massif: the Enzkreis reaches into the Stromberg, the
+#: Ortenaukreis into the Rhine plain, Emmendingen onto the Kaiserstuhl. So the sweep does NOT trust the
+#: district it came from -- every trail is assigned to the sub-region of the nearest ANCHOR TOWN
+#: (tools/schwarzwald_anchors.py), and one that is further than this from every anchor is not in the
+#: Schwarzwald at all and is dropped, with its name printed. That single rule does the assigning and
+#: the excluding at once, which is what makes the exclusions reviewable instead of a hidden name list.
+MAX_ANCHOR_KM = 12.0
+
+#: Two trails of the same name are the same trail only if they are also in the same place. See the
+#: comment on `by_norm` in main() for the three Jägerpfads this exists for.
+SAME_NAME_KM = 5.0
+
+#: Containment at or above this share of the shorter line's points, with the "subsumed" shape, means the
+#: two entries are one piece of ground -- the project's own duplicate metric (see
+#: `trailforks-duplicate-detection-method` and tools/pfaelzerwald_containment.py). The already-built
+#: trail wins: it came from the operator or from Trailguide's cropped line, both better sourced.
+DUPE_FRACTION = 0.6
+DUPE_TOL_M = 25.0
+
+
+def nearest_anchor(point):
+    best = min(ANCHORS, key=lambda a: haversine_m(point, (a[0], a[1])))
+    return best[2], haversine_m(point, (best[0], best[1])) / 1000.0, best[3]
+
+
+def norm(name):
+    """A name key for duplicate detection. Only the word "trail" is dropped.
+
+    NOT "uphill"/"downhill"/"dh": stripping those made a trail collide with its own counterpart --
+    "Borderline" normalised to the same key as "Borderline Uphill", which would drop a genuine climb as a
+    duplicate of the descent that shares its name. Anything the name test misses this way is still caught
+    by the geometry test, which is the reliable one anyway.
+    """
+    n = slug(name)
+    return n.replace("_trail", "").replace("trail_", "")
+
+
+def duplicate_of(coords, geo, index):
+    """The id of an already-built trail this line shares its ground with, or None.
+
+    `index` is {id: bbox} so the full pairwise scan stays cheap at 700 trails a side.
+    """
+    b = bbox(coords, pad=0.0005)
+    for tid, other_b in index.items():
+        if not bbox_overlaps(b, other_b):
+            continue
+        other = geo[tid]
+        short, long_ = ((coords, other) if line_len_m(coords) <= line_len_m(other)
+                        else (other, coords))
+        prof = dist_profile(short, long_)
+        frac = sum(1 for d in prof if d <= DUPE_TOL_M) / len(prof)
+        if frac >= DUPE_FRACTION and profile_shape(prof) == "subsumed":
+            return tid, frac
+    return None
 
 
 def main():
@@ -304,7 +401,29 @@ def main():
         geo[entry["id"]] = coords
         profs[entry["id"]] = prof
 
-    # ---- 4. the lift ---------------------------------------------------------------------------
+    # ---- 4. the lifts --------------------------------------------------------------------------
+    # THREE candidates were checked against their OPERATOR's own summer pages, because OSM's
+    # `aerialway:bicycle` tag does not decide membership (it was wrong in both directions in Serfaus):
+    #
+    #   Schauinslandbahn (Freiburg)  -> IN. Its own "Biking" page states the fare: "Der Preis für eine
+    #       Fahrradmitnahme in der Schauinslandbahn beträgt 12,00 € zzgl. Tarif pro Person. Pro Kabine
+    #       können maximal 2 Fahrräder mitgenommen werden." It is also the uplift for Badish Moon Rising
+    #       and the Canadian, i.e. for this region's best-known descents.
+    #   Feldbergbahn-Seebuck         -> IN. The Liftverbund's own summer page: 8-seat cabins with room
+    #       for "Kinderwagen, Rollstuhl, Fahrrad oder sogar den vierbeinigen Freund". Note OSM still has
+    #       it tagged `chair_lift` while the operator describes cabins — the geometry is the same line.
+    #   Belchen-Seilbahn             -> OUT, and this is the case the rule exists for: OSM tags it
+    #       `aerialway:bicycle=yes`, but the operator's own price list has no bike fare at all and its
+    #       site says nothing about carrying bikes. No operator word, no lift.
+    #
+    # Bad Wildbad's Sommerbergbahn is a fourth candidate and is also out: it carried bikes on two days a
+    # week *for the bikepark*, and that park's operating company stopped on 2025-12-31 (see NOT_BUILT).
+    OSM_LIFTS = [
+        ("lift_sw_schauinslandbahn", "Schauinslandbahn", "freiburg", "Schauinslandbahn"),
+        ("lift_sw_feldbergbahn", "Feldbergbahn", "hochschwarzwald", "Feldbergbahn-Seebuck"),
+    ]
+
+    # ---- 4a. the Hasenhorn chairlift -----------------------------------------------------------
     # The Hasenhorn chairlift is the park's own uplift and the operator sells bike tickets for it, so
     # it belongs in the data on the operator's word; OSM (which also tags `aerialway:bicycle=yes` here)
     # only supplies the geometry. Stored bottom-station-first, which is the order OSM already has.
@@ -318,10 +437,93 @@ def main():
               "len": round(length, 2), "baseEle": int(round(base)), "topEle": int(round(top)),
               "coords": lift_coords}]
 
+    # ---- 4b. the two operator-confirmed lifts, geometry from OSM by an anchored name --------------
+    survey = {r["name"]: r for r in osm_aerialway_survey("47.55,7.60,49.00,8.90", min_len_m=500)}
+    for lid, label, sub, osm_name in OSM_LIFTS:
+        row = survey.get(osm_name)
+        if not row:
+            print("  !! %s: no OSM aerialway called %r -- lift skipped" % (label, osm_name))
+            continue
+        coords = [[round(p[0], 6), round(p[1], 6)] for p in row["geom"]]
+        e0, e1 = ele_lookup([coords[0]])[0], ele_lookup([coords[-1]])[0]
+        if e0 > e1:                                  # store bottom-station-first
+            coords, e0, e1 = coords[::-1], e1, e0
+        lifts.append({"id": lid, "name": label, "region": sub,
+                      "len": round(sum(haversine_m(coords[i], coords[i + 1])
+                                       for i in range(len(coords) - 1)) / 1000.0, 2),
+                      "baseEle": int(round(e0)), "topEle": int(round(e1)), "coords": coords})
+
     places = json.load(open(OUT, encoding="utf-8")).get("places") if os.path.exists(OUT) else []
+    # ---- 5. the Trailforks sweep ----------------------------------------------------------------
+    tf_table = json.load(open(TF_TABLE, encoding="utf-8"))
+    tf_geo = json.load(open(TF_GEO, encoding="utf-8")) if os.path.exists(TF_GEO) else {}
+    # {normalised name: [(id, midpoint)]} -- a LIST, and with a position, because a name means nothing
+    # on its own across 200 km of range: there are three separate "Jägerpfad"s, two "Kammweg"s and two
+    # "Woody"s in these tables, and matching on the name alone silently dropped the far ones as
+    # duplicates of the near one. A name match only counts as a duplicate within SAME_NAME_KM.
+    by_norm = {}
+    for t in trails:
+        g = geo[t["id"]]
+        by_norm.setdefault(norm(t["name"]), []).append((t["id"], g[len(g) // 2]))
+    index = {t["id"]: bbox(geo[t["id"]], pad=0.0005) for t in trails}
+    stats = {"built": 0, "dupe_name": [], "dupe_geo": [], "far": [], "nogeo": [], "tiny": []}
+    for tf_slug, row in sorted(tf_table.items()):
+        diff = row.get("diff")
+        if not diff or diff in ACCESS_DIFF:
+            continue
+        name = row["cells"][0] if row["cells"] else tf_slug
+        g = tf_geo.get(tf_slug) or {}
+        # The profile is preferred over the polyline: the same line, but carrying Trailforks' own
+        # elevation, so the sweep needs no DEM lookup at all.
+        if g.get("p") and len(g["p"]) >= 2:
+            pts = [[q[2], q[3], q[1]] for q in g["p"]]
+        elif g.get("c") and len(g["c"]) >= 2:
+            pts = [[q[0], q[1], None] for q in g["c"]]
+        else:
+            stats["nogeo"].append(name)
+            continue
+        sub, km, anchor = nearest_anchor(pts[len(pts) // 2][:2])
+        if km > MAX_ANCHOR_KM:
+            stats["far"].append("%s (%.0f km from %s)" % (name, km, anchor))
+            continue
+        mid = pts[len(pts) // 2][:2]
+        near_same_name = [tid for tid, other_mid in by_norm.get(norm(name), [])
+                          if haversine_m(mid, other_mid) / 1000.0 <= SAME_NAME_KM]
+        if near_same_name:
+            stats["dupe_name"].append("%s = %s" % (name, near_same_name[0]))
+            continue
+        coords_only = [[q[0], q[1]] for q in pts]
+        if line_len_m(coords_only) < 80:
+            stats["tiny"].append(name)
+            continue
+        dup = duplicate_of(coords_only, geo, index)
+        if dup:
+            stats["dupe_geo"].append("%s = %s (%.0f%%)" % (name, dup[0], dup[1] * 100))
+            continue
+        up = looks_uphill(pts)
+        entry, coords, prof = build_trail("sw_" + tf_slug.replace("-", "_"), name, sub,
+                                         TF_DIFF[diff], pts, uphill=up, descend=not up,
+                                         elevation=ele_lookup)
+        trails.append(entry)
+        geo[entry["id"]] = coords
+        profs[entry["id"]] = prof
+        by_norm.setdefault(norm(name), []).append((entry["id"], coords[len(coords) // 2]))
+        index[entry["id"]] = bbox(coords, pad=0.0005)
+        stats["built"] += 1
+
     data = write_region(OUT, trails, geo, profs, places=places or [], lifts=lifts)
     summary = region_summary(data)
     print(json.dumps(summary, ensure_ascii=False, indent=1))
+    print("\nTrailforks sweep: %d built, %d name duplicates, %d geometry duplicates, "
+          "%d outside the Schwarzwald, %d without geometry, %d under 80 m"
+          % (stats["built"], len(stats["dupe_name"]), len(stats["dupe_geo"]), len(stats["far"]),
+             len(stats["nogeo"]), len(stats["tiny"])))
+    for key, label in (("dupe_name", "same name as"), ("dupe_geo", "same ground as"),
+                       ("far", "dropped, too far from any anchor"),
+                       ("nogeo", "no geometry harvested"), ("tiny", "dropped, under 80 m")):
+        if stats[key]:
+            print("  %s: %s" % (label, "; ".join(sorted(stats[key]))))
+
     print("\nnot built:")
     for line in NOT_BUILT:
         print("  -", line)

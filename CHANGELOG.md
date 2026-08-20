@@ -22,6 +22,37 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Schwarzwald, second pass: the Trailforks sweep takes it from 119 trails to 619, and from 7
+  sub-regions to 10.** `tools/harvest_schwarzwald_tf.py` (new) harvests the trail table of every
+  Schwarzwald district and then one page per trail; `tools/build_schwarzwald.py` integrates them.
+  Geometry AND elevation come from the trail page itself — Trailforks embeds an `ElevationChart` whose
+  points carry lat/lng, real height and cumulative distance, so the sweep needed **no elevation API at
+  all**, and the page's second copy of the line (the `encodedpath` polyline) cross-checks it: all 602
+  pairs agree within 60 m. Anonymous curl worked for ~700 pages (urllib gets a 403 with the same
+  User-Agent — use curl). Two traps worth carrying forward: the `ElevationChart` points come with
+  **quoted** lat/lng, and an unquoted-number regex silently yields no profile at all; and the table URL's
+  `difficulty=` list must name code 10 or the whole black tier vanishes (the third region to hit that).
+  **A district is not a massif**, so nothing trusts the district it came from: every trail is assigned to
+  the sub-region of the nearest of 103 **anchor towns** (`tools/schwarzwald_anchors.py`) and anything
+  further than 12 km from all of them is dropped as not-Schwarzwald — one rule that assigns and excludes
+  at once, and prints all 30 exclusions (the Kraichgau/Stromberg cluster, two Rhine-plain trails, three
+  isolated ones). Duplicates are dropped twice over: by name **within 5 km only** (there are three
+  separate "Jägerpfad"s and two "Kammweg"s in these tables — matching on the name alone dropped the far
+  ones as duplicates of the near one) and by the project's containment metric; 40 and 36 respectively,
+  with the already-built trail always winning. The old "Südschwarzwald" bracket is gone, split into
+  `markgraefler` and `hochschwarzwald`, and `ortenau` plus `enztal` are new — each of those is bigger
+  than the whole region was before the sweep.
+- **Two more lifts, and two rejected on the operator's word.** In: the **Schauinslandbahn** (its own
+  Biking page states the bike fare, and it is the uplift for Badish Moon Rising and the Canadian) and the
+  **Feldbergbahn** (the Liftverbund's summer page: 8-seat cabins with room for a bike). Out: the
+  **Belchen-Seilbahn**, which is exactly what the operator-decides rule is for — OSM tags it
+  `aerialway:bicycle=yes` and the operator's price list has no bike fare at all; and Bad Wildbad's
+  **Sommerbergbahn**, whose bike days belonged to the bikepark. **Bikepark Bad Wildbad's operator ceased
+  on 2025-12-31**: its six runs are in the region (they exist, Trailforks holds the lines) but with
+  Trailforks grades and no lift.
+- **`tools/add_region_places.py`: the Schwarzwald joins the two Vogesen regions on the 18-label cap** —
+  it now spans Lörrach to Pforzheim, where the default 10 left whole brackets anonymous. 18 labels, one
+  to three per bracket.
 - **RIDE mode no longer lets the map zoom out past z10 (`RIDE_MIN_ZOOM`), because doing so reliably killed the
   app on the user's phone.** Reported as "weiße Seite / lädt sich neu", which is the tell that matters: a
   thrown error shows the fatal panel, so a white page is iOS killing the WebKit content process for memory —
