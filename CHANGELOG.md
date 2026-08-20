@@ -22,6 +22,23 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **The normal-mode direction arrows moved ONTO the line: filled white triangles with a dark edge, the same
+  design RIDE uses, one size smaller.** This reverses the 2026-08-05 design knowingly — that one put a thin
+  chevron 9 px to the SIDE, at the user's own request, modelled on OSM. What killed it is a case it never
+  accounted for: two trails running parallel a dozen pixels apart, which a bike park is full of. A 9 px offset
+  then lands the red trail's arrow on the blue trail's line, so it does not just look untidy, it points at the
+  wrong trail ("das ist manchmal verwirrend"). Four alternatives were mocked up with `visualize` first —
+  including a filled arrow in the trail's own colour and a chevron cut into a locally thickened line — and the
+  user picked the RIDE-consistent one. **What it gives up**: arrows are no longer coloured per difficulty. On
+  the line that cue is largely redundant (position already says whose arrow it is), and white-with-a-dark-edge
+  is the one combination needing no per-basemap palette entry, so `repaintLineColors` lost its arrow branch
+  entirely. `buildDirectionArrowLayer` is an `L.polygon` now — the three points close into a triangle once the
+  side offset is zero, so the geometry needed no new code, and it is still one node per trail. Two knock-ons
+  worth knowing: solo dimming had to learn `fillOpacity` (dimming only the stroke left a soloed-out trail's
+  arrows glowing white), and the RIDE arrows took a slightly heavier edge (1.6 against 1.2) — right for a
+  bigger shape anyway, and now the only attribute that tells the two apart in the DOM, which three test
+  helpers needed. `geometry`'s chevron case asserts the shape STRADDLES its anchor instead of sitting beside
+  it; the old check would have passed unchanged for the wrong reason, so it was replaced rather than relaxed.
 - **The Schwarzwald's Touren now ride their trails' own geometry, not the recording's.** The Tour segments
   were built with `fill_connectors`, i.e. each named stretch kept the recorded track — so two Tours riding
   Borderline each drew their own slightly different Borderline and none of them matched the trail. The user

@@ -115,14 +115,22 @@ TM.add("geometry", () => typeof haversineM === "function", async (T) => {
   T.ok("higher latitude (more compressed east-west) covers fewer metres per pixel than the equator",
        metresPerPixel(60, 15) < metresPerPixel(0, 15), metresPerPixel(60, 15), "< " + metresPerPixel(0, 15));
 
-  T.test("buildChevron draws a V shape offset to the side, tip forward, sized from mpp");
+  T.test("buildChevron draws a three-point arrow STRADDLING the anchor, tip forward, sized from mpp");
   const mpp17 = metresPerPixel(47, 17);
   const chevron = buildChevron([47, 10], 90, 1, mpp17);   // pointing due east
   T.eq("three points: back-left, tip, back-right", chevron.length, 3);
   const [backLeft, tip, backRight] = chevron;
-  // Offset to the side: none of the three points sits exactly on the centreline's own latitude/longitude.
-  T.ok("the whole shape is offset away from the anchor, not drawn on top of it",
-       chevron.every((p) => haversineM(p, [47, 10]) > 3 * mpp17), chevron.map((p) => Math.round(haversineM(p, [47, 10]))), "> " + Math.round(3 * mpp17) + "m each");
+  // The default spec's side offset went to 0 on 2026-08-20 (arrows sit ON the line now, see ARROW_SPEC), so
+  // the contract is no longer "offset away from the anchor" -- it is that the shape is CENTRED on it. Checked
+  // as the two back corners falling on opposite sides of the line: an offset shape has both on the same side,
+  // which is what this case used to assert and would now be wrong. Note the old check would still PASS here
+  // by accident -- the corners are ~9px from the anchor either way -- so it had to be replaced, not relaxed.
+  T.ok("the back corners straddle the anchor rather than sitting to one side of it",
+       (backLeft[0] - 47) * (backRight[0] - 47) < 0,
+       [backLeft[0] - 47, backRight[0] - 47], "opposite signs");
+  T.ok("and the anchor is between them, not outside the shape",
+       Math.abs((backLeft[0] + backRight[0]) / 2 - 47) < 1e-9,
+       (backLeft[0] + backRight[0]) / 2 - 47, "midpoint on the anchor");
   T.ok("the tip is further EAST than the back of the chevron (it points the way it is told to)",
        tip[1] > (backLeft[1] + backRight[1]) / 2, tip[1], "> " + (backLeft[1] + backRight[1]) / 2);
   T.ok("back-left and back-right straddle the tip's own latitude, roughly symmetrically",

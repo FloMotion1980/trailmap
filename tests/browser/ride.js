@@ -234,10 +234,14 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
     } else {
       const paths = () => TM.map.overlay();
       // A normal chevron is the only 1.6px unfilled stroke on the map; a triangle is the only #ffffff fill.
-      const chevronShapes = () => paths().filter((p) => p.getAttribute("fill") === "none" &&
-        p.getAttribute("stroke-width") === "1.6" && (p.getAttribute("d") || "").length > 10)
+      // The NORMAL arrows became filled white triangles on the line too (2026-08-20), so they are no longer
+      // "the unfilled 1.6px strokes" -- they are white polygons like the RIDE ones and differ only in edge
+      // weight: 1.2 normal, 1.6 in RIDE. That one attribute is what separates them here, and it is why the
+      // RIDE arrows carry the heavier edge in the first place (a bigger shape, a heavier outline).
+      const chevronShapes = () => paths().filter((p) => p.getAttribute("fill") === "#ffffff" &&
+        p.getAttribute("stroke-width") === "1.2" && (p.getAttribute("d") || "").length > 10)
         .reduce((a, p) => a + ((p.getAttribute("d") || "").match(/M/g) || []).length, 0);
-      const triNodes = () => paths().filter((p) => p.getAttribute("fill") === "#ffffff");
+      const triNodes = () => paths().filter((p) => p.getAttribute("fill") === "#ffffff" && p.getAttribute("stroke-width") === "1.6");
       TM.ui.trailCards()[0].click();
       await TM.until(() => TM.$("#infoPanel").classList.contains("visible"), 3000);
       m2.setZoom(16, { animate: false });
@@ -328,7 +332,7 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
       await TM.until(() => TM.$("#infoPanel").classList.contains("visible"), 3000);
       await TM.wait(700);
       // One polygon node; each arrow is a sub-path of it, so the count is the number of "M" commands.
-      const arrowNode = () => TM.map.overlay().filter((p) => p.getAttribute("fill") === "#ffffff")[0] || null;
+      const arrowNode = () => TM.map.overlay().filter((p) => p.getAttribute("fill") === "#ffffff" && p.getAttribute("stroke-width") === "1.6")[0] || null;
       const subPaths = () => {
         const n = arrowNode();
         if (!n) return [];
@@ -424,7 +428,7 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
       await TM.ui.setSwitch("showDirectionArrowsToggle", true);
       const card = TM.ui.trailCards()[0];
       const subs = () => {
-        const p = TM.map.overlay().filter((x) => x.getAttribute("fill") === "#ffffff")[0];
+        const p = TM.map.overlay().filter((x) => x.getAttribute("fill") === "#ffffff" && x.getAttribute("stroke-width") === "1.6")[0];
         return p ? (p.getAttribute("d") || "").split("M").filter(Boolean).map((x) => "M" + x.trim()) : [];
       };
       card.click();

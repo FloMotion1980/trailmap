@@ -487,9 +487,14 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   // bare prefix match (no trailing `$`) also matches the START of any ordinary trail line's own `d` ("M x yL x
   // yL x yL x y..." with many more points) -- and a short REAL trail simplified down to exactly 3 points would
   // satisfy even the fully-anchored shape check on its own, which is why both conditions are needed together.
+  // Since 2026-08-20 an arrow layer is a FILLED polygon (white, dark edge, on the line) rather than a
+  // stroke-only chevron beside it, so the old "stroke-width 1.6 plus an open three-point d" no longer
+  // matches anything and both arrow cases silently skipped. The fill colour is the narrow part now --
+  // #ffffff is the arrows and nothing else on the map -- and a closed ring's `d` ends in "z", which no
+  // trail line's does.
   const arrowPath = () => TM.$$("#map .leaflet-overlay-pane path")
-    .find((p) => p.getAttribute("stroke-width") === "1.6" &&
-                 /^M-?[\d.]+ -?[\d.]+L-?[\d.]+ -?[\d.]+L-?[\d.]+ -?[\d.]+$/.test(p.getAttribute("d") || ""));
+    .find((p) => p.getAttribute("fill") === "#ffffff" && p.getAttribute("stroke-width") === "1.2" &&
+                 /z$/i.test((p.getAttribute("d") || "").trim()));
   const gotArrow = await TM.until(() => !!arrowPath(), 3000);
   if (!gotArrow) {
     T.skip("no arrow rendered near this trail at zoom 17 -- nothing to measure");

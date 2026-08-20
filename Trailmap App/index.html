@@ -4201,7 +4201,6 @@ function repaintLineColors(){
       liftSegs[i + 1].setStyle({ color: LIFT_LINE_COLOR });
       liftSegs[i + 2].setStyle({ color: LIFT_LINE_COLOR });
     }
-    if (layer.directionArrowLayer) layer.directionArrowLayer.setStyle({ color: diffColor[t.diff] });
   });
   Object.values(liftLayers).forEach(layer => {
     layer.mask.setStyle({ color: LIFT_MASK_COLOR, opacity: LIFT_MASK_OPACITY });
@@ -5283,8 +5282,10 @@ function applyLiftSegmentOpacity(){
   });
 }
 
+// Both opacities: the arrows are filled triangles since 2026-08-20, and `opacity` alone is the STROKE's --
+// dimming only that left a soloed-out trail's arrows glowing white over everything else.
 function setArrowOpacity(layer, opacity){
-  if (layer.directionArrowLayer) layer.directionArrowLayer.setStyle({ opacity });
+  if (layer.directionArrowLayer) layer.directionArrowLayer.setStyle({ opacity, fillOpacity: opacity });
 }
 // `id` may name a TRAIL or a LIFT (2026-07-30, per the user). A soloed lift dims every trail -- none of
 // them is the solo target -- and applyLiftVisibility() then keeps that one lift and drops the others.
@@ -5653,7 +5654,21 @@ const ARROW_OFFSET_PX = 9, ARROW_LEN_PX = 6, ARROW_HALF_WIDTH_PX = 3.5;
 const ARROW_MIN_ZOOM = 15;
 // The three sizes above, as one object, so the same sampling loop and the same three-point shape can be built
 // at a second size without duplicating either (see RIDE_ARROW_SPEC).
-const ARROW_SPEC = { offsetPx: ARROW_OFFSET_PX, lenPx: ARROW_LEN_PX, halfWidthPx: ARROW_HALF_WIDTH_PX };
+const ARROW_SPEC = { offsetPx: 0, lenPx: 14, halfWidthPx: 6.5 };
+// Filled white with a dark edge, ON the line -- the same treatment RIDE uses, one size smaller because these
+// are drawn for every visible trail rather than one focused tour (2026-08-20). This REVERSES the 2026-08-05
+// design, and knowingly: that one put the chevron 9px to the SIDE at the user's own request, modelled on
+// OSM's rendering. What killed it is a case that design never accounted for -- two trails running parallel
+// a dozen pixels apart, which a bike park is full of. A 9px offset then lands the red trail's arrow on the
+// blue trail's line, so it does not merely look untidy, it points at the wrong trail ("das ist manchmal
+// verwirrend"). Four alternatives were mocked up first and this one was picked.
+//
+// Note what it gives up: the arrows are no longer coloured per difficulty. On the line that cue is largely
+// redundant -- position already says which trail an arrow belongs to -- and white-on-dark-edge is the one
+// combination that needs no per-basemap palette entry at all, which is why repaintLineColors no longer has
+// an arrow branch. ARROW_OFFSET_PX is kept as the (now unused) side-offset capability of buildChevron; the
+// function stays general even though nothing asks for a non-zero offset any more.
+const ARROW_FILL = "#ffffff", ARROW_EDGE = "#2a2a2a", ARROW_EDGE_WEIGHT = 1.2;
 // The focused trail's arrows during RIDE. Two things differ and both come from the same report (user,
 // 2026-08-20: "Durch die dickere Linie wird der komplett verdeckt und die Pfeilchen sind eh zu klein und
 // dünn"). First, `offsetPx: 0` -- the RIDE focus halo is 18px wide, i.e. it reaches +/-9px from the
@@ -5674,7 +5689,11 @@ const ARROW_SPEC = { offsetPx: ARROW_OFFSET_PX, lenPx: ARROW_LEN_PX, halfWidthPx
 // since stroke width drives the painted area more than the fill does. What actually matters is the COUNT,
 // and this layer only ever exists for the one focused trail, so it is ~40 shapes, not 15,000.
 const RIDE_ARROW_SPEC = { offsetPx: 0, lenPx: 16, halfWidthPx: 7.5 };
-const RIDE_ARROW_FILL = "#ffffff", RIDE_ARROW_EDGE = "#2a2a2a", RIDE_ARROW_EDGE_WEIGHT = 1.2;
+// Same design as the normal arrows since 2026-08-20 (they moved onto the line too), one size up and with a
+// slightly heavier edge to match -- a bigger shape carries a heavier outline the same way larger type does,
+// and the RIDE arrow sits on a busier background. It also happens to be the only attribute that tells the
+// two apart in the DOM, which is what the suites use, since fill and edge colour are now identical.
+const RIDE_ARROW_FILL = "#ffffff", RIDE_ARROW_EDGE = "#2a2a2a", RIDE_ARROW_EDGE_WEIGHT = 1.6;
 
 // Metres per screen pixel at a given latitude/zoom, standard Web Mercator (the projection Leaflet's default CRS
 // and this app's tile grid both use) -- equatorial circumference / 256, scaled by zoom and by cos(lat) for the
@@ -5738,14 +5757,13 @@ function buildDirectionArrowShapes(coords, reversed, zoom, spec){
 // The coords array is never reordered (see applyReversedEndpoints) -- reversing rebuilds this layer from
 // scratch with `reversed` flipped rather than storing a second permanent copy for every trail, the same
 // "recompute on demand" rule reverseElevationProfile already follows a few lines away.
-function buildDirectionArrowLayer(coords, reversed, color, zoom){
-  // Coloured per the trail's own difficulty (user, 2026-08-05) -- the same cue the label's own tl-diff dot and
-  // the elevation chart's line already use, so an arrow reads as belonging to ITS trail rather than being one
-  // neutral, anonymous mark shared by every line on the map. `color` defaults to the dark neutral the arrows
-  // used before this, purely so a caller that forgets to pass one (there should be none) degrades safely rather
-  // than drawing nothing.
-  return L.polyline(buildDirectionArrowShapes(coords, reversed, zoom),
-    { color: color || "#22301f", weight: 1.6, opacity: 0.85, interactive: false, bubblingMouseEvents: false });
+// An L.polygon, not an L.polyline: buildChevron's three points close into a triangle once the side offset is
+// zero, so the shape itself needed no new code -- only the layer type and the fill. Still ONE node per trail
+// holding every arrow as a sub-ring, exactly as before.
+function buildDirectionArrowLayer(coords, reversed, zoom){
+  return L.polygon(buildDirectionArrowShapes(coords, reversed, zoom),
+    { color: ARROW_EDGE, weight: ARROW_EDGE_WEIGHT, fillColor: ARROW_FILL, fillOpacity: 1, opacity: 1,
+      interactive: false, bubblingMouseEvents: false });
 }
 // Rebuilds every visible trail's arrow geometry for the CURRENT zoom -- called on zoomend (see
 // updateStartDotVisibility) so the on-screen size stays constant as the user zooms, the same guarantee the
@@ -5949,11 +5967,13 @@ function applyReversedEndpoints(id){
   // versa) the moment the layer is rebuilt.
   if (layer.directionArrowLayer) {
     const wasShown = map.hasLayer(layer.directionArrowLayer);
+    // Both opacities, because solo dims a FILLED shape now -- carrying only the stroke's would leave a
+    // dimmed trail's arrows sitting there at full white.
     const wasOpacity = layer.directionArrowLayer.options.opacity;
-    const wasColor = layer.directionArrowLayer.options.color;   // the trail's own difficulty colour
+    const wasFill = layer.directionArrowLayer.options.fillOpacity;
     map.removeLayer(layer.directionArrowLayer);
-    layer.directionArrowLayer = buildDirectionArrowLayer(coords, isReversed, wasColor, map.getZoom());
-    layer.directionArrowLayer.setStyle({ opacity: wasOpacity });
+    layer.directionArrowLayer = buildDirectionArrowLayer(coords, isReversed, map.getZoom());
+    layer.directionArrowLayer.setStyle({ opacity: wasOpacity, fillOpacity: wasFill });
     if (wasShown) layer.directionArrowLayer.addTo(map);
   }
 }
@@ -6508,7 +6528,7 @@ function buildTrailLayer(t){
   const startDot = L.circleMarker(coords[0], { radius:5, color:"#22301f", weight:1.5, fillColor:"#fff", fillOpacity:1, bubblingMouseEvents:false }).addTo(map);
   const startMarker = L.circleMarker(coords[0], { radius:5, color:"#0d3d1a", weight:1.5, fillColor:"#3fbf5e", fillOpacity:1, bubblingMouseEvents:false });
   const endMarker = L.circleMarker(coords[coords.length - 1], { radius:5, color:"#5c0f0a", weight:1.5, fillColor:"#e0392b", fillOpacity:1, bubblingMouseEvents:false });
-  const directionArrowLayer = buildDirectionArrowLayer(coords, false, diffColor[t.diff], map.getZoom());
+  const directionArrowLayer = buildDirectionArrowLayer(coords, false, map.getZoom());
   if (showDirectionArrows && map.getZoom() >= ARROW_MIN_ZOOM) {
     directionArrowLayer.addTo(map);
   }
