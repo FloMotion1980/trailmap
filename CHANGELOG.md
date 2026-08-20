@@ -22,6 +22,13 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Tour 8 Annweiler: eine Stelle per Handeingriff gekappt, weil keine Regel die Gruppen trennt.** Der Nutzer
+  wollte an `seg25` gekappt haben; die Zahlen waren 84m Bruecke mit 31m doppelt und ohne Kappung (Fall 1) gegen
+  27m Bruecke mit 8m doppelt und 52m Kappung (Fall 2). Drei Verallgemeinerungen sind an echten Zahlen
+  gescheitert (Doppelt-Mass vor die Fallnummer: 8 unbeanstandete Stellen kippen; doppelt an der Luecke gemessen:
+  13; doppelt als Anteil an der Bruecke: unbrauchbar, weil bei kurzen Bruecken ohnehin fast alles neben der
+  Trail-Linie liegt -- 564 von 1023 laegen ueber 20 %). Deshalb `NTC_PREFER`, ein benannter Eingriff fuer eine
+  einzelne Luecke, im Report als [HANDEINGRIFF] sichtbar.
 - **Die 25 uebrigen Pfaelzerwald-Trailrunden geschlossen: 683 von 705 Luecken, 97 %** (Tour 1-20 plus die
   fuenf Community-Runden). Die 22 verbleibenden sind nach Grund aufgeschluesselt, weil das die Konsequenz
   bestimmt: 10 unverhaeltnismaessig (Kandidaten da, alle zu teuer), 9 weglos ueber Toleranz und 4 ohne jeden

@@ -145,6 +145,28 @@ MAX_GAP_M = 1500.0
 # und 18m doppelt. Nach Laenge allein gewinnt die erste; der Nutzer hat fuer diese Stelle ausdruecklich das
 # Kappen verlangt ("Da muss man halt auch den Trail kuerzen").
 MAX_DOUBLE_M = 60.0
+# NTC_PREFER erlaubt es, an EINER Stelle die Fallwahl vorzugeben: "25:2_,31:3_" heisst "nimm bei Luecke 25 den
+# besten nicht verworfenen Fall-2-Kandidaten". Das ist bewusst ein Handeingriff und keine Regel -- eingebaut
+# fuer seg25 der Tour 8 Annweiler, wo der Nutzer gekappt haben wollte ("Da haette gekuerzt werden muessen"):
+# 84m Bruecke mit 31m doppelt und ohne Kappung (Fall 1) gegen 27m Bruecke mit 8m doppelt und 52m Kappung
+# (Fall 2). DREI Versuche, das zu verallgemeinern, sind an echten Zahlen gescheitert, jeder mit Kollateral an
+# Stellen, die der Nutzer abgenommen hat:
+#   * das Doppelt-Mass VOR die Fallnummer, in 40m-Eimern -> acht Stellen kippen, eine davon auf eine LAENGERE
+#     Bruecke MIT Kappung, also klar schlechter;
+#   * doppelt gemessen an der Luecke (>50 %) -> dreizehn Stellen kippen, darunter eine 142m-Bruecke mit 111m
+#     Kappung anstelle von 30m ohne;
+#   * doppelt als Anteil an der BRUECKE -> unbrauchbar, von 1023 angewendeten Loesungen laegen 564 ueber 20 %
+#     und viele ueber 90 %, weil bei einer kurzen Bruecke ohnehin fast alles neben der Trail-Linie liegt.
+# 31m loesen die absolute 60m-Grenze nicht aus, und jede Schwelle, die sie ausloest, trifft auch Faelle, die in
+# Ordnung sind. Solange kein Mass gefunden ist, das die Gruppen trennt, ist ein benannter Handeingriff
+# ehrlicher als eine Regel, die zwoelf gute Ergebnisse verschlechtert.
+def _prefer_map():
+    out = {}
+    for part in (os.environ.get("NTC_PREFER") or "").split(","):
+        if ":" in part:
+            k, v = part.split(":", 1)
+            out[int(k.strip())] = v.strip()
+    return out
 
 OVERLAP_M = 20.0          # so nah muss ein Punkt an der Linie der anderen Seite liegen, um als "darauf" zu gelten
 MIN_OVERLAP_M = 25.0      # kuerzere Ueberlappungen sind Endpunkt-Rauschen, kein doppelt gefahrenes Stueck
@@ -674,6 +696,13 @@ def close_gaps(s, gaps, names=None, write=False, report=None):
         lax_B = budget_for(s[j], relax=True) if s[j].get("trailId") else None
         res = solve(A, B, trail_A=bool(s[i].get("trailId")), trail_B=bool(s[j].get("trailId")),
                     budget_A=bud_A, budget_B=bud_B)
+        want = _prefer_map().get(i)
+        if want and res:
+            pick = [r for r in res if r["name"].startswith(want) and not r["reject"]
+                    and r["off"] <= OFF_TOL_M]
+            if pick:
+                res = pick + [r for r in res if r not in pick]
+                rec["prefer"] = want
         usable = res and res[0]["off"] <= OFF_TOL_M and not res[0]["reject"]
         if res and not usable:
             # Zweiter Durchgang: nur wo streng nichts Brauchbares uebrig bleibt (siehe RELAX_* oben). Ein
@@ -711,8 +740,9 @@ def close_gaps(s, gaps, names=None, write=False, report=None):
                     C.close_gap(s, i, j, [list(q) for q in best["bridge"][1:-1]],
                                 best["newA"][-1], best["newB"][0])
         if report and rec["applied"]:
-            report("    -> angewendet: %s%s" % (rec["applied"],
-                                                "  [GELOCKERT -- ansehen]" if rec.get("relaxed") else ""))
+            report("    -> angewendet: %s%s%s" % (rec["applied"],
+                                                  "  [GELOCKERT -- ansehen]" if rec.get("relaxed") else "",
+                                                  "  [HANDEINGRIFF]" if rec.get("prefer") else ""))
         elif report and res:
             report("    -> %s, nichts angewendet" % rec["skipped"])
         elif report:

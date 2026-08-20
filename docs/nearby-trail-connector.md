@@ -606,6 +606,31 @@ bis 5,6, zwei offene Luecken.
 
 ---
 
+## Wenn keine Regel die Gruppen trennt: NTC_PREFER (2026-08-20)
+
+Bei `seg25` der Tour 8 Annweiler wollte der Nutzer gekappt haben („Da haette gekuerzt werden muessen"). Die
+Zahlen: Fall 1 mit 84 m Bruecke, 31 m doppelt, keine Kappung -- gegen Fall 2 mit **27 m** Bruecke, 8 m doppelt
+und 52 m Kappung. Fall 1 gewinnt ueber die Fallnummer, und 31 m loesen die absolute 60-m-Grenze nicht aus.
+
+**Drei Versuche, das zu verallgemeinern, sind an echten Zahlen gescheitert** -- jeder mit Kollateral an Stellen,
+die der Nutzer abgenommen hat:
+
+| Versuch | Kollateral |
+|---|---|
+| Doppelt-Mass VOR die Fallnummer, 40-m-Eimer | 8 Stellen kippen, eine auf eine LAENGERE Bruecke MIT Kappung |
+| Doppelt gemessen an der Luecke, > 50 % | 13 Stellen kippen, eine 142-m-Bruecke mit 111 m Kappung statt 30 m ohne |
+| Doppelt als Anteil an der BRUECKE | unbrauchbar: von 1023 angewendeten Loesungen laegen 564 ueber 20 %, viele ueber 90 % |
+
+Der dritte Versuch ist der lehrreichste: bei einer **kurzen** Bruecke liegt ohnehin fast alles neben der
+Trail-Linie („34 m doppelt von 35 m Bruecke"), das ist Kreuzungsgeometrie und kein Doppelfahren. Ein relatives
+Mass kann die Gruppen deshalb grundsaetzlich nicht trennen.
+
+Also `NTC_PREFER="25:2_"` -- ein benannter **Handeingriff** fuer eine einzelne Luecke, der im Report als
+`[HANDEINGRIFF]` erscheint. Das ist ehrlicher als eine Regel, die zwoelf gute Ergebnisse verschlechtert, um
+eines zu verbessern. Wenn irgendwann ein Mass gefunden wird, das die Gruppen trennt, ersetzt es den Eingriff.
+
+---
+
 ## Regressionstest (2026-08-20)
 
 `python tests/run.py --suite ntcregression` — 12 Fälle, ~60 s. Rechnet drei Touren aus ihrem Stand **vor** dem
