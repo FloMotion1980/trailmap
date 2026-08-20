@@ -22,6 +22,20 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **The Schwarzwald's Touren now ride their trails' own geometry, not the recording's.** The Tour segments
+  were built with `fill_connectors`, i.e. each named stretch kept the recorded track — so two Tours riding
+  Borderline each drew their own slightly different Borderline and none of them matched the trail. The user
+  found it by eye; measured, 0 of 35 named segments lay on their trail (mean median offset 4,1 m, 11 over
+  5 m). They are built with `build_segments` now and all 35 measure 0,0 m, with the gaps that snapping
+  opens closed by `nearby_trail_connector.py` as before. **Note for the next audit of this kind: a
+  point-for-point "exact slice" test is the wrong measure** — it reported Bike Kingdom, Laax, Paganella
+  and Portes du Soleil as 0 % when in fact the only points off the trail's own list are the two
+  interpolated clip endpoints and every line coincides (the user's spot check was right and the metric was
+  wrong). Measure the distance.
+- **Two of the four Tours are provisional and will be rebuilt in the Tourenbuilder** (the user's call):
+  Canadian & Borderline still jumps 582 m and runs 12 % over its recorded track, Hubbelfuchs · Kammweg ·
+  Borderline jumps 401 m, both because the matcher extends a stretch to the trail's real end where the
+  recording had already turned off. Not tuned and not hand-patched, on instruction.
 - **Start and Ziel merge into one two-colour marker exactly when they would overlap on screen.** Where a Tour
   ends on its own start, the red Ziel simply won by draw order and the green Start was gone — worse since the
   markers grew for RIDE, and more common since closing the loop gaps made tours actually end where they begin.

@@ -239,6 +239,24 @@ combination of the region's own trails:
 
 Four things about the method are worth keeping:
 
+- **The named stretches carry their TRAIL's geometry, not the recording's** — and getting this wrong the
+  first time is the one defect a user actually saw: with `fill_connectors` every segment kept the Tour's
+  own recorded points, so two Tours riding Borderline drew two slightly different Borderlines and neither
+  matched the trail (the user, 2026-08-20: "Die Geo von Borderline ist aber nicht identisch"). Measured
+  then: 0 of 35 named segments on their trail, mean median offset 4,1 m, 11 of them over 5 m. Now: **0,0 m
+  for all 35.** Worth knowing for the next check of this kind — a point-for-point "is this an exact slice"
+  test is the WRONG measure and reported four healthy regions (Bike Kingdom, Laax, Paganella, Portes du
+  Soleil) as 0 %: in all 65 Bike Kingdom segments the only points not on the trail's own list are the two
+  interpolated clip endpoints, and the user's own spot check was right. Measure the DISTANCE.
+- **These four Tours are provisional.** With the geometry fixed, two of them still show what the recording
+  cannot support: Canadian & Borderline jumps 582 m and runs 12 % over its own track, and
+  Hubbelfuchs · Kammweg · Borderline jumps 401 m. Both come from the matcher extending a stretch to the
+  trail's real end where the recording had already turned off (`endpoint_extend_m`, 60 m), so the next
+  stretch starts *behind* the last one's end. The user's call (2026-08-20) is to **rebuild these in the
+  Tourenbuilder** rather than tune the matcher or hand-patch the data — "Lass es, wir bauen es nach" — and
+  to close the remaining gaps there with original geometry plus the trail connector. The ride order each
+  auto-build reconstructed is a usable starting point for that; the fragments under 25 % of their trail
+  are the parts to distrust.
 - **The boundary gaps are closed, with `tools/nearby_trail_connector.py`** — the user's own confirmed
   procedure (`docs/nearby-trail-connector.md`), not `close_loop_gaps.py`'s tier system. 34 gaps over 30 m
   across the four Tours, every one solved: 31 by "ein Weg erreicht beide Seiten", 2 by
