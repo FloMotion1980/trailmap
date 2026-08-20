@@ -68,6 +68,35 @@ richtig.
 
 ## Fallkatalog
 
+### Fall 0 — Überlappung: `seg10`, Kurztour 6 Landstuhl (Ost) (2026-08-20)
+
+Vom Nutzer gefunden, und der erste Fall, der **keine Lücke** ist: „Außerdem überlappen bereits in der
+Originaltour zwei Trails: Der Anfang von Pavillonplatz Trail, das Ende von Landstuhl Trail 2. Da könnte man
+einen von beiden Trailabschnitten kürzen. Das ist ein neuer Fall denke ich."
+
+Gemessen: „Landstuhl Trail 2" (467 m) endet **6,0 m neben** der Linie von „Pavillonplatz Trail" (682 m) und
+projiziert **82 m hinter deren Anfang**; umgekehrt liegt Pavillonplatz' Anfang 6,1 m neben Landstuhl Trail 2
+und 107 m vor dessen Ende. Beide durchlaufen dasselbe ~82–107 m lange Stück, und die aufeinander folgenden
+Punkte projizieren monoton — also **dieselbe Richtung**. Die Tour fährt das Stück damit zweimal: einmal als
+Ende des einen Abschnitts, dann rückwärts zurück zum Anfang des anderen und wieder vorwärts.
+
+**Lösung: den NACHFOLGENDEN Abschnitt bis zum Ende des vorigen kappen.** Die Fahrtrichtung entscheidet — sein
+Anfangsstück ist zu dem Zeitpunkt schon gefahren, und zwar mit der Geometrie des vorigen Abschnitts. Ergebnis:
+Pavillonplatz 682 m → 600 m (−12 %), Landstuhl Trail 2 unangetastet, Brücke 6 m (der reine Querversatz).
+
+Zwei Dinge daran sind wichtig:
+
+- **Fall 0 muss vor allen Brückenfällen geprüft werden.** Fall 1 fand für dieselbe Stelle eine formal saubere
+  Lösung — 89 m Brücke, weglos 0, keine Kappung — die aber genau **rückwärts über die Überlappung** führt. Nach
+  Fallnummer sortiert gewinnt Fall 0; hieße er `6_`, gewänne die falsche Lösung.
+- **Die Richtungsprüfung ist nicht optional.** Bei entgegengesetzter Richtung ist ein doppelt gefahrenes Stück
+  legitim — der Nutzer hat genau so eine Stelle in Rodalben Felsentrails als richtig bestätigt („Da ist eine
+  Pausenstelle und deswegen fährt man das Stück hin und zurück"). Geprüft wird, ob die letzten Punkte von A,
+  soweit sie auf B liegen, auf B monoton nach vorne projizieren.
+
+Die umgekehrte Variante (den *vorigen* Abschnitt kappen) ist **absichtlich nicht eingebaut** — an keinem Fall
+geprüft, und ein ungeprüftes Muster hat hier schon sechs Anläufe gekostet.
+
 ### Fall 1 — `seg0`, Felsenweg Nord Ende (L 482)
 
 Lücke 180,7 m, Trail → CONNECTOR.
@@ -219,6 +248,29 @@ Einzelabfrage pro Lücke zurück (20–80 s pro Fall statt 0,9 s für vier).
   funktionierenden Fix überschrieben und die Tour zerlegt. Rückgängig immer über dieselbe Basis.
 - **Immer die geschriebene Datei nachmessen** (`segs[i].coords[-1]` ↔ `segs[i+1].coords[0]`), nie dem Report
   glauben. Ein Lauf meldete 29 Schließungen, wirksam waren 13.
+- **Ein benannter Trailabschnitt darf nicht per Reparatur verschwinden.** Die Verhältnismäßigkeitsgrenze bezog
+  die Kappung nur auf die **Lücke** — bei `seg8` der Kurztour 6 Landstuhl (Ost) durfte eine 133-m-Lücke also
+  242 m kappen, und weil „Steps Heidenfelsen" genau 242 m lang war, löste sich der ganze Abschnitt auf
+  (5 Punkte → 1). Der Nutzer hat es auf der Karte gesehen: „ist das Stück hier kaputt gegangen". Es braucht
+  **zusätzlich** eine Grenze relativ zur **eigenen Länge des Segments** (`MAX_SEG_TRIM_FRACTION`, halbe Länge)
+  und ein Minimum an Punkten.
+- **Die Kappung als Längendifferenz rechnen, nicht über Punktzahlen.** Fall 0 setzt einen projizierten Punkt an
+  die Stelle des weggeschnittenen Anfangs — die Punktzahl bleibt gleich, also hätte eine punktbasierte Messung
+  82 doppelt gefahrene Meter als „0 m gekappt" gemeldet und die Segment-Grenze hätte sie nicht gesehen.
+- **Dieselbe Schwelle für Tor, Vorauswahl und Sortierung.** Die Rangfolge rundete weglos auf ganze Meter, das
+  Tor `weglos > 0` tat es nicht: ein Kandidat mit 0,4 m wurde als „0 m" angezeigt, sortierte wie 0 und wurde
+  dann als mangelhaft verworfen — bei `seg10` der Kurztour 6 Landstuhl (West) blieb die Lücke offen, obwohl
+  der Report eine saubere Lösung meldete. Jetzt eine Konstante (`OFF_TOL_M`, 0,5 m) für alle drei.
+- **Ablehnungsgrund an einer Stelle bestimmen.** Er stand zweimal im Code — einmal als Tor für die Kettensuche,
+  einmal für den Report — und die beiden liefen auseinander: bei `seg8` galt der einzige Kandidat als brauchbar,
+  also lief Fall 5 nicht an, und danach verwarf ihn die neue Segment-Grenze doch. Ergebnis: Lücke offen, obwohl
+  Fall 5 sie über Pfad → Wohnstraße → Forstweg ohne jede Kappung schließt.
+- **Verschmelzen ist ein zusätzlicher Kandidat, kein Ersatz.** Bei `seg14` derselben Tour erreicht der
+  *unverschmolzene* 255-m-Pfad beide Seiten und liefert 94 m Brücke für 88 m Lücke; in eine 2472-m-Kette aus
+  fünf Teilstücken verschmolzen wachsen daraus 1041 m, weil sich die Projektionen von a und b auf der langen
+  Kette weit auseinanderschieben. Beide Formen antreten lassen.
+- **In Fall 1 nicht nach dem ersten Treffer abbrechen.** „Liegt dem Endpunkt am nächsten" sagt nichts darüber,
+  wie gut die Brücke wird — bei `seg14` lagen fünf Wege bei 0,0 m unter dem Endpunkt.
 - **Segment-Indizes verschieben sich**, wenn ein Segment eingefügt wird — nach dem Schreiben immer alle
   Übergänge neu messen, nicht dieselben Indexnummern wie vorher.
 
@@ -282,17 +334,44 @@ welcher ist. Bei „Kurztour 3 – Finsterbrunnertal" besteht die Abweichung ohn
 (30,86 km Metadaten gegen 29,05 km Geometrie) — dort stammen die zwei Zahlen offensichtlich aus verschiedenen
 Quellen, unabhängig von diesem Verfahren.
 
+## Dreizehn Touren, 235 Lücken (Stand 2026-08-20)
+
+Achter bis dreizehnter Einsatz: die restlichen acht Kurztouren, **121 Lücken, alle geschlossen, keine offen**.
+Fallverteilung über diese 121: 102× Fall 1, 9× Fall 3, 4× Fall 2(B), 2× Fall 5, 1× Fall 5+kappen(A),
+1× Fall 5+kappen(B), 1× Fall 2(A), 1× Fall 0. Nur sechs Trailabschnitte wurden überhaupt gekappt.
+
+Diese Runde hat das Verfahren an fünf Stellen verändert (siehe die handwerklichen Regeln), ausgelöst durch
+**einen** Befund des Nutzers an „Kurztour 6 – Landstuhl (Ost)": ein aufgelöster Trailabschnitt und eine
+Überlappung. Die Nachrechnung gegen die fünf bestätigten Touren ist der Grund, warum das überhaupt
+verantwortbar war — und sie brauchte erst eine brauchbare Referenz:
+
+- **Der bestätigte Stand von Rodalben Felsentrails ist KEINE Referenz für das Werkzeug.** Er enthält
+  Lösungen, die es nicht erzeugen kann: `seg0` kappt 230 m bei 34,9 m Lücke, Faktor 6,6 gegen eine Grenze von
+  4,0. Beim Schließen der Tour stand `MAX_TRIM_FACTOR` sogar auf 3,0. Der Doku-Eintrag „36 von 38 Segmenten
+  identisch" heißt genau das: zwei Segmente waren von Hand. Ein Vergleich dagegen meldet 18 von 38 — auch mit
+  **allen** Änderungen abgeschaltet, was per Ablation nachgewiesen ist.
+- **Die belastbare Prüfung ist Werkzeug-wie-committet gegen Werkzeug-mit-Änderung, auf demselben
+  Ausgangsstand.** Ergebnis über alle fünf bestätigten Touren: es ändern sich **ausschließlich
+  Verbinder-Segmente, um 0–9 m kürzer**, kein einziger Trailabschnitt, und keine Lücke bleibt zusätzlich offen.
+- **Dafür lassen sich alle Schwellen per `NTC_*`-Umgebungsvariable überschreiben.** Das ist kein
+  Konfigurations-Feature, sondern das Werkzeug für genau diese Pflichtaufgabe: nur so lässt sich eine von
+  mehreren gleichzeitigen Änderungen einzeln abschalten und messen. Ohne das bleibt bei einer Abweichung nur
+  Raten. `MERGE_ONLY` und `CASE1_FIRST_ONLY` schalten die beiden Kandidaten-Änderungen ab.
+
+---
+
 ## Offen
 
 - **Andere Trailrunden.** Bisher nur `pw_rodalben_felsentrails` behandelt; jede andere Tour mit
   `trailSegments` hat ihre Lücken unverändert. Das Verfahren steckt in `tools/nearby_trail_connector.py` und
   sollte dort ohne Änderung anwendbar sein — aber jede neue Tour zuerst im Trockenlauf ansehen, nicht blind
   schreiben.
-- **Fall 5 ist noch nicht im Tool verdrahtet.** `chain_bridges`/`chain_bridges_trim` existieren als
-  Funktionen, werden von `solve()` aber noch nicht aufgerufen; die zwei Fälle wurden mit einem eigenen Skript
-  angewendet. Beim nächsten Einsatz einbauen und die Rangfolge festlegen (Fall 5 nach Fall 1–4).
 - **Zwei Grenzwerte sind noch nicht belastbar geprüft**: `PROJ_MIN_SECOND_M` (40 m) hat bei `seg33`/`seg34`
   Fall 4 blockiert, was dort richtig war — ob der Wert generell passt, zeigt erst die nächste Tour.
-  `MEET_M`/`ON_WAY_M` mussten von 8 m auf 15 m, weil `seg14` sonst durch alle Fälle fiel.
+  `MEET_M`/`ON_WAY_M` mussten von 8 m auf 15 m und 2026-08-20 auf 20 m, weil zwei unabhängige Fälle bei 15,2 m
+  und 15,9 m knapp herausfielen und dadurch gar nicht erst geprüft wurden.
+- **Zwei Kappungen über einem Drittel sind noch nicht vom Nutzer beurteilt**: „Lambrecht Trail 7" −39 %
+  (511 → 311 m) und „Westpfalz-Wanderweg Schwarzes W" −36 % (549 → 353 m). Beide entstehen, weil das Maß
+  weglos zuerst zählt und die kappungsärmere Alternative 11 m weglos hat. Innerhalb der Grenze, aber viel.
 - `tools/close_loop_gaps.py` und `tools/gap_variants.py` enthalten viel Verworfenes und sind **nicht** der
   Stand dieses Dokuments — nur `nearby_trail_connector.py` ist es.

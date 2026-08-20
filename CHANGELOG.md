@@ -22,6 +22,23 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Die restlichen acht Kurztouren des Pfälzerwalds geschlossen — 121 Lücken, keine offen** (Heltersberg,
+  Waldfischbach-Burgalben, Schopp, Waldleiningen, Elmstein, Lambrecht, Landstuhl Ost und West). Damit sind
+  dreizehn Trailrunden lückenlos, 235 Lücken. 102 der 121 über den einfachsten Fall; nur sechs
+  Trailabschnitte überhaupt gekappt. Zwei Kappungen über einem Drittel („Lambrecht Trail 7" −39 %,
+  „Westpfalz-Wanderweg Schwarzes W" −36 %) sind innerhalb der Grenzen, aber noch nicht beurteilt.
+- **`nearbyTrailConnector`: neuer Fall 0 (Überlappung) und vier Fehler behoben, alle aus einem Befund des
+  Nutzers an „Kurztour 6 – Landstuhl (Ost)".** Ein ganzer benannter Trailabschnitt hatte sich aufgelöst
+  („Steps Heidenfelsen", 242 m → 0 m): die Verhältnismäßigkeitsgrenze bezog die Kappung nur auf die Lücke,
+  nicht auf die eigene Länge des Segments. Dazu überlappten sich zwei Abschnitte schon in der Originaltour —
+  „Landstuhl Trail 2" endet 82 m innerhalb von „Pavillonplatz Trail", beide in derselben Richtung, die Tour
+  fuhr das Stück also zweimal. Das ist keine Lücke, sondern ein Datenfehler, und er muss **vor** allen
+  Brückenfällen geprüft werden, sonst baut Fall 1 eine formal saubere Brücke rückwärts darüber. Außerdem:
+  Verschmelzen von OSM-Way-Objekten ist jetzt ein zusätzlicher Kandidat statt eines Ersatzes (1041 m Brücke
+  statt 94 m für eine 88-m-Lücke), Fall 1 bricht nicht mehr nach dem ersten Weg ab, der Ablehnungsgrund wird
+  an einer Stelle bestimmt statt an zwei auseinanderlaufenden, und Tor/Vorauswahl/Sortierung benutzen
+  dieselbe weglos-Schwelle. Nachgerechnet gegen die fünf bestätigten Touren: es ändern sich ausschließlich
+  Verbinder um 0–9 m, kein Trailabschnitt. Siehe `docs/nearby-trail-connector.md`.
 - **Zwei weitere Kurztouren geschlossen: „Kurztour 3 – Finsterbrunnertal" (25 Lücken, 29,18 km) und
   „Kurztour 5 – Johanniskreuz" (14 Lücken, 10,65 km)** — beide ohne eine einzige Kappung und ohne
   Verhältnismäßigkeits-Ablehnung, 38 von 39 Lücken über den einfachsten Fall. Die beiden größten Lücken
