@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
 @suite   ntcregression
-@area    nearbyTrailConnector: what the procedure actually achieves on three real tours
+@area    nearbyTrailConnector: what the procedure actually achieves on five real tours
 @files   tools/nearby_trail_connector.py, tools/make_ntc_fixture.py, tests/fixtures/ntc_baseline.json
-@touches solve, close_gaps, merge_roads, score, off_way_core, MAX_TRIM_FACTOR, MAX_BRIDGE_FACTOR, MAX_SEG_TRIM_FRACTION, MIN_SEG_POINTS, OFF_TOL_M, ON_WAY_M, MEET_M, OVERLAP_M, MIN_OVERLAP_M
+@touches solve, close_gaps, merge_roads, score, off_way_core, double_ride, MAX_DOUBLE_M, RELAX_DOUBLE_M, MAX_TRIM_ABS_M, MAX_GAP_M, MAX_TRIM_FACTOR, MAX_BRIDGE_FACTOR, MAX_SEG_TRIM_FRACTION, MIN_SEG_POINTS, OFF_TOL_M, ON_WAY_M, MEET_M, OVERLAP_M, MIN_OVERLAP_M
 
 This suite exists because the procedure degraded silently, twice, and both times the degradation was invisible
 until a rider looked at the map.
@@ -39,9 +39,15 @@ Two things about it are deliberate and easy to get wrong if this is ever rewritt
   networked run sees. A test that needed Overpass would never be run, and a fixture trimmed by "near the
   tour" would quietly be testing a different input.
 
-**The third tour, Landstuhl (West), is in for exactly one gap.** Its `seg10` is the only place in any of the
-three where `OFF_TOL_M` decides anything -- measured, not assumed: with the first two tours alone,
-`NTC_OFF_TOL_M=0` left this suite completely green.
+**Three of the five tours are in for exactly one threshold each**, and in every case that was measured rather
+than assumed -- with the other tours alone, the mutation left the suite completely green:
+
+* **Landstuhl (West)** for `OFF_TOL_M`: its `seg10` is the only place where a sub-metre off-way residual
+  decides anything.
+* **Felsenwanderweg Rodalben** for `MAX_TRIM_ABS_M`: its `seg0` is where a solution cut 1362m off a 5273m
+  section -- within the fraction limit, indefensible in absolute terms.
+* **Kurztour 3 Schopp** for `RELAX_DOUBLE_M`: its `seg5` is the only place where the ONLY solution rides a
+  stretch twice, so rejecting it strictly would leave the gap open -- which is the worse outcome.
 
 Coverage gaps, stated rather than papered over:
 
@@ -60,7 +66,7 @@ If a change to the procedure is intended, regenerate the baseline with
 was written for.
 
 Verified by mutation (2026-08-20), all through `NTC_*` overrides so no source edit is needed. Baseline is
-12 cases / 45 checks; the column is how many cases each mutation breaks:
+20 cases / 75 checks; the column is how many cases each mutation breaks:
 
 | mutation | cases failing |
 |---|---|
@@ -79,6 +85,9 @@ Verified by mutation (2026-08-20), all through `NTC_*` overrides so no source ed
 | the joint cost out of the sort key again, leaving case number then bridge length (source edit) | measured on a fourth tour, see below |
 | `RELAX_BRIDGE_FACTOR` 7 -> 6 | 2 |
 | `RELAX_SEG_TRIM_FRACTION` 0.65 -> 0.5 | 2 |
+| `MAX_DOUBLE_M` 60 -> off (99999) | 6 |
+| `MAX_TRIM_ABS_M` 300 -> off (99999) | 3 |
+| `RELAX_DOUBLE_M` 120 -> 60 | 2 |
 
 Two of these are only reachable by editing the source, because they are structural rather than a threshold.
 Both were found by applying the procedure to a NEW tour rather than by reasoning, which is the argument for

@@ -457,6 +457,60 @@ ohne eine einzige offene innere Lücke, und nur noch sieben gekappte Abschnitte 
 
 ---
 
+## Doppelt gefahren -- ein Mangel, den das Mass weglos nicht sieht (2026-08-20)
+
+Der Nutzer hat drei Stellen der Ost-West-Passage gemeldet, alle mit derselben Begruendung: „Da haette man doch
+nur den Pfad weiter gehen muessen, bis man auf den Brunnenwanderweg trifft. Der wird dann wieder etwas
+abgeschnitten." Nachgemessen fuhr die Tour dort **87 m, 73 m und 85 m hin und zurueck** -- die Bruecke lief zu
+100 % auf der Linie des Abschnitts, zu dem sie fuehrt, also einmal als Verbinder und einmal als Trail.
+
+`weglos` ist dafuer blind (alles liegt auf Wegen) und die Laenge auch (die Bruecke war kaum laenger als die
+Luftlinie). Es fehlte also ein Kriterium, nicht ein Grenzwert.
+
+### Der eigentliche Fehler sass in Fall 2
+
+`min()` ueber alle Weg-Stuetzpunkte nahm den, der der anderen Linie **am naechsten** liegt -- nicht den
+**ersten**, den man vom Endpunkt aus erreicht. Bei `seg9` lief der Weg lange neben dem Brunnenwanderweg her und
+war 197 m hineingesetzt am dichtesten; diese 197 m von 245 m trafen die Segment-Grenze, der Kandidat fiel weg,
+und uebrig blieb die doppelt fahrende Fall-1-Bruecke. Mit „erster Treffer" wird daraus eine **11-m-Bruecke mit
+83 m Kappung** -- genau die Loesung, die der Nutzer beschrieben hat, und woertlich seine alte Anweisung („geh
+die Linie zurueck, du wirst den Trail schneiden, DAS ist der neue Endpunkt"). Ausserdem treten jetzt alle Wege
+unter dem Endpunkt in beiden Laufrichtungen an, statt nur der eine.
+
+### Das neue Mass und wie es kalibriert wurde
+
+`double_ride()` misst die Meter der Bruecke, die auf der Linie eines der beiden Abschnitte liegen (erste und
+letzte Kante ausgenommen, die beruehren die Endpunkte zwangslaeufig). Die Schwelle ist an den 71 bis dahin
+angewendeten Loesungen kalibriert, nicht gewaehlt: 54 liegen unter 10 m, zehn zwischen 10 und 20, die hoechste
+**unbeanstandete** bei 51,2 m -- und dann kommen die drei beanstandeten mit 73,1 m, 80 m und 106,1 m. `60 m`
+trennt die Gruppen also exakt.
+
+Drei Anlaeufe waren noetig, jeder mit einer eigenen Lehre:
+
+- **25 m griff viel zu weit**: Landstuhl (Ost) verlor drei Luecken ganz und sechs Abschnitte wurden gekappt.
+- **In der Rangfolge VOR der Fallnummer** verschob es ein Dutzend unbeanstandeter Stellen. Es steht jetzt
+  dahinter -- dort entscheidet es nur zwischen Kandidaten desselben Falls, und dort **muss** es entscheiden:
+  bei `seg15` standen 80 m Bruecke ohne Kappung mit 38 m doppelt gegen 37 m Bruecke mit 64 m Kappung und 18 m
+  doppelt, und der Nutzer hat fuer diese Stelle ausdruecklich das Kappen verlangt.
+- **50 m** verwarf noch eine 51,2-m-Loesung, die niemand beanstandet hatte.
+
+### Zwei Loecher, die das neue Kriterium erst freigelegt hat
+
+- **Die Bruchteil-Grenze allein reicht nicht.** Bei `seg0` des Felsenwanderwegs gewann eine Loesung, die
+  **1362 m** von „Felsenweg Sued" wegschnitt -- 26 % eines 5273-m-Abschnitts und Faktor 3,6 der Luecke, beide
+  Grenzen also eingehalten. Die groesste je bestaetigte Kappung ist 235 m, deshalb jetzt `MAX_TRIM_ABS_M = 300`,
+  und zwar in **beiden** Durchgaengen: der gelockerte lockert den Bruchteil fuer kurze Abschnitte, nicht die
+  Erlaubnis, einen Kilometer Trail zu loeschen.
+- **Eine offene Luecke ist schlimmer als ein doppelt gefahrenes Stueck.** Bei `seg5` der Kurztour 3 Schopp
+  faehrt die einzige Loesung 89,5 m doppelt; streng verworfen bliebe die Luecke offen -- und eine Luecke fuehrt
+  den Fahrer an eine falsche Stelle, worueber sich der Nutzer am deutlichsten beschwert hat. Der zweite
+  Durchgang darf sie deshalb nehmen (`RELAX_DOUBLE_M = 120`) und meldet sie als gelockert.
+
+Ergebnis: alle drei gemeldeten Stellen fahren nichts mehr doppelt (84 -> 0, 63 -> 0, 75 -> 0 m), alle 15 Touren
+wurden erneut neu gebaut, keine offene innere Luecke, fuenf Uebergaenge brauchten den zweiten Durchgang.
+
+---
+
 ## Regressionstest (2026-08-20)
 
 `python tests/run.py --suite ntcregression` — 12 Fälle, ~60 s. Rechnet drei Touren aus ihrem Stand **vor** dem

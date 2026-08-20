@@ -39,9 +39,17 @@ FIX = os.path.join(ROOT, "tests", "fixtures")
 # Landstuhl (West) ist die dritte, und zwar wegen genau EINER Luecke: seg10 haengt an OFF_TOL_M. Ohne diese
 # Tour deckt der Test die Schwelle nicht ab -- nachgemessen, nicht vermutet: `NTC_OFF_TOL_M=0` liess die
 # Suite mit den ersten beiden Touren vollstaendig gruen.
+# Felsenwanderweg Rodalben und Kurztour 3 Schopp kamen 2026-08-20 dazu, jede fuer genau eine Schwelle, die
+# ohne sie nicht festgenagelt ist -- nachgemessen, nicht vermutet: mit den ersten drei Touren allein liessen
+# `NTC_MAX_TRIM_ABS_M=99999` und `NTC_RELAX_DOUBLE_M=60` die Suite vollstaendig gruen. Der Felsenwanderweg
+# haelt den Fall, in dem eine Loesung 1362m eines 5273m langen Abschnitts wegschnitt (Bruchteil-Grenze
+# eingehalten, absolut indiskutabel); Schopp den Fall, in dem die EINZIGE Loesung 89,5m doppelt faehrt und
+# eine offene Luecke die schlechtere Wahl waere.
 TOURS = [("pw_rodalben_felsentrails", "4e14f36"),
          ("pw_kurztour_6_landstuhl_ost", "100f6ee~1"),
-         ("pw_kurztour_6_landstuhl_west", "100f6ee~1")]
+         ("pw_kurztour_6_landstuhl_west", "100f6ee~1"),
+         ("pw_felsenwanderweg_rodalben", "495711f"),
+         ("pw_kurztour_3_schopp", "100f6ee~1")]
 
 
 def region_at(rev):

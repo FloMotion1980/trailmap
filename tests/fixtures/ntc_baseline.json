@@ -1,20 +1,189 @@
 {
-  "pw_kurztour_6_landstuhl_ost": {
+  "pw_felsenwanderweg_rodalben": {
     "cases": {
-      "0_Ueberlappung": 1,
-      "1_ein-Weg-beide-Seiten": 16,
-      "2_Weg-folgen-und-kappen": 1,
-      "3_Schnittpunkt": 2,
-      "5_Wegekette": 1
+      "1_ein-Weg-beide-Seiten": 13,
+      "3_Schnittpunkt": 1,
+      "5_Wegekette+kappen": 2
     },
-    "closed": 21,
-    "gaps": 21,
-    "length_m": 34262,
+    "closed": 16,
+    "gaps": 16,
+    "length_m": 45677,
+    "per_gap": [
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 61,
+        "gap": 39.6,
+        "relaxed": false,
+        "seg": 15,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "5_Wegekette+kappen(B)",
+        "bridge": 105,
+        "gap": 131.1,
+        "relaxed": false,
+        "seg": 14,
+        "skipped": null,
+        "trim": 148
+      },
+      {
+        "applied": "3_Schnittpunkt",
+        "bridge": 399,
+        "gap": 354.2,
+        "relaxed": false,
+        "seg": 13,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 23,
+        "gap": 21.9,
+        "relaxed": false,
+        "seg": 12,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 28,
+        "gap": 26.2,
+        "relaxed": false,
+        "seg": 11,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 36,
+        "gap": 31.3,
+        "relaxed": false,
+        "seg": 10,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 20,
+        "gap": 19.9,
+        "relaxed": false,
+        "seg": 9,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 44,
+        "gap": 28.3,
+        "relaxed": false,
+        "seg": 8,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 108,
+        "gap": 88.1,
+        "relaxed": false,
+        "seg": 7,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 38,
+        "gap": 26.9,
+        "relaxed": false,
+        "seg": 6,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 167,
+        "gap": 151.6,
+        "relaxed": false,
+        "seg": 5,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 146,
+        "gap": 130.7,
+        "relaxed": false,
+        "seg": 4,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 26,
+        "gap": 21.5,
+        "relaxed": false,
+        "seg": 3,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 87,
+        "gap": 81.6,
+        "relaxed": false,
+        "seg": 2,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 22,
+        "gap": 15.4,
+        "relaxed": false,
+        "seg": 1,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "5_Wegekette+kappen(B)",
+        "bridge": 2391,
+        "gap": 379.0,
+        "relaxed": true,
+        "seg": 0,
+        "skipped": null,
+        "trim": 255
+      }
+    ],
+    "relaxed": [
+      0
+    ],
+    "segments": 18,
+    "still_open": [],
+    "trail_m": {
+      "Felsenwanderweg Rodalben Trail 1": 160,
+      "Felsenweg Nord": 12670,
+      "Felsenweg Süd": 20327,
+      "Gipfelstürmer": 2385,
+      "Pfälzer Jakobsweg-Verbindungsroute 1": 191,
+      "Rodalber Felsenwanderweg 15": 457,
+      "Rodalber Felsenwanderweg 16": 397,
+      "Rodalber Felsenwanderweg 17": 392
+    }
+  },
+  "pw_kurztour_3_schopp": {
+    "cases": {
+      "1_ein-Weg-beide-Seiten": 15,
+      "3_Schnittpunkt": 3,
+      "5_Wegekette+kappen": 2
+    },
+    "closed": 20,
+    "gaps": 20,
+    "length_m": 35708,
     "per_gap": [
       {
         "applied": "3_Schnittpunkt",
-        "bridge": 145,
-        "gap": 141.7,
+        "bridge": 78,
+        "gap": 55.4,
         "relaxed": false,
         "seg": 21,
         "skipped": null,
@@ -22,7 +191,215 @@
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
-        "bridge": 22,
+        "bridge": 55,
+        "gap": 54.7,
+        "relaxed": false,
+        "seg": 20,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 52,
+        "gap": 49.1,
+        "relaxed": false,
+        "seg": 19,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "5_Wegekette+kappen(A)",
+        "bridge": 70,
+        "gap": 46.6,
+        "relaxed": false,
+        "seg": 18,
+        "skipped": null,
+        "trim": 10
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 38,
+        "gap": 36.5,
+        "relaxed": false,
+        "seg": 17,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "3_Schnittpunkt",
+        "bridge": 53,
+        "gap": 52.7,
+        "relaxed": false,
+        "seg": 16,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 31,
+        "gap": 31.4,
+        "relaxed": false,
+        "seg": 15,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 66,
+        "gap": 66.3,
+        "relaxed": false,
+        "seg": 14,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 66,
+        "gap": 66.3,
+        "relaxed": false,
+        "seg": 12,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 31,
+        "gap": 31.4,
+        "relaxed": false,
+        "seg": 11,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 31,
+        "gap": 31.4,
+        "relaxed": false,
+        "seg": 9,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 66,
+        "gap": 66.3,
+        "relaxed": false,
+        "seg": 8,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 42,
+        "gap": 37.5,
+        "relaxed": false,
+        "seg": 7,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 109,
+        "gap": 105.4,
+        "relaxed": false,
+        "seg": 6,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "5_Wegekette+kappen(B)",
+        "bridge": 202,
+        "gap": 57.1,
+        "relaxed": true,
+        "seg": 5,
+        "skipped": null,
+        "trim": 60
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 43,
+        "gap": 43.1,
+        "relaxed": false,
+        "seg": 4,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 60,
+        "gap": 46.3,
+        "relaxed": false,
+        "seg": 3,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 64,
+        "gap": 58.1,
+        "relaxed": false,
+        "seg": 2,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 107,
+        "gap": 96.0,
+        "relaxed": false,
+        "seg": 1,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "3_Schnittpunkt",
+        "bridge": 78,
+        "gap": 55.4,
+        "relaxed": false,
+        "seg": 0,
+        "skipped": null,
+        "trim": 0
+      }
+    ],
+    "relaxed": [
+      5
+    ],
+    "segments": 23,
+    "still_open": [],
+    "trail_m": {
+      "Naturfreundewege Kaiserslautern": 720,
+      "Pfälzerwald Gelb-Blauer Balken": 546,
+      "Pfälzerwald Grün-Gelbes Kreuz 3": 473,
+      "Pfälzerwald Grün-Gelbes Kreuz 4": 1444,
+      "Schopp Trail 4": 355,
+      "Schopp Trail 5": 563,
+      "Schopp Trail 6": 231,
+      "Zum Walzwerk": 1511
+    }
+  },
+  "pw_kurztour_6_landstuhl_ost": {
+    "cases": {
+      "0_Ueberlappung": 1,
+      "1_ein-Weg-beide-Seiten": 15,
+      "2_Weg-folgen-und-kappen": 4,
+      "3_Schnittpunkt": 1
+    },
+    "closed": 21,
+    "gaps": 21,
+    "length_m": 33656,
+    "per_gap": [
+      {
+        "applied": "2_Weg-folgen-und-kappen(B)",
+        "bridge": 69,
+        "gap": 141.7,
+        "relaxed": true,
+        "seg": 21,
+        "skipped": null,
+        "trim": 76
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 32,
         "gap": 19.3,
         "relaxed": false,
         "seg": 20,
@@ -49,12 +426,12 @@
       },
       {
         "applied": "2_Weg-folgen-und-kappen(A)",
-        "bridge": 265,
+        "bridge": 213,
         "gap": 92.3,
         "relaxed": false,
         "seg": 17,
         "skipped": null,
-        "trim": 196
+        "trim": 146
       },
       {
         "applied": "3_Schnittpunkt",
@@ -66,13 +443,13 @@
         "trim": 0
       },
       {
-        "applied": "1_ein-Weg-beide-Seiten",
-        "bridge": 95,
+        "applied": "2_Weg-folgen-und-kappen(B)",
+        "bridge": 37,
         "gap": 70.6,
         "relaxed": false,
         "seg": 15,
         "skipped": null,
-        "trim": 0
+        "trim": 64
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
@@ -129,13 +506,13 @@
         "trim": 0
       },
       {
-        "applied": "5_Wegekette",
-        "bridge": 480,
+        "applied": "2_Weg-folgen-und-kappen(A)",
+        "bridge": 253,
         "gap": 133.4,
         "relaxed": false,
         "seg": 8,
         "skipped": null,
-        "trim": 0
+        "trim": 115
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
@@ -201,12 +578,14 @@
         "trim": 0
       }
     ],
-    "relaxed": [],
+    "relaxed": [
+      21
+    ],
     "segments": 30,
     "still_open": [],
     "trail_m": {
       "Blocks n Rocks": 223,
-      "Bännjer Sportplatz": 368,
+      "Bännjer Sportplatz": 304,
       "Curvy Up´N´Down": 499,
       "Landstuhl Ost Trail 2": 172,
       "Landstuhl Trail 1": 211,
@@ -214,9 +593,9 @@
       "Landstuhl Trail 3": 424,
       "Nanstein Castle Trail": 1038,
       "Pavillonplatz Trail": 600,
-      "Pfälzerwald Gelb-Roter Balken 1": 302,
-      "Steps Heidenfelsen": 1490,
-      "Westpfalz-Wanderweg Schwarzes W (Großer Westpfalz-Wanderweg) 1": 353
+      "Pfälzerwald Gelb-Roter Balken 1": 226,
+      "Steps Heidenfelsen": 1375,
+      "Westpfalz-Wanderweg Schwarzes W (Großer Westpfalz-Wanderweg) 1": 403
     }
   },
   "pw_kurztour_6_landstuhl_west": {
@@ -226,16 +605,16 @@
     },
     "closed": 12,
     "gaps": 12,
-    "length_m": 18028,
+    "length_m": 18098,
     "per_gap": [
       {
         "applied": "2_Weg-folgen-und-kappen(B)",
-        "bridge": 0,
+        "bridge": 35,
         "gap": 63.4,
         "relaxed": false,
         "seg": 11,
         "skipped": null,
-        "trim": 66
+        "trim": 31
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
@@ -357,7 +736,7 @@
     },
     "closed": 38,
     "gaps": 38,
-    "length_m": 41662,
+    "length_m": 41677,
     "per_gap": [
       {
         "applied": "1_ein-Weg-beide-Seiten",
@@ -379,7 +758,7 @@
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
-        "bridge": 37,
+        "bridge": 43,
         "gap": 27.7,
         "relaxed": false,
         "seg": 35,
@@ -694,12 +1073,12 @@
       },
       {
         "applied": "2_Weg-folgen-und-kappen(A)",
-        "bridge": 240,
+        "bridge": 179,
         "gap": 34.9,
         "relaxed": true,
         "seg": 0,
         "skipped": null,
-        "trim": 230
+        "trim": 160
       }
     ],
     "relaxed": [
@@ -713,7 +1092,7 @@
       "Clauser Haweweg 2": 196,
       "Clauser Haweweg 3": 611,
       "Clauser Haweweg 4": 499,
-      "Felsenweg Nord": 750,
+      "Felsenweg Nord": 819,
       "Felsenweg Süd": 55,
       "Gipfelstürmer": 816,
       "Rodalben Felsentrails Trail 1": 371,

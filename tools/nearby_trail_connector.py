@@ -62,6 +62,14 @@ MAX_BRIDGE_FACTOR = 6.0  # Brueckenlaenge, bezogen auf die Luftlinie
 MAX_SEG_TRIM_FRACTION = 0.5
 MIN_SEG_POINTS = 2
 
+# Die Bruchteil-Grenze allein hat ein Loch, das erst ein LANGER Abschnitt aufdeckt: bei seg0 des
+# Felsenwanderwegs Rodalben gewann eine Loesung, die 1362m von "Felsenweg Sued" wegschnitt, um eine 379m-
+# Luecke zu schliessen -- 26 % eines 5273m-Abschnitts und Faktor 3,6 der Luecke, beide Grenzen also
+# eingehalten. 1362m Trail sind trotzdem indiskutabel. Die groesste je vom Nutzer bestaetigte Kappung ist
+# 235m, deshalb liegt die absolute Grenze bei 300m -- und zwar in BEIDEN Durchgaengen: der gelockerte lockert
+# den Bruchteil (fuer kurze Abschnitte), nicht die Erlaubnis, einen Kilometer Trail zu loeschen.
+MAX_TRIM_ABS_M = 300.0
+
 # Fall 0, Ueberlappung (Nutzer, 2026-08-20, bei Kurztour 6 Landstuhl (Ost) gefunden): zwei aufeinander
 # folgende Abschnitte koennen sich schon in der ORIGINALTOUR ueberlappen -- "Landstuhl Trail 2" endet 82m
 # innerhalb von "Pavillonplatz Trail", beide durchlaufen dasselbe Stueck in derselben Richtung. Die Tour
@@ -98,6 +106,11 @@ OFF_TOL_M = 0.5
 # an dieser Stelle richtig ist.
 RELAX_BRIDGE_FACTOR = 7.0
 RELAX_SEG_TRIM_FRACTION = 0.65
+# Doppelt fahren ist ein Mangel, eine offene Luecke ist schlimmer -- sie fuehrt den Fahrer an eine falsche
+# Stelle, und genau darueber hat der Nutzer sich am deutlichsten beschwert. Bei seg5 der Kurztour 3 Schopp ist
+# die einzige Loesung eine, die 89,5m doppelt faehrt; streng verworfen bliebe die Luecke offen. Der zweite
+# Durchgang darf sie also nehmen, wird aber als "gelockert" gemeldet.
+RELAX_DOUBLE_M = 120.0
 
 # Oberhalb davon ist ein Uebergang keine Luecke mehr, die dieses Verfahren behandelt. Gefunden 2026-08-20 an
 # den zwei Fernwegen des Pfaelzerwalds: "Ost-West-Passage" und "Trans Pfaelzerwald" sind PUNKT-ZU-PUNKT, ihr
@@ -107,6 +120,31 @@ RELAX_SEG_TRIM_FRACTION = 0.65
 # Vorkommenden und trifft nur den Unsinn. So ein Uebergang wird gemeldet, nicht stillschweigend uebergangen:
 # er kann auch bedeuten, dass die Tour zwei getrennte Teile hat, und das gehoert angesehen.
 MAX_GAP_M = 1500.0
+
+# Eine Bruecke, die auf der LINIE eines der beiden Abschnitte entlanglaeuft, laesst dieses Stueck zweimal
+# fahren -- hin als Verbinder, zurueck als Trail. Das Mass weglos ist dafuer blind (alles liegt ja auf Wegen)
+# und die Laenge auch (die Bruecke ist kaum laenger als die Luftlinie). Gefunden 2026-08-20 vom Nutzer auf
+# der Karte, an drei Stellen der Ost-West-Passage gleichzeitig: dort lief die Bruecke zu 100 % auf der Linie
+# des Abschnitts, zu dem sie fuehrt, also 87m, 73m und 85m doppelt. Seine Anweisung war jedes Mal dieselbe:
+# "Da haette man doch nur den Pfad weiter gehen muessen, bis man auf den Brunnenwanderweg trifft. Der wird
+# dann wieder etwas abgeschnitten." Das ist ein MANGEL, nicht nur ein Nachteil, deshalb verwirft er den
+# Kandidaten und rangiert vor der Fallnummer: die Fallnummer sagt, wie gut die Zuordnung belegt ist, und
+# nuetzt nichts, wenn die Route Unsinn faehrt. Die Toleranz ist grosszuegig, weil die ersten und letzten
+# Meter einer Bruecke zwangslaeufig an den beiden Abschnitten liegen.
+# Die Schwelle ist an den 71 bisher angewendeten Loesungen kalibriert, nicht geraten: 54 von ihnen liegen
+# unter 10m, zehn zwischen 10 und 20, und dann bricht die Verteilung ab -- der hoechste Wert unter den vom
+# Nutzer beanstandeten liegen bei 106,1m, 80m und 73,1m, die hoechste UNbeanstandete bei 51,2m -- 60m trennt
+# die beiden Gruppen also exakt, und die Grenze steht nicht auf einer runden Zahl, weil sie an echten Werten
+# haengt. Zwei Fehlversuche davor: 25m griff viel zu weit (Landstuhl (Ost) verlor drei Luecken ganz und sechs
+# Abschnitte wurden gekappt), 50m verwarf noch die 51,2m-Loesung an einer Stelle, die niemand beanstandet hat.
+#
+# In der Sortierung steht das Mass HINTER der Fallnummer, aus demselben Grund wie die Kappung: vor die
+# Fallnummer gestellt verschob es ein Dutzend Stellen, die niemand beanstandet hatte. Dahinter entscheidet es
+# nur noch zwischen Kandidaten desselben Falls -- und dort muss es entscheiden: bei seg15 der Kurztour 6
+# standen zwei Fall-2-Loesungen, 80m Bruecke ohne Kappung mit 38m doppelt gegen 37m Bruecke mit 64m Kappung
+# und 18m doppelt. Nach Laenge allein gewinnt die erste; der Nutzer hat fuer diese Stelle ausdruecklich das
+# Kappen verlangt ("Da muss man halt auch den Trail kuerzen").
+MAX_DOUBLE_M = 60.0
 
 OVERLAP_M = 20.0          # so nah muss ein Punkt an der Linie der anderen Seite liegen, um als "darauf" zu gelten
 MIN_OVERLAP_M = 25.0      # kuerzere Ueberlappungen sind Endpunkt-Rauschen, kein doppelt gefahrenes Stueck
@@ -136,7 +174,8 @@ PROJ_NO_BRANCH_M = 25.0    # am Anschlusspunkt darf kein anderer Weg so nah abzw
 # gefaehrlichste Variante, weil der Ablationslauf dann "kein Unterschied" meldet und man das glaubt.
 for _k in ("ON_WAY_M", "MEET_M", "MAX_TRIM_FACTOR", "MAX_BRIDGE_FACTOR", "MAX_SEG_TRIM_FRACTION",
            "MIN_SEG_POINTS", "OFF_TOL_M", "OVERLAP_M", "MIN_OVERLAP_M", "PROJ_MAX_MEAN_M",
-           "RELAX_BRIDGE_FACTOR", "RELAX_SEG_TRIM_FRACTION", "MAX_GAP_M",
+           "RELAX_BRIDGE_FACTOR", "RELAX_SEG_TRIM_FRACTION", "MAX_GAP_M", "MAX_DOUBLE_M",
+           "MAX_TRIM_ABS_M", "RELAX_DOUBLE_M",
            "PROJ_MIN_RATIO", "PROJ_MIN_SECOND_M", "PROJ_NO_BRANCH_M", "MERGE_ONLY", "CASE1_FIRST_ONLY"):
     if os.environ.get("NTC_" + _k) is not None:
         globals()[_k] = float(os.environ["NTC_" + _k])
@@ -287,6 +326,7 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
     lim_trim = float("inf") if relax else MAX_TRIM_FACTOR
     lim_bridge = RELAX_BRIDGE_FACTOR if relax else MAX_BRIDGE_FACTOR
     lim_seg = RELAX_SEG_TRIM_FRACTION if relax else MAX_SEG_TRIM_FRACTION
+    lim_dbl = RELAX_DOUBLE_M if relax else MAX_DOUBLE_M
     a, b = A[-1], B[0]
     W = fetch(a, b)
     idx = C.WayIndex(W)
@@ -312,6 +352,20 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
         """Der Querversatz an den beiden Anschluessen -- Trail-Aufzeichnung gegen OSM-Weg."""
         return C.off_way_metres(bridge, idx) - off_way_core(bridge)
 
+    def double_ride(bridge, newA, newB):
+        """Meter der Bruecke, die auf der Linie eines der beiden Abschnitte liegen -- also doppelt gefahren.
+
+        Erste und letzte Kante bleiben aussen vor: die beruehren die Endpunkte zwangslaeufig.
+        """
+        if len(bridge) < 4:
+            return 0.0
+        tot = 0.0
+        for k in range(1, len(bridge) - 2):
+            mid = [(bridge[k][0] + bridge[k + 1][0]) / 2.0, (bridge[k][1] + bridge[k + 1][1]) / 2.0]
+            if min(point_to_line(mid, newA)[0], point_to_line(mid, newB)[0]) <= OVERLAP_M:
+                tot += haversine_m(bridge[k], bridge[k + 1])
+        return tot
+
     def score(name, bridge, newA, newB, extra):
         # Die Kappung wird als LAENGENDIFFERENZ gerechnet, nicht ueber Punktzahlen. Fall 0 setzt einen
         # projizierten Punkt an die Stelle des weggeschnittenen Anfangs, die Punktzahl bleibt also gleich --
@@ -326,7 +380,7 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
             if cut <= 0.5:
                 continue
             trimmed += cut
-            if len(new) < MIN_SEG_POINTS or cut > lim_seg * full:
+            if len(new) < MIN_SEG_POINTS or cut > lim_seg * full or cut > MAX_TRIM_ABS_M:
                 seg_over.append("kappt %.0fm von %.0fm des Segments %s" % (cut, full, side))
         blen = C.line_len_m(bridge)
         # Der Ablehnungsgrund wird HIER bestimmt, nicht erst am Ende. Er stand vorher zweimal im Code --
@@ -334,13 +388,16 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
         # beide liefen auseinander: bei seg8 der Kurztour 6 galt der einzige Kandidat als brauchbar
         # (Kappung 242m < 4x133m Luecke), also lief die Kettensuche nicht an, und danach verwarf ihn die
         # Segment-Grenze doch. Ergebnis: Luecke offen, obwohl Fall 5 sie ueber Pfad + Forstweg schliesst.
+        dbl = double_ride(bridge, newA, newB)
         reject = list(seg_over)
+        if dbl > lim_dbl:
+            reject.append("faehrt %.0fm doppelt" % dbl)
         if trimmed > lim_trim * max(beeline, 1.0):
             reject.append("kappt %.0fm bei %.0fm Luecke" % (trimmed, beeline))
         if blen > lim_bridge * max(beeline, 1.0):
             reject.append("Bruecke %.0fm bei %.0fm Luecke" % (blen, beeline))
         out.append({"name": name, "bridge": bridge, "newA": newA, "newB": newB,
-                    "reject": "; ".join(reject), "len": blen,
+                    "reject": "; ".join(reject), "len": blen, "dbl": dbl,
                     # weglos = was INNEN abseits der Wege laeuft, plus der Teil des Anschluss-Versatzes, der
                     # ueber die GPS-Ungenauigkeit hinausgeht. 13m Versatz sind Rauschen und zaehlen nicht;
                     # die 21,9m querab am Hilschberghaus sind ein echtes Gelaendestueck und zaehlen -- genau
@@ -411,25 +468,46 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
             # erreicht. Jeder Kandidat wird bewertet, die Rangfolge entscheidet.
 
     # --- Fall 2: Weg unter einem Endpunkt trifft die LINIE der anderen Seite -> dort kappen
+    # Der Treffer ist der ERSTE Punkt, den man vom Endpunkt aus auf dem Weg erreicht -- nicht der naechste.
+    # Das ist die Anweisung des Nutzers woertlich ("geh die Linie zurueck, du wirst den Trail schneiden, DAS
+    # ist der neue Endpunkt"), und der Unterschied ist gross: `min()` ueber alle Stuetzpunkte nahm bei seg9
+    # der Ost-West-Passage einen Punkt 197m in den Brunnenwanderweg hinein, weil der Weg lange neben ihm
+    # herlaeuft und dort am dichtesten ist. Diese 197m von 245m trafen die Segment-Grenze, der Kandidat fiel
+    # weg -- und uebrig blieb eine Fall-1-Bruecke, die 90m auf der Linie des Brunnenwanderwegs entlanglaeuft
+    # und ihn danach von vorne faehrt: 87m doppelt. Derselbe Fehler an drei Stellen, alle vom Nutzer auf der
+    # Karte gefunden ("Da haette man doch nur den Pfad weiter gehen muessen, bis man auf den Brunnenwanderweg
+    # trifft. Der wird dann wieder etwas abgeschnitten").
+    # Ausserdem treten ALLE Wege unter dem Endpunkt an, in BEIDE Laufrichtungen, statt nur der, der der
+    # anderen Linie irgendwo am naechsten kommt -- "am naechsten" sagt nichts darueber, wo man sie zuerst
+    # trifft, und die Rangfolge kann ohnehin nur zwischen Kandidaten waehlen, die es gibt.
     for anchor_is_b in (True, False):
         anchor, other = (b, A) if anchor_is_b else (a, B)
-        cands = [m for m in M if point_to_line(anchor, m["geom"])[0] <= ON_WAY_M]
-        if not cands:
-            continue
-        m = min(cands, key=lambda m: min(point_to_line(q, other)[0] for q in m["geom"]))
-        g = [list(q) for q in m["geom"]]
-        k, dmeet = min(((k, point_to_line(q, other)[0]) for k, q in enumerate(g)), key=lambda x: x[1])
-        if dmeet > MEET_M:
-            continue
-        cut = point_to_line(g[k], other)[1]
-        if anchor_is_b:
-            newA, newB = A[:cut + 1], B
-        else:
-            newA, newB = A, B[cut:]
-        mid, _x, _y = C.slice_way_between(g, newA[-1], newB[0])
-        score("2_Weg-folgen-und-kappen(%s)" % ("A" if anchor_is_b else "B"),
-              _clean([newA[-1]] + mid + [newB[0]]), newA, newB,
-              "highway=%s, Treffer %.1fm" % (m["tags"].get("highway"), dmeet))
+        for m in [m for m in M if point_to_line(anchor, m["geom"])[0] <= ON_WAY_M]:
+            g = [list(q) for q in m["geom"]]
+            i0 = C.project_onto_way(g, anchor)[0]
+            for step, label in ((1, "vorwaerts"), (-1, "rueckwaerts")):
+                k = None
+                # NICHT `idx` nennen: so hiess der WayIndex dieser Funktion, und die Schleife hat ihn
+                # ueberschrieben -- der Fehler kam dann erst in off_way_metres heraus.
+                pos = i0 + (1 if step > 0 else 0)
+                while 0 <= pos < len(g):
+                    if point_to_line(g[pos], other)[0] <= MEET_M:
+                        k = pos
+                        break
+                    pos += step
+                if k is None:
+                    continue
+                dmeet, cut = point_to_line(g[k], other)
+                if anchor_is_b:
+                    newA, newB = A[:cut + 1], B
+                else:
+                    newA, newB = A, B[cut:]
+                if len(newA) < MIN_SEG_POINTS or len(newB) < MIN_SEG_POINTS:
+                    continue
+                mid, _x, _y = C.slice_way_between(g, newA[-1], newB[0])
+                score("2_Weg-folgen-und-kappen(%s)" % ("A" if anchor_is_b else "B"),
+                      _clean([newA[-1]] + mid + [newB[0]]), newA, newB,
+                      "highway=%s %s, erster Treffer %.1fm" % (m["tags"].get("highway"), label, dmeet))
 
     # --- Fall 3: zwei verschiedene Wege -> echter Schnittpunkt
     ma = min(M, key=lambda m: point_to_line(a, m["geom"])[0])
@@ -527,7 +605,7 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
     #     Schluessel entschied allein die Bruecke -- 44m kuerzer, dafuer 1033m echter Trail weg.
     # Danach `trim` und erst zuletzt `len`: bei gleicher Summe ist die Loesung besser, die mehr reale
     # Trail-Geometrie stehen laesst.
-    out.sort(key=lambda r: (bool(r["reject"]), round(r["off"]), r["name"][0],
+    out.sort(key=lambda r: (bool(r["reject"]), round(r["off"]), r["name"][0], round(r["dbl"] / 10.0),
                             round(r["len"] + r["trim"]), r["trim"], r["len"]))
     return out
 
@@ -570,8 +648,8 @@ def close_gaps(s, gaps, names=None, write=False, report=None):
         else:
             if report:
                 for r in res:
-                    report("    %-28s Bruecke %4.0fm | weglos %3.0fm | kappt %4.0fm | %s%s"
-                           % (r["name"], r["len"], r["off"], r["trim"], r["extra"],
+                    report("    %-28s Bruecke %4.0fm | weglos %3.0fm | doppelt %4.0fm | kappt %4.0fm | %s%s"
+                           % (r["name"], r["len"], r["off"], r["dbl"], r["trim"], r["extra"],
                               ("   VERWORFEN: " + r["reject"]) if r["reject"] else ""))
             best = res[0]
             if best["off"] > OFF_TOL_M:

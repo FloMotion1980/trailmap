@@ -22,6 +22,22 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Neues Mangelkriterium: eine Bruecke darf kein Stueck doppelt fahren lassen.** Der Nutzer meldete drei
+  Stellen der Ost-West-Passage, an denen die Tour 87m, 73m und 85m hin und zurueck fuhr -- die Bruecke lief zu
+  100 % auf der Linie des Abschnitts, zu dem sie fuehrt. `weglos` ist dafuer blind (alles liegt auf Wegen), die
+  Laenge auch (die Bruecke war kaum laenger als die Luftlinie). Der eigentliche Fehler sass in Fall 2: er nahm
+  den Weg-Stuetzpunkt, der der anderen Linie am NAECHSTEN liegt, statt den ERSTEN, den man vom Endpunkt aus
+  erreicht -- woertlich das Gegenteil der Anweisung des Nutzers. Bei seg9 setzte das den Schnitt 197m in den
+  Brunnenwanderweg hinein, was die Segment-Grenze traf; mit "erster Treffer" wird daraus eine 11m-Bruecke mit
+  83m Kappung. Das neue Mass `double_ride` ist an den 71 bisher angewendeten Loesungen kalibriert (54 unter
+  10m, hoechste unbeanstandete 51,2m, die drei beanstandeten 73/80/106m), Schwelle 60m; es steht in der
+  Rangfolge HINTER der Fallnummer, weil es davor ein Dutzend unbeanstandeter Stellen verschob. Zwei Loecher
+  kamen dabei heraus: eine absolute Kappungsgrenze fehlte (eine Loesung schnitt 1362m eines 5273m-Abschnitts
+  weg, beide relativen Grenzen eingehalten), und eine offene Luecke ist schlimmer als ein doppelt gefahrenes
+  Stueck, weshalb der zweite Durchgang eine hoehere Doppelt-Toleranz hat. Alle 15 Touren neu gebaut, keine
+  offene innere Luecke, fuenf Uebergaenge brauchten den zweiten Durchgang. Der Regressionstest deckt jetzt
+  fuenf Touren (20 Faelle / 75 Pruefungen) -- zwei kamen dazu, jede fuer genau eine Schwelle, die sonst
+  ungedeckt blieb.
 - **Drei der vier offenen Wahrzeichen-Touren geschlossen: „Felsenwanderweg Rodalben" (16 Luecken, 44,29 km),
   „Ost-West-Passage" (60, 78,32 km) und „Trans Pfaelzerwald" (58, 91,24 km).** Damit haben 17 Pfaelzerwald-
   Trailrunden keine einzige offene innere Luecke mehr. Die vierte, „Dahner Felsenpfad", ist keine Lueckenarbeit:
