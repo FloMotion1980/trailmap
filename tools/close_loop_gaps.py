@@ -223,12 +223,51 @@ def pad_bbox(a, b, pad_m):
     return "%.6f,%.6f,%.6f,%.6f" % (lat_min - lat_pad, lon_min - lon_pad, lat_max + lat_pad, lon_max + lon_pad)
 
 
-def fetch_routing_ways(bbox):
-    """Every routable way in the bbox, WITH its tags -- the tags are what the rideability check and the
-    way-type preference below run on, so dropping them (as the first version of this script did) makes both
-    impossible. Returns [{"geom": [(lat,lon),...], "tags": {...}, "id": osm_id}, ...].
+def _bbox_nums(bbox):
+    return [float(x) for x in bbox.split(",")]
+
+
+def _overlaps(a, b):
+    """Two bboxes as (latMin, lonMin, latMax, lonMax) -- Overpass' own way-selection semantics."""
+    return not (a[2] < b[0] or b[2] < a[0] or a[3] < b[1] or b[3] < a[1])
+
+
+#: One prefetched superset of routable ways, as (bbox_nums, ways). Filled by prefetch_routing_ways().
+_WAY_CACHE = []
+
+
+def prefetch_routing_ways(bboxes, verbose=False):
+    """Fetch the routing ways for ALL of a loop's gaps in one Overpass query.
+
+    Why: `close_gap()` used to call `fetch_routing_ways()` itself, i.e. **one Overpass query per gap**.
+    With four Schwarzwald Tours and ~32 gaps between them that is 32 queries, each waiting in Overpass'
+    own queue, and the run did not finish in ten minutes -- the user spotted the cause from the runtime
+    alone (2026-08-20: "Machen wir wieder pro Lücke eine OSM Abfrage anstatt sie am Anfang einmal zu
+    machen?"). One query over the union of the gap bboxes is a strict superset of every per-gap bbox, so
+    each gap still searches exactly the ways it did before; `fetch_routing_ways()` now filters the cached
+    set by the same bbox-intersection rule Overpass applies, instead of asking again.
+
+    **`nearby_trail_connector.prefetch_gaps()` already did this, and does it better**: one query carrying
+    one small box PER GAP rather than a single box around all of them (its own measurement: 46 km2 against
+    534 km2 for the Trans Pfaelzerwald), plus a disk cache. It was written for the same reason and this
+    one was written without noticing it. If either is touched again, unify them -- and note the import
+    direction, since that module already imports this one.
     """
-    q = '[out:json][timeout:60];way["highway"~"^(%s)$"](%s);out tags geom;' % (HIGHWAY_WHITELIST, bbox)
+    if not bboxes:
+        return
+    nums = [_bbox_nums(b) for b in bboxes]
+    union = (min(n[0] for n in nums), min(n[1] for n in nums),
+             max(n[2] for n in nums), max(n[3] for n in nums))
+    bbox = "%.6f,%.6f,%.6f,%.6f" % union
+    ways = _fetch_routing_ways_overpass(bbox)
+    _WAY_CACHE.append((union, ways))
+    if verbose:
+        print("  Overpass: eine Abfrage über %s -> %d Wege für %d Lücken"
+              % (bbox, len(ways), len(bboxes)))
+
+
+def _fetch_routing_ways_overpass(bbox):
+    q = '[out:json][timeout:180];way["highway"~"^(%s)$"](%s);out tags geom;' % (HIGHWAY_WHITELIST, bbox)
     j = overpass(q)
     ways = []
     for e in j.get("elements", []):
@@ -238,6 +277,28 @@ def fetch_routing_ways(bbox):
         if len(g) >= 2:
             ways.append({"geom": g, "tags": e.get("tags", {}) or {}, "id": e.get("id")})
     return ways
+
+
+def fetch_routing_ways(bbox):
+    """Every routable way in the bbox, WITH its tags -- the tags are what the rideability check and the
+    way-type preference below run on, so dropping them (as the first version of this script did) makes both
+    impossible. Returns [{"geom": [(lat,lon),...], "tags": {...}, "id": osm_id}, ...].
+
+    Served from the prefetched superset when one covers this bbox (see prefetch_routing_ways); only a bbox
+    nothing prefetched still goes to Overpass.
+    """
+    want = _bbox_nums(bbox)
+    for union, ways in _WAY_CACHE:
+        if (want[0] >= union[0] and want[1] >= union[1]
+                and want[2] <= union[2] and want[3] <= union[3]):
+            out = []
+            for w in ways:
+                la = [p[0] for p in w["geom"]]
+                lo = [p[1] for p in w["geom"]]
+                if _overlaps((min(la), min(lo), max(la), max(lo)), want):
+                    out.append(w)
+            return out
+    return _fetch_routing_ways_overpass(bbox)
 
 
 #: Values that, on their own key, mean "a bicycle may not ride here". `motor_vehicle` is deliberately absent:
@@ -719,6 +780,12 @@ def process_loop(region_data, loop_id, threshold_m, verbose=False, cache=None, c
     gaps = boundary_gaps(segs, threshold_m)
     if not gaps:
         return None, []
+
+    # ONE Overpass query for all of this loop's gaps, before touching any of them -- see
+    # prefetch_routing_ways() for why (it used to be one query per gap, and that is what made a run over
+    # four Tours with 32 gaps not finish).
+    prefetch_routing_ways([pad_bbox(segs[i]["coords"][-1], segs[j]["coords"][0], BBOX_PAD_M)
+                           for i, j, _ in gaps], verbose=verbose)
 
     report = []
     # Process from the END backwards so earlier indices stay valid as segments get inserted.

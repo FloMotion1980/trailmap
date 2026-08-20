@@ -12,7 +12,8 @@
 //          updateUserLocation, //          recoverFromRotationCrash, rotationPadding, syncRideArrows, buildRideArrowLayer, rideArrowLayer,
 //          RIDE_ARROW_SPEC, RIDE_ARROW_FILL, RIDE_ARROW_EDGE, ARROW_SPEC, buildChevron,
 //          buildDirectionArrowShapes, highlightSelectedTrail, updateStartDotVisibility,
-//          eachVectorRenderer, setRendererPadding, BUILDER_PANE, LIFT_BAND_PANE
+//          eachVectorRenderer, setRendererPadding, BUILDER_PANE, LIFT_BAND_PANE,
+//          buildRideArrowShapes, RIDE_ARROW_SPACING_PX, RIDE_ARROW_MAX, rideArrowCumDist, rideArrowCumCache
 // @needs   region=bikekingdom, builder=off
 //
 // Added 2026-08-16, once the RIDE infobox redesign settled (per the user's own phone-tested refinements the
@@ -249,8 +250,13 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
       T.ok("it is a filled polygon with a dark edge, not a stroke-only chevron",
            tri[0].getAttribute("stroke") === "#2a2a2a" && (tri[0].getAttribute("d") || "").indexOf("z") > -1,
            tri[0].getAttribute("stroke") + " / " + (tri[0].getAttribute("d") || "").slice(-2), "#2a2a2a / closed");
+      // Batching, not quantity: every arrow is a sub-path of the SAME node. How MANY there are is a
+      // property of the grid and the current view (see the grid case below) -- since RIDE started deriving
+      // them from the visible stretch, one is a perfectly correct answer for a short trail, and this check
+      // used to demand "more than one" from the old whole-trail sampling and failed on a correct app.
       const triShapes = ((tri[0].getAttribute("d") || "").match(/M/g) || []).length;
-      T.ok("it carries more than one arrow", triShapes > 1, triShapes, "> 1");
+      T.ok("every arrow is a sub-path of that one node", triShapes >= 1 && tri.length === 1,
+           triShapes + " arrows in " + tri.length + " node(s)", ">= 1 arrow in exactly 1 node");
       // The regression this case exists for as much as the feature: highlightSelectedTrail brings the
       // selected trail's own line to the front AFTER showTrailInfo has built the halo, so without a
       // counter-call the 3.5px line paints a stripe straight through every 16px triangle. Measured at DOM
@@ -294,6 +300,70 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
   } finally {
     L.Map.prototype.flyTo = realFlyTo2;
     if (!arrowsWereOn) await TM.ui.setSwitch("showDirectionArrowsToggle", false);
+  }
+
+  T.test("the RIDE arrows sit on a grid anchored to the TRAIL, spaced by zoom, only where the line is visible");
+  // The normal arrows sample the whole trail every 300 m and cap at 40 -- one every 2.25 km on a 90 km tour,
+  // so a screen showing 300 m of it usually shows none (user, 2026-08-20). RIDE derives them from the visible
+  // stretch instead. The property that matters is WHICH thing the zoom controls: the SPACING, never the
+  // position. Arrows live on a grid anchored at km 0, so each one keeps its place on the ground and glides
+  // past like a signpost; deriving the position from the viewport ("one in the middle of what is visible")
+  // gives it no fixed home and makes it JUMP on every pan. That is what the pan check below pins, and it is
+  // the only check here that can tell the two designs apart -- counts alone cannot.
+  if (!m2) {
+    T.skip("no map instance captured earlier in this suite");
+  } else {
+    const realFlyTo3 = L.Map.prototype.flyTo;
+    L.Map.prototype.flyTo = function (c, z) { return this.setView(c, z, { animate: false }); };
+    try {
+      exitRideMode();
+      await TM.wait(400);
+      await TM.ui.setSwitch("showDirectionArrowsToggle", true);
+      enterRideMode();
+      await TM.wait(500);
+      TM.ui.trailCards()[0].click();
+      await TM.until(() => TM.$("#infoPanel").classList.contains("visible"), 3000);
+      await TM.wait(700);
+      // One polygon node; each arrow is a sub-path of it, so the count is the number of "M" commands.
+      const arrowNode = () => TM.map.overlay().filter((p) => p.getAttribute("fill") === "#ffffff")[0] || null;
+      const subPaths = () => {
+        const n = arrowNode();
+        if (!n) return [];
+        return (n.getAttribute("d") || "").split("M").filter(Boolean).map((x) => "M" + x.trim());
+      };
+      const counts = {};
+      for (const z of [16, 17, 18]) { m2.setZoom(z, { animate: false }); await TM.wait(650); counts[z] = subPaths().length; }
+      const seen = Object.values(counts);
+      T.ok("a handful at every zoom, never the whole trail's worth", seen.every((n) => n <= 12),
+           JSON.stringify(counts), "each <= 12");
+      T.ok("and at least one zoom actually shows some", seen.some((n) => n > 0), JSON.stringify(counts), "some > 0");
+
+      m2.setZoom(16, { animate: false });
+      await TM.wait(700);
+      const before = subPaths();
+      if (!before.length) {
+        T.skip("the focused trail is not under the map centre at this zoom");
+      } else {
+        // A pan at CONSTANT zoom does not change layer-pixel coordinates -- Leaflet translates the pane
+        // instead -- so an arrow that keeps its place on the ground must come back byte-identical. A
+        // viewport-derived position would be recomputed and differ.
+        const c = m2.getCenter();
+        m2.panTo([c.lat + 0.0016, c.lng + 0.0016], { animate: false });
+        await TM.wait(800);
+        const after = subPaths();
+        const survived = before.filter((d) => after.indexOf(d) > -1);
+        T.ok("panning leaves the surviving arrows exactly where they were",
+             survived.length > 0 || after.length === 0,
+             before.length + " before, " + after.length + " after, " + survived.length + " unchanged",
+             "at least one carried over unchanged");
+        T.ok("nothing was silently re-placed", before.length === 0 || survived.length > 0,
+             survived.length, "> 0 of " + before.length);
+      }
+      exitRideMode();
+      await TM.wait(400);
+    } finally {
+      L.Map.prototype.flyTo = realFlyTo3;
+    }
   }
 
   T.test("RIDE does not allocate a full-size renderer for the empty builder pane");

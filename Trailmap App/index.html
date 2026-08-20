@@ -2300,6 +2300,13 @@ L.Renderer.prototype._update = function(){
 };
 
 map.on("zoomend", updateStartDotVisibility);
+// The focused trail's RIDE arrows sit on a grid anchored to the trail, and PANNING changes which of its
+// points are on screen -- so unlike every other arrow in the app they have to be re-derived on plain moves
+// too, not only when the zoom changes their spacing. syncRideArrows() bails out immediately unless RIDE is on
+// with a focused trail, so on any normal map this listener costs one boolean per moveend. It is also what
+// makes the arrows follow a ride at all: the follow loop pans on every GPS fix, and endBearingSweep() fires
+// moveend once a rotation settles.
+map.on("moveend", syncRideArrows);
 
 // Bottom right, the same corner Leaflet's own attribution already occupies -- Leaflet stacks multiple
 // controls sharing a corner automatically, so this needs no positioning of our own and sits correctly on
@@ -3566,6 +3573,7 @@ function clearRideFocusHalo(){
   rideHaloOriginalConnectorStyles = [];
   rideHaloTrailId = null;
   if (rideArrowLayer) { map.removeLayer(rideArrowLayer); rideArrowLayer = null; }
+  rideArrowCumCache = { trailId: null, cumDist: null };
   // Hand the normal chevrons back to whoever the current filters/zoom say should have them -- including
   // the trail this halo was just on, whose own layer applyRideFocusHalo took off the map.
   updateStartDotVisibility();
@@ -3577,12 +3585,62 @@ function clearRideFocusHalo(){
 // are one L.polyline holding every chevron as a sub-path: one DOM node per trail, not one per arrow.
 // (`rideArrowLayer` itself is declared up with the rest of the halo state, see there.)
 
-function buildRideArrowLayer(coords, reversed, zoom){
-  const shapes = buildDirectionArrowShapes(coords, reversed, zoom, RIDE_ARROW_SPEC);
-  if (!shapes.length) return null;
-  return L.polygon(shapes, { color: RIDE_ARROW_EDGE, weight: RIDE_ARROW_EDGE_WEIGHT,
-    fillColor: RIDE_ARROW_FILL, fillOpacity: 1, opacity: 1,
-    interactive: false, bubblingMouseEvents: false });
+// How far apart the focused trail's arrows sit -- expressed in SCREEN pixels of line length, not in metres of
+// trail (2026-08-20, the user: "so dass man immer 1-2 auf dem aktuellen Bildschirmausschnitt hat"). The normal
+// arrows sample the WHOLE trail at a fixed 300 m and cap at 40, which on a 90 km tour is one every 2.25 km --
+// so on a screen showing 300 m of it you usually see none at all. That, not the size, is why they read as
+// useless while riding.
+//
+// The zoom-dependent thing is the SPACING, never the position. Arrows sit on a grid anchored at km 0 of the
+// trail, so a given arrow always has the same home on the ground and glides past like a signpost; only which
+// grid points fall in view changes as the map pans. Deriving the position from the viewport instead ("put one
+// in the middle of what is visible") was the first idea and is wrong: it gives an arrow no fixed place, so it
+// is recomputed and JUMPS on every pan rather than gliding.
+const RIDE_ARROW_SPACING_PX = 400;
+// Safety net only -- the grid is already bounded to the visible stretch below, so this can only be reached by
+// a trail that folds back on itself many times inside one screen.
+const RIDE_ARROW_MAX = 12;
+// cumulativeDistanceKm is O(points) with a haversine each, and this runs on every moveend while following, so
+// it is cached per trail the same way the elevation-chart hover caches its own (see getEleHoverData).
+let rideArrowCumCache = { trailId: null, cumDist: null };
+function rideArrowCumDist(trailId, coords){
+  if (rideArrowCumCache.trailId !== trailId) {
+    rideArrowCumCache = { trailId: trailId, cumDist: cumulativeDistanceKm(coords) };
+  }
+  return rideArrowCumCache.cumDist;
+}
+
+function buildRideArrowShapes(trailId, coords, reversed, zoom){
+  const cumDist = rideArrowCumDist(trailId, coords);
+  const totalKm = cumDist[cumDist.length - 1];
+  if (!(totalKm > 0)) return [];
+  const bounds = map.getBounds();   // leaflet-rotate returns the rotated viewport's own hull, see its getBounds
+  if (!bounds || !bounds.isValid()) return [];
+  // One linear pass to find WHICH stretch of the line is on screen at all, so the grid below is walked over
+  // that range instead of over the whole tour -- the difference between a handful of steps and a few thousand
+  // at a close zoom. min/max rather than per-run, because a trail can leave and re-enter the view; the
+  // per-point bounds test in the loop is what keeps the gap between two runs from emitting anything.
+  let minKm = Infinity, maxKm = -Infinity;
+  for (let i = 0; i < coords.length; i++) {
+    if (!bounds.contains(coords[i])) continue;
+    const km = reversed ? totalKm - cumDist[i] : cumDist[i];
+    if (km < minKm) minKm = km;
+    if (km > maxKm) maxKm = km;
+  }
+  if (minKm > maxKm) return [];
+  const stepKm = (RIDE_ARROW_SPACING_PX * metresPerPixel(coords[coords.length >> 1][0], zoom)) / 1000;
+  if (!(stepKm > 0)) return [];
+  const shapes = [];
+  for (let k = Math.ceil(minKm / stepKm); k * stepKm <= maxKm && shapes.length < RIDE_ARROW_MAX; k++) {
+    const targetKm = k * stepKm;
+    if (targetKm <= 0 || targetKm >= totalKm) continue;
+    const pos = latLngAtDistance(coords, cumDist, targetKm, reversed);
+    if (!bounds.contains(pos)) continue;
+    const behind = latLngAtDistance(coords, cumDist, Math.max(0, targetKm - 0.02), reversed);
+    const ahead = latLngAtDistance(coords, cumDist, Math.min(totalKm, targetKm + 0.02), reversed);
+    shapes.push(buildChevron(pos, bearingDeg(behind, ahead), 1, metresPerPixel(pos[0], zoom), RIDE_ARROW_SPEC));
+  }
+  return shapes;
 }
 
 // Whether the focused trail's RIDE arrows should be on the map right now, and at the right size for the
@@ -3598,12 +3656,18 @@ function syncRideArrows(){
   }
   const layer = lineLayers[rideHaloTrailId];
   if (!layer) return;
-  const shapes = buildDirectionArrowShapes(layer.coords, reversedId === rideHaloTrailId, map.getZoom(), RIDE_ARROW_SPEC);
-  if (!shapes.length) return;
+  const shapes = buildRideArrowShapes(rideHaloTrailId, layer.coords, reversedId === rideHaloTrailId, map.getZoom());
+  // No shapes means no part of the line is on screen -- take the layer away rather than leaving the last
+  // set stranded where the trail used to be.
+  if (!shapes.length) {
+    if (rideArrowLayer) { map.removeLayer(rideArrowLayer); rideArrowLayer = null; }
+    return;
+  }
   if (rideArrowLayer) rideArrowLayer.setLatLngs(shapes);
   else {
-    rideArrowLayer = buildRideArrowLayer(layer.coords, reversedId === rideHaloTrailId, map.getZoom());
-    if (rideArrowLayer) rideArrowLayer.addTo(map);
+    rideArrowLayer = L.polygon(shapes, { color: RIDE_ARROW_EDGE, weight: RIDE_ARROW_EDGE_WEIGHT,
+      fillColor: RIDE_ARROW_FILL, fillOpacity: 1, opacity: 1,
+      interactive: false, bubblingMouseEvents: false }).addTo(map);
   }
   // Last in the pane, so neither the orange ring (added with bringToBack) nor the trail's own line (which
   // highlightSelectedTrail brings to the front on every selection, AFTER showTrailInfo has already built

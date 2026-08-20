@@ -786,8 +786,16 @@ def main():
         d["trailSegments"][args.loop] = add_dist_range(line, s)
         d["trailGeo"][args.loop] = line
         ele = ElevationLookup(os.path.join(ROOT, "Material", "elevation_cache.json"))
-        prof, _g, _l = build_profile(line, ele([[q[0], q[1]] for q in line]))
+        prof, gain, loss = build_profile(line, ele([[q[0], q[1]] for q in line]))
         d["elevationProfiles"][args.loop] = prof
+        # The Tour's OWN len/up/down move with the line: a bridge adds metres and a Kappung removes
+        # them. Leaving them alone (as this did until 2026-08-20) leaves the info panel stating the
+        # pre-closure figures -- measured on the Schwarzwald's "Canadian & Borderline", where the written
+        # line was 22,18 km against the 21,35 km still in `lineTrails`.
+        for t in d["lineTrails"]:
+            if t["id"] == args.loop:
+                t["len"] = round(C.line_len_m(line) / 1000.0, 2)
+                t["up"], t["down"] = gain, loss
         write_region(args.region, d["lineTrails"], d["trailGeo"], d["elevationProfiles"],
                      places=d.get("places"), lifts=d.get("lifts"), trail_segments=d["trailSegments"])
         n = len(s)

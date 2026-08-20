@@ -217,6 +217,9 @@ TODTNAU = [
 #: not mapped it, and the Trailforks region carries only the two above. Same call as the four Harz runs
 #: dropped on 2026-08-14 -- do not invent a line for it; add it when a real track turns up.
 NOT_BUILT = [
+    # SETTLED, do not re-open without a new source: the user searched for a GPX too and found none
+    # either (2026-08-20, "Fuer Downhill Flow hab ich auch keine GPX gefunden. Lassen wir halt weg").
+    # Same standing as the four Harz runs dropped on 2026-08-14.
     "Downhill Flow (Bikepark Todtnau) -- 2,6 km / 450 hm, red, no geometry in any source",
     # Not a trail but worth stating with the rest: the park itself stopped. Adventure-Bikepark GmbH,
     # which ran Bikepark Bad Wildbad's six runs and had the Sommerbergbahn carry bikes two days a week,

@@ -22,6 +22,17 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **The Schwarzwald's four Touren have their segment gaps closed**, with `tools/nearby_trail_connector.py`
+  — the user's own confirmed procedure, not `close_loop_gaps.py`'s tier system. All 34 gaps over 30 m
+  solved (31 "ein Weg erreicht beide Seiten", 2 "Weg folgen und kappen", 1 chain of ways), every applied
+  bridge at **weglos 0 m**, i.e. entirely on OSM ways; what remains is the 10–29 m band that procedure
+  leaves alone as GPS noise. Two fixes fell out of it. **`nearby_trail_connector.py` left the Tour's own
+  `len`/`up`/`down` untouched** while inserting bridges into its line, so the info panel kept stating the
+  pre-closure figures (Canadian & Borderline wrote 22,18 km and claimed 21,35); it now updates them from
+  the written line. And **`close_loop_gaps.py` was making one Overpass query per gap** — the user spotted
+  it from the runtime alone — so it now prefetches once per loop; note that
+  `nearby_trail_connector.prefetch_gaps()` had had a better version of this all along (one query, one
+  small box per gap), which is exactly what should have been reused instead.
 - **The RIDE zoom restriction is gone again, at the user's request**, hours after it went in: the crash it was
   meant to stop came back with the map zoomed far IN, so the guard was treating one route to the cliff rather
   than the cliff. With 40 MB of the real cause removed (the empty builder pane), the user would rather have

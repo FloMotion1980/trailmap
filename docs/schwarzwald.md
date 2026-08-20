@@ -231,14 +231,24 @@ combination of the region's own trails:
 
 | Tour | km | named | segments |
 |---|---|---|---|
-| Canadian & Borderline | 21,4 | 55 % | Canadian Uphill 1 → Canadian Trail → Borderline Uphill → Borderline |
-| Hubbelfuchs · Kammweg · Borderline | 40,0 | 79 % | 13 named stretches incl. Hubbelfuchs, Fritzis Ende, Kammweg (5,7 km), Jägerwegle, Borderline |
-| Schlossberg · Nesselplatz · Rosskopf | 29,2 | 35 % | 8 named stretches around the Rosskopf |
-| Freiburger Dreierlei | 35,4 | 46 % | the event route: Borderline, Badish Moon Rising, Canadian |
+| Canadian & Borderline | 22,2 | 55 % | Canadian Uphill 1 → Canadian Trail → Borderline Uphill → Borderline |
+| Hubbelfuchs · Kammweg · Borderline | 40,1 | 79 % | 13 named stretches incl. Hubbelfuchs, Fritzis Ende, Kammweg (5,7 km), Jägerwegle, Borderline |
+| Schlossberg · Nesselplatz · Rosskopf | 29,3 | 35 % | 8 named stretches around the Rosskopf |
+| Freiburger Dreierlei | 35,5 | 46 % | the event route: Borderline, Badish Moon Rising, Canadian |
 | ~~Banden Ride~~ | 37,8 | 59 % | **not built**: its recording jumps 2 593 m in one step — 6,9 % of the Tour, drawn as a straight line across Freiburg. Same call as the three Paganella marathon routes. The other four have no step over 619 m (1,5 %) |
 
 Four things about the method are worth keeping:
 
+- **The boundary gaps are closed, with `tools/nearby_trail_connector.py`** — the user's own confirmed
+  procedure (`docs/nearby-trail-connector.md`), not `close_loop_gaps.py`'s tier system. 34 gaps over 30 m
+  across the four Tours, every one solved: 31 by "ein Weg erreicht beide Seiten", 2 by
+  "Weg folgen und kappen", 1 by a chain of ways — and every applied bridge at **weglos 0 m**, i.e.
+  entirely on OSM ways. What is left is the 10–29 m band the procedure deliberately leaves alone as GPS
+  noise ("Die Sprünge sind zwar unschön, aber unvermeidbar"). Two things this cost, both fixed rather
+  than worked around: the tool **left `len`/`up`/`down` in `lineTrails` untouched** while the line itself
+  grew by its bridges (Canadian & Borderline wrote 22,18 km and kept claiming 21,35), and
+  `close_loop_gaps.py` was doing **one Overpass query per gap**, which the user spotted from the runtime
+  — `nearby_trail_connector` had had a batched prefetch all along.
 - **`fill_connectors`, not `build_segments`.** Both were measured. Snapping each named stretch onto its
   trail's own stored geometry (what the Pfälzerwald rederive does) opened joints of up to **746 m**
   between consecutive segments — each is drawn as its own polyline, so that is a hole in the Tour — and
@@ -282,8 +292,11 @@ Four things about the method are worth keeping:
   purpose-built line OSM has not mapped scores low legitimately.
 - **Three Trailforks trails carry no line on their own page** (`Buhlbachwegle`, `Hof Dicke Downhill`,
   `Ottenbronn Downhill`) and four are under 80 m; both sets are printed by the build and stay out.
-- **Bikepark Todtnau's "Downhill Flow"** still has no geometry in any source checked (operator, OSM,
-  Trailforks). Add it when a real track turns up; do not draw one.
+- ~~**Bikepark Todtnau's "Downhill Flow"**~~ — **closed, not open.** No geometry in any source checked
+  here (operator, OSM, Trailforks) and none found by the user either, who looked for a GPX independently
+  and settled it on 2026-08-20: "Für Downhill Flow hab ich auch keine GPX gefunden. Lassen wir halt
+  weg." Same standing as the four Harz runs dropped on 2026-08-14 — do not re-open without a genuinely
+  new source, and do not draw a line for it.
 - **Difficulty for the swept trails is Trailforks' own rating**, which is the documented fallback and
   correct here — these are community trails without an operator. The exceptions to keep an eye on are
   the ones with a real operator: Todtnau (grades taken from the operator) and Bad Wildbad (operator gone,
