@@ -1,0 +1,655 @@
+{
+  "pw_kurztour_6_landstuhl_ost": {
+    "cases": {
+      "0_Ueberlappung": 1,
+      "1_ein-Weg-beide-Seiten": 15,
+      "2_Weg-folgen-und-kappen": 2,
+      "3_Schnittpunkt": 2,
+      "5_Wegekette": 1
+    },
+    "closed": 21,
+    "gaps": 21,
+    "length_m": 34221,
+    "per_gap": [
+      {
+        "applied": "3_Schnittpunkt",
+        "bridge": 145,
+        "gap": 141.7,
+        "seg": 21,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 22,
+        "gap": 19.3,
+        "seg": 20,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 18,
+        "gap": 13.9,
+        "seg": 19,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 80,
+        "gap": 70.0,
+        "seg": 18,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "2_Weg-folgen-und-kappen(A)",
+        "bridge": 265,
+        "gap": 92.3,
+        "seg": 17,
+        "skipped": null,
+        "trim": 196
+      },
+      {
+        "applied": "3_Schnittpunkt",
+        "bridge": 128,
+        "gap": 74.6,
+        "seg": 16,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 95,
+        "gap": 70.6,
+        "seg": 15,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 94,
+        "gap": 88.0,
+        "seg": 14,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 38,
+        "gap": 36.1,
+        "seg": 13,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 48,
+        "gap": 44.9,
+        "seg": 12,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 80,
+        "gap": 74.5,
+        "seg": 11,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "0_Ueberlappung(B gekappt)",
+        "bridge": 6,
+        "gap": 82.3,
+        "seg": 10,
+        "skipped": null,
+        "trim": 82
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 112,
+        "gap": 107.7,
+        "seg": 9,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "5_Wegekette",
+        "bridge": 480,
+        "gap": 133.4,
+        "seg": 8,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 20,
+        "gap": 19.8,
+        "seg": 6,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 35,
+        "gap": 29.1,
+        "seg": 5,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 39,
+        "gap": 35.6,
+        "seg": 4,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "2_Weg-folgen-und-kappen(B)",
+        "bridge": 163,
+        "gap": 169.8,
+        "seg": 3,
+        "skipped": null,
+        "trim": 23
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 30,
+        "gap": 25.1,
+        "seg": 2,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 51,
+        "gap": 50.1,
+        "seg": 1,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 101,
+        "gap": 100.2,
+        "seg": 0,
+        "skipped": null,
+        "trim": 0
+      }
+    ],
+    "segments": 30,
+    "still_open": [],
+    "trail_m": {
+      "Blocks n Rocks": 223,
+      "Bännjer Sportplatz": 368,
+      "Curvy Up´N´Down": 476,
+      "Landstuhl Ost Trail 2": 172,
+      "Landstuhl Trail 1": 211,
+      "Landstuhl Trail 2": 467,
+      "Landstuhl Trail 3": 424,
+      "Nanstein Castle Trail": 1038,
+      "Pavillonplatz Trail": 600,
+      "Pfälzerwald Gelb-Roter Balken 1": 302,
+      "Steps Heidenfelsen": 1490,
+      "Westpfalz-Wanderweg Schwarzes W (Großer Westpfalz-Wanderweg) 1": 353
+    }
+  },
+  "pw_kurztour_6_landstuhl_west": {
+    "cases": {
+      "1_ein-Weg-beide-Seiten": 11,
+      "2_Weg-folgen-und-kappen": 1
+    },
+    "closed": 12,
+    "gaps": 12,
+    "length_m": 18028,
+    "per_gap": [
+      {
+        "applied": "2_Weg-folgen-und-kappen(B)",
+        "bridge": 0,
+        "gap": 63.4,
+        "seg": 11,
+        "skipped": null,
+        "trim": 66
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 29,
+        "gap": 20.8,
+        "seg": 10,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 88,
+        "gap": 77.0,
+        "seg": 9,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 94,
+        "gap": 84.8,
+        "seg": 8,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 98,
+        "gap": 97.9,
+        "seg": 7,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 65,
+        "gap": 62.9,
+        "seg": 6,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 30,
+        "gap": 29.9,
+        "seg": 5,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 42,
+        "gap": 39.4,
+        "seg": 4,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 98,
+        "gap": 89.7,
+        "seg": 3,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 38,
+        "gap": 37.3,
+        "seg": 2,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 87,
+        "gap": 85.9,
+        "seg": 1,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 16,
+        "gap": 15.5,
+        "seg": 0,
+        "skipped": null,
+        "trim": 0
+      }
+    ],
+    "segments": 12,
+    "still_open": [],
+    "trail_m": {
+      "Landstuhl Trail 6": 289,
+      "Landstuhl Trail 7": 341,
+      "Landstuhl Trail 8": 206,
+      "Melkerei Trail": 684,
+      "Pfälzerwald Gelb-Roter Balken": 199,
+      "Westpfalz-Wanderweg Oranges W (Saarpfalz-Wanderweg)": 248
+    }
+  },
+  "pw_rodalben_felsentrails": {
+    "cases": {
+      "1_ein-Weg-beide-Seiten": 36
+    },
+    "closed": 36,
+    "gaps": 38,
+    "length_m": 41645,
+    "per_gap": [
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 3,
+        "gap": 2.7,
+        "seg": 37,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 7,
+        "gap": 6.6,
+        "seg": 36,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 43,
+        "gap": 27.7,
+        "seg": 35,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": null,
+        "bridge": null,
+        "gap": 22.0,
+        "seg": 34,
+        "skipped": "unverhaeltnismaessig",
+        "trim": null
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 9,
+        "gap": 8.6,
+        "seg": 33,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 49,
+        "gap": 48.8,
+        "seg": 32,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 53,
+        "gap": 45.6,
+        "seg": 31,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 17,
+        "gap": 16.6,
+        "seg": 30,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 27,
+        "gap": 19.1,
+        "seg": 29,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 30,
+        "gap": 29.0,
+        "seg": 28,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 49,
+        "gap": 47.5,
+        "seg": 27,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 11,
+        "gap": 11.5,
+        "seg": 26,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 6,
+        "gap": 4.3,
+        "seg": 25,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 21,
+        "gap": 15.2,
+        "seg": 24,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 10,
+        "gap": 7.5,
+        "seg": 23,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 10,
+        "gap": 10.0,
+        "seg": 22,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 90,
+        "gap": 88.3,
+        "seg": 21,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 18,
+        "gap": 13.8,
+        "seg": 20,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 11,
+        "gap": 10.6,
+        "seg": 19,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 11,
+        "gap": 11.2,
+        "seg": 18,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 11,
+        "gap": 11.4,
+        "seg": 17,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 40,
+        "gap": 40.3,
+        "seg": 16,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 21,
+        "gap": 21.1,
+        "seg": 15,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 12,
+        "gap": 12.0,
+        "seg": 14,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 85,
+        "gap": 84.5,
+        "seg": 13,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 19,
+        "gap": 19.2,
+        "seg": 12,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 29,
+        "gap": 24.3,
+        "seg": 11,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 26,
+        "gap": 24.6,
+        "seg": 10,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 51,
+        "gap": 50.7,
+        "seg": 9,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 64,
+        "gap": 64.5,
+        "seg": 8,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 7,
+        "gap": 6.7,
+        "seg": 7,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 66,
+        "gap": 45.6,
+        "seg": 6,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 27,
+        "gap": 23.6,
+        "seg": 5,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 32,
+        "gap": 22.6,
+        "seg": 4,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 47,
+        "gap": 36.1,
+        "seg": 3,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 16,
+        "gap": 11.9,
+        "seg": 2,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 6,
+        "gap": 5.7,
+        "seg": 1,
+        "skipped": null,
+        "trim": 0
+      },
+      {
+        "applied": null,
+        "bridge": null,
+        "gap": 34.9,
+        "seg": 0,
+        "skipped": "unverhaeltnismaessig",
+        "trim": null
+      }
+    ],
+    "segments": 38,
+    "still_open": [
+      22.0,
+      34.9
+    ],
+    "trail_m": {
+      "Clauser Haweweg 1": 192,
+      "Clauser Haweweg 2": 196,
+      "Clauser Haweweg 3": 611,
+      "Clauser Haweweg 4": 499,
+      "Felsenweg Nord": 980,
+      "Felsenweg Süd": 150,
+      "Gipfelstürmer": 816,
+      "Rodalben Felsentrails Trail 1": 371,
+      "Rodalben Felsentrails Trail 2": 243,
+      "Rodalben Trail 2": 391,
+      "Rodalben Trail 3": 348,
+      "Rodalben Trail 6": 267,
+      "Rodalber Felsenwanderweg 15": 457,
+      "Rodalber Felsenwanderweg 16": 397,
+      "Wandern in Clausen C10": 230,
+      "Wandern in Clausen C9 1": 350,
+      "Wandern in Clausen C9 2": 650
+    }
+  }
+}

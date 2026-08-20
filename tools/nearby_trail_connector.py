@@ -78,17 +78,6 @@ OFF_TOL_M = 0.5
 OVERLAP_M = 20.0          # so nah muss ein Punkt an der Linie der anderen Seite liegen, um als "darauf" zu gelten
 MIN_OVERLAP_M = 25.0      # kuerzere Ueberlappungen sind Endpunkt-Rauschen, kein doppelt gefahrenes Stueck
 
-# Jede der Schwellen laesst sich per Umgebungsvariable ueberschreiben. Das ist kein Konfigurations-Feature,
-# sondern das Werkzeug fuer die Pflichtaufgabe "ein geaendertes Verfahren MUSS nachgerechnet werden": nur so
-# laesst sich eine Aenderung einzeln abschalten und messen, welche von mehreren gleichzeitigen Aenderungen
-# eine bestaetigte Tour verschiebt. Ohne das bleibt bei einer Abweichung nur Raten.
-for _k in ("ON_WAY_M", "MEET_M", "MAX_TRIM_FACTOR", "MAX_BRIDGE_FACTOR", "MAX_SEG_TRIM_FRACTION",
-           "PROJ_MAX_MEAN_M", "MERGE_ONLY", "CASE1_FIRST_ONLY"):
-    if os.environ.get("NTC_" + _k) is not None:
-        globals()[_k] = float(os.environ["NTC_" + _k])
-MERGE_ONLY = bool(globals().get("MERGE_ONLY", 0))
-CASE1_FIRST_ONLY = bool(globals().get("CASE1_FIRST_ONLY", 0))
-
 # --- Fall 4: Projektion des Trailabschnitts auf "seinen" OSM-Weg -------------------------------------
 # Nutzer-Hinweis (2026-08-16): ein Trailabschnitt laeuft oft NICHT exakt auf seinem OSM-Weg, ist ihm aber
 # eindeutig zuzuordnen, weil kein anderer Weg in der Naehe liegt und keiner abzweigt. 10-15m Versatz sind
@@ -103,6 +92,22 @@ PROJ_MAX_MEAN_M = 15.0     # so weit darf der Abschnitt im Mittel neben seinem W
 PROJ_MIN_RATIO = 3.0       # der zweitbeste Weg muss mindestens so viel weiter weg sein
 PROJ_MIN_SECOND_M = 40.0   # ... und zusaetzlich absolut so weit
 PROJ_NO_BRANCH_M = 25.0    # am Anschlusspunkt darf kein anderer Weg so nah abzweigen
+
+# Jede der Schwellen laesst sich per Umgebungsvariable ueberschreiben. Das ist kein Konfigurations-Feature,
+# sondern das Werkzeug fuer die Pflichtaufgabe "ein geaendertes Verfahren MUSS nachgerechnet werden": nur so
+# laesst sich eine Aenderung einzeln abschalten und messen, welche von mehreren gleichzeitigen Aenderungen
+# eine bestaetigte Tour verschiebt, und nur so sind die Mutationen in tests/python/ntcregression.py ohne
+# Quellcode-Aenderung nachvollziehbar. Ohne das bleibt bei einer Abweichung nur Raten.
+# Der Block MUSS hinter ALLEN Konstanten stehen: er stand einmal vor PROJ_MAX_MEAN_M und den drei anderen
+# Projektions-Schwellen, sodass eine Ueberschreibung von genau denen stillschweigend wirkungslos war -- die
+# gefaehrlichste Variante, weil der Ablationslauf dann "kein Unterschied" meldet und man das glaubt.
+for _k in ("ON_WAY_M", "MEET_M", "MAX_TRIM_FACTOR", "MAX_BRIDGE_FACTOR", "MAX_SEG_TRIM_FRACTION",
+           "MIN_SEG_POINTS", "OFF_TOL_M", "OVERLAP_M", "MIN_OVERLAP_M", "PROJ_MAX_MEAN_M",
+           "PROJ_MIN_RATIO", "PROJ_MIN_SECOND_M", "PROJ_NO_BRANCH_M", "MERGE_ONLY", "CASE1_FIRST_ONLY"):
+    if os.environ.get("NTC_" + _k) is not None:
+        globals()[_k] = float(os.environ["NTC_" + _k])
+MERGE_ONLY = bool(globals().get("MERGE_ONLY", 0))
+CASE1_FIRST_ONLY = bool(globals().get("CASE1_FIRST_ONLY", 0))
 
 # FESTE REGEL (Nutzer, 2026-08-17): "Bitte immer die Region komplett laden, wenn unser TrailConnector laeuft."
 # Ein einziger Overpass-Abruf fuer die GANZE Tour statt einer pro Luecke -- pro Fall 20-80s Wartezeit war der
@@ -429,6 +434,59 @@ def solve(A, B, trail_A=False, trail_B=False):
     return out
 
 
+def close_gaps(s, gaps, names=None, write=False, report=None):
+    """Die Luecken einer Tour der Reihe nach schliessen -- der EINE Kern, den Werkzeug und Regressionstest
+    gemeinsam benutzen.
+
+    Die Annahmeregeln (weglos-Tor, Verhaeltnismaessigkeit) stehen absichtlich hier und nicht in main(): sie
+    sind selbst Teil dessen, was regressieren kann, also muss der Test genau sie ausfuehren und nicht eine
+    nachgebaute Kopie. Rueckwaerts durchlaufen, weil `close_gap` ein Segment einfuegen kann und dabei alle
+    hoeheren Indizes verschiebt.
+    """
+    names = names or {}
+    out = []
+    for i in sorted(gaps, reverse=True):
+        j = (i + 1) % len(s)
+        A, B = s[i]["coords"], s[j]["coords"]
+        kind = lambda x: names.get(x.get("trailId"), "?")[:22] if x.get("trailId") else "CONNECTOR"
+        rec = {"seg": i, "gap": round(haversine_m(A[-1], B[0]), 1),
+               "from": kind(s[i]), "to": kind(s[j]), "applied": None}
+        if report:
+            report("seg%-2d %6.1fm  %-22s -> %s" % (i, rec["gap"], rec["from"], rec["to"]))
+        res = solve(A, B, trail_A=bool(s[i].get("trailId")), trail_B=bool(s[j].get("trailId")))
+        if not res:
+            rec["skipped"] = "keine Loesung gefunden"
+        else:
+            if report:
+                for r in res:
+                    report("    %-28s Bruecke %4.0fm | weglos %3.0fm | kappt %4.0fm | %s%s"
+                           % (r["name"], r["len"], r["off"], r["trim"], r["extra"],
+                              ("   VERWORFEN: " + r["reject"]) if r["reject"] else ""))
+            best = res[0]
+            if best["off"] > OFF_TOL_M:
+                rec["skipped"] = "weglos > %.1fm" % OFF_TOL_M
+            elif best["reject"]:
+                rec["skipped"] = "unverhaeltnismaessig"
+            else:
+                rec["applied"] = best["name"]
+                rec["bridge"] = round(best["len"])
+                rec["trim"] = round(best["trim"])
+                rec["best"] = best
+                if write:
+                    s[i]["coords"] = best["newA"]
+                    s[j]["coords"] = best["newB"]
+                    C.close_gap(s, i, j, [list(q) for q in best["bridge"][1:-1]],
+                                best["newA"][-1], best["newB"][0])
+        if report and rec["applied"]:
+            report("    -> angewendet: %s" % rec["applied"])
+        elif report and res:
+            report("    -> %s, nichts angewendet" % rec["skipped"])
+        elif report:
+            report("    %s" % rec["skipped"])
+        out.append(rec)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--region", default=REGION)
@@ -441,33 +499,8 @@ def main():
     s = d["trailSegments"][args.loop]
     prefetch([q for seg in s for q in seg["coords"]])
     names = {t["id"]: t["name"] for t in d["lineTrails"]}
-    chosen = {}
-    for i in sorted(args.gap, reverse=True):
-        j = (i + 1) % len(s)
-        A, B = s[i]["coords"], s[j]["coords"]
-        kind = lambda x: names.get(x.get("trailId"), "?")[:22] if x.get("trailId") else "CONNECTOR"
-        print("seg%-2d %6.1fm  %-22s -> %s" % (i, haversine_m(A[-1], B[0]), kind(s[i]), kind(s[j])))
-        res = solve(A, B, trail_A=bool(s[i].get("trailId")), trail_B=bool(s[j].get("trailId")))
-        if not res:
-            print("    keine Loesung gefunden")
-            continue
-        for r in res:
-            print("    %-28s Bruecke %4.0fm | weglos %3.0fm | kappt %4.0fm | %s%s"
-                  % (r["name"], r["len"], r["off"], r["trim"], r["extra"],
-                     ("   VERWORFEN: " + r["reject"]) if r["reject"] else ""))
-        best = res[0]
-        if best["off"] > OFF_TOL_M:
-            print("    -> weglos > 0, nichts angewendet")
-            continue
-        if best["reject"]:
-            print("    -> unverhaeltnismaessig, nichts angewendet")
-            continue
-        chosen[i] = best
-        if args.write:
-            s[i]["coords"] = best["newA"]
-            s[j]["coords"] = best["newB"]
-            C.close_gap(s, i, j, [list(q) for q in best["bridge"][1:-1]], best["newA"][-1], best["newB"][0])
-            print("    -> angewendet: %s" % best["name"])
+    recs = close_gaps(s, args.gap, names=names, write=args.write, report=lambda t: print(t))
+    chosen = {r["seg"]: r["best"] for r in recs if r["applied"]}
 
     if args.write and chosen:
         line = [q for seg in s for q in seg["coords"]]

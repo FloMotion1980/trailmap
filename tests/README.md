@@ -16,10 +16,17 @@ throttled to roughly one tick per minute, and every wait in the harness is a tim
 takes **~25 seconds** in a visible window and does not finish at all in a hidden one. A run that seems to
 hang part-way through is almost always this, not a failure.
 
-Current state, all green (measured 2026-08-05; `palette` added 2026-08-13, `geomerge` the same day):
-**17 suites, 199 cases, 822 checks** — 133 cases / 605 checks in the browser bundle (bearing 17, controls 6,
-filters 10, geometry 17, infopanel 16, labels 9, lifts 8, lists 16, palette 7, regions 17, solo 10),
-47 cases / 120 checks in Python, and `builder` on its own with 19 cases / 97 checks.
+Current state, all green:
+**19 suites.** The Python half is **80 cases / 200 checks**, measured 2026-08-20 and green (`appshell`,
+`geomerge`, `ntcregression`, `pipeline`, `regiondata`, `runner`). The browser bundle was last counted on
+2026-08-05 at **133 cases / 605 checks** (bearing 17, controls 6, filters 10, geometry 17, infopanel 16,
+labels 9, lifts 8, lists 16, palette 7, regions 17, solo 10) — `ride` joined it afterwards and is not in that
+figure; `builder` runs on its own with 19 cases / 97 checks. Browser counts are only ever as fresh as the last
+time someone pasted the bundle, so treat the date, not the number, as the claim.
+
+**`ntcregression` is the slow one (~60 s)** and it is a Python suite that runs a real algorithm over three
+tours' worth of OSM ways, not a unit test. That is deliberate — see its own docstring for why a faster
+comparison against the region file cannot catch what it catches.
 
 ## Serve the repo root, not the app folder
 

@@ -22,6 +22,18 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Regressionstest fuer `nearbyTrailConnector` (`tests/python/ntcregression.py`, 12 Faelle / 39 Pruefungen).**
+  Das Verfahren war zweimal still schlechter geworden, und beide Male fiel es erst auf, als der Nutzer auf die
+  Karte sah: `MAX_TRIM_FACTOR` wurde mit 3.0 eingefuehrt, *nachdem* Rodalben Felsentrails damit geschlossen
+  war, wodurch zwei bestaetigte Loesungen (Faktor 6,6) unerreichbar wurden — vier Tage unbemerkt, weil die
+  Tour in der Regionsdatei ja schon geschlossen war. Der Test rechnet deshalb jede Tour aus ihrem Stand VOR
+  dem Schliessen neu, statt die Datei zu vergleichen. Drei Touren: Felsentrails (Pflicht, auf Wunsch des
+  Nutzers), Landstuhl Ost (alle Aenderungen von heute) und Landstuhl West (haengt an genau einer Schwelle).
+  Die OSM-Wege liegen gepackt daneben (264 KB) und sind beweisbar dieselbe Menge, die `fetch()` im echten Lauf
+  sieht — ein Test, der Overpass braucht, laeuft nie. Elf Mutationen nachgemessen, drei Deckungsluecken
+  benannt statt beschoenigt (Fall 4 kommt in keiner reproduzierbaren Tour vor). Der Kern `close_gaps()` steht
+  jetzt im Werkzeug und wird von Werkzeug UND Test benutzt, damit der Test die echten Annahmeregeln ausfuehrt
+  und nicht eine Kopie.
 - **Die restlichen acht Kurztouren des Pfälzerwalds geschlossen — 121 Lücken, keine offen** (Heltersberg,
   Waldfischbach-Burgalben, Schopp, Waldleiningen, Elmstein, Lambrecht, Landstuhl Ost und West). Damit sind
   dreizehn Trailrunden lückenlos, 235 Lücken. 102 der 121 über den einfachsten Fall; nur sechs

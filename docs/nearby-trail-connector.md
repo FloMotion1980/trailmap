@@ -360,6 +360,34 @@ verantwortbar war — und sie brauchte erst eine brauchbare Referenz:
 
 ---
 
+## Regressionstest (2026-08-20)
+
+`python tests/run.py --suite ntcregression` — 12 Fälle, ~60 s. Rechnet drei Touren aus ihrem Stand **vor** dem
+Schließen neu und vergleicht gegen `tests/fixtures/ntc_baseline.json`: geschlossene Lücken, welcher Fall wo
+gegriffen hat, jede Brückenlänge, jede Kappung, und die Restlänge jedes benannten Trailabschnitts.
+
+Es gibt ihn, weil das Verfahren zweimal still schlechter geworden ist und beides erst auf der Karte auffiel.
+Die Regionsdatei kann das nicht zeigen — sie enthält das alte, schon gute Ergebnis, an dem eine Degradation
+im Verfahren nichts ändert. `MAX_TRIM_FACTOR = 3.0` blieb so vier Tage unbemerkt.
+
+Drei Entscheidungen daran sind wichtig:
+
+- **Die Wege liegen gepackt daneben** (264 KB für drei Touren), und zwar genau die Vereinigung der
+  Bounding-Boxen, die `fetch()` pro Lücke selbst benutzt — beweisbar dieselbe Wegemenge wie im echten Lauf.
+  Ein Test, der Overpass braucht, wird nicht gelaufen; einer mit einer engeren Auswahl prüft etwas anderes.
+- **Der Test ruft `close_gaps()` aus dem Werkzeug**, nicht eine Kopie der Schleife. Die Annahmeregeln
+  (weglos-Tor, Verhältnismäßigkeit) sind selbst Teil dessen, was regressieren kann.
+- **Ein Fall liest die Erwartung absichtlich NICHT**: „ein Reparaturschritt darf keinen Trailabschnitt
+  auflösen" gilt auch dann, wenn jemand die Erwartung mit dem Fehler drin neu erzeugt — genau so segnet ein
+  Golden-File-Test sonst eine Regression ab.
+
+Elf Mutationen sind nachgemessen und in der Suite tabelliert, drei Deckungslücken benannt: Fall 4 kommt in
+keiner reproduzierbaren Tour vor, `MAX_TRIM_FACTOR` ist nur nach unten festgenagelt, `MEET_M`/`OFF_TOL_M` nur
+grob. Und eine Warnung aus eigener Erfahrung: die erste Fassung der Tabelle behauptete eine Mutation, die
+nichts tat. **Eine Mutationstabelle muss gelaufen sein, nicht gedacht.**
+
+---
+
 ## Offen
 
 - **Andere Trailrunden.** Bisher nur `pw_rodalben_felsentrails` behandelt; jede andere Tour mit
