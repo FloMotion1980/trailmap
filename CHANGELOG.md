@@ -22,6 +22,20 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Start and Ziel merge into one two-colour marker exactly when they would overlap on screen.** Where a Tour
+  ends on its own start, the red Ziel simply won by draw order and the green Start was gone — worse since the
+  markers grew for RIDE, and more common since closing the loop gaps made tours actually end where they begin.
+  **Measured across every region first, because the obvious rules are both wrong**: of 97 Touren, **52 % have
+  bit-identical first and last coordinates** (they never separate at any zoom), ~25 % more are within 25 m, and
+  **18 % are not loops at all** — the Sölden descents and the two Pfälzerwald passages start over a kilometre
+  from where they end. So `loop` cannot decide it, and neither can a distance in metres: 25 m is 64 px apart at
+  z18 (two clearly separate markers) and invisible at z13 (100 m still overlaps). The rule is the SCREEN
+  distance — two circles of radius r collide below 2r — re-evaluated on `zoomend`, since the merged form is a
+  property of the view, not of the trail. Merged, the green shrinks and comes to the front, reading as a dot
+  inside the red disc, and its tooltip says "Start / Ziel" (or "Talstation / Bergstation", since a short lift
+  can collide too). Verified live: the bit-identical Tour stays merged at z13–z19, and a Tour whose ends are
+  44 m apart is merged at 4 px and 7 px apart (z13, z14) and separate from 13 px (z15) — the crossover landing
+  exactly at the 10 px the rule predicts.
 - **Start and Ziel are drawn at radius 9 instead of 5 while riding**, with a heavier outline, after the user
   reported they nearly vanish at arm's length inside the 18px focus ring. `applyEndpointSize` is called by
   `showEndpoints` for the pair being added, and `syncEndpointSizes` resizes whatever is already on the map

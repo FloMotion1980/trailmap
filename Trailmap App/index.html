@@ -2307,6 +2307,10 @@ map.on("zoomend", updateStartDotVisibility);
 // makes the arrows follow a ride at all: the follow loop pans on every GPS fix, and endBearingSweep() fires
 // moveend once a rotation settles.
 map.on("moveend", syncRideArrows);
+// Whether Start and Ziel overlap is a question about PIXELS, so it changes with the zoom and nothing else --
+// see applyEndpointSize for why a distance in metres cannot answer it. syncEndpointSizes only touches pairs
+// that are actually on the map, which is at most one trail plus one lift.
+map.on("zoomend", syncEndpointSizes);
 
 // Bottom right, the same corner Leaflet's own attribution already occupies -- Leaflet stacks multiple
 // controls sharing a corner automatically, so this needs no positioning of our own and sits correctly on
@@ -6165,14 +6169,47 @@ function endpointOwner(id){ return lineLayers[id] || liftLayers[id]; }
 // small while riding: at arm's length on a bright phone, inside an 18px focus ring, they nearly vanish
 // (user, 2026-08-20 -- "die sieht man fast nicht"). During RIDE they are drawn at radius 9, i.e. the same
 // 18px across as the ring itself, with a heavier outline so the green/red still reads against it.
+//
+// When the two ends land on top of each other, the red one wins by draw order and the green one is simply
+// gone. Measured across every region: of 97 Touren, **52 % have bit-identical first and last coordinates**
+// (those never separate at any zoom), another ~25 % are within 25 m, and 18 % are not loops at all -- the
+// Sölden descents and the two Pfälzerwald passages start over a kilometre from where they end. So the merge
+// cannot key on `loop`, and it cannot key on a fixed distance either: 25 m is 64 px apart at z18 (two clearly
+// separate markers that must not be merged) and invisible at z13 (100 m still overlaps and would be missed).
+// The honest test is the SCREEN distance, which is why this is re-evaluated on zoomend -- the merged form is
+// a property of the current view, not of the trail. Two circles of radius r collide once their centres are
+// closer than 2r; the green one then shrinks and comes to the front, so it reads as a dot inside the red
+// disc (exactly concentric for the 52 %, slightly offset for the rest, both ends visible either way).
 const ENDPOINT_RADIUS = 5, ENDPOINT_WEIGHT = 1.5;
 const RIDE_ENDPOINT_RADIUS = 9, RIDE_ENDPOINT_WEIGHT = 2.5;
+const ENDPOINT_INNER_FACTOR = 0.5;   // of the outer radius, floored so it stays visible at the small size
+const ENDPOINT_INNER_MIN_RADIUS = 2.5;
+
+function endpointsCollide(layer, r){
+  const a = map.latLngToLayerPoint(layer.startMarker.getLatLng());
+  const b = map.latLngToLayerPoint(layer.endMarker.getLatLng());
+  return a.distanceTo(b) < 2 * r;
+}
+
 function applyEndpointSize(layer){
   if (!layer || !layer.startMarker) return;
   const r = rideMode ? RIDE_ENDPOINT_RADIUS : ENDPOINT_RADIUS;
   const w = rideMode ? RIDE_ENDPOINT_WEIGHT : ENDPOINT_WEIGHT;
-  layer.startMarker.setStyle({ radius: r, weight: w });
+  const merged = endpointsCollide(layer, r);
   layer.endMarker.setStyle({ radius: r, weight: w });
+  layer.startMarker.setStyle({
+    radius: merged ? Math.max(ENDPOINT_INNER_MIN_RADIUS, r * ENDPOINT_INNER_FACTOR) : r,
+    weight: merged ? Math.max(1, w * 0.7) : w
+  });
+  // Draw order is the only thing that decides which is visible where they overlap, so it is set here rather
+  // than left to showEndpoints' own two bringToFront calls -- which end on the RED one and are what hides
+  // the green in the first place.
+  (merged ? layer.startMarker : layer.endMarker).bringToFront();
+  // Say both roles when both are in one place. A lift's two stations can collide too, zoomed far enough out,
+  // and "Talstation / Bergstation" is exactly as true there.
+  const names = layer.lift ? ["Talstation", "Bergstation"] : ["Start", "Ziel"];
+  if (layer.startMarker.getTooltip()) layer.startMarker.setTooltipContent(merged ? names.join(" / ") : names[0]);
+  if (layer.endMarker.getTooltip()) layer.endMarker.setTooltipContent(names[1]);
 }
 // Entering or leaving RIDE has to resize whatever is ALREADY on the map -- showEndpoints only covers the
 // pair being added. Walks both registries rather than tracking which pair is shown: it runs twice per ride,
@@ -6186,11 +6223,13 @@ function syncEndpointSizes(){
 function showEndpoints(id){
   const layer = endpointOwner(id);
   if (!layer) return;
-  applyEndpointSize(layer);
   if (!map.hasLayer(layer.startMarker)) layer.startMarker.addTo(map);
   if (!map.hasLayer(layer.endMarker)) layer.endMarker.addTo(map);
   layer.startMarker.bringToFront();
   layer.endMarker.bringToFront();
+  // AFTER the two adds: bringToFront is a no-op on a layer that has no renderer yet, and this call has its
+  // own z-order to set (see applyEndpointSize).
+  applyEndpointSize(layer);
   // The green Start marker replaces the neutral white dot rather than sitting on top of it -- see
   // syncStartDot's own comment for why the z-order alone could not be trusted to keep it visible.
   syncStartDot(lineLayers[id]);

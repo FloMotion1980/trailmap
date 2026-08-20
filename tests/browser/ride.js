@@ -15,7 +15,8 @@
 //          eachVectorRenderer, setRendererPadding, BUILDER_PANE, LIFT_BAND_PANE,
 //          buildRideArrowShapes, RIDE_ARROW_SPACING_PX, RIDE_ARROW_MAX, rideArrowCumDist, rideArrowCumCache,
 //          reversedId, applyReversedEndpoints, reverse-btn, applyEndpointSize, syncEndpointSizes,
-//          RIDE_ENDPOINT_RADIUS, RIDE_ENDPOINT_WEIGHT, ENDPOINT_RADIUS, showEndpoints
+//          RIDE_ENDPOINT_RADIUS, RIDE_ENDPOINT_WEIGHT, ENDPOINT_RADIUS, showEndpoints,
+//          endpointsCollide, ENDPOINT_INNER_FACTOR, ENDPOINT_INNER_MIN_RADIUS
 // @needs   region=bikekingdom, builder=off
 //
 // Added 2026-08-16, once the RIDE infobox redesign settled (per the user's own phone-tested refinements the
@@ -516,6 +517,89 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
       }
     } finally {
       L.Map.prototype.flyTo = realFlyTo5;
+    }
+  }
+
+  T.test("Start and Ziel merge into one two-colour marker exactly when they would overlap on screen");
+  // Not a RIDE behaviour -- it lives in this suite only because applyEndpointSize does. Measured across
+  // every region: of 97 Touren, 52 % have bit-identical first and last coordinates, ~25 % more are within
+  // 25 m, and 18 % are not loops at all. So neither `loop` nor a distance in metres can decide this: 25 m is
+  // 64px apart at z18 and invisible at z13. The rule is the SCREEN distance, which is why the interesting
+  // assertion below is that the SAME trail merges at one zoom and separates at another.
+  if (!m2) {
+    T.skip("no map instance captured earlier in this suite");
+  } else {
+    const realFlyTo6 = L.Map.prototype.flyTo;
+    L.Map.prototype.flyTo = function (cc, z) { return this.setView(cc, z, { animate: false }); };
+    try {
+      exitRideMode();
+      await TM.wait(400);
+      const dotOf = (fill) => {
+        const all = TM.map.overlay();
+        const p = all.filter((x) => x.getAttribute("fill") === fill)[0];
+        if (!p) return null;
+        const m = /a(\d+(?:\.\d+)?),/.exec(p.getAttribute("d") || "");
+        const b = p.getBoundingClientRect();
+        return { r: m ? +m[1] : null, idx: all.indexOf(p), cx: b.left + b.width / 2, cy: b.top + b.height / 2 };
+      };
+      const centreOn = async (d, z) => {
+        const box = TM.$("#map").getBoundingClientRect();
+        m2.setView(m2.containerPointToLatLng([d.cx - box.left, d.cy - box.top]), z, { animate: false });
+        await TM.wait(600);
+      };
+      // A plain trail: its two ends are hundreds of metres apart, so nothing may be merged.
+      TM.ui.trailCards()[0].click();
+      await TM.until(() => TM.$("#infoPanel").classList.contains("visible"), 3000);
+      await TM.wait(500);
+      const pg = dotOf("#3fbf5e"), pr = dotOf("#e0392b");
+      if (pg && pr) T.eq("a point-to-point trail keeps both ends at the same size", pg.r, pr.r);
+
+      // The one Tour whose first and last coordinate are bit-identical: merged at every zoom, forever.
+      const closed = TM.ui.cardNamed("tourCards", /Biketicket 2 RIDE schwarz/);
+      if (!closed) {
+        T.skip("the closed Tour this checks is not in the active region");
+      } else {
+        closed.click();
+        await TM.wait(900);
+        const g0 = dotOf("#3fbf5e");
+        if (!g0) {
+          T.skip("no Start marker on screen for the closed Tour");
+        } else {
+          await centreOn(g0, 18);
+          const g = dotOf("#3fbf5e"), r = dotOf("#e0392b");
+          T.ok("a Tour that ends on its own start draws the green dot smaller", g && r && g.r < r.r,
+               g && r ? g.r + " vs " + r.r : null, "green < red");
+          T.ok("and in front, or it would be the invisible one", g && r && g.idx > r.idx,
+               g && r ? g.idx + " vs " + r.idx : null, "green drawn after red");
+          T.ok("even zoomed right in, because those two coordinates are identical", g && g.r < r.r,
+               "z18: " + (g ? g.r : null), "still merged");
+        }
+      }
+
+      // The real proof that this is a PIXEL rule: a Tour whose ends are ~44 m apart merges when zoomed out
+      // and separates when zoomed in, with the crossover where the two radii stop touching.
+      const nearly = TM.ui.cardNamed("tourCards", /E-Biketicket 2 RIDE rot/);
+      if (!nearly) {
+        T.skip("the near-miss Tour this checks is not in the active region");
+      } else {
+        nearly.click();
+        await TM.wait(900);
+        const seed = dotOf("#3fbf5e");
+        if (!seed) {
+          T.skip("no Start marker on screen for the near-miss Tour");
+        } else {
+          await centreOn(seed, 13);
+          const outG = dotOf("#3fbf5e"), outR = dotOf("#e0392b");
+          await centreOn(outG || seed, 17);
+          const inG = dotOf("#3fbf5e"), inR = dotOf("#e0392b");
+          T.ok("zoomed out, the same Tour is merged", outG && outR && outG.r < outR.r,
+               outG && outR ? outG.r + " vs " + outR.r : null, "green < red at z13");
+          T.ok("zoomed in, it is two separate markers again", inG && inR && inG.r === inR.r,
+               inG && inR ? inG.r + " vs " + inR.r : null, "equal radii at z17");
+        }
+      }
+    } finally {
+      L.Map.prototype.flyTo = realFlyTo6;
     }
   }
 
