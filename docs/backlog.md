@@ -170,8 +170,38 @@ this section in the same commit as the code**, the same standing rule `CHANGELOG
   endpoints are showing. Two new mutation-checked cases in `tests/browser/lists.js`; the startDot one counts a
   DELTA rather than "no white dot at the green position", because several trails legitimately share a
   trailhead and that coordinate holds another trail's dot either way.
-- **Open, measured, not fixed: RIDE mode more than doubles the vector-renderer memory, and that is why zooming
-  far out could kill the app.** The crash itself is closed (a `RIDE_MIN_ZOOM` of 10 now blocks the trigger — see
+- **Open, measured, partly fixed: RIDE mode carries ~9x the vector-renderer memory of the normal map — the
+  single most likely cause of the white-screen crashes, and the biggest remaining lever in the app.**
+  **Superseded numbers below**: the table further down said 2.3x/89 MB across three panes; a re-measurement at
+  a real 375x812 phone viewport with RIDE fully applied gives **33 Mpx / ~126 MB across FOUR panes**, against
+  3.6 Mpx / ~14 MB north-up. Also corrected: **tiles play no part**, in either zoom direction (20 tiles vs 25,
+  one level, JS heap 12–14 MB) — the earlier "tile burst" explanation was wrong, which is why `RIDE_MIN_ZOOM`
+  did not close the crash. It blocked one route to the cliff; the user found the other by zooming far IN
+  (2026-08-20, Donnersberg).
+  Per-pane, RIDE + rotation on that viewport:
+
+  | pane | surface | paths |
+  |---|---|---|
+  | overlay | 3235x3236 = 39.9 MB | 655 |
+  | liftBand | 3235x3236 = 39.9 MB | 63 |
+  | builder | 3235x3236 = 39.9 MB | **0** |
+  | tourSegHit | 1245x1244 = 5.9 MB | 92 |
+
+  **Done (2026-08-20): the builder pane is gone**, −40 MB, no visual change — `eachVectorRenderer` was
+  materialising it by asking `map.getRenderer()` about a pane nothing used. 126 → 86 MB. **Still open, in
+  order of appeal:**
+  - **`LIFT_BAND_PANE` pays a full 39.9 MB for 63 short lift paths, and is a wholly empty surface in every
+    region that has no lifts** — Donnersberg, Pfälzerwald, Odenwald, Finale. Two questions worth separating:
+    whether it needs the rotation padding at all (re-rasterising 63 short lines per degree is far cheaper than
+    doing it for 655), and whether it should exist when the active regions have no lifts. The pane itself
+    cannot simply be dropped: the lift's grey mask must sit UNDER the trails and OVER the tiles, and Leaflet
+    offers no z-index between its own tilePane (200) and overlayPane (400), which is the entire reason for a
+    third pane at 350.
+  - **Cap `rotationPadding()`** — declined once (see below) and worth re-raising now that the zoom guard has
+    demonstrably not closed the crash. 0.938 → 0.65 takes roughly a third off every remaining surface.
+  - **The original entry's own options (a)–(d) still stand** for the elongation itself.
+- **Original entry, kept for the reasoning (its numbers are superseded above): RIDE mode more than doubles the
+  vector-renderer memory, and that is why zooming far out could kill the app.** The crash itself is closed (a `RIDE_MIN_ZOOM` of 10 now blocks the trigger — see
   `CHANGELOG.md` 2026-08-20; confirmed on the user's own phone the same day), but the underlying overhead is untouched and will matter again for a bigger
   region or an older phone. Measured on a 375x812 viewport at a fixed 45° bearing:
 

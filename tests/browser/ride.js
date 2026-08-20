@@ -12,7 +12,8 @@
 //          updateUserLocation, RIDE_MIN_ZOOM, preRideMinZoom, preRideMinZoomSaved,
 //          recoverFromRotationCrash, rotationPadding, syncRideArrows, buildRideArrowLayer, rideArrowLayer,
 //          RIDE_ARROW_SPEC, RIDE_ARROW_FILL, RIDE_ARROW_EDGE, ARROW_SPEC, buildChevron,
-//          buildDirectionArrowShapes, highlightSelectedTrail, updateStartDotVisibility
+//          buildDirectionArrowShapes, highlightSelectedTrail, updateStartDotVisibility,
+//          eachVectorRenderer, setRendererPadding, BUILDER_PANE, LIFT_BAND_PANE
 // @needs   region=bikekingdom, builder=off
 //
 // Added 2026-08-16, once the RIDE infobox redesign settled (per the user's own phone-tested refinements the
@@ -278,6 +279,12 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
       await TM.until(() => TM.$("#infoPanel").classList.contains("visible"), 3000);
       m2.setZoom(16, { animate: false });
       await TM.wait(700);
+      // Every count below has to be taken at the SAME view: how many chevrons are painted depends on how many
+      // trails are on screen, and clicking a card calls flyToTrailBounds. Comparing counts across two clicks
+      // without restoring the view is what made the first version of this case report 190 against 74 -- the
+      // app was right and the measurement was not.
+      const anchorCentre = m2.getCenter();
+      const atAnchor = async () => { m2.setView(anchorCentre, 16, { animate: false }); await TM.wait(600); };
       const withFocus = chevronShapes(), tri = triNodes();
       T.eq("exactly one triangle layer, holding several arrows in one node", tri.length, 1);
       T.ok("it is a filled polygon with a dark edge, not a stroke-only chevron",
@@ -297,13 +304,14 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
       // Suppression: dropping the focus must hand that trail's own chevrons back, and taking it again must
       // remove them. Same view throughout, so the counts are comparable.
       clearRideFocusHalo();
-      await TM.wait(600);
+      await atAnchor();
       const noFocus = chevronShapes();
       T.eq("no triangles once the focus is gone", triNodes().length, 0);
       T.ok("and the trail's own chevrons came back", noFocus > withFocus, noFocus + " vs " + withFocus,
            "more than while focused");
       TM.ui.trailCards()[0].click();
-      await TM.wait(800);
+      await TM.wait(400);
+      await atAnchor();
       T.eq("re-focusing suppresses them again", chevronShapes(), withFocus);
       T.eq("and the triangles are back", triNodes().length, 1);
       // Below ARROW_MIN_ZOOM nothing is drawn at all, exactly like the normal arrows.
@@ -311,8 +319,7 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
       await TM.wait(700);
       T.eq("below the arrow zoom threshold there are no triangles", triNodes().length, 0);
       T.eq("and no chevrons either", chevronShapes(), 0);
-      m2.setZoom(16, { animate: false });
-      await TM.wait(700);
+      await atAnchor();
       T.eq("zooming back in brings the triangles back", triNodes().length, 1);
       // This is the check that pins the suppression term in updateStartDotVisibility's own loop, and it has
       // to come AFTER a zoom: applyRideFocusHalo removes the focused trail's chevrons itself, so up to here
@@ -330,6 +337,43 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
     L.Map.prototype.setMinZoom = realSetMinZoom2;
     if (!arrowsWereOn) await TM.ui.setSwitch("showDirectionArrowsToggle", false);
   }
+
+  T.test("RIDE does not allocate a full-size renderer for the empty builder pane");
+  // Each vector pane costs one SVG sized to the padded bounds, and while rotated that is the same surface
+  // whether the pane holds 655 paths or none: measured on a phone in RIDE, 3235x3236 = 39.9 MB for a builder
+  // pane with zero paths in it, a third of the app's whole vector footprint. It existed only because
+  // setRendererPadding asked about the pane, and map.getRenderer() CREATES a renderer for a pane that has
+  // none rather than just looking one up. RIDE switches the builder off outright, so during a ride that
+  // surface can never be anything but empty. Read from the DOM: L.Renderer.onAdd appends its container to
+  // its pane, so a pane with no child element has no renderer.
+  const builderPaneEl = () => document.querySelector(".leaflet-builder-pane");
+  exitRideMode();
+  await TM.wait(400);
+  T.ok("the builder pane element exists (it is created at boot)", !!builderPaneEl(), !!builderPaneEl(), true);
+  const childrenBefore = builderPaneEl().childElementCount;
+  enterRideMode();
+  await TM.wait(600);
+  // Weak on purpose and known to be so: once an earlier suite in the same bundle has used the builder, the
+  // renderer already exists and this can only report "unchanged". The check that actually bites is the
+  // padded-panes one below -- see tests/MUTATIONS.md, which records which of the two the mutation kills.
+  T.eq("entering RIDE adds no renderer to it", builderPaneEl().childElementCount, childrenBefore);
+  T.eq("and nothing in RIDE put paths there either", builderPaneEl().querySelectorAll("path").length, 0);
+  // The panes that DO hold something are still padded -- this must not have switched the mechanism off.
+  // "Is it padded" has to be asked against the CONTAINER, not against a pixel threshold: at bearing 0 the
+  // padded box is the plain rectangle (1078px wide on a phone) and only a rotated one comes out square and
+  // wide, so a raw width test reports a correctly padded map as unpadded. Area ratio is bearing-independent.
+  const mapBox = document.getElementById("map").getBoundingClientRect();
+  const containerArea = mapBox.width * mapBox.height;
+  const areaOf = (e) => (+e.getAttribute("width") || 0) * (+e.getAttribute("height") || 0);
+  const padded = TM.$$(".leaflet-pane svg").filter((e) => areaOf(e) > containerArea * 2);
+  T.ok("the panes that hold something are still padded for rotation", padded.length > 0,
+       padded.length, "> 0");
+  T.ok("none of the padded panes is the builder pane",
+       padded.every((e) => !/builder/.test(e.parentElement.className || "")),
+       padded.map((e) => (e.parentElement.className || "").replace("leaflet-pane leaflet-", "")).join(","),
+       "no builder-pane");
+  exitRideMode();
+  await TM.wait(400);
 
   T.test("teardown: leave RIDE mode, restore the real geolocation API");
   exitRideMode();

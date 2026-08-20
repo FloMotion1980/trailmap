@@ -2783,7 +2783,24 @@ function endBearingSweep(){
 // pane, so a throwaway layer per pane resolves to exactly the same cached instances the real layers draw into
 // -- which beats reaching into map._renderer / map._paneRenderers.
 function eachVectorRenderer(fn){
-  [{}, { pane: LIFT_BAND_PANE }, { pane: BUILDER_PANE }].forEach(opts => {
+  const panes = [{}, { pane: LIFT_BAND_PANE }];
+  // The builder pane is asked about only once it ALREADY has a renderer -- because map.getRenderer() does not
+  // merely look one up, it creates and adds one when the pane has none. Simply naming the pane here was
+  // therefore enough to allocate a full-size SVG for a pane holding nothing at all: measured on a phone in
+  // RIDE, 3235x3236 = 39.9 MB with zero paths in it, a third of the app's entire vector footprint (2026-08-20,
+  // found while chasing a second white-screen crash the user hit in Donnersberg -- a region which, having no
+  // lifts, was carrying TWO such empty full-size surfaces). Nothing else creates it: builderHighlight is an
+  // L.layerGroup, which has no path of its own, so the renderer really does first come into being with the
+  // route glow at builderTryAdd time. `childElementCount` is the honest question to ask -- L.Renderer.onAdd
+  // appends its container to the pane, so a pane with a child has a renderer and one without has not, and
+  // asking costs nothing. Once it exists it stays in the list, so its padding is still reset properly.
+  //
+  // Accepted trade: turning the builder on while the map is ALREADY rotated leaves its pane unpadded until
+  // the next setRendererPadding call, so it repaints per degree during a sweep until then. That pane holds a
+  // handful of glow polylines, and nobody assembles a tour while riding -- enterRideMode switches the builder
+  // off outright, which is also why this can never cost anything during a ride.
+  if (map.getPane(BUILDER_PANE).childElementCount) panes.push({ pane: BUILDER_PANE });
+  panes.forEach(opts => {
     const r = map.getRenderer(L.polyline([], opts));
     if (r) fn(r);
   });

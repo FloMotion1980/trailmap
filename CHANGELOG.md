@@ -22,6 +22,21 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **The empty builder pane no longer costs 40 MB in RIDE (126 MB → 86 MB of vector surface, no visual
+  change).** Found while diagnosing a SECOND white-screen crash the user hit — this time zoomed far IN, in
+  Donnersberg — which disproved part of the earlier diagnosis: the direction of the zoom was never the driver,
+  so the `RIDE_MIN_ZOOM` guard had only blocked one route to the same cliff. Re-measured properly at a real
+  phone viewport: RIDE + rotation carries **33 Mpx / 126 MB across four renderer panes**, against 3.6 Mpx /
+  14 MB north-up — a factor of 9, not the 2.3 reported earlier (that measurement used three panes and a
+  container that had not reached full RIDE height). **Tiles are not involved at all**, contrary to the earlier
+  entry: 20 tiles without RIDE against 25 with, one level, JS heap 12–14 MB, whichever way you zoom. Leaflet
+  prunes correctly. What kills the tab is the baseline surface plus the re-cut every zoom step forces, which
+  briefly holds the old and new surfaces at once. The first 40 MB of it came off for free: `eachVectorRenderer`
+  named the builder pane in a hardcoded list, and `map.getRenderer()` CREATES a renderer for a pane that has
+  none rather than just looking one up — so asking in order to pad it is what allocated a full-size SVG for a
+  pane holding nothing. It is now asked about only once it already has a renderer. In Donnersberg the picture
+  was worse still: with no lifts in the region, TWO of the three big surfaces were completely empty. New
+  mutation-checked case in `tests/browser/ride.js` (14 cases now).
 - **The Schwarzwald gets four Touren, and Todtnau's Downhill changes source.**
   `tools/build_schwarzwald_tours.py` (new, runs AFTER the trail build, which would otherwise overwrite
   its `trailSegments`) builds Trailrunden from Trailforks' own recorded **routes** for the Freiburg area:
