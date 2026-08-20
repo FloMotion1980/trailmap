@@ -59,13 +59,24 @@ REGION = os.path.join(ROOT, "Trailmap App", "regions", "schwarzwald.json")
 #: trails the route rides), tidied only where the slug leaked into them.
 ROUTES = [
     # slug                                          name                          sub        stated km
-    ("canadian--borderline",                        "Canadian & Borderline",       "mtbfr",       21.3),
-    ("freiburg-i-breisgau-hubbelfuchs-kammweg-borderline",
-     "Hubbelfuchs · Kammweg · Borderline",                                 "mtbfr",       40.0),
     ("schlossbergnesselplatzrosskopf-trails",
      "Schlossberg · Nesselplatz · Rosskopf",                                "freiburg",    29.1),
     ("freiburger-dreierlei-on-gpsies-com",          "Freiburger Dreierlei",        "mtbfr",       35.4),
-    ("banden-ride",                                 "Banden Ride",                 "freiburg",    37.7),
+]
+
+#: Recordings that are HARVESTED but not built as Touren here. `canadian--borderline` and the Hubbelfuchs
+#: route were auto-matched first and both came out wrong in ways the recording cannot fix (a 582 m jump back
+#: to the Borderline's start, a 401 m jump, and a fifth of their named stretches drifted between parallel
+#: lines). The user's call was to state those two routes instead of guessing them, so they are assembled
+#: from the app's own Tourenbuilder by `tools/build_schwarzwald_builder_tours.py` -- which still needs these
+#: recordings, because that is where the long connectors through town are read from. Hence harvested here,
+#: not built here.
+ROUTES_HARVEST_ONLY = [
+    "canadian--borderline",
+    "freiburg-i-breisgau-hubbelfuchs-kammweg-borderline",
+    # "Banden Ride": its recording jumps 2 593 m in one step, 6,9 % of the Tour, drawn as a straight line
+    # across Freiburg -- the same reason three Paganella marathon routes were left out of that region.
+    "banden-ride",
 ]
 
 #: A parsed route whose own line is further than this from Trailforks' stated distance is reported and
@@ -129,7 +140,7 @@ def dedupe_halves(pts):
 
 def harvest():
     routes = json.load(io.open(ROUTES_FILE, encoding="utf-8")) if os.path.exists(ROUTES_FILE) else {}
-    for slug, _, _, _ in ROUTES:
+    for slug in [r[0] for r in ROUTES] + ROUTES_HARVEST_ONLY:
         if slug in routes:
             continue
         title, pts = fetch_route(slug)

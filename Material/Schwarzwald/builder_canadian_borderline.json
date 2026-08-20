@@ -1,0 +1,45 @@
+{
+  "name": "Canadian & Borderline",
+  "elements": [
+    {
+      "kind": "trail",
+      "id": "sw_canadian_uphill1",
+      "name": "Canadian Uphill 1",
+      "reversed": false,
+      "from": [47.98305, 7.86377],
+      "to": [47.967164, 7.882495],
+      "km": 4.546,
+      "iConnect": { "off": true, "gapM": 29, "nearestM": 12 }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_canadian",
+      "name": "Canadian Trail",
+      "reversed": false,
+      "from": [47.96742, 7.88242],
+      "to": [47.98345, 7.86554],
+      "km": 3.067,
+      "iConnect": { "off": true, "gapM": 2309, "nearestM": 1960, "tooFar": true }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_borderline_uphill",
+      "name": "Borderline Uphill",
+      "reversed": false,
+      "from": [47.99035, 7.8948],
+      "to": [48.010061, 7.901597],
+      "km": 5.545,
+      "iConnect": { "off": true, "gapM": 141, "nearestM": 1 }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_borderline",
+      "name": "Borderline",
+      "reversed": false,
+      "from": [48.00884, 7.90109],
+      "to": [47.99034, 7.89481],
+      "km": 3.052,
+      "iConnect": null
+    }
+  ]
+}

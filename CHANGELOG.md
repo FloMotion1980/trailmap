@@ -38,7 +38,25 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   nothing. Mutation-checked in `tests/browser/lists.js`: without the re-front the line lands at DOM index 654
   against the arrows' 653, and nothing about the arrows' own attributes changes, so only the pane order can
   see it.
-
+- **The Schwarzwald's two problem Touren are assembled from the Tourenbuilder now, not matched**
+  (`tools/build_schwarzwald_builder_tours.py`, new). Canadian & Borderline is 19,30 km with 84 % of it on
+  named trails, Hubbelfuchs · Kammweg · Borderline 40,05 km with 83 % — against 55 % and 79 % when
+  matched, and neither has a gap over 30 m left (largest 29 m and 21 m). The ride order comes from the
+  app's own builder (`Material/Schwarzwald/builder_*.json`, checked in), each named stretch is that
+  trail's own geometry clipped to the points the builder cut it at, and the long connectors are **read out
+  of the original recording** rather than routed — 2 770 m, 1 540 m and 3 702 m of it. Two things that
+  took a second pass: picking the right PASS of the recording (a loop comes past the same place up to four
+  times, and nearest-point-to-nearest-point returned 10,4 km of track for a 2,3 km gap), and orienting a
+  stretch's heights together with its geometry instead of separately. What the recording does not cover
+  went to `nearby_trail_connector.py` as before — including, as the one exception to the GPX-first rule,
+  the 875 m between Fritzis Ende and Baden To The Bone Uphill, where the recording never comes within 60 m
+  of the uphill's start as the builder set it.
+- **`build_schwarzwald_tours.py` no longer builds those two**, so a rebuild cannot quietly overwrite the
+  hand-assembled versions; their recordings are still harvested there, because that is where the
+  builder-tour script reads its connectors from. The full order is now four scripts plus the version
+  manifest — written out in `docs/schwarzwald.md`.
+- Note on the previous entry's commit: `c8f01ad` carries a stray `@` as its subject line, from a
+  shell heredoc quoting mistake. Left as is on the user's instruction rather than force-pushed away.
 ## 2026-08-20
 - **The normal-mode direction arrows moved ONTO the line: filled white triangles with a dark edge, the same
   design RIDE uses, one size smaller.** This reverses the 2026-08-05 design knowingly — that one put a thin

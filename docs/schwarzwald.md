@@ -217,7 +217,7 @@ each case the operator publishes both lines:
 - **Trailguide's "Hardheim" (4 trails)** is Odenwald and this app already ships an `odenwald` region —
   worth a look next time that one is touched.
 
-## Touren — four, from Trailforks' own recorded routes
+## Touren — four: two matched, two assembled in the Tourenbuilder
 
 `tools/build_schwarzwald_tours.py`, run **after** the trail build (which would otherwise overwrite the
 `trailSegments` it adds).
@@ -229,12 +229,55 @@ descent and the sweep already built it as one. What this region does have is Tra
 recorded rides, each with an `encodedpath` and an `ElevationChart` like a trail page, and each genuinely a
 combination of the region's own trails:
 
-| Tour | km | named | segments |
+| Tour | km | named | built from |
 |---|---|---|---|
-| Canadian & Borderline | 22,2 | 55 % | Canadian Uphill 1 → Canadian Trail → Borderline Uphill → Borderline |
-| Hubbelfuchs · Kammweg · Borderline | 40,1 | 79 % | 13 named stretches incl. Hubbelfuchs, Fritzis Ende, Kammweg (5,7 km), Jägerwegle, Borderline |
-| Schlossberg · Nesselplatz · Rosskopf | 29,3 | 35 % | 8 named stretches around the Rosskopf |
-| Freiburger Dreierlei | 35,5 | 46 % | the event route: Borderline, Badish Moon Rising, Canadian |
+| Canadian & Borderline | 19,30 | 84 % | **Tourenbuilder** — Canadian Uphill 1 → Canadian Trail → Borderline Uphill → Borderline |
+| Hubbelfuchs · Kammweg · Borderline | 40,05 | 83 % | **Tourenbuilder** — 12 stretches incl. Hubbelfuchs, Fritzis Ende, Kammweg, Jägerwegle, Borderline |
+| Schlossberg · Nesselplatz · Rosskopf | 29,15 | 35 % | matched from the Trailforks route |
+| Freiburger Dreierlei | 35,43 | 46 % | matched from the Trailforks route |
+
+### The two that are assembled, not matched
+
+`tools/build_schwarzwald_builder_tours.py`, from the app's own Tourenbuilder exports in
+`Material/Schwarzwald/builder_*.json`. Both had been matched first and both came out wrong in ways the
+recording cannot fix — Canadian & Borderline jumped 582 m back to the Borderline's start and ran 12 % over
+its own track, Hubbelfuchs · Kammweg · Borderline jumped 401 m, and about a fifth of their named stretches
+were fragments the matcher had drifted into between parallel lines (on the Rosskopf the club's uphill route
+runs beside and across the trail it serves). The user's call, after seeing it on the map: state the route
+instead of guessing it.
+
+So the ride order is given, and nothing here matches anything:
+
+- **A named stretch is that trail's own geometry**, clipped between the two points the builder cut it at
+  (it splits an element at junctions, so an element's `km` is often less than the whole trail) and oriented
+  by the builder's `reversed`. Measured afterwards: 0,0 m from the trail for every stretch.
+- **A connector is read out of the ORIGINAL recording**, never routed and never invented — the user's own
+  instruction for the 2,3 km through Freiburg ("Den Weg durch die Städt kannst du ja aus der Originaltour
+  lesen"). Three were filled that way: 2 770 m, 1 540 m, 3 702 m. **Picking the right PASS matters**: a loop
+  recording comes past the same place up to four times, so "walk from the point nearest a to the point
+  nearest b" returned 10,4 km of recording for a 2,3 km gap on the first attempt. Every point within 60 m
+  of each end is a candidate and the shortest stretch wins, gated at 3× the straight-line gap.
+- **What the recording does not cover goes to `tools/nearby_trail_connector.py`** afterwards, the user's
+  confirmed procedure: four short gaps (78–152 m) and — the one exception to the GPX-first rule — the
+  **875 m between Fritzis Ende and Baden To The Bone Uphill**, where the recording has no point within 60 m
+  of the uphill's start as the builder set it, so a chain of ways closed it instead. Worth a look on the
+  map before it is taken as settled.
+- **The return leg to the start is left open** in Canadian & Borderline (2 448 m, not in the recording). A
+  Trailrunde does not have to be geometrically closed and the app draws no line from the last segment back
+  to the first, so nothing is missing on screen — and the gap count deliberately ignores that wrap-around.
+- Neither Tour has a gap over 30 m left; the largest are 29 m and 21 m, which is the GPS-noise band the
+  procedure leaves alone.
+
+**Three scripts, in this order, every time** — the first rewrites the region from scratch and would
+otherwise drop the Touren:
+
+```
+python tools/build_schwarzwald.py
+python tools/build_schwarzwald_tours.py          # the two matched Touren
+python tools/build_schwarzwald_builder_tours.py  # the two assembled ones
+python tools/nearby_trail_connector.py --region "Trailmap App/regions/schwarzwald.json" --loop <id> --gap <i ...> --write
+python tools/update_region_versions.py
+```
 | ~~Banden Ride~~ | 37,8 | 59 % | **not built**: its recording jumps 2 593 m in one step — 6,9 % of the Tour, drawn as a straight line across Freiburg. Same call as the three Paganella marathon routes. The other four have no step over 619 m (1,5 %) |
 
 Four things about the method are worth keeping:
@@ -248,15 +291,11 @@ Four things about the method are worth keeping:
   test is the WRONG measure and reported four healthy regions (Bike Kingdom, Laax, Paganella, Portes du
   Soleil) as 0 %: in all 65 Bike Kingdom segments the only points not on the trail's own list are the two
   interpolated clip endpoints, and the user's own spot check was right. Measure the DISTANCE.
-- **These four Tours are provisional.** With the geometry fixed, two of them still show what the recording
-  cannot support: Canadian & Borderline jumps 582 m and runs 12 % over its own track, and
-  Hubbelfuchs · Kammweg · Borderline jumps 401 m. Both come from the matcher extending a stretch to the
-  trail's real end where the recording had already turned off (`endpoint_extend_m`, 60 m), so the next
-  stretch starts *behind* the last one's end. The user's call (2026-08-20) is to **rebuild these in the
-  Tourenbuilder** rather than tune the matcher or hand-patch the data — "Lass es, wir bauen es nach" — and
-  to close the remaining gaps there with original geometry plus the trail connector. The ride order each
-  auto-build reconstructed is a usable starting point for that; the fragments under 25 % of their trail
-  are the parts to distrust.
+- **Two of the four are assembled from the Tourenbuilder, not matched** — see the Touren section above for
+  why and how. The matcher's own failure mode is worth keeping in mind for the next region: it extends a
+  stretch to the trail's real end where the recording had already turned off (`endpoint_extend_m`, 60 m),
+  so the next stretch can start *behind* the last one's end, which reads as a jump backwards and inflates
+  the Tour's length.
 - **The boundary gaps are closed, with `tools/nearby_trail_connector.py`** — the user's own confirmed
   procedure (`docs/nearby-trail-connector.md`), not `close_loop_gaps.py`'s tier system. 34 gaps over 30 m
   across the four Tours, every one solved: 31 by "ein Weg erreicht beide Seiten", 2 by

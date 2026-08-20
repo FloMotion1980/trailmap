@@ -1,0 +1,125 @@
+{
+  "name": "Hubbelfuchs · Kammweg · Borderline",
+  "elements": [
+    {
+      "kind": "trail",
+      "id": "sw_borderline_uphill",
+      "name": "Borderline Uphill",
+      "reversed": false,
+      "from": [47.99035, 7.8948],
+      "to": [48.010061, 7.901597],
+      "km": 5.545,
+      "iConnect": { "off": true, "gapM": 6, "nearestM": 1 }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_hubbelfuchs",
+      "name": "Hubbelfuchs",
+      "reversed": false,
+      "from": [48.01002, 7.90154],
+      "to": [48.01366, 7.87678],
+      "km": 2.042,
+      "iConnect": { "off": true, "gapM": 78, "nearestM": 79 }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_fritzis_ende",
+      "name": "Fritzis Ende",
+      "reversed": false,
+      "from": [48.01395, 7.87583],
+      "to": [48.016595, 7.865859],
+      "km": 1.205,
+      "iConnect": { "off": true, "gapM": 875, "nearestM": 556, "tooFar": true }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_btb_uphill",
+      "name": "Baden To The Bone Uphill",
+      "reversed": false,
+      "from": [48.022065, 7.87432],
+      "to": [48.010052, 7.90158],
+      "km": 5.837,
+      "iConnect": { "off": true, "gapM": 5, "nearestM": 2 }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_windrad_trail",
+      "name": "Windrad Trail",
+      "reversed": false,
+      "from": [48.010007, 7.901579],
+      "to": [48.014953, 7.897997],
+      "km": 1.607,
+      "iConnect": { "alt": 0, "of": 4, "gapM": 2 }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_btb_uphill",
+      "name": "Baden To The Bone Uphill",
+      "reversed": false,
+      "from": [48.014932, 7.898],
+      "to": [48.012553, 7.903688],
+      "km": 1.51,
+      "iConnect": { "alt": 0, "of": 2, "gapM": 5 }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_kandel_hoehenweg_rosskopf",
+      "name": "Kandel Höhenweg Rosskopf",
+      "reversed": false,
+      "from": [48.012597, 7.903719],
+      "to": [48.012346, 7.914437],
+      "km": 0.972,
+      "iConnect": { "off": true, "gapM": 1118, "nearestM": 1140, "tooFar": true }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_kandelhohenweg",
+      "name": "Kandelhöhenweg",
+      "reversed": false,
+      "from": [48.01493, 7.92896],
+      "to": [48.01902, 7.94282],
+      "km": 1.26,
+      "iConnect": { "alt": 0, "of": 2, "gapM": 0 }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_kammweg_130799",
+      "name": "Kammweg",
+      "reversed": false,
+      "from": [48.01902, 7.94282],
+      "to": [48.02208, 7.99498],
+      "km": 4.487,
+      "iConnect": { "alt": 0, "of": 6, "gapM": 105 }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_jagerwegle",
+      "name": "Jägerwegle",
+      "reversed": false,
+      "from": [48.02115, 7.99526],
+      "to": [48.01683, 7.9521],
+      "km": 4.42,
+      "iConnect": { "off": true, "gapM": 2846, "nearestM": 2905, "tooFar": true }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_kandel_hoehenweg_rosskopf",
+      "name": "Kandel Höhenweg Rosskopf",
+      "reversed": true,
+      "from": [48.012346, 7.914437],
+      "to": [48.010159, 7.901601],
+      "km": 1.29,
+      "iConnect": { "off": true, "gapM": 152, "nearestM": 151, "tooFar": true }
+    },
+    {
+      "kind": "trail",
+      "id": "sw_borderline",
+      "name": "Borderline",
+      "reversed": false,
+      "from": [48.00884, 7.90109],
+      "to": [47.99034, 7.89481],
+      "km": 3.052,
+      "iConnect": null
+    }
+  ]
+}
