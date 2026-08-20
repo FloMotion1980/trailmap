@@ -13,7 +13,9 @@
 //          RIDE_ARROW_SPEC, RIDE_ARROW_FILL, RIDE_ARROW_EDGE, ARROW_SPEC, buildChevron,
 //          buildDirectionArrowShapes, highlightSelectedTrail, updateStartDotVisibility,
 //          eachVectorRenderer, setRendererPadding, BUILDER_PANE, LIFT_BAND_PANE,
-//          buildRideArrowShapes, RIDE_ARROW_SPACING_PX, RIDE_ARROW_MAX, rideArrowCumDist, rideArrowCumCache
+//          buildRideArrowShapes, RIDE_ARROW_SPACING_PX, RIDE_ARROW_MAX, rideArrowCumDist, rideArrowCumCache,
+//          reversedId, applyReversedEndpoints, reverse-btn, applyEndpointSize, syncEndpointSizes,
+//          RIDE_ENDPOINT_RADIUS, RIDE_ENDPOINT_WEIGHT, ENDPOINT_RADIUS, showEndpoints
 // @needs   region=bikekingdom, builder=off
 //
 // Added 2026-08-16, once the RIDE infobox redesign settled (per the user's own phone-tested refinements the
@@ -366,6 +368,157 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
     }
   }
 
+  T.test("a trail reversed BEFORE entering RIDE gets its arrows pointing the other way");
+  // 🔄 is unreachable during RIDE (the info panel is hidden), so a reversed view can only come from before --
+  // exactly the case the user asked to pin (2026-08-20). buildRideArrowShapes samples the angle from
+  // latLngAtDistance at targetKm ± 20 m, and that helper measures from the END when `reversed`, so the sign
+  // falls out of the same mechanism the normal arrows use. Worth pinning anyway: RIDE builds its own shapes,
+  // so nothing else would notice if the flag stopped being threaded through.
+  //
+  // Two checks, because neither alone is both exact and honest. The FIRST calls buildRideArrowShapes directly
+  // on a synthetic straight line laid across the current view: on a straight line the answer is exact, and it
+  // needs no trail to be selected, no zoom to cooperate and no guess about how the real trail bends. Three
+  // earlier attempts went through the rendered layer instead and skipped themselves every time -- once for no
+  // arrows in view, once because the two runs' grids sit a constant 100px apart (they are anchored to km 0 of
+  // the line and of the REVERSED line), and once because the visible stretch bent too much to compare
+  // directions at all. The SECOND is the integration half the direct call cannot see: that `reversedId`
+  // actually reaches the layer.
+  if (!m2) {
+    T.skip("no map instance captured earlier in this suite");
+  } else {
+    const b = m2.getBounds(), c = m2.getCenter();
+    const lat0 = c.lat - (c.lat - b.getSouth()) * 0.9, lat1 = c.lat + (b.getNorth() - c.lat) * 0.9;
+    const straightLine = [];
+    for (let i = 0; i <= 60; i++) straightLine.push([lat0 + (lat1 - lat0) * i / 60, c.lng]);
+    const dirsOf = (shapes) => shapes.map((sh) => {
+      const bl = sh[0], tip = sh[1], br = sh[2];
+      const mid = [(bl[0] + br[0]) / 2, (bl[1] + br[1]) / 2];
+      const v = [tip[0] - mid[0], tip[1] - mid[1]], len = Math.hypot(v[0], v[1]) || 1;
+      return [v[0] / len, v[1] / len];
+    });
+    const fwd = dirsOf(buildRideArrowShapes("__reversetest__", straightLine, false, m2.getZoom()));
+    const rev = dirsOf(buildRideArrowShapes("__reversetest__", straightLine, true, m2.getZoom()));
+    T.ok("the straight probe line produces arrows both ways", fwd.length > 0 && rev.length > 0,
+         fwd.length + " forward, " + rev.length + " reversed", "both > 0");
+    if (fwd.length && rev.length) {
+      const dot = fwd[0][0] * rev[0][0] + fwd[0][1] * rev[0][1];
+      T.ok("reversed arrows point the exact opposite way", dot < -0.99, dot.toFixed(4), "< -0.99");
+      T.ok("and a forward arrow runs along the line, not across it", Math.abs(fwd[0][1]) < 0.02,
+           fwd[0][1].toFixed(4), "|east-west component| < 0.02 on a north-south line");
+    }
+    // rideArrowCumDist caches by trail id and the probe just put a fake one in it.
+    clearRideFocusHalo();
+    await TM.wait(300);
+
+    // Integration half: reverse a real trail, then enter RIDE, and check the drawn set CHANGED. Deliberately
+    // not a geometric claim -- if `reversedId` never reached syncRideArrows the two runs would be built from
+    // identical inputs and come out byte-identical, which is what this can see without assuming anything
+    // about the trail's shape.
+    const realFlyTo4 = L.Map.prototype.flyTo;
+    L.Map.prototype.flyTo = function (cc, z) { return this.setView(cc, z, { animate: false }); };
+    let reversedHere = false;
+    try {
+      exitRideMode();
+      await TM.wait(400);
+      await TM.ui.setSwitch("showDirectionArrowsToggle", true);
+      const card = TM.ui.trailCards()[0];
+      const subs = () => {
+        const p = TM.map.overlay().filter((x) => x.getAttribute("fill") === "#ffffff")[0];
+        return p ? (p.getAttribute("d") || "").split("M").filter(Boolean).map((x) => "M" + x.trim()) : [];
+      };
+      card.click();
+      await TM.until(() => TM.$("#infoPanel").classList.contains("visible"), 3000);
+      enterRideMode();
+      await TM.wait(500);
+      // enterRideMode ends by re-centring on the tracked position (an earlier case delivered one), so the
+      // trail has to be brought back under the map AFTER that or nothing is in view at all.
+      card.click();
+      await TM.wait(700);
+      const drawnForward = subs();
+      exitRideMode();
+      await TM.wait(500);
+      const revBtn = TM.$("#ipContent .reverse-btn");
+      if (!revBtn || !drawnForward.length) {
+        T.skip(!revBtn ? "no reverse button on this panel" : "no arrows drawn for the real trail here");
+      } else {
+        revBtn.click();
+        reversedHere = true;
+        await TM.wait(500);
+        enterRideMode();
+        await TM.wait(500);
+        card.click();
+        await TM.wait(700);
+        const drawnReversed = subs();
+        T.ok("the reversed trail still draws arrows", drawnReversed.length > 0, drawnReversed.length, "> 0");
+        T.ok("and they are not the same shapes as the forward run",
+             drawnReversed.some((d) => drawnForward.indexOf(d) === -1),
+             drawnForward.length + " forward vs " + drawnReversed.length + " reversed",
+             "at least one differs");
+      }
+      exitRideMode();
+      await TM.wait(400);
+    } finally {
+      L.Map.prototype.flyTo = realFlyTo4;
+      if (reversedHere) {
+        const back = TM.$("#ipContent .reverse-btn");
+        if (back && back.classList.contains("active")) { back.click(); await TM.wait(400); }
+      }
+    }
+  }
+
+  T.test("Start and Ziel are drawn bigger while riding, and go back to normal afterwards");
+  // Radius 5 is right on a normal map and far too small at arm's length on a bright phone, inside an 18px
+  // focus ring (user, 2026-08-20: "die sieht man fast nicht"). Read off the marker's own path data rather
+  // than app state: a Leaflet circleMarker renders as "M<x>,<y>a<r>,<r> ...", so the first number after the
+  // arc command IS the radius the browser is drawing.
+  {
+    const greenDot = () => {
+      const p = TM.map.overlay().filter((x) => x.getAttribute("fill") === "#3fbf5e")[0];
+      if (!p) return null;
+      const m = /a(\d+(?:\.\d+)?),/.exec(p.getAttribute("d") || "");
+      return m ? { r: +m[1], w: p.getAttribute("stroke-width") } : null;
+    };
+    const realFlyTo5 = L.Map.prototype.flyTo;
+    L.Map.prototype.flyTo = function (cc, z) { return this.setView(cc, z, { animate: false }); };
+    try {
+      exitRideMode();
+      await TM.wait(400);
+      const card = TM.ui.trailCards()[0];
+      card.click();
+      await TM.until(() => TM.$("#infoPanel").classList.contains("visible"), 3000);
+      await TM.wait(400);
+      const normal = greenDot();
+      if (!normal) {
+        T.skip("no Start marker on screen to measure");
+      } else {
+        T.eq("a selected trail's Start dot is radius 5 on a normal map", normal.r, 5);
+        // RIDE always re-centres on the tracked position -- applyRideMapOffset ends with a panTo, and
+        // showTrailInfo goes through updateRideInfoPanel, so even clicking the card again cannot keep a
+        // faraway trail in view. Clicking it first and THEN reporting a fix at the map centre puts the
+        // rider at the trail, which is both what a real ride looks like and the only way this stays
+        // measurable: a clipped marker renders as "M0 0" and has no radius to read at all.
+        const at = m2.getCenter();
+        updateUserLocation({ coords: { latitude: at.lat, longitude: at.lng, accuracy: 8 } }, false);
+        await TM.wait(200);
+        enterRideMode();
+        await TM.wait(800);
+        const riding = greenDot();
+        T.ok("and grows while riding", riding && riding.r > normal.r,
+             riding ? riding.r : null, "> " + normal.r);
+        T.ok("with a heavier outline so it still reads inside the ring",
+             riding && parseFloat(riding.w) > parseFloat(normal.w),
+             riding ? riding.w : null, "> " + normal.w);
+        exitRideMode();
+        await TM.wait(600);
+        const back = greenDot();
+        T.eq("leaving RIDE puts the radius back", back ? back.r : null, normal.r);
+        T.eq("and the outline too", back ? back.w : null, normal.w);
+      }
+    } finally {
+      L.Map.prototype.flyTo = realFlyTo5;
+    }
+  }
+
   T.test("RIDE does not allocate a full-size renderer for the empty builder pane");
   // Each vector pane costs one SVG sized to the padded bounds, and while rotated that is the same surface
   // whether the pane holds 655 paths or none: measured on a phone in RIDE, 3235x3236 = 39.9 MB for a builder
@@ -381,6 +534,13 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
   const childrenBefore = builderPaneEl().childElementCount;
   enterRideMode();
   await TM.wait(600);
+  // Only a pane that has NOT been used yet can show this. Once the Tourenbuilder has actually drawn a route
+  // glow -- which the lifts and lists suites do earlier in a full bundle -- the renderer legitimately exists
+  // and legitimately gets padded, which is the documented behaviour, not a regression. Saying so out loud
+  // beats a check that quietly means different things depending on which suites ran first.
+  if (childrenBefore > 0) {
+    T.skip("an earlier suite already used the Tourenbuilder, so its pane legitimately has a renderer");
+  } else {
   // Weak on purpose and known to be so: once an earlier suite in the same bundle has used the builder, the
   // renderer already exists and this can only report "unchanged". The check that actually bites is the
   // padded-panes one below -- see tests/MUTATIONS.md, which records which of the two the mutation kills.
@@ -400,6 +560,7 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
        padded.every((e) => !/builder/.test(e.parentElement.className || "")),
        padded.map((e) => (e.parentElement.className || "").replace("leaflet-pane leaflet-", "")).join(","),
        "no builder-pane");
+  }
   exitRideMode();
   await TM.wait(400);
 

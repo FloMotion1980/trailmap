@@ -2760,6 +2760,7 @@ function recoverFromRotationCrash(){
     rideMode = false;
     document.documentElement.classList.remove("ride-mode");
     syncRideModeChrome();
+    syncEndpointSizes();
     clearRideMapOffset();
     clearRideFocusHalo();
     stopFollowing();
@@ -3793,6 +3794,7 @@ function enterRideMode(){
   applyRideFocusHalo(openTrailId);
   updateRideInfoPanel(); // also applies the map offset, now that the trail row's height (if any) is set
   if (orientationHandler === null) requestOrientationPermission();
+  syncEndpointSizes();
   setHeadingUp(true);
   if (!followMode) startFollowing();
 }
@@ -3802,6 +3804,7 @@ function exitRideMode(){
   rideMode = false;
   document.documentElement.classList.remove("ride-mode");
   syncRideModeChrome();
+  syncEndpointSizes();   // rideMode is already false, so this puts them back to the normal radius
   clearRideMapOffset();
   clearRideFocusHalo();
   setHeadingUp(false);
@@ -6158,9 +6161,32 @@ let currentSelectedId = null;
 // lift-specific pair (2026-07-26, per the user: "Im Idealfall ist das auch der gleiche Code").
 function endpointOwner(id){ return lineLayers[id] || liftLayers[id]; }
 
+// Start/Ziel (and a lift's Tal-/Bergstation) are radius-5 dots, which is right on a normal map and far too
+// small while riding: at arm's length on a bright phone, inside an 18px focus ring, they nearly vanish
+// (user, 2026-08-20 -- "die sieht man fast nicht"). During RIDE they are drawn at radius 9, i.e. the same
+// 18px across as the ring itself, with a heavier outline so the green/red still reads against it.
+const ENDPOINT_RADIUS = 5, ENDPOINT_WEIGHT = 1.5;
+const RIDE_ENDPOINT_RADIUS = 9, RIDE_ENDPOINT_WEIGHT = 2.5;
+function applyEndpointSize(layer){
+  if (!layer || !layer.startMarker) return;
+  const r = rideMode ? RIDE_ENDPOINT_RADIUS : ENDPOINT_RADIUS;
+  const w = rideMode ? RIDE_ENDPOINT_WEIGHT : ENDPOINT_WEIGHT;
+  layer.startMarker.setStyle({ radius: r, weight: w });
+  layer.endMarker.setStyle({ radius: r, weight: w });
+}
+// Entering or leaving RIDE has to resize whatever is ALREADY on the map -- showEndpoints only covers the
+// pair being added. Walks both registries rather than tracking which pair is shown: it runs twice per ride,
+// and a "which one was it" variable is exactly the kind of duplicated state that goes stale.
+function syncEndpointSizes(){
+  [lineLayers, liftLayers].forEach(reg => Object.values(reg).forEach(layer => {
+    if (layer && layer.startMarker && map.hasLayer(layer.startMarker)) applyEndpointSize(layer);
+  }));
+}
+
 function showEndpoints(id){
   const layer = endpointOwner(id);
   if (!layer) return;
+  applyEndpointSize(layer);
   if (!map.hasLayer(layer.startMarker)) layer.startMarker.addTo(map);
   if (!map.hasLayer(layer.endMarker)) layer.endMarker.addTo(map);
   layer.startMarker.bringToFront();

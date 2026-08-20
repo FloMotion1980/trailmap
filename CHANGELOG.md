@@ -22,6 +22,37 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Start and Ziel are drawn at radius 9 instead of 5 while riding**, with a heavier outline, after the user
+  reported they nearly vanish at arm's length inside the 18px focus ring. `applyEndpointSize` is called by
+  `showEndpoints` for the pair being added, and `syncEndpointSizes` resizes whatever is already on the map
+  when RIDE is entered or left (including from the crash-recovery path). Applies to a lift's
+  Tal-/Bergstation too, since both registries store the same marker pair.
+- **A trail reversed before entering RIDE now has a test proving its arrows turn around.** They already did —
+  `latLngAtDistance` measures from the end when `reversed`, so the sign falls out of the shared helper — but
+  RIDE builds its own shapes, so nothing else would have noticed if the flag stopped being threaded through.
+  Measured directly: the direction flips to a dot product of exactly −1.0000. **Three earlier versions of
+  this case skipped themselves** rather than failing, each for a different real reason (no trail in view
+  because `enterRideMode` re-centres on the tracked position; the forward and reversed grids sit a constant
+  100px apart, being anchored to km 0 of the line and of the reversed line; and the visible stretch bending
+  too much for any direction comparison). The version that stands calls `buildRideArrowShapes` directly on a
+  synthetic straight line laid across the current view, where the answer is exact and needs nothing to
+  cooperate, plus one integration check that the reversed run's shapes actually differ from the forward run's
+  — which is what proves `reversedId` reaches the layer at all.
+- **The focused trail's RIDE arrows are now derived from the visible stretch, so there are always a couple on
+  screen instead of usually none.** The normal arrows sample the WHOLE trail every 300 m and cap at 40 — on a
+  90 km tour that is one every 2.25 km, so a screen showing 300 m of it shows none at all. That, not the size,
+  is why they read as useless while riding (user, 2026-08-20). **What the zoom controls is the SPACING, never
+  the position**: arrows sit on a grid anchored at km 0 of the trail, so each keeps its place on the ground and
+  glides past like a signpost, and only which grid points fall in view changes as the map pans. The first idea
+  — put one in the middle of what is visible — was wrong for exactly that reason and is recorded as such: it
+  gives an arrow no fixed home, so it is recomputed and jumps on every pan. `RIDE_ARROW_SPACING_PX` is 400,
+  tuned against measured counts (a long Tour gives 5/4/1 at z15/16/17, a single trail 1–2 throughout).
+  Bounded work per update: one linear pass over the coords finds which stretch is on screen, the grid is then
+  walked over that range only, and the cumulative-distance array is cached per trail. Re-derived on `moveend`
+  as well as `zoomend`, since panning is what changes the visible stretch while riding. New mutation-checked
+  case in `tests/browser/ride.js` (15 cases now) whose pan check is the only one that can tell the two designs
+  apart — the arrow COUNT is identical either way. Out-and-back stretches still show both directions; that
+  needs the progress cursor and is deliberately left for later.
 - **The Schwarzwald's four Touren have their segment gaps closed**, with `tools/nearby_trail_connector.py`
   — the user's own confirmed procedure, not `close_loop_gaps.py`'s tier system. All 34 gaps over 30 m
   solved (31 "ein Weg erreicht beide Seiten", 2 "Weg folgen und kappen", 1 chain of ways), every applied
