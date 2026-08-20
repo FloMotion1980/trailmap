@@ -28,7 +28,7 @@ Jeder Build prüft **jeden Trail** gegen die Linie. Aktuell: alle 474 auf der S�
 
 ## Stand
 
-**474 Trails, 533,1 km, 12 Sub-Regionen (davon 3 Bikeparks), 2 Lifte, 12 Orte, 1,21 MB.** Bounds
+**474 Trails, 533,1 km, 12 Sub-Regionen (davon 3 Bikeparks), 3 Lifte, 12 Orte, 1,21 MB.** Bounds
 `[[47.74454, 6.36278], [48.17171, 7.28295]]`. Keine Touren/Trailrunden. Kein einziger Trail-Slug ist in beiden
 Vogesen-Regionen (geprüft), und `tools/region_dupe_check.py suedvogesen` findet **keine geometrische
 Überlappung** mit irgendeiner bestehenden Region.
@@ -112,7 +112,7 @@ schon da, nur in `guebwiller` verborgen.)
 
 ## Lifte
 
-**Zwei**, beide Sessellifte, beide mit dem dokumentierten Verfahren gebaut (`tools/add_lifts.py`, Eintrag
+**Drei** — zwei Sessellifte und ein Teléski, alle mit dem dokumentierten Verfahren gebaut (`tools/add_lifts.py`, Eintrag
 `suedvogesen`): Betreiber entscheidet die Zugehörigkeit, OSM liefert nur die Geometrie, gespeichert wird
 Talstation zuerst.
 
@@ -120,13 +120,35 @@ Talstation zuerst.
 |---|---|---:|---|---|
 | **Montjoie** (Lac Blanc) | `bp_lacblanc` | 1 191 m | 867 → 1 151 m | Station nennt nur "un télésiège débrayable"; es ist der einzige Sessellift dort, Bergstation 22 m vom Start aller 7 DH-Pisten |
 | **Vologne Express** (La Bresse) | `bp_labresse` | 1 173 m | 921 → 1 174 m | vom Betreiber namentlich als Lift des Bikeparks genannt; Bergstation 9 m von den Pisten-Startpunkten |
+| **Tremplin 1** (Markstein) | `bp_markstein` | 762 m | 1 036 → 1 180 m | Teléski; Bergstation 78 m von einem Pisten-Start, **Talstation 10 m von einem Pisten-Ziel**, Linie bleibt 10–22 m an allen sechs Pisten — siehe unten |
 
-**Markstein bekommt bewusst keinen Lift.** kelbikepark sagt "1" für Biker geöffnete Bahn und ein
-France-3-Artikel erwähnt einen im Sommer laufenden Sessellift — aber **OSM hat am Markstein überhaupt
-keinen `chair_lift`**, nur Teleskis und Seillifte (nächster: `Tremplin 1`, 78 m von den Pisten-Startpunkten).
-Zusammen mit der toten Betreiberseite heißt das: welcher Lift Bikes mitnimmt, ist unbekannt, und
-Zugehörigkeit wird nie geraten (`docs/lifts-feature.md`). Ebenfalls ausgeschlossen und im Skript
-begründet: Gérardmer/La Mauselaine, Ballon d'Alsace, sowie `Le Chitelet` neben dem Vologne Express.
+**Markstein: `Tremplin 1`, ein Teléski** — nachgetragen 2026-08-20, nachdem der Nutzer einen Kandidaten
+nannte (*"Das könnte der Lift in Markstein sein: Téléski Grenouillère 1"*). Der Hinweis zeigte auf den
+richtigen Hang, aber die Messung gegen die sechs Pisten (die ihre echte Höhe aus Trailforks' Profil
+mitbringen, 1 168 m oben bis 1 034 m unten) schließt Grenouillère aus und lässt genau einen Kandidaten
+übrig:
+
+| Lift | Länge | Hm | Bergstation → Pisten-Start | Talstation → Pisten-Ziel |
+|---|---:|---:|---:|---:|
+| **Tremplin 1** | 762 m | 143 | **78 m** | **10 m** |
+| Tremplin 2 | 669 m | 162 | 306 m | 12 m |
+| Grenouillère 1 | 324 m | 40 | 174 m | 469 m |
+| Grenouillère 2 | 324 m | 41 | 172 m | 466 m |
+| Grenouillère 3 | 252 m | 34 | 142 m | 434 m |
+
+Grenouillère 1 kann es nicht sein: seine **Talstation liegt 469 m entfernt und 110 Hm über** den
+Pisten-Zielen — man käme unten an und müsste 110 Hm hinauflaufen — und 40 Hm Förderhöhe bedienen keine
+Abfahrt mit 125 Hm. Tremplin 1 passt an beiden Stationen, hebt genau die Höhe, die die Pisten abfahren,
+und seine Linie bleibt über die ganze Länge 10–22 m an allen sechs Pisten, klettert also den Hang hoch,
+den sie herunterkommen. Tremplin 2 ist der parallele Schlepper daneben.
+
+Dass es ein Teléski ist, passt zusammen: Markstein hat **gar keinen Sessellift**, und kelbikepark nennt
+genau "1" für Biker geöffnete Bahn. Beweislage damit dieselbe Klasse wie bei Montjoie (Betreiberangabe
+"ein Lift" + genau ein Kandidat, der zu den Pisten passt), nicht ein OSM-Bike-Tag — das schließt
+`docs/lifts-feature.md` ausdrücklich aus. Eine direkte Namensbestätigung des Betreibers gibt es nicht
+(Alterssperre auf der Seite); falls sie auftaucht und widerspricht, ist es eine Zeile in
+`tools/add_lifts.py`. Weiter ausgeschlossen und dort begründet: Gérardmer/La Mauselaine, Ballon d'Alsace,
+`Le Chitelet` neben dem Vologne Express.
 
 **Ein Rebuild löscht die Lifte nicht mehr.** `add_lifts.py` schreibt sie *nach* dem Region-Build in die
 Datei, und `write_region()` gibt nur aus, was es bekommt — `build_suedvogesen.py` liest ein vorhandenes
@@ -248,8 +270,6 @@ Regionen. Fehlt noch: je ein Eintrag in `CHANGELOG.md` und `docs/backlog.md`.
 
 ## Bekannte Lücken
 
-- **Markstein hat keinen Lift in den Daten** — siehe oben; braucht eine Betreiberauskunft, welche der
-  Teleskis Bikes mitnehmen.
 - **Markstein-Schwierigkeiten unbestätigt** und vermutlich zwei Pisten unvollständig — siehe oben.
 - **Keine Touren/Trailrunden.** Trailforks hat für mehrere dieser Regionen „Routes" (u. a. „Enduro
   Bressaud", das hier als eigene Trailforks-Region mit 27 Trails auftaucht und vermutlich ein

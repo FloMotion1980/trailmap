@@ -47,30 +47,51 @@ LIFTS = {
     #   unambiguous. (A platter of the SAME name sits beside it, hence the `aerialway=` filter.)
     # * La Bresse-Hohneck: the operator and France Montagnes both name the `Vologne Express` chairlift
     #   as the park's lift; OSM's way of that name ends 9 m from the park trails' tops.
-    # * **Markstein has no lift here on purpose.** kelbikepark.fr says "1" lift is open to bikers and a
-    #   France 3 piece mentions a chairlift running in summer, but OSM has NO chair_lift at Markstein at
-    #   all -- only telekis and rope tows, the nearest being `Tremplin 1`, 78 m from the park's trail
-    #   tops. And the operator page kelbikepark names as official
-    #   (alsacefreerideacademy.fr/bikepark-markstein) now serves an "18+ ONLY" age gate rather than a
-    #   bike park, while lemarkstein.net and the valley tourism site publish no lift detail. Membership
-    #   comes from the operator, never from a guess (docs/lifts-feature.md), so nothing is added until
-    #   someone can confirm WHICH lift takes bikes.
+    # * Markstein: `Tremplin 1`, a TELESKI -- there is no chairlift at Markstein at all. kelbikepark.fr
+    #   says exactly "1" lift is open to bikers, so if bikers ride a lift there it has to be a T-bar, and
+    #   the geometry says which one without ambiguity. Measured against the park's six pistes (which carry
+    #   their own real elevation from Trailforks' profile, 1168 m at the top down to 1034 m):
+    #     Tremplin 1     762 m, 143 Hm, 1036 -> 1179 m   top 78 m from a piste start, BASE 10 m from a
+    #                                                    piste finish, and its line stays within 10-22 m
+    #                                                    of all SIX pistes -- it climbs the slope they
+    #                                                    descend, and lifts exactly their vertical.
+    #     Grenouillere 1 324 m,  40 Hm, 1146 -> 1187 m   the user's own suggestion, and ruled out by the
+    #                                                    numbers: its BASE sits 469 m away and 110 m ABOVE
+    #                                                    the piste finishes, so a rider would end each run
+    #                                                    110 Hm below it, and 40 Hm cannot serve a 125 Hm
+    #                                                    descent. Same for Grenouillere 2/3.
+    #     Tremplin 2     669 m, 162 Hm                   the parallel T-bar on the same slope; its base is
+    #                                                    also at the finishes (12 m) but its top is 306 m
+    #                                                    from any piste start, so Tremplin 1 is the one.
+    #   This is the same evidence class as Montjoie above (an operator count of lifts, plus exactly one
+    #   candidate that fits the pistes at both stations) rather than an OSM bike tag, which is what
+    #   docs/lifts-feature.md rules out. The operator page kelbikepark names as official
+    #   (alsacefreerideacademy.fr/bikepark-markstein) now serves an "18+ ONLY" age gate, so a direct
+    #   operator confirmation of the NAME is not available -- if it ever is and it disagrees, this is one
+    #   line.
     # * Gerardmer (La Mauselaine) and Ballon d'Alsace have chairlifts/telekis but no operator statement
     #   about summer bike transport anywhere, and no lift-served DH park -- excluded, see below.
     # ---------------------------------------------------------------------------------------------
-    "suedvogesen": dict(bbox="47.99,6.94,48.17,7.12", lifts=[
+    "suedvogesen": dict(bbox="47.90,6.94,48.17,7.12", lifts=[
         dict(id="lift_sv_montjoie", name="Montjoie", region="bp_lacblanc",
              osm=r"^Montjoie$", aerialway="chair_lift",
              note="the Lac Blanc bike park's own lift -- the station calls it only 'un telesiege "
                   "debrayable'; it is the single chair_lift there and its top is 22 m from every DH "
                   "piste's start. A platter of the same name is a different lift"),
+        dict(id="lift_sv_tremplin1", name="Tremplin 1", region="bp_markstein",
+             osm=r"^Tremplin 1$", aerialway="drag_lift",
+             note="the Bikepark du Markstein's lift -- a T-bar, since Markstein has no chairlift at all; "
+                  "chosen on geometry because the operator page is gone, see the note above the table"),
         dict(id="lift_sv_vologne_express", name="Vologne Express", region="bp_labresse",
              osm=r"^Vologne Express$",
              note="the lift for Bike Park La Bresse-Hohneck's 10 pistes, named as such by the operator; "
                   "its top is 9 m from the park trails' tops"),
     ], excluded=[
-        ("Markstein (all lifts)", "1 lift is open to bikers per kelbikepark, but OSM has no chair_lift "
-                                  "there and the operator page is gone -- which lift is unknown"),
+        ("Grenouillere 1/2/3 (Markstein)", "the user's first guess, but their base is 469 m from and "
+                                           "110 m ABOVE the piste finishes, and 40 Hm cannot serve a "
+                                           "125 Hm descent"),
+        ("Tremplin 2 (Markstein)", "parallel T-bar on the same slope; base at the finishes but top 306 m "
+                                   "from any piste start"),
         ("Gerardmer / La Mauselaine", "chairlifts run, but no operator statement on summer bike "
                                       "transport and no lift-served DH park"),
         ("Ballon d'Alsace", "no operator statement on summer bike transport"),

@@ -52,6 +52,12 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   Talklammer geprüft. Die beiden Lifte hängen jetzt an ihrem Park statt am Tal. (3) **Alle
   Sub-Region-Labels auf je einen Namen gekürzt** — aus "Saverne / Dabo / Wangenbourg" wurde "Saverne",
   aus "Épinal / Vallon d'Olima" "Épinal"; ein Seitenleisten-Chip hat ~14 Zeichen, bevor er umbricht.
+- **Markstein hat jetzt auch einen Lift: `Tremplin 1`** (Teléski, 762 m, 143 Hm) — der Nutzer nannte
+  einen Kandidaten ("Téléski Grenouillère 1"), der auf den richtigen Hang zeigte, aber die Messung gegen
+  die sechs Pisten schließt ihn aus: seine Talstation liegt 469 m entfernt und **110 Hm über** den
+  Pisten-Zielen, und 40 Hm Förderhöhe bedienen keine 125-Hm-Abfahrt. Tremplin 1 passt an beiden Stationen
+  (78 m zum Start, **10 m zum Ziel**), hebt genau die Höhe der Abfahrten und bleibt über die ganze Länge
+  10–22 m an allen sechs Pisten. Damit sind alle drei Bikeparks liftbedient.
 - Nebenbei geklärt: **Bikepark Markstein ist vollständig**, nicht lückenhaft. Als eigene Sub-Region
   sichtbar sind es genau die 6 Pisten, die kelbikepark nennt (inkl. `Dexter`, das vorher in `guebwiller`
   verborgen war) — eine ist bei Trailforks nur eine Stufe härter eingetragen als beim Betreiber, statt
