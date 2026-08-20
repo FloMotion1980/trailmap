@@ -179,7 +179,13 @@ def pick(data, elements, sub_labels, allow_hamlets, cap=None):
             pop = int(str(tags.get("population", "0")).replace(" ", ""))
         except ValueError:
             pop = 0
-        named = name.lower() in haystack
+        # A WHOLE WORD, not a substring. "Au" (1 335 inhabitants, in the Hexental) counted as a namesake
+        # of the Schwarzwald because "au" is the tail of "Bikepark Todtnau" -- and being a namesake both
+        # sorts first and is exempt from MIN_SEPARATION_KM, so it took the Freiburg bracket's first slot
+        # and then knocked out Freiburg itself, a city of 230 000, for sitting within 8 km of it. Found
+        # 2026-08-20 while building the Schwarzwald; a region only re-picks its places under --force, so
+        # this changes no shipped list until one is deliberately rebuilt.
+        named = re.search(r"\b%s\b" % re.escape(name.lower()), haystack) is not None
         # Three ways for a small settlement to qualify, and proximity is deliberately NOT one of them: in a
         # bike park the trails run past everything, so distance alone gave Bikecircus three slots to Grießen
         # (79 inhabitants), Berg (130) and Rain (229), and gave Sölden nine unnamed hamlets (Wildmoos, Platte,

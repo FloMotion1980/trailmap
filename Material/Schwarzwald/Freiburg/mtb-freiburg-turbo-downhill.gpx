@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<gpx version="1.1" creator="mountainbike-freiburg.com" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd">
+<metadata>
+<name>Turbo Trail</name>
+<link href="https://www.mountainbike-freiburg.com/">
+<text>MTB Freiburg e.V.</text>
+</link>
+</metadata>
+<trk>
+<name>
+Turbo
+</name>
+<trkseg>
+<trkpt lat="48.12525" lon="7.88053">
+<ele>311</ele>
+<time>2025-07-28T09:07:03-07:00</time>
+</trkpt>
+<trkpt lat="48.12536" lon="7.8802">
+<ele>307</ele>
+<time>2025-07-28T09:07:04-07:00</time>
+</trkpt>
+<trkpt lat="48.12542" lon="7.87993">
+<ele>307</ele>
+<time>2025-07-28T09:07:05-07:00</time>
+</trkpt>
+<trkpt lat="48.1255" lon="7.87972">
+<ele>306</ele>
+<time>2025-07-28T09:07:06-07:00</time>
+</trkpt>
+<trkpt lat="48.12547" lon="7.87965">
+<ele>306</ele>
+<time>2025-07-28T09:07:07-07:00</time>
+</trkpt>
+<trkpt lat="48.12529" lon="7.87946">
+<ele>303</ele>
+<time>2025-07-28T09:07:08-07:00</time>
+</trkpt>
+<trkpt lat="48.12512" lon="7.87935">
+<ele>298</ele>
+<time>2025-07-28T09:07:09-07:00</time>
+</trkpt>
+</trkseg>
+</trk>
+</gpx>

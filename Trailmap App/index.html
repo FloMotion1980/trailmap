@@ -1475,6 +1475,27 @@ const REGION_CATALOG = {
       andreasberg: { label: "St. Andreasberg", color: "#5a8f3c" },
       braunlage: { label: "Braunlage/Wurmberg", color: "#b8860b" }
     }
+  },
+  // Built 2026-08-20 from four sources, in this order of authority: Mountainbike Freiburg e.V.'s own
+  // per-trail GPX *and* its own difficulty colours; that club's Trailforks association (12404) for the
+  // trails its site does not list; Trailguide's anonymous JSON API for everything no operator publishes;
+  // OSM/Trailforks for Bikepark Todtnau, which publishes no GPX at all. `mtbfr` is the one
+  // ORGANISATIONAL bracket here -- the club's own network wherever it is, including its Ortsgruppen
+  // trails at Waldkirch and Emmendingen -- on the user's own call. See docs/schwarzwald.md for which
+  // source wins where, the dropped same-line-two-names duplicates, the three overlapping pairs kept on
+  // purpose, and why Todtnau's two runs are shorter than the operator's stated distance.
+  schwarzwald: {
+    countries: ["DE"], label: "Schwarzwald", file: "regions/schwarzwald.json", trailCount: 119,
+    bounds: [[47.74911, 7.72534], [48.62848, 8.40915]],
+    subRegions: {
+      mtbfr:    { label: "MTB Freiburg e.V.",     color: "#c2410c" },
+      freiburg: { label: "Freiburg & Umgebung",   color: "#0891b2" },
+      todtnau:  { label: "Bikepark Todtnau",      color: "#7c3aed" },
+      elztal:   { label: "Elztal & Kandel",       color: "#0f766e" },
+      sued:     { label: "Südschwarzwald",        color: "#b45309" },
+      mitte:    { label: "Mittlerer Schwarzwald", color: "#1d4ed8" },
+      nord:     { label: "Nordschwarzwald",       color: "#be185d" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;

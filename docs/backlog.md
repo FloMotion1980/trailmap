@@ -364,10 +364,9 @@ Added to the list later the same day (no order given beyond "also on the list"):
      stated distance to within 2 m.
 10. **Geißkopf / Freiburg / Todtnau** — added 2026-08-11. **Freiburg and Todtnau are BUILT**
     (2026-08-20) as part of a whole-range `schwarzwald` region: 119 trails, the Hasenhorn chairlift,
-    seven sub-regions, `docs/schwarzwald.md` for the full account. The region file, its build script
-    and its version hash are all in place, but **the `REGION_CATALOG` entry is not** — `index.html`
-    was being edited by another session at the time, so the entry the build script prints still has
-    to be pasted in before the region appears in the app. **Geißkopf is still open** and is NOT part
+    seven sub-regions, `docs/schwarzwald.md` for the full account. Region file, build script, version
+    hash and the `REGION_CATALOG` entry are all in place (the entry was pasted in once the session that
+    had `index.html` open was done). **Geißkopf is still open** and is NOT part
     of that region: it is in the Bayerischer Wald, 300 km east, and only ever shared this backlog
     item by accident of when the three links were collected. Still to do for the Schwarzwald: a
     Trailforks sweep (only the club's own association 12404 has been worked in), Bikepark Bad
@@ -467,6 +466,24 @@ bottom-first by elevation and require the join to keep climbing.
       long point-to-point routes that partly run on gravel roads, and several published "tours" model the
       shuttle/lift leg as a straight line — exclude those or build them as Touren with segments, never as
       a trail.
+
+15. **Madeira** (PT) — requested by the user 2026-08-20, alongside the Gardasee. Nothing researched
+    yet. What to know before starting:
+    - **It is a shuttle island, not a lift island** — the classic descents (Pico do Arieiro, Pico Ruivo,
+      Encumeada, Fanal/Ribeira da Janela, Ponta do Pargo, Santo da Serra) all start from a van drop, so
+      expect NO lifts and no `lifts` array at all, like Odenwald/Pfälzerwald/Donnersberg. Say so
+      explicitly rather than leaving the piece unaccounted for.
+    - **Sub-regions probably split east/central/west plus the north coast** (Funchal/Santo da Serra,
+      Arieiro/Ruivo, Encumeada/São Vicente, Porto Moniz/Fanal, Ponta do Pargo) — decide it from where the
+      trails actually are once they are harvested, the same way the Schwarzwald's seven were.
+    - **Sources:** the operators here are the guiding/shuttle companies (Freeride Madeira and friends),
+      which publish descriptions but rarely per-trail GPX with a grade — so this is very likely a
+      **Trailforks-first** region (its `madeira` region tree is well populated), with Trailguide's
+      anonymous API worth a check first since it costs two calls (see `docs/schwarzwald.md`).
+    - **Watch the levadas.** Many Madeira lines run along irrigation channels that are hiking
+      infrastructure, sometimes bike-forbidden and sometimes tunnels; a Trailforks polyline says nothing
+      about whether riding it is legal. Do not silently ship a trail whose own source flags it as hiking,
+      and keep the activitytype filter on (the Harz's "Madonon Ridgeline" was Trailforks-tagged Hike).
 
 Sourcing order for each of these: **try the operator's own site for direct per-trail GPX before
 falling back to OSM + a rate-limited elevation API.** Austrian/Swiss resort sites in particular have

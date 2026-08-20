@@ -1,0 +1,1230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="mountainbike-freiburg.com" schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd http://www.garmin.com/xmlschemas/PowerExtension/v1 http://www.garmin.com/xmlschemas/PowerExtensionv1.xsd http://www.topografix.com/GPX/gpx_style/0/2 http://www.topografix.com/GPX/gpx_style/0/2/gpx_style.xsd" xmlns:gpxtpx="http://www.garmin.com/xmlschemas/TrackPointExtension/v1" xmlns:gpxx="http://www.garmin.com/xmlschemas/GpxExtensions/v3" xmlns:gpxpx="http://www.garmin.com/xmlschemas/PowerExtension/v1" xmlns:gpx_style="http://www.topografix.com/GPX/gpx_style/0/2">
+  <metadata>
+    <name>Borderline Uphill</name>
+    <author>
+      <name>gpx.studio</name>
+      <link href="https://gpx.studio"/>
+    </author>
+    <link href="https://www.mountainbike-freiburg.com/">
+      <text>Mountainbike Freiburg e.V.</text>
+    </link>
+  </metadata>
+  <trk>
+    <name>Borderline Uphill</name>
+    <trkseg>
+      <trkpt lat="47.99035" lon="7.8948">
+        <ele>312</ele>
+        <time>2025-07-27T23:05:41.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99048" lon="7.89498">
+        <ele>321</ele>
+        <time>2025-07-27T23:05:42.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99095" lon="7.89532">
+        <ele>332</ele>
+        <time>2025-07-27T23:05:43.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99137" lon="7.89586">
+        <ele>334</ele>
+        <time>2025-07-27T23:05:44.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99147" lon="7.89601">
+        <ele>338</ele>
+        <time>2025-07-27T23:05:45.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99206" lon="7.89723">
+        <ele>362</ele>
+        <time>2025-07-27T23:05:46.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99231" lon="7.89803">
+        <ele>366</ele>
+        <time>2025-07-27T23:05:47.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99271" lon="7.89874">
+        <ele>367</ele>
+        <time>2025-07-27T23:05:48.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99312" lon="7.89977">
+        <ele>383</ele>
+        <time>2025-07-27T23:05:49.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99302" lon="7.89979">
+        <ele>383</ele>
+        <time>2025-07-27T23:05:50.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99204" lon="7.89944">
+        <ele>402</ele>
+        <time>2025-07-27T23:05:51.000Z</time>
+      </trkpt>
+      <trkpt lat="47.9918" lon="7.89929">
+        <ele>402</ele>
+        <time>2025-07-27T23:05:52.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99135" lon="7.8989">
+        <ele>401</ele>
+        <time>2025-07-27T23:05:53.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99121" lon="7.89877">
+        <ele>407</ele>
+        <time>2025-07-27T23:05:54.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99097" lon="7.89864">
+        <ele>406</ele>
+        <time>2025-07-27T23:05:55.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99085" lon="7.89867">
+        <ele>406</ele>
+        <time>2025-07-27T23:05:56.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99074" lon="7.89877">
+        <ele>409</ele>
+        <time>2025-07-27T23:05:57.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99069" lon="7.8989">
+        <ele>403</ele>
+        <time>2025-07-27T23:05:58.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99066" lon="7.89965">
+        <ele>414</ele>
+        <time>2025-07-27T23:05:59.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99057" lon="7.90029">
+        <ele>420</ele>
+        <time>2025-07-27T23:06:00.000Z</time>
+      </trkpt>
+      <trkpt lat="47.9903" lon="7.90128">
+        <ele>429</ele>
+        <time>2025-07-27T23:06:01.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99017" lon="7.90163">
+        <ele>436</ele>
+        <time>2025-07-27T23:06:02.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99019" lon="7.90174">
+        <ele>436</ele>
+        <time>2025-07-27T23:06:03.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99025" lon="7.90179">
+        <ele>436</ele>
+        <time>2025-07-27T23:06:04.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99037" lon="7.90167">
+        <ele>436</ele>
+        <time>2025-07-27T23:06:05.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99066" lon="7.90107">
+        <ele>434</ele>
+        <time>2025-07-27T23:06:06.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99091" lon="7.90081">
+        <ele>438</ele>
+        <time>2025-07-27T23:06:07.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99101" lon="7.90079">
+        <ele>443</ele>
+        <time>2025-07-27T23:06:08.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99126" lon="7.90104">
+        <ele>447</ele>
+        <time>2025-07-27T23:06:09.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99138" lon="7.90125">
+        <ele>447</ele>
+        <time>2025-07-27T23:06:10.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99179" lon="7.90216">
+        <ele>461</ele>
+        <time>2025-07-27T23:06:11.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99219" lon="7.90288">
+        <ele>463</ele>
+        <time>2025-07-27T23:06:12.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99268" lon="7.90353">
+        <ele>470</ele>
+        <time>2025-07-27T23:06:13.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99291" lon="7.90395">
+        <ele>476</ele>
+        <time>2025-07-27T23:06:14.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99302" lon="7.90433">
+        <ele>479</ele>
+        <time>2025-07-27T23:06:15.000Z</time>
+      </trkpt>
+      <trkpt lat="47.9933" lon="7.90482">
+        <ele>481</ele>
+        <time>2025-07-27T23:06:16.000Z</time>
+      </trkpt>
+      <trkpt lat="47.9935" lon="7.905">
+        <ele>489</ele>
+        <time>2025-07-27T23:06:17.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99392" lon="7.90524">
+        <ele>496</ele>
+        <time>2025-07-27T23:06:18.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99408" lon="7.90528">
+        <ele>497</ele>
+        <time>2025-07-27T23:06:19.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99424" lon="7.90537">
+        <ele>497</ele>
+        <time>2025-07-27T23:06:20.000Z</time>
+      </trkpt>
+      <trkpt lat="47.9946" lon="7.90543">
+        <ele>494</ele>
+        <time>2025-07-27T23:06:21.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99541" lon="7.90598">
+        <ele>506</ele>
+        <time>2025-07-27T23:06:22.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99574" lon="7.90593">
+        <ele>509</ele>
+        <time>2025-07-27T23:06:23.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99603" lon="7.90539">
+        <ele>515</ele>
+        <time>2025-07-27T23:06:24.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99611" lon="7.90496">
+        <ele>515</ele>
+        <time>2025-07-27T23:06:25.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99607" lon="7.90454">
+        <ele>516</ele>
+        <time>2025-07-27T23:06:26.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99612" lon="7.90428">
+        <ele>516</ele>
+        <time>2025-07-27T23:06:27.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99635" lon="7.90356">
+        <ele>528</ele>
+        <time>2025-07-27T23:06:28.000Z</time>
+      </trkpt>
+      <trkpt lat="47.9964" lon="7.90323">
+        <ele>526</ele>
+        <time>2025-07-27T23:06:29.000Z</time>
+      </trkpt>
+      <trkpt lat="47.9963" lon="7.90277">
+        <ele>528</ele>
+        <time>2025-07-27T23:06:30.000Z</time>
+      </trkpt>
+      <trkpt lat="47.9963" lon="7.90227">
+        <ele>525</ele>
+        <time>2025-07-27T23:06:31.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99652" lon="7.90171">
+        <ele>516</ele>
+        <time>2025-07-27T23:06:32.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99678" lon="7.9016">
+        <ele>528</ele>
+        <time>2025-07-27T23:06:33.000Z</time>
+      </trkpt>
+      <trkpt lat="47.997" lon="7.90162">
+        <ele>533</ele>
+        <time>2025-07-27T23:06:34.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99737" lon="7.90177">
+        <ele>531</ele>
+        <time>2025-07-27T23:06:35.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99755" lon="7.90193">
+        <ele>536</ele>
+        <time>2025-07-27T23:06:36.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99821" lon="7.9032">
+        <ele>551</ele>
+        <time>2025-07-27T23:06:37.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99898" lon="7.90431">
+        <ele>564</ele>
+        <time>2025-07-27T23:06:38.000Z</time>
+      </trkpt>
+      <trkpt lat="47.99977" lon="7.90434">
+        <ele>557</ele>
+        <time>2025-07-27T23:06:39.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00041" lon="7.90447">
+        <ele>559</ele>
+        <time>2025-07-27T23:06:40.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00155" lon="7.9044">
+        <ele>572</ele>
+        <time>2025-07-27T23:06:41.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00247" lon="7.90421">
+        <ele>577</ele>
+        <time>2025-07-27T23:06:42.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00368" lon="7.90431">
+        <ele>586</ele>
+        <time>2025-07-27T23:06:43.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00425" lon="7.90414">
+        <ele>593</ele>
+        <time>2025-07-27T23:06:44.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00474" lon="7.90369">
+        <ele>599</ele>
+        <time>2025-07-27T23:06:45.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00512" lon="7.9036">
+        <ele>601</ele>
+        <time>2025-07-27T23:06:46.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00525" lon="7.90344">
+        <ele>607</ele>
+        <time>2025-07-27T23:06:47.000Z</time>
+      </trkpt>
+      <trkpt lat="48.0052" lon="7.90332">
+        <ele>607</ele>
+        <time>2025-07-27T23:06:48.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00519" lon="7.90309">
+        <ele>608</ele>
+        <time>2025-07-27T23:06:49.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00524" lon="7.90288">
+        <ele>609</ele>
+        <time>2025-07-27T23:06:50.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00538" lon="7.90262">
+        <ele>609</ele>
+        <time>2025-07-27T23:06:51.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00597" lon="7.90175">
+        <ele>615</ele>
+        <time>2025-07-27T23:06:52.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00644" lon="7.9005">
+        <ele>622</ele>
+        <time>2025-07-27T23:06:53.000Z</time>
+      </trkpt>
+      <trkpt lat="48.00693" lon="7.89965">
+        <ele>638</ele>
+        <time>2025-07-27T23:06:54.772Z</time>
+      </trkpt>
+      <trkpt lat="48.006934" lon="7.899651">
+        <ele>639.5</ele>
+        <time>2025-07-27T23:06:54.781Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.006961" lon="7.899474">
+        <ele>640</ele>
+        <time>2025-07-27T23:06:55.067Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.00692" lon="7.899226">
+        <ele>636.75</ele>
+        <time>2025-07-27T23:06:55.470Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.00665" lon="7.898434">
+        <ele>636</ele>
+        <time>2025-07-27T23:06:56.873Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.00644" lon="7.897543">
+        <ele>636</ele>
+        <time>2025-07-27T23:06:58.365Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.006364" lon="7.897146">
+        <ele>635.75</ele>
+        <time>2025-07-27T23:06:59.017Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.006342" lon="7.896792">
+        <ele>637.25</ele>
+        <time>2025-07-27T23:06:59.578Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.006468" lon="7.896757">
+        <ele>638.5</ele>
+        <time>2025-07-27T23:06:59.880Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.006984" lon="7.896807">
+        <ele>637.25</ele>
+        <time>2025-07-27T23:07:01.100Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.007442" lon="7.897022">
+        <ele>638.75</ele>
+        <time>2025-07-27T23:07:02.233Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.008381" lon="7.897339">
+        <ele>646.75</ele>
+        <time>2025-07-27T23:07:04.505Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.008474" lon="7.897351">
+        <ele>649</ele>
+        <time>2025-07-27T23:07:04.725Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.008586" lon="7.897296">
+        <ele>649.5</ele>
+        <time>2025-07-27T23:07:05.003Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.008873" lon="7.896629">
+        <ele>636.25</ele>
+        <time>2025-07-27T23:07:06.255Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.009094" lon="7.896402">
+        <ele>635</ele>
+        <time>2025-07-27T23:07:06.888Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.00969" lon="7.896337">
+        <ele>646.25</ele>
+        <time>2025-07-27T23:07:08.298Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.009819" lon="7.896242">
+        <ele>647</ele>
+        <time>2025-07-27T23:07:08.637Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.009909" lon="7.896099">
+        <ele>646.5</ele>
+        <time>2025-07-27T23:07:08.947Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.009983" lon="7.895835">
+        <ele>643.5</ele>
+        <time>2025-07-27T23:07:09.399Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.010045" lon="7.895678">
+        <ele>641.25</ele>
+        <time>2025-07-27T23:07:09.686Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.010165" lon="7.89554">
+        <ele>639</ele>
+        <time>2025-07-27T23:07:10.043Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.01022" lon="7.895469">
+        <ele>637.75</ele>
+        <time>2025-07-27T23:07:10.214Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.010441" lon="7.895422">
+        <ele>637.5</ele>
+        <time>2025-07-27T23:07:10.740Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.010545" lon="7.895482">
+        <ele>638.75</ele>
+        <time>2025-07-27T23:07:11.003Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.010612" lon="7.895587">
+        <ele>640.5</ele>
+        <time>2025-07-27T23:07:11.232Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.010681" lon="7.895727">
+        <ele>643</ele>
+        <time>2025-07-27T23:07:11.506Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.010918" lon="7.896123">
+        <ele>647.5</ele>
+        <time>2025-07-27T23:07:12.345Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011082" lon="7.896462">
+        <ele>650.5</ele>
+        <time>2025-07-27T23:07:13.005Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.01123" lon="7.896875">
+        <ele>655.25</ele>
+        <time>2025-07-27T23:07:13.744Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011277" lon="7.897034">
+        <ele>657</ele>
+        <time>2025-07-27T23:07:14.011Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011318" lon="7.897168">
+        <ele>658.5</ele>
+        <time>2025-07-27T23:07:14.237Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011378" lon="7.897514">
+        <ele>663</ele>
+        <time>2025-07-27T23:07:14.787Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011368" lon="7.897829">
+        <ele>666.5</ele>
+        <time>2025-07-27T23:07:15.272Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011341" lon="7.898104">
+        <ele>669.5</ele>
+        <time>2025-07-27T23:07:15.699Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011336" lon="7.898288">
+        <ele>671.5</ele>
+        <time>2025-07-27T23:07:15.982Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011379" lon="7.898475">
+        <ele>674</ele>
+        <time>2025-07-27T23:07:16.286Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011464" lon="7.89852">
+        <ele>674</ele>
+        <time>2025-07-27T23:07:16.493Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.01159" lon="7.898514">
+        <ele>672.25</ele>
+        <time>2025-07-27T23:07:16.783Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011653" lon="7.898422">
+        <ele>670.25</ele>
+        <time>2025-07-27T23:07:16.985Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011766" lon="7.898194">
+        <ele>668.25</ele>
+        <time>2025-07-27T23:07:17.421Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011849" lon="7.898081">
+        <ele>667.75</ele>
+        <time>2025-07-27T23:07:17.679Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.012051" lon="7.897998">
+        <ele>668</ele>
+        <time>2025-07-27T23:07:18.161Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.012229" lon="7.89799">
+        <ele>669</ele>
+        <time>2025-07-27T23:07:18.570Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.01233" lon="7.89805">
+        <ele>670.25</ele>
+        <time>2025-07-27T23:07:18.820Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.012475" lon="7.898247">
+        <ele>673.5</ele>
+        <time>2025-07-27T23:07:19.270Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.012748" lon="7.898796">
+        <ele>675.25</ele>
+        <time>2025-07-27T23:07:20.323Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.013025" lon="7.89944">
+        <ele>678.75</ele>
+        <time>2025-07-27T23:07:21.501Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.013149" lon="7.899941">
+        <ele>684.5</ele>
+        <time>2025-07-27T23:07:22.323Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.013254" lon="7.900636">
+        <ele>689.25</ele>
+        <time>2025-07-27T23:07:23.419Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.013314" lon="7.901154">
+        <ele>694</ele>
+        <time>2025-07-27T23:07:24.228Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.013359" lon="7.901691">
+        <ele>699.25</ele>
+        <time>2025-07-27T23:07:25.061Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.013307" lon="7.902111">
+        <ele>705</ele>
+        <time>2025-07-27T23:07:25.718Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.013235" lon="7.902411">
+        <ele>709.5</ele>
+        <time>2025-07-27T23:07:26.208Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.012984" lon="7.902903">
+        <ele>717.25</ele>
+        <time>2025-07-27T23:07:27.160Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.012732" lon="7.903325">
+        <ele>725.75</ele>
+        <time>2025-07-27T23:07:28.030Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <smoothness>intermediate</smoothness>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.012553" lon="7.903688">
+        <ele>733.5</ele>
+        <time>2025-07-27T23:07:28.724Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+              <mtb_scale>0</mtb_scale>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.012378" lon="7.903921">
+        <ele>737.5</ele>
+        <time>2025-07-27T23:07:29.263Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011773" lon="7.90355">
+        <ele>739.5</ele>
+        <time>2025-07-27T23:07:30.767Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011464" lon="7.903366">
+        <ele>739.25</ele>
+        <time>2025-07-27T23:07:31.532Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.011016" lon="7.902836">
+        <ele>737.25</ele>
+        <time>2025-07-27T23:07:32.846Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.01074" lon="7.902433">
+        <ele>738.5</ele>
+        <time>2025-07-27T23:07:33.733Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>track</highway>
+              <tracktype>grade2</tracktype>
+              <surface>compacted</surface>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.010369" lon="7.90205">
+        <ele>735.25</ele>
+        <time>2025-07-27T23:07:34.770Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>path</highway>
+              <surface>dirt</surface>
+              <mtb_scale>0</mtb_scale>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.010128" lon="7.90172">
+        <ele>736.25</ele>
+        <time>2025-07-27T23:07:35.522Z</time>
+        <extensions>
+          <gpxtpx:TrackPointExtension>
+            <gpxtpx:Extensions>
+              <reversedirection>yes</reversedirection>
+              <highway>path</highway>
+              <surface>dirt</surface>
+              <mtb_scale>0</mtb_scale>
+            </gpxtpx:Extensions>
+          </gpxtpx:TrackPointExtension>
+        </extensions>
+      </trkpt>
+      <trkpt lat="48.010061" lon="7.901597">
+        <ele>736.5</ele>
+        <time>2025-07-27T23:07:35.766Z</time>
+      </trkpt>
+    </trkseg>
+  </trk>
+</gpx>
