@@ -9,7 +9,8 @@
 //          RIDE_MIDDLE_TINT, RIDE_MIDDLE_WEIGHT, RIDE_CONNECTOR_CORE_WEIGHT, RIDE_CONNECTOR_CORE_COLOR,
 //          RIDE_GAP_BRIDGE_MIN_M, rideModeBtn, rideInfoPanel, rideInfoSpeed, rideInfoAlt, rideInfoName,
 //          rideInfoStats, rideInfoTrail, lastSpeedKmh, lastAltitudeM, startFollowing, stopFollowing,
-//          updateUserLocation
+//          updateUserLocation, RIDE_MIN_ZOOM, preRideMinZoom, preRideMinZoomSaved,
+//          recoverFromRotationCrash, rotationPadding
 // @needs   region=bikekingdom, builder=off
 //
 // Added 2026-08-16, once the RIDE infobox redesign settled (per the user's own phone-tested refinements the
@@ -192,6 +193,53 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
   T.eq("its name matches the card that was clicked", TM.$("#rideInfoName").textContent, cardName);
   const statsText = TM.$("#rideInfoStats").textContent;
   T.ok("its stats mention km/climb/descent", /km/.test(statsText) && /⬆️/.test(statsText) && /⬇️/.test(statsText), statsText, "km + ⬆️ + ⬇️");
+
+  T.test("RIDE clamps how far out the map may zoom, and exiting gives the old limit back");
+  // A memory guard, not a UX preference: RIDE's look-ahead makes #map ~30% taller, the container more
+  // elongated, and rotationPadding()'s short-axis rule then roughly doubles the painted vector surface
+  // (measured on a 375x812 viewport at bearing 45: ~38 MB -> ~89 MB across the three renderer panes).
+  // Zooming far out lands a multi-tile-level burst on top of that, and on iOS the WebKit content process
+  // gets killed -- a WHITE PAGE, not the fatal panel, so nothing throws and no suite could ever catch it
+  // after the fact. What IS checkable is the guard itself. See enterRideMode's own comment.
+  //
+  // The map instance is a `const` inside the app's own try{} block and unreachable from here (same reason
+  // lineLayers/soloId are) -- but the app hands it to us itself: setMinZoom is called on it by
+  // enterRideMode, so wrapping the prototype captures the very instance the app uses. Restored immediately;
+  // leaving a prototype patched would follow every later suite in the bundle.
+  exitRideMode();
+  await TM.wait(400);
+  const realSetMinZoom = L.Map.prototype.setMinZoom;
+  let theMap = null;
+  L.Map.prototype.setMinZoom = function (z) { theMap = this; return realSetMinZoom.apply(this, arguments); };
+  let beforeMin;
+  try {
+    enterRideMode();
+    await TM.wait(500);
+    T.ok("entering RIDE set a minimum zoom on the map", !!theMap, !!theMap, true);
+    if (theMap) {
+      beforeMin = theMap.getMinZoom();
+      T.ok("the limit is a real one, not the world view", beforeMin >= 8, beforeMin, ">= 8");
+      // Through the map's own public API, so this covers every route a rider can take: leaflet-rotate's
+      // pinch handler runs the same _limitZoom on both its move and end branches (bounceAtZoomLimits is
+      // false), and scrollWheelZoom does too.
+      theMap.setZoom(2, { animate: false });
+      await TM.wait(400);
+      T.eq("asking for zoom 2 while riding lands on the limit instead", theMap.getZoom(), beforeMin);
+    }
+    exitRideMode();
+    await TM.wait(500);
+    if (theMap) {
+      T.ok("leaving RIDE lifts the limit again", theMap.getMinZoom() < beforeMin,
+           theMap.getMinZoom(), "< " + beforeMin);
+      theMap.setZoom(4, { animate: false });
+      await TM.wait(400);
+      T.eq("and zoom 4 is reachable once more", theMap.getZoom(), 4);
+      theMap.setZoom(13, { animate: false });
+      await TM.wait(300);
+    }
+  } finally {
+    L.Map.prototype.setMinZoom = realSetMinZoom;
+  }
 
   T.test("teardown: leave RIDE mode, restore the real geolocation API");
   exitRideMode();

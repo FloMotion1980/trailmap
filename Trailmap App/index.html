@@ -2723,6 +2723,12 @@ function recoverFromRotationCrash(){
     rideMode = false;
     document.documentElement.classList.remove("ride-mode");
     syncRideModeChrome();
+    // Inside the rideMode branch on purpose, not beside the other resets above: preRideMinZoomSaved is a
+    // `let` declared much further down, next to enterRideMode, and this function can be reached from
+    // window.onerror before that declaration has run -- reading it in its temporal dead zone would throw
+    // out of the recovery itself. rideMode being true is proof enterRideMode already ran, so in here the
+    // binding provably exists. (Same trap the bearingSweeping declaration further up warns about.)
+    if (preRideMinZoomSaved) { map.setMinZoom(preRideMinZoom); preRideMinZoomSaved = false; }
     clearRideMapOffset();
     clearRideFocusHalo();
     stopFollowing();
@@ -3602,6 +3608,37 @@ function toggleRideMode(){
   withRideCooldown(() => { if (rideMode) exitRideMode(); else enterRideMode(); });
 }
 
+// While riding, the map is not allowed below this zoom. Not a UX preference -- it is a memory guard, and it
+// is the cheaper half of a real trade-off (user's own call, 2026-08-20: "Im Ride Modus zoomt man nicht
+// sonderlich weit raus. Das war nur für mich zum Testen").
+//
+// The problem it defends against, measured on a 375x812 viewport at a fixed 45 degrees of bearing: RIDE's
+// look-ahead makes `#map` about 30% taller than the visible window, which makes the CONTAINER more elongated
+// (2.02 -> 2.65). rotationPadding()'s short axis then decides, and it grows faster than the container does --
+// padding 0.646 -> 0.938, painted box 1835x1835 -> 2786x2786, i.e. ~38 MB -> ~89 MB of vector backing store
+// across the three renderer panes, before a single tile is loaded. Zooming far out lands a burst on top of
+// that already-inflated baseline: several tile levels are crossed in one gesture, and under rotation the tile
+// bounds are the ROTATED hull of the container (~2.5x its own area at 45 degrees), not the plain rectangle.
+// On iOS that is enough for the WebKit content process to be killed -- which is why the report was a WHITE
+// PAGE, not the fatal panel: a jetsam kill throws nothing and leaves no stack trace (user, 2026-08-20,
+// reliably reproducible on their phone with the Sölden region -- 38 trails, so the DATA volume is not the
+// driver; the surfaces are).
+//
+// The alternative fix, capping rotationPadding() itself, was offered and NOT taken: that padding exists
+// because the same user reported the rotation stutter (see the L.Renderer._update sweep guard), and capping
+// it would trade their own fix back. This costs nothing anybody wants during a ride.
+//
+// setMinZoom is the right lever rather than a guard in our own zoom handlers: it is what leaflet-rotate's
+// pinch handler consults (`_limitZoom` on both the move and the end branches, and `bounceAtZoomLimits` is
+// false), and what scrollWheelZoom and every programmatic setZoom already respect -- so one call covers every
+// way a rider can zoom out. Leaflet's own setMinZoom also clamps the CURRENT zoom if it is already lower, so
+// entering RIDE while zoomed way out corrects itself.
+const RIDE_MIN_ZOOM = 10;
+// Whatever the map's own minZoom was before RIDE touched it, so exiting restores exactly that rather than
+// inventing a value. Undefined is a legitimate value here (Leaflet then derives the limit from the layers),
+// which is why this is a separate "did we save one" flag rather than a null check.
+let preRideMinZoom = null, preRideMinZoomSaved = false;
+
 function enterRideMode(){
   if (rideMode) return;
   // Cancels any pan/flyTo animation still in flight before the resize/pan work below runs -- see
@@ -3617,6 +3654,8 @@ function enterRideMode(){
   applyRideFocusHalo(openTrailId);
   updateRideInfoPanel(); // also applies the map offset, now that the trail row's height (if any) is set
   if (orientationHandler === null) requestOrientationPermission();
+  if (!preRideMinZoomSaved) { preRideMinZoom = map.options.minZoom; preRideMinZoomSaved = true; }
+  map.setMinZoom(RIDE_MIN_ZOOM);
   setHeadingUp(true);
   if (!followMode) startFollowing();
 }
@@ -3626,6 +3665,7 @@ function exitRideMode(){
   rideMode = false;
   document.documentElement.classList.remove("ride-mode");
   syncRideModeChrome();
+  if (preRideMinZoomSaved) { map.setMinZoom(preRideMinZoom); preRideMinZoomSaved = false; }
   clearRideMapOffset();
   clearRideFocusHalo();
   setHeadingUp(false);

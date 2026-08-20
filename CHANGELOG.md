@@ -22,6 +22,47 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **RIDE mode no longer lets the map zoom out past z10 (`RIDE_MIN_ZOOM`), because doing so reliably killed the
+  app on the user's phone.** Reported as "weiße Seite / lädt sich neu", which is the tell that matters: a
+  thrown error shows the fatal panel, so a white page is iOS killing the WebKit content process for memory —
+  nothing throws and no stack trace survives. Measured cause, on a 375x812 viewport at a fixed 45° bearing:
+  RIDE's look-ahead makes `#map` ~30% taller than the visible window, which makes the container more elongated
+  (2.02 → 2.65); `rotationPadding()`'s short-axis rule then grows faster than the container does — padding
+  0.646 → 0.938, painted box 1835² → 2786², i.e. **~38 MB → ~89 MB** of vector backing store across the three
+  renderer panes, before a tile is loaded. Zooming far out lands a burst on that inflated baseline: several
+  tile levels crossed in one gesture, and under rotation the tile bounds are the rotated hull of the container
+  (~2.5x its own area at 45°). Sölden was active when it happened — 38 trails, so the DATA volume is not the
+  driver, the surfaces are. `setMinZoom` is the lever rather than a guard of our own: leaflet-rotate's pinch
+  handler already runs `_limitZoom` on both its branches, as do scrollWheelZoom and every programmatic
+  setZoom, so one call covers every way a rider can zoom out — and Leaflet clamps the current zoom too, so
+  entering RIDE while already zoomed out corrects itself. Restored on exit AND in `recoverFromRotationCrash`'s
+  own RIDE teardown. **The alternative fix — capping `rotationPadding()` — was offered and deliberately not
+  taken**: that padding exists because the same user reported the rotation stutter, and capping it would trade
+  their own fix back for memory. The 2.3x overhead is recorded in `docs/backlog.md` instead, since it will
+  matter again for a bigger region. New mutation-checked case in `tests/browser/ride.js` (12 cases now).
+- **New region: Schwarzwald — 119 trails, 1 lift, 7 sub-regions, built but NOT yet in `REGION_CATALOG`.**
+  `regions/schwarzwald.json` plus `tools/build_schwarzwald.py`; `index.html` was deliberately left
+  untouched (another session was editing it), so the region is invisible in the app until the catalog entry
+  the build script prints is pasted in. Sources: **Mountainbike Freiburg e.V.**'s own per-trail GPX *and*
+  its own difficulty colours (a `window.mtb_trails` blob on `mountainbike-freiburg.com`, 23 GPX mirrored
+  under `Material/Schwarzwald/`) — operator-wins, which changed six grades away from Trailguide's;
+  **Trailguide's own anonymous JSON API** (`/a?query={"action":"trails.get.query","tracks":true,
+  "cropTrack":true,...}`, 108 trails with real per-point elevation — `cropTrack` is what stops a trail
+  recorded inside a longer ride from arriving with that whole ride's geometry); **Trailforks' anonymous
+  `encodedpath`** for the club's association-only trails and for Bikepark Todtnau; and **OSM Overpass**
+  for Todtnau's Downhill plus the Hasenhorn chairlift and the place labels. `mtbfr` ("Mountainbike
+  Freiburg e.V.") is an organisational bracket among six geographic ones, on the user's own call. Not
+  built, deliberately: Todtnau's "Downhill Flow" (no geometry in any source), Trailforks' "Schauinsland
+  Enduro" (a multi-trail route — a Tour candidate, and the region has no Touren yet), and four
+  same-line-two-names duplicates (Shooter = Schöni, Hirzberg Highway = K-Trail, and two contained
+  fragments). Todtnau's two runs are 40 % shorter than the operator's stated distance in every available
+  source — the Braunlage-Freeride precedent, recorded rather than papered over. Full account, including
+  the three overlapping pairs left in on purpose: `docs/schwarzwald.md`.
+- **`tools/add_region_places.py`: a sub-region namesake is now matched as a WHOLE WORD.** "Au" (1 335
+  inhabitants) counted as a Schwarzwald namesake because "au" is the tail of "Bikepark Todtnau" — and a
+  namesake both sorts first and is exempt from the 8 km separation rule, so it took the Freiburg bracket's
+  slot and then knocked out Freiburg itself, a city of 230 000. No shipped region's list changes until one
+  is deliberately rebuilt with `--force`.
 - **Fixed both open RIDE-era bugs from 2026-08-16, neither of which was actually RIDE-specific.** (1) *A
   selected trail's Start marker read white instead of green.* The white `startDot` and the green `startMarker`
   sit at the EXACT same coordinate with the same radius, so whichever was added to the map last covers the

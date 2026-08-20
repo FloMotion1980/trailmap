@@ -170,6 +170,32 @@ this section in the same commit as the code**, the same standing rule `CHANGELOG
   endpoints are showing. Two new mutation-checked cases in `tests/browser/lists.js`; the startDot one counts a
   DELTA rather than "no white dot at the green position", because several trails legitimately share a
   trailhead and that coordinate holds another trail's dot either way.
+- **Open, measured, not fixed: RIDE mode more than doubles the vector-renderer memory, and that is why zooming
+  far out could kill the app.** The crash itself is closed (a `RIDE_MIN_ZOOM` of 10 now blocks the trigger — see
+  `CHANGELOG.md` 2026-08-20), but the underlying overhead is untouched and will matter again for a bigger
+  region or an older phone. Measured on a 375x812 viewport at a fixed 45° bearing:
+
+  | | container | ratio | `rotationPadding()` | painted box | 3 renderer panes |
+  |---|---|---|---|---|---|
+  | rotation, RIDE off | 375x757 | 2.02 | 0.646 | 1835x1835 | ~38 MB |
+  | rotation, RIDE on | 375x995 | 2.65 | **0.938** | **2786x2786** | **~89 MB** |
+
+  Two individually-correct mechanisms colliding: RIDE's look-ahead inflates `#map` to place the position dot a
+  third up from the bottom, and `rotationPadding()` must cover the circle the container sweeps, with the SHORT
+  axis deciding — so a more elongated container costs quadratically. **The obvious fix, capping the padding, was
+  offered to the user and declined** in favour of the zoom limit, and rightly: that padding exists because the
+  user reported the rotation stutter, so capping it trades their own fix back. Options if this is ever picked up
+  again, in rough order of appeal: (a) derive the padding from the radius needed to cover the VISIBLE crop
+  rather than the whole inflated container — correct, but measured at only ~18% saving, since the crop reaches
+  almost the full height anyway; (b) cap the padding only while RIDE is on and accept some stutter there; (c)
+  shrink `RIDE_LOOKAHEAD_FRACTION`, which attacks the elongation itself but changes a placement the user chose
+  deliberately; (d) drop the whole SVG-under-rotation approach for a GL/vector-tile map, which is the only one
+  that removes the class of problem rather than the instance.
+  **A second, unexplained observation from the same session, worth knowing before assuming memory is the whole
+  story:** with the zoom guard mutated away, one of three `ride` suite runs threw `Invalid LatLng object: (NaN,
+  NaN)` out of Leaflet. It did not reproduce and it is NOT the reported crash (a throw shows the fatal panel;
+  the report is a white page) — but a far-zoomed-out rotated RIDE map may be a broken state and not just an
+  expensive one. Nobody has chased this down.
 - **General note from the same 2026-08-16 conversation: go through `CLAUDE.md`'s documented feature
   history looking for other behaviours that don't yet have a browser-suite case**, the same way this
   session's `ride.js` work surfaced a real bug purely from the exercise of writing tests for
@@ -336,17 +362,36 @@ Added to the list later the same day (no order given beyond "also on the list"):
      JSON into `~/Downloads` and read it from disk. That also sidesteps the backslash-escaping trap
      entirely. All 67 Harz sections came out this way and every decoded length matched Trailforks' own
      stated distance to within 2 m.
-10. **Geißkopf / Freiburg / Todtnau** — added 2026-08-11, links only, not researched. Geißkopf
-    (Bodenmais, Bayerischer Wald) is geographically separate from Freiburg/Todtnau (both Schwarzwald)
-    — do NOT assume these three form one region group like Sauerland/Upland; decide the grouping when
-    picked up based on actual distance, same judgement call as Livigno/Waldmeister's "does this deserve
-    its own bounding box" question. Sources:
+10. **Geißkopf / Freiburg / Todtnau** — added 2026-08-11. **Freiburg and Todtnau are BUILT**
+    (2026-08-20) as part of a whole-range `schwarzwald` region: 119 trails, the Hasenhorn chairlift,
+    seven sub-regions, `docs/schwarzwald.md` for the full account. The region file, its build script
+    and its version hash are all in place, but **the `REGION_CATALOG` entry is not** — `index.html`
+    was being edited by another session at the time, so the entry the build script prints still has
+    to be pasted in before the region appears in the app. **Geißkopf is still open** and is NOT part
+    of that region: it is in the Bayerischer Wald, 300 km east, and only ever shared this backlog
+    item by accident of when the three links were collected. Still to do for the Schwarzwald: a
+    Trailforks sweep (only the club's own association 12404 has been worked in), Bikepark Bad
+    Wildbad — in none of the sources used, Todtnau's third run "Downhill Flow" (no geometry
+    anywhere), and the region's first Tour ("Schauinsland Enduro", a Trailforks multi-trail).
+    Geißkopf (Bodenmais, Bayerischer Wald) is geographically separate from Freiburg/Todtnau (both
+    Schwarzwald) — do NOT assume these three form one region group like Sauerland/Upland; decide the
+    grouping when picked up based on actual distance, same judgement call as Livigno/Waldmeister's
+    "does this deserve its own bounding box" question. Sources:
     - https://mtbzone-bikepark.com/geisskopf/strecken — Geißkopf trail overview (same
       `mtbzone-bikepark.com` site as Willingen's — check if it has direct GPX for this park, since it
       did NOT for Willingen).
-    - https://www.mountainbike-freiburg.com/trails/#trails — Freiburg-area trails.
-    - https://2-cycle.de/pages/bikepark-todtnau-strecken — Bikepark Todtnau.
-    - https://trailguide.net/html/Germany/Baden-W%C3%BCrttemberg/Freiburg — added 2026-08-11: a bigger
+    - https://www.mountainbike-freiburg.com/trails/#trails — Freiburg-area trails. **Used**: the page's
+      own `window.mtb_trails` blob carries per-trail GPX *and* the club's own difficulty colours.
+    - https://2-cycle.de/pages/bikepark-todtnau-strecken — Bikepark Todtnau. **Used** for the three runs'
+      names, grades and figures; it has no GPX at all, hence OSM/Trailforks for the geometry.
+    - https://www.trailforks.com/trails/all/?association=12404&activitytype=0 — the club's own Trailforks
+      association, given by the user 2026-08-20. **Used**: 25 trails, of which six were not on the club's
+      own site and three existed nowhere else.
+    - https://trailguide.net/html/Germany/Baden-W%C3%BCrttemberg/Freiburg — added 2026-08-11. **Used, and
+      it turned out to be a bulk source, not a click-per-trail one**: Trailguide has an anonymous JSON API
+      (two calls, documented in `docs/schwarzwald.md`) that returns every trail's full geometry WITH
+      per-point elevation, so no headless browser and no DEM lookups were needed. Reuse it for any future
+      region Trailguide covers. Original note, still accurate about the listing page: a bigger
       Freiburg trail list than mountainbike-freiburg.com's official one, with **overlap** (some of the
       same trails appear on both) plus several extra ones. GPX is reachable per-trail but needs a second
       click-through on the trail's own subpage (not a direct link from the list view) — check whether
@@ -400,6 +445,28 @@ bottom-first by elevation and require the join to keep climbing.
       ~1.8 km of line the Pfälzerwald does not have (the Trailforks versions are the longer ones) — listed
       with per-trail coverage figures in `DUPLICATE_OF_PFAELZERWALD` in `tools/build_nordvogesen.py` if it
       is ever worth reversing.
+
+14. **Gardasee** (Riva del Garda / Torbole / Arco / Monte Baldo / Ledrotal, IT) — requested by the user
+    2026-08-20, "Das sollte noch auf jeden Fall in die App". Nothing researched yet; noted here so it
+    survives a device change. What to expect when it is picked up:
+    - **It is big and it is spread over several valleys** — Riva/Torbole (Monte Brione, Busatte,
+      Pregasina), Arco (Monte Velo, Bocca di Trat, Dosso Gorai), Monte Baldo/Malcesine on the eastern
+      shore (with a cable car that carries bikes in summer), the Ledrotal and Tremalzo, plus Monte Stivo
+      and the Bondone side. That is a sub-region split to decide, not one hub, and probably one region
+      group in the same way Finale Ligure is one group with a dozen hubs.
+    - **Lifts:** the Malcesine–Monte Baldo cable car is the obvious one and is a genuine summer bike
+      lift — check the operator's own summer page for the season and the bike ticket rather than OSM's
+      `aerialway:bicycle`, per the standing rule.
+    - **Sources to try, in this order:** any operator/consortium page that publishes per-trail GPX and a
+      grade (Garda Trentino's own bike portal, `gardatrentino.it`, and Outdooractive-backed tourism
+      portals — Outdooractive needs `tools/oa_harvest_server.py`); then **Trailguide**, whose anonymous
+      JSON API is now a known-good bulk source (`docs/schwarzwald.md` documents the two calls and the
+      mandatory `cropTrack`) and which has good coverage of the Garda classics; then Trailforks for the
+      rest. Difficulty: operator first, Trailforks as the fallback.
+    - **Watch for the same trap Finale had**: the famous descents (601, Pernici, Tremalzo, Altissimo) are
+      long point-to-point routes that partly run on gravel roads, and several published "tours" model the
+      shuttle/lift leg as a straight line — exclude those or build them as Touren with segments, never as
+      a trail.
 
 Sourcing order for each of these: **try the operator's own site for direct per-trail GPX before
 falling back to OSM + a rate-limited elevation API.** Austrian/Swiss resort sites in particular have
