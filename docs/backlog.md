@@ -498,7 +498,10 @@ bottom-first by elevation and require the join to keep climbing.
       a trail.
 
 15. **Madeira** (PT) — requested by the user 2026-08-20, alongside the Gardasee. Nothing researched
-    yet. What to know before starting:
+    yet. **The user has ridden there themselves** — so ask them about difficulties and the sub-region split
+    before falling back on Trailforks for either, the same way their own visit settled both for Bike Kingdom
+    (see `Material/BikeKingdom/Trails Lenzerheide.ods`, authoritative for exactly those two fields). What to
+    know before starting:
     - **It is a shuttle island, not a lift island** — the classic descents (Pico do Arieiro, Pico Ruivo,
       Encumeada, Fanal/Ribeira da Janela, Ponta do Pargo, Santo da Serra) all start from a van drop, so
       expect NO lifts and no `lifts` array at all, like Odenwald/Pfälzerwald/Donnersberg. Say so
@@ -514,6 +517,24 @@ bottom-first by elevation and require the join to keep climbing.
       infrastructure, sometimes bike-forbidden and sometimes tunnels; a Trailforks polyline says nothing
       about whether riding it is legal. Do not silently ship a trail whose own source flags it as hiking,
       and keep the activitytype filter on (the Harz's "Madonon Ridgeline" was Trailforks-tagged Hike).
+
+16. **Elba** (IT) — requested by the user 2026-08-20. **They have ridden there themselves**, so the same rule
+    as Madeira applies: their own account of the trails beats a scraped rating, and it is the fastest route to
+    a sub-region split that matches how the island is actually ridden. Nothing researched yet, and
+    deliberately little written here — what follows is the shape of the questions, not findings:
+    - **Sub-regions almost certainly follow the island's three massifs**, which are separated by real
+      distance rather than by a naming convention: Monte Capanne in the west, the Monte Calamita peninsula in
+      the south-east (the old iron-mining area), and the Volterraio/Rio ridge in the east. Confirm against
+      where the harvested trails actually fall, the same way the Schwarzwald's seven were decided.
+    - **Check whether any lift takes bikes before assuming one does.** The Monte Capanne cabinovia from
+      Marciana is a standing open-basket type, which is not a plausible bike carrier — but that is exactly the
+      kind of assumption `docs/lifts-feature.md` says to settle from the operator's own summer page rather
+      than from OSM's `aerialway:bicycle` tag or from reasoning. If nothing carries bikes, the region gets no
+      `lifts` array at all, like Odenwald and Donnersberg, and the entry should say so rather than leave it
+      unaccounted for.
+    - **Sources: unknown, and worth ten minutes before committing to a method.** Trailforks has an Elba tree;
+      whether the local operators publish per-trail GPX with an official grade is untested. Follow the
+      standing order below — operator first, Trailforks only where no grade is published.
 
 Sourcing order for each of these: **try the operator's own site for direct per-trail GPX before
 falling back to OSM + a rate-limited elevation API.** Austrian/Swiss resort sites in particular have
