@@ -88,25 +88,29 @@ ACCESS_DIFF = {"Access Trail, Road or Doubletrack", "Secondary Access Road/Trail
 # parent-level area cell (all 18 of Hohlandsbourg's, all 7 of Lac Blanc's, two Niederbronn ones), and
 # the slug is always present and unambiguous. Anything the slug cannot settle falls through to a
 # nearest-centroid assignment, so a trail is never dropped for a missing label.
+# Labels are ONE name each (user, 2026-08-20: "Die Namen der Unterregionen ... sind zu lang"). They used
+# to spell out what each bracket spans ("Saverne / Dabo / Wangenbourg", "Vogesen West (Saint-Die)") -- true,
+# but a sidebar chip has ~14 characters before it wraps, and each of these valleys is navigated by one name.
+# The full contents stay visible in the slug lists below and in docs/nordvogesen.md.
 SUBREGIONS = {
-    "wissembourg": ("Wissembourg / Nordvogesen", "#3a6ea5", [
+    "wissembourg": ("Wissembourg", "#3a6ea5", [
         "wissembourg-62557", "cleebourg", "climbach", "lembach", "goersdorf", "lampertsloch",
         "soultzsousforets", "wingen", "obersteinbach", "niedersteinbach", "windstein"]),
     # `dambach` is Dambach-Neunhoffen in the NORTHERN Vosges (canton Niederbronn, 49.008 N -- Chateau
     # de Schoeneck sits above it), NOT Dambach-la-Ville down by Barr. Its six trails were filed under
     # Barr/Mont-Sainte-Odile by a first version of this map, 65 km from where they actually are, which
     # is why every sub-region's own extent is printed at the end of a build.
-    "niederbronn": ("Niederbronn / Heidenkopf", "#a8452f", [
+    "niederbronn": ("Niederbronn", "#a8452f", [
         "niederbronn", "heidenkopf", "oberbronn", "niederbronn-bike-trail", "dambach"]),
-    "saverne": ("Saverne / Dabo / Wangenbourg", "#8a6a2f", [
+    "saverne": ("Saverne", "#8a6a2f", [
         "saverne", "haegen", "reinhardsmunster", "dabo", "phalsbourg", "danneetquatrevents",
         "lutzelbourg", "cosswiler", "wangenbourg"]),
-    "sainteodile": ("Barr / Mont Sainte-Odile", "#6a3a8a", [
+    "sainteodile": ("Barr", "#6a3a8a", [
         "barr", "boersch", "le-hohwald", "breitenbach"]),
     "bruche": ("Bruche-Tal", "#2f8a7a", ["lutzelhouse-74628", "muhlbachsurbruche"]),
-    "ville": ("Val de Villé / Ribeauvillé", "#c2185b", [
+    "ville": ("Ribeauvillé", "#c2185b", [
         "neubois", "liepvre", "breitenau", "ribeauville"]),
-    "vosges_ouest": ("Vogesen West (Saint-Dié)", "#7a7a2f", [
+    "vosges_ouest": ("Saint-Dié", "#7a7a2f", [
         "saintdie-des-vosges", "raon-l-etape", "raon-l-etape-41060", "lac-de-la-maix", "donon"]),
 }
 

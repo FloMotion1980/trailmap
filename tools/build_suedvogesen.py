@@ -132,36 +132,51 @@ def resolve_diff(slug, tf_diff):
 # a blank "riding area" cell, the slug never is). Brackets follow the valleys, which is how this massif
 # is actually organised and ridden. Colours distinct within the group and none is --forest (#2f5d3a);
 # they may repeat colours used in OTHER groups, which is explicitly fine.
+# The three bike parks are their own sub-regions (user, 2026-08-20: "die Bikeparks eine eigene
+# Unterregion"). They are lift-served, graded by an operator and ridden as a destination, so folding them
+# into the valley bracket around them hid them: Lac Blanc's 8 pistes were 32 % of `kaysersberg`, La Bresse's
+# 9 were 10 % of `labresse`, and Markstein's 6 were 15 % of `guebwiller`.
+#
+# Membership comes from the trail's own Trailforks region slug -- each park IS a Trailforks region, and the
+# three lists came out exactly as the operators publish them (Lac Blanc 7 DH pistes + the 4X track,
+# La Bresse 6 technique + 3 freeride, Markstein 6). Checked FIRST in `resolve_sub`, before the valley map,
+# so a trail that carries both its park and its commune cannot land in the valley by list order.
+PARK_REGS = {
+    "lac-blanc-bike-park": "bp_lacblanc",
+    "bikepark-la-bresse-25099": "bp_labresse",
+    "bikepark-du-markstein-39293": "bp_markstein",
+}
+
+# Labels are ONE name each (user, 2026-08-20: "Die Namen der Unterregionen ... sind zu lang"). They were
+# "Thann / Saint-Amarin", "Masevaux / Ballon d'Alsace", "Epinal / Vallon d'Olima" and so on -- honest about
+# what a bracket spans, but a sidebar chip has ~14 characters before it wraps, and a valley is navigated by
+# one name anyway. What each bracket actually covers is in the slug list right here, and in
+# docs/suedvogesen.md.
 SUBREGIONS = {
-    "colmar": ("Colmar / Hohlandsbourg", "#a03a8a", [
+    "colmar": ("Colmar", "#a03a8a", [
         "hohlandsbourg", "wintzenheim", "wettolsheim-9426"]),
+    "kaysersberg": ("Kaysersberg", "#a8452f", [
+        "labaroche", "le-bonhomme", "trois-epis", "turckheim"]),
+    "bp_lacblanc": ("Bikepark Lac Blanc", "#e07a1f", ["lac-blanc-bike-park"]),
     "munstertal": ("Münstertal", "#3a6ea5", [
         "munster", "munster-valley-22230", "stosswihr", "luttenbachpresmunster", "metzeral",
         "hohrod", "whirauval", "breitenbachhautrhin", "orbey"]),
-    "guebwiller": ("Guebwiller / Markstein", "#c1440e", [
-        "guebwiller", "buhl", "orschwihr", "bergholtzzel", "soultzhautrhin",
-        "bikepark-du-markstein-39293"]),
-    "thann": ("Thann / Saint-Amarin", "#8a6a2f", [
+    "guebwiller": ("Guebwiller", "#c1440e", [
+        "guebwiller", "buhl", "orschwihr", "bergholtzzel", "soultzhautrhin"]),
+    "bp_markstein": ("Bikepark Markstein", "#8a2f5a", ["bikepark-du-markstein-39293"]),
+    "thann": ("Thann", "#8a6a2f", [
         "thann", "mollau", "moosch", "urbes", "fellering", "kruth"]),
-    "masevaux": ("Masevaux / Ballon d'Alsace", "#2f8a7a", [
+    "masevaux": ("Masevaux", "#2f8a7a", [
         "masevaux", "dolleren", "bourbachlehaut", "wegscheid", "giromagny",
         "ballon-d-alsace-31436", "mulhouse-south-alsace-32280"]),
-    "labresse": ("La Bresse / Hautes-Vosges", "#6a3a8a", [
-        "la-bresse", "bikepark-la-bresse-25099", "enduro-bressaud-30938", "ventron", "cornimont",
+    "labresse": ("La Bresse", "#6a3a8a", [
+        "la-bresse", "enduro-bressaud-30938", "ventron", "cornimont",
         "saulxuressurmoselotte", "le-menil", "bussang", "remiremont-9316", "vagney-37825"]),
+    "bp_labresse": ("Bikepark La Bresse", "#2f6ea8", ["bikepark-la-bresse-25099"]),
     "gerardmer": ("Gérardmer", "#4a7d3f", ["gerardmer", "xonruptlongemer"]),
-    # Moved here from Nordvogesen by the red line (2026-08-19): this bracket centres 7 km SOUTH of it.
-    # It holds the Lac Blanc bike park, which the user had named as one of THIS region's two parks
-    # before the line existed -- so the line and their own instinct agree.
-    "kaysersberg": ("Kaysersberg / Lac Blanc", "#a8452f", [
-        "labaroche", "lac-blanc-bike-park", "le-bonhomme", "trois-epis", "turckheim"]),
-    # Its own bracket, and the one to drop first if this region should stay a mountain region: these four
-    # slugs are ONE cluster around Epinal (all four centre within 3 km of 48.160, 6.42), i.e. ~65 km WEST
-    # of Colmar in the Lorraine PLAIN, not the massif. "Vallon d'Olima" is an MTB spot there, and its two
-    # slugs plus `epinal` and `la-40-semaine-42294` overlap heavily -- 71 distinct trails once deduped.
-    # Measured, not guessed: `tools/build_suedvogesen.py` prints every bracket's real extent, and this
-    # cluster is what stretched a first version of the `thann` bracket across 100 km of longitude.
-    "epinal": ("Épinal / Vallon d'Olima", "#7a3a2f", [
+    # 65 km west of Colmar in the Lorraine plain rather than the massif, but below the line and 76 real
+    # trails -- its own bracket so it can be switched off in the sidebar instead of dropped.
+    "epinal": ("Épinal", "#7a3a2f", [
         "epinal", "vallon-d-olima", "vallon-d-olima-33741", "la-40-semaine-42294"]),
 }
 
@@ -221,6 +236,14 @@ def line_length_m(pts):
     return sum(haversine_m(pts[i - 1], pts[i]) for i in range(1, len(pts)))
 
 
+def resolve_park(meta):
+    """A bike-park sub-region, checked before the valley map so list order cannot decide it."""
+    for r in (meta.get("reg") or "").split(","):
+        if r in PARK_REGS:
+            return PARK_REGS[r]
+    return None
+
+
 def resolve_sub(meta, slug=None):
     """Sub-region for this row, or a sentinel string the caller reports/skips on.
 
@@ -231,6 +254,10 @@ def resolve_sub(meta, slug=None):
         ov = override(slug)
         if ov is not None:
             return ov[1] if ov[0] == EXPECT_SIDE else "OTHERSIDE"
+
+    park = resolve_park(meta)
+    if park is not None:
+        return park
 
     return _resolve_sub_by_region(meta)
 

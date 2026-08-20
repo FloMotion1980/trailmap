@@ -32,18 +32,23 @@ Zwei Klammern hat die Linie gegenüber dem vorherigen Stand **in entgegengesetzt
 
 ## Stand
 
-**483 Trails, 588,2 km, 7 Sub-Regionen, 22 Orte, 1,18 MB.** Bounds `[[48.10768, 6.81610], [49.13417, 7.93934]]`.
+**483 Trails, 588,2 km, 7 Sub-Regionen, 15 Orte, 1,18 MB.** Bounds `[[48.10768, 6.81610], [49.13417, 7.93934]]`.
 Keine Lifte, keine Touren/Trailrunden.
 
 | Sub-Region (Key) | Label | Trails | km | Breitengrad |
 |---|---|---:|---:|---|
-| `saverne` | Saverne / Dabo / Wangenbourg | 148 | 178,0 | 48.589–48.863 |
-| `niederbronn` | Niederbronn / Heidenkopf | 109 | 121,7 | 48.873–49.070 |
-| `sainteodile` | Barr / Mont Sainte-Odile | 89 | 99,8 | 48.320–48.488 |
-| `wissembourg` | Wissembourg / Nordvogesen | 56 | 68,9 | 48.958–49.134 |
-| `vosges_ouest` | Vogesen West (Saint-Dié) | 49 | 75,5 | 48.249–48.513 |
+| `saverne` | Saverne | 148 | 178,0 | 48.589–48.863 |
+| `niederbronn` | Niederbronn | 109 | 121,7 | 48.873–49.070 |
+| `sainteodile` | Barr | 89 | 99,8 | 48.320–48.488 |
+| `wissembourg` | Wissembourg | 56 | 68,8 | 48.958–49.134 |
+| `vosges_ouest` | Saint-Dié | 49 | 75,5 | 48.249–48.513 |
 | `bruche` | Bruche-Tal | 16 | 16,9 | 48.529–48.572 |
-| `ville` | Val de Villé / Ribeauvillé | 16 | 27,4 | 48.108–48.322 |
+| `ville` | Ribeauvillé | 16 | 27,4 | 48.108–48.322 |
+
+**Die Labels sind je EIN Name** (2026-08-20, *"Die Namen der Unterregionen … sind zu lang"*). Sie hießen
+"Saverne / Dabo / Wangenbourg", "Barr / Mont Sainte-Odile", "Vogesen West (Saint-Dié)" — ehrlich, was eine
+Klammer umspannt, aber ein Seitenleisten-Chip hat ~14 Zeichen, bevor er umbricht, und jedes dieser Täler wird
+ohnehin über einen Namen gefunden. Was drin ist, steht in `SUBREGIONS` in `tools/build_nordvogesen.py`.
 
 Schwierigkeiten: 104 grün, 247 blau, 94 rot, 38 schwarz. Höhen 183–1097 m.
 
@@ -159,33 +164,28 @@ hier — sie sind Teil desselben Trailforks-Netzes um Wissembourg, und der Pfäl
 
 ## Orte
 
-**22 pro Region**, aus OSMs eigenen `place`-Knoten über `tools/add_region_places.py` — also genau auf dem
-Punkt, an dem die Basemap den Namen selbst zeichnet, damit unser Label ihn überdeckt statt zu verdoppeln
-(dieselbe "match the base map"-Regel wie bei Donnersberg). Gefiltert nach Abstand zum nächsten Trail
-(Stadt ≤ 5 km, Dorf ≤ 2,5 km) und nach Einwohnerzahl bzw. Namensgleichheit mit einer Sub-Region.
+**15 (Nord) und 12 (Süd)**, aus OSMs eigenen `place`-Knoten über `tools/add_region_places.py` — also genau
+auf dem Punkt, an dem die Basemap den Namen selbst zeichnet, damit unser Label ihn überdeckt statt zu
+verdoppeln (dieselbe "match the base map"-Regel wie bei Donnersberg).
 
-Das Werkzeug brauchte dafür drei Erweiterungen, alle drei allgemein nützlich:
+Runde zwei, nach *"Es sind mir zu viele Orte. Dünn das gerne etwas aus … da wo wenig Trails sind oder viele
+Orte beieinander liegen"* (2026-08-20) — aus 22+22 wurden 15+12, über genau die zwei genannten Achsen:
 
-1. **Labels aus dem Build-Skript, wenn die Region noch nicht im Katalog steht.** Die Funktion las die
-   Sub-Region-Namen aus `REGION_CATALOG` in `index.html` — die hier fehlt. Ohne sie feuert der Test
-   "heißt wie eine Sub-Region" nie, und genau der hält die Orte, nach denen man wirklich navigiert
-   (Wissembourg, Saverne, Barr, Thann, La Bresse …), gegen beliebige Nachbardörfer. Fällt jetzt auf
-   `SUBREGIONS` im jeweiligen `build_*.py` zurück.
-2. **`MAX_PLACES` pro Region überschreibbar.** Der Default 10 passt zu einer Resort-Region (Brandnertal
-   3×4 km); für ein ganzes Massiv mit 7–9 Sub-Regionen bleiben damit die Hälfte der Klammern namenlos.
-   Beide Vogesen-Regionen stehen auf 22 — der Pfälzerwald daneben hat 27 bei ähnlicher Trailzahl.
-3. **Mindestabstand zwischen zwei Labels (`MIN_SEPARATION_KM` = 4 km).** Ohne den vergab Südvogesen
-   **sechs** seiner 22 Plätze an eine einzige Agglomeration (Mulhouse 106 341, Illzach 14 829,
-   Kingersheim 13 178, Pfastatt 10 237, Lutterbach 6 261, Richwiller 3 704), weil ein Vorort mit 10 000
-   Einwohnern ein Bergdorf mit 4 000 in der Rangfolge schlägt. Auf dem Bildschirm ist das ein Klumpen,
-   und er kostete sechs Bergdörfer ihr Label.
+- **viele Orte beieinander**: `MIN_SEPARATION_KM` von 4 auf **8 km**.
+- **wenig Trails**: eine **Quote pro Sub-Region**, `1 + Trails // 45`, maximal 4. Eine Klammer mit 14
+  Trails bekommt damit ein Label, eine mit 148 vier. Ein Ort zählt für die Sub-Region, deren Trail ihm am
+  nächsten liegt. Das kann `MAX_PLACES` allein nicht leisten, weil das eine regionsweite Summe ist, die die
+  Einwohner-Rangfolge dann dort ausgibt, wo die größten Städte liegen.
+- **Ausnahme: der Namensgeber einer Sub-Region ist vom Abstand befreit.** Sonst fällt genau der Name weg,
+  nach dem die Klammer heißt: **La Bresse** (4 041 Einwohner, Namensgeber einer 82-Trail-Klammer *und* eines
+  Bikeparks) war rausgefallen, weil es 8,15 km von Gérardmer entfernt liegt — an 150 m Grenzwert gescheitert.
 
-**Jede Sub-Region beider Regionen hat mindestens 2 Labels innerhalb von 6 km**, das nächste jeweils
-höchstens 2,6 km entfernt — keine Klammer bleibt namenlos.
+Früher, in Runde eins, kam noch dazu: Labels aus dem Build-Skript, wenn die Region nicht im Katalog steht,
+und `MAX_PLACES` pro Region überschreibbar (Default 10 passt zu einem Resort, nicht zu einem Massiv).
 
-Vergeben: Saverne, Wissembourg, Barr, Ribeauvillé, Dabo, Saint-Dié-des-Vosges, Obernai, Bitche,
-Raon-l'Étape, Phalsbourg, Kaysersberg, Niederbronn-les-Bains, Ingwiller, Moyenmoutier, La Broque,
-Senones, Saulcy-sur-Meurthe, Dambach-la-Ville, Wisches, Oberhaslach, Lièpvre, Wingen-sur-Moder.
+Vergeben: Saverne, Wissembourg, Barr, Ribeauvillé, Dabo, Saint-Dié-des-Vosges, Bitche, Raon-l'Étape,
+Phalsbourg, Niederbronn-les-Bains, Ingwiller, La Broque, Oberhaslach, Lembach, Romanswiller.
+Alle sieben Klammern haben mindestens ein Label.
 
 ## Katalog-Eintrag (einfügen, sobald `index.html` frei ist)
 
@@ -202,13 +202,13 @@ Senones, Saulcy-sur-Meurthe, Dambach-la-Ville, Wisches, Oberhaslach, Lièpvre, W
     countries: ["FR", "DE"], label: "Nordvogesen", file: "regions/nordvogesen.json", trailCount: 483,
     bounds: [[48.10768, 6.81610], [49.13417, 7.93934]],
     subRegions: {
-      wissembourg: { label: "Wissembourg / Nordvogesen", color: "#3a6ea5" },
-      niederbronn: { label: "Niederbronn / Heidenkopf", color: "#a8452f" },
-      saverne: { label: "Saverne / Dabo / Wangenbourg", color: "#8a6a2f" },
+      wissembourg: { label: "Wissembourg", color: "#3a6ea5" },
+      niederbronn: { label: "Niederbronn", color: "#a8452f" },
+      saverne: { label: "Saverne", color: "#8a6a2f" },
       bruche: { label: "Bruche-Tal", color: "#2f8a7a" },
-      sainteodile: { label: "Barr / Mont Sainte-Odile", color: "#6a3a8a" },
-      ville: { label: "Val de Villé / Ribeauvillé", color: "#c2185b" },
-      vosges_ouest: { label: "Vogesen West (Saint-Dié)", color: "#7a7a2f" }
+      sainteodile: { label: "Barr", color: "#6a3a8a" },
+      ville: { label: "Ribeauvillé", color: "#c2185b" },
+      vosges_ouest: { label: "Saint-Dié", color: "#7a7a2f" }
     }
   },
 ```

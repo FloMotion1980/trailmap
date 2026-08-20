@@ -46,17 +46,26 @@ MAX_PLACES = 10
 #: agglomeration's suburbs a place each -- Suedvogesen gave six of its slots to Mulhouse/Illzach/
 #: Kingersheim/Pfastatt/Lutterbach/Richwiller, which on screen is one blob and costs six mountain
 #: villages their label. The higher-ranked of a close pair wins, which is why this is applied after the
-#: sort rather than during it.
-MIN_SEPARATION_KM = 4.0
+#: sort rather than during it. Raised from 4 to 8 km on the user's own reading of the result
+#: (2026-08-20, "zu viele Orte ... da wo ... viele Orte beieinander liegen").
+MIN_SEPARATION_KM = 8.0
+
+#: Labels per sub-region, as `base + trails // per_extra`, capped. The other half of the same request
+#: ("ausduennen da wo wenig Trails sind"): a bracket with 14 trails does not need the same number of
+#: labels as one with 148, and MAX_PLACES alone cannot express that because it is a region-wide total that
+#: the population ranking then spends wherever the biggest towns happen to be. A place is attributed to
+#: whichever sub-region owns the trail nearest to it.
+SUB_QUOTA_BASE = 1
+SUB_QUOTA_PER_EXTRA = 45
+SUB_QUOTA_MAX = 4
 #: Per-region override of MAX_PLACES. The default suits a resort-sized region (Brandnertal is 3x4 km);
 #: it does not suit one that spans a whole massif, where ten labels leave most sub-regions anonymous.
 #: Keyed by region, with the reason, so the numbers stay arguable instead of arbitrary.
 MAX_PLACES_BY_REGION = {
-    # 483 trails over 115 x 80 km and 7 sub-regions from Wissembourg to Ribeauville. The Pfaelzerwald
-    # next door carries 27 labels for a comparable trail count and a smaller area.
-    "nordvogesen": 22,
-    # 475 trails over 85 x 65 km and 9 sub-regions, from Colmar to the Ballon d'Alsace and out to Epinal.
-    "suedvogesen": 22,
+    # Both span a whole massif, so the default 10 would leave brackets anonymous -- but the per-sub-region
+    # quota below is what actually shapes the result now, and both land well under this ceiling.
+    "nordvogesen": 18,
+    "suedvogesen": 18,
 }
 MIN_VILLAGE_POP = 600     # see the note below
 KNOWN_MAX_KM = 2.0        # for places that carry a wikidata/wikipedia tag but are small
@@ -193,13 +202,36 @@ def pick(data, elements, sub_labels, allow_hamlets, cap=None):
     # Sub-region namesakes first, then bigger before smaller, then nearer before further: what survives the
     # cap should be what a rider would use to orient themselves.
     out.sort(key=lambda p: (not p["_named"], RANK[p["_kind"]], -p["_pop"], p["_km"]))
+
+    # Which sub-region each candidate belongs to, and how many labels that sub-region may have.
+    per_sub = {}
+    for t in data["lineTrails"]:
+        per_sub[t["region"]] = per_sub.get(t["region"], 0) + 1
+    quota = dict((sub, min(SUB_QUOTA_MAX, SUB_QUOTA_BASE + n // SUB_QUOTA_PER_EXTRA))
+                 for sub, n in per_sub.items())
+    owner = {}
+    for t in data["lineTrails"]:
+        for c in data["trailGeo"][t["id"]][::4] or data["trailGeo"][t["id"]][:1]:
+            owner.setdefault(t["region"], []).append(c)
+
+    used = {}
     kept = []
     for cand in out:
         if len(kept) >= (cap or MAX_PLACES):
             break
-        if any(haversine_m((cand["lat"], cand["lng"]), (k["lat"], k["lng"])) / 1000.0
-               < MIN_SEPARATION_KM for k in kept):
+        here = (cand["lat"], cand["lng"])
+        # A sub-region's OWN namesake is exempt from the separation rule: it is the name that bracket is
+        # called by, so losing it to a merely-bigger neighbour defeats the point of having labels at all.
+        # La Bresse (4 041, and the name of an 82-trail bracket plus a bike park) was dropped for sitting
+        # 8.15 km from Gerardmer, i.e. by 150 m of threshold.
+        if not cand["_named"] and any(
+                haversine_m(here, (k["lat"], k["lng"])) / 1000.0 < MIN_SEPARATION_KM for k in kept):
             continue
+        sub = min(owner, key=lambda sr: min(haversine_m(here, c) for c in owner[sr]))
+        if used.get(sub, 0) >= quota.get(sub, SUB_QUOTA_MAX):
+            continue
+        used[sub] = used.get(sub, 0) + 1
+        cand["_sub"] = sub
         kept.append(cand)
     return kept
 
@@ -228,7 +260,7 @@ def main(argv):
         print("%-16s %2d von %3d Kandidaten: %s" % (
             key, len(picked), len(elements),
             ", ".join("%s (%s, %.1f km, pop %d%s%s)" % (
-                p["name"], p["_kind"], p["_km"], p["_pop"],
+                p["name"], p.get("_sub", p["_kind"]), p["_km"], p["_pop"],
                 ", Namensgeber" if p["_named"] else "",
                 ", bekannt" if p["_known"] and not p["_named"] else "")
                       for p in picked)))

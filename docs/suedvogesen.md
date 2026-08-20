@@ -28,27 +28,42 @@ Jeder Build prüft **jeden Trail** gegen die Linie. Aktuell: alle 474 auf der S�
 
 ## Stand
 
-**474 Trails, 533,1 km, 9 Sub-Regionen, 2 Lifte, 22 Orte, 1,21 MB.** Bounds
+**474 Trails, 533,1 km, 12 Sub-Regionen (davon 3 Bikeparks), 2 Lifte, 12 Orte, 1,21 MB.** Bounds
 `[[47.74454, 6.36278], [48.17171, 7.28295]]`. Keine Touren/Trailrunden. Kein einziger Trail-Slug ist in beiden
 Vogesen-Regionen (geprüft), und `tools/region_dupe_check.py suedvogesen` findet **keine geometrische
 Überlappung** mit irgendeiner bestehenden Region.
 
-| Sub-Region (Key) | Label | Trails | km | Ausdehnung |
-|---|---|---:|---:|---|
-| `thann` | Thann / Saint-Amarin | 118 | 181,1 | 47.758–48.007 N, 6.864–7.290 E |
-| `labresse` | La Bresse / Hautes-Vosges | 91 | 107,7 | 47.832–48.065 N, 6.552–7.025 E |
-| `epinal` | Épinal / Vallon d'Olima | 76 | 37,6 | 48.133–48.172 N, 6.363–6.467 E |
-| `munstertal` | Münstertal | 66 | 62,4 | 47.956–48.109 N, 6.775–7.179 E |
-| `guebwiller` | Guebwiller / Markstein | 40 | 39,2 | 47.846–47.944 N, 7.030–7.226 E |
-| `colmar` | Colmar / Hohlandsbourg | 26 | 28,3 | 47.963–48.076 N, 6.915–7.283 E |
-| `kaysersberg` | Kaysersberg / Lac Blanc | 25 | 27,1 | 48.061–48.147 N, 7.045–7.271 E |
-| `masevaux` | Masevaux / Ballon d'Alsace | 18 | 29,6 | 47.745–47.875 N, 6.764–7.025 E |
-| `gerardmer` | Gérardmer | 14 | 20,1 | 48.056–48.160 N, 6.866–6.954 E |
+| Sub-Region (Key) | Label | Trails | km |
+|---|---|---:|---:|
+| `thann` | Thann | 118 | 181,1 |
+| `labresse` | La Bresse | 82 | 96,7 |
+| `epinal` | Épinal | 76 | 37,6 |
+| `munstertal` | Münstertal | 66 | 62,4 |
+| `guebwiller` | Guebwiller | 34 | 34,4 |
+| `colmar` | Colmar | 26 | 28,3 |
+| `masevaux` | Masevaux | 18 | 29,6 |
+| `kaysersberg` | Kaysersberg | 17 | 15,2 |
+| `gerardmer` | Gérardmer | 14 | 20,1 |
+| **`bp_labresse`** | **Bikepark La Bresse** | 9 | 11,0 |
+| **`bp_lacblanc`** | **Bikepark Lac Blanc** | 8 | 11,9 |
+| **`bp_markstein`** | **Bikepark Markstein** | 6 | 4,9 |
+
+**Die drei Bikeparks sind eigene Sub-Regionen** (2026-08-20, *"ich möchte dass die Bikeparks eine eigene
+Unterregion werden"*). Sie sind liftbedient, vom Betreiber bewertet und werden als Ziel gefahren — in der
+Talklammer ringsum gingen sie unter: Lac Blancs 8 Pisten waren ein Drittel von `kaysersberg`, Marksteins 6
+ein Siebtel von `guebwiller`. Zugehörigkeit kommt aus der jeweils **eigenen Trailforks-Region** des Parks,
+und die drei Listen kamen genau so heraus, wie die Betreiber sie veröffentlichen. Geprüft **vor** der
+Talklammer, damit ein Trail, der Park *und* Gemeinde trägt, nicht über die Listenreihenfolge im Tal landet.
+
+**Die übrigen Labels sind je EIN Name** (gleiche Anfrage): aus "Thann / Saint-Amarin",
+"Masevaux / Ballon d'Alsace", "Épinal / Vallon d'Olima" wurde je der Talname. Was drin ist, steht in
+`SUBREGIONS` in `tools/build_suedvogesen.py`.
 
 Schwierigkeiten: 74 grün, 235 blau, 110 rot, **56 schwarz** (Norden: 38 — die Hautes-Vosges sind das
 steilere Gelände). Höhen 245–1355 m.
 
-Drei Bikeparks: **La Bresse** (9 Trails), **Markstein** (6), **Lac Blanc** (8).
+Drei Bikeparks, jetzt je eigene Sub-Region: **La Bresse** (9 Trails), **Lac Blanc** (8),
+**Markstein** (6).
 
 Gebaut von `tools/build_suedvogesen.py`. Rohdaten in `.tmpwork/vogesen/`: `sued_table.json` +
 `sued_geo.json`, plus die Nord-Dateien für die übernommenen Klammern.
@@ -87,10 +102,13 @@ gleich aussehen dürfen. Nicht gefunden: "Schuss Line" (rouge) — nicht geraten
 **Bikepark du Markstein: nicht überprüfbar, bleibt auf Trailforks.** Die Seite, die kelbikepark.fr als
 offiziell führt (`alsacefreerideacademy.fr/bikepark-markstein`), liefert heute eine
 **"18+ ONLY"-Alterssperre** statt eines Bikeparks; `lemarkstein.net` und die Tourismusseite des Tals
-veröffentlichen keine Pistenliste. kelbikepark nennt eine **Verteilung** (6 Pisten: 2 grün, 2 blau, 1 rot,
-1 schwarz), die nicht zu unserem Bestand passt (Manala grün, Papala blau, Spaetzle blau, Schloppa rot,
-Papala rouge rot) — es fehlen also eher ein grüner und ein schwarzer Trail, als dass die Bewertungen
-falsch wären. Als ungelöst vermerkt.
+veröffentlichen keine Pistenliste. kelbikepark nennt eine **Verteilung**: 6 Pisten, 2 grün / 2 blau / 1 rot / 1 schwarz.
+**Seit der Park eine eigene Sub-Region ist, ist klar, dass wir alle sechs haben** — Manala (grün), Papala
+(blau), Spaetzle (blau), Papala rouge (rot), Schloppa (rot), Dexter (schwarz), also 1/2/2/1. Es fehlt
+demnach keine Piste; eine ist bei Trailforks nur eine Stufe härter eingetragen als beim Betreiber. Welche,
+lässt sich ohne die Betreiberseite nicht sagen — als ungelöst vermerkt, aber deutlich kleiner als zuvor
+angenommen. (Die frühere Notiz "es fehlen ein grüner und ein schwarzer Trail" war falsch: `Dexter` war
+schon da, nur in `guebwiller` verborgen.)
 
 ## Lifte
 
@@ -100,8 +118,8 @@ Talstation zuerst.
 
 | Lift | Sub-Region | Länge | Höhe | Beleg |
 |---|---|---:|---|---|
-| **Montjoie** (Lac Blanc) | `kaysersberg` | 1 191 m | 867 → 1 151 m | Station nennt nur "un télésiège débrayable"; es ist der einzige Sessellift dort, Bergstation 22 m vom Start aller 7 DH-Pisten |
-| **Vologne Express** (La Bresse) | `labresse` | 1 173 m | 921 → 1 174 m | vom Betreiber namentlich als Lift des Bikeparks genannt; Bergstation 9 m von den Pisten-Startpunkten |
+| **Montjoie** (Lac Blanc) | `bp_lacblanc` | 1 191 m | 867 → 1 151 m | Station nennt nur "un télésiège débrayable"; es ist der einzige Sessellift dort, Bergstation 22 m vom Start aller 7 DH-Pisten |
+| **Vologne Express** (La Bresse) | `bp_labresse` | 1 173 m | 921 → 1 174 m | vom Betreiber namentlich als Lift des Bikeparks genannt; Bergstation 9 m von den Pisten-Startpunkten |
 
 **Markstein bekommt bewusst keinen Lift.** kelbikepark sagt "1" für Biker geöffnete Bahn und ein
 France-3-Artikel erwähnt einen im Sommer laufenden Sessellift — aber **OSM hat am Markstein überhaupt
@@ -159,33 +177,28 @@ Profil — nicht gebaut, gemeldet.
 
 ## Orte
 
-**22 pro Region**, aus OSMs eigenen `place`-Knoten über `tools/add_region_places.py` — also genau auf dem
-Punkt, an dem die Basemap den Namen selbst zeichnet, damit unser Label ihn überdeckt statt zu verdoppeln
-(dieselbe "match the base map"-Regel wie bei Donnersberg). Gefiltert nach Abstand zum nächsten Trail
-(Stadt ≤ 5 km, Dorf ≤ 2,5 km) und nach Einwohnerzahl bzw. Namensgleichheit mit einer Sub-Region.
+**15 (Nord) und 12 (Süd)**, aus OSMs eigenen `place`-Knoten über `tools/add_region_places.py` — also genau
+auf dem Punkt, an dem die Basemap den Namen selbst zeichnet, damit unser Label ihn überdeckt statt zu
+verdoppeln (dieselbe "match the base map"-Regel wie bei Donnersberg).
 
-Das Werkzeug brauchte dafür drei Erweiterungen, alle drei allgemein nützlich:
+Runde zwei, nach *"Es sind mir zu viele Orte. Dünn das gerne etwas aus … da wo wenig Trails sind oder viele
+Orte beieinander liegen"* (2026-08-20) — aus 22+22 wurden 15+12, über genau die zwei genannten Achsen:
 
-1. **Labels aus dem Build-Skript, wenn die Region noch nicht im Katalog steht.** Die Funktion las die
-   Sub-Region-Namen aus `REGION_CATALOG` in `index.html` — die hier fehlt. Ohne sie feuert der Test
-   "heißt wie eine Sub-Region" nie, und genau der hält die Orte, nach denen man wirklich navigiert
-   (Wissembourg, Saverne, Barr, Thann, La Bresse …), gegen beliebige Nachbardörfer. Fällt jetzt auf
-   `SUBREGIONS` im jeweiligen `build_*.py` zurück.
-2. **`MAX_PLACES` pro Region überschreibbar.** Der Default 10 passt zu einer Resort-Region (Brandnertal
-   3×4 km); für ein ganzes Massiv mit 7–9 Sub-Regionen bleiben damit die Hälfte der Klammern namenlos.
-   Beide Vogesen-Regionen stehen auf 22 — der Pfälzerwald daneben hat 27 bei ähnlicher Trailzahl.
-3. **Mindestabstand zwischen zwei Labels (`MIN_SEPARATION_KM` = 4 km).** Ohne den vergab Südvogesen
-   **sechs** seiner 22 Plätze an eine einzige Agglomeration (Mulhouse 106 341, Illzach 14 829,
-   Kingersheim 13 178, Pfastatt 10 237, Lutterbach 6 261, Richwiller 3 704), weil ein Vorort mit 10 000
-   Einwohnern ein Bergdorf mit 4 000 in der Rangfolge schlägt. Auf dem Bildschirm ist das ein Klumpen,
-   und er kostete sechs Bergdörfer ihr Label.
+- **viele Orte beieinander**: `MIN_SEPARATION_KM` von 4 auf **8 km**.
+- **wenig Trails**: eine **Quote pro Sub-Region**, `1 + Trails // 45`, maximal 4. Eine Klammer mit 14
+  Trails bekommt damit ein Label, eine mit 148 vier. Ein Ort zählt für die Sub-Region, deren Trail ihm am
+  nächsten liegt. Das kann `MAX_PLACES` allein nicht leisten, weil das eine regionsweite Summe ist, die die
+  Einwohner-Rangfolge dann dort ausgibt, wo die größten Städte liegen.
+- **Ausnahme: der Namensgeber einer Sub-Region ist vom Abstand befreit.** Sonst fällt genau der Name weg,
+  nach dem die Klammer heißt: **La Bresse** (4 041 Einwohner, Namensgeber einer 82-Trail-Klammer *und* eines
+  Bikeparks) war rausgefallen, weil es 8,15 km von Gérardmer entfernt liegt — an 150 m Grenzwert gescheitert.
 
-**Jede Sub-Region beider Regionen hat mindestens 2 Labels innerhalb von 6 km**, das nächste jeweils
-höchstens 2,6 km entfernt — keine Klammer bleibt namenlos.
+Früher, in Runde eins, kam noch dazu: Labels aus dem Build-Skript, wenn die Region nicht im Katalog steht,
+und `MAX_PLACES` pro Region überschreibbar (Default 10 passt zu einem Resort, nicht zu einem Massiv).
 
-Vergeben: Épinal, Guebwiller, Gérardmer, Thann, La Bresse, Masevaux, Saint-Amarin, Cernay, Remiremont,
-Munster, Wintzenheim, Vagney, Orbey, Cornimont, Giromagny, Saulxures-sur-Moselotte, Soultzmatt,
-Les Forges, Willer-sur-Thur, Fellering, Corcieux, Lautenbach.
+Vergeben: Épinal, Guebwiller, Gérardmer, Thann, La Bresse, Masevaux, Saint-Amarin, Remiremont, Munster,
+Wintzenheim, Orbey, Giromagny. Die drei Bikepark-Klammern bekommen keins — sie heißen in der Seitenleiste
+schon nach ihrem Park, und ihr nächstes Dorf ist jeweils über ein anderes Label abgedeckt.
 
 ## Ein Trail dabei rausgeflogen
 
@@ -209,15 +222,18 @@ Also raus, mit derselben Begründung wie bei `glaserberg-25360`: nicht im Massiv
     countries: ["FR"], label: "Südvogesen", file: "regions/suedvogesen.json", trailCount: 474,
     bounds: [[47.74454, 6.36278], [48.17171, 7.28295]],
     subRegions: {
-      colmar: { label: "Colmar / Hohlandsbourg", color: "#a03a8a" },
-      kaysersberg: { label: "Kaysersberg / Lac Blanc", color: "#a8452f" },
+      colmar: { label: "Colmar", color: "#a03a8a" },
+      kaysersberg: { label: "Kaysersberg", color: "#a8452f" },
+      bp_lacblanc: { label: "Bikepark Lac Blanc", color: "#e07a1f" },
       munstertal: { label: "Münstertal", color: "#3a6ea5" },
-      guebwiller: { label: "Guebwiller / Markstein", color: "#c1440e" },
-      thann: { label: "Thann / Saint-Amarin", color: "#8a6a2f" },
-      masevaux: { label: "Masevaux / Ballon d'Alsace", color: "#2f8a7a" },
-      labresse: { label: "La Bresse / Hautes-Vosges", color: "#6a3a8a" },
+      guebwiller: { label: "Guebwiller", color: "#c1440e" },
+      bp_markstein: { label: "Bikepark Markstein", color: "#8a2f5a" },
+      thann: { label: "Thann", color: "#8a6a2f" },
+      masevaux: { label: "Masevaux", color: "#2f8a7a" },
+      labresse: { label: "La Bresse", color: "#6a3a8a" },
+      bp_labresse: { label: "Bikepark La Bresse", color: "#2f6ea8" },
       gerardmer: { label: "Gérardmer", color: "#4a7d3f" },
-      epinal: { label: "Épinal / Vallon d'Olima", color: "#7a3a2f" }
+      epinal: { label: "Épinal", color: "#7a3a2f" }
     }
   },
 ```

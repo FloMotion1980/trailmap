@@ -668,16 +668,20 @@ const REGION_CATALOG = {
   nordvogesen: {
     countries: ["FR", "DE"], label: "Nordvogesen", file: "regions/nordvogesen.json", trailCount: 483,
     bounds: [[48.10768, 6.81610], [49.13417, 7.93934]],
+    // Labels are ONE name each (user, 2026-08-20: "Die Namen der Unterregionen ... sind zu lang"). They
+    // used to spell out what a bracket spans ("Saverne / Dabo / Wangenbourg") -- a sidebar chip has ~14
+    // characters before it wraps, and each of these valleys is navigated by one name anyway. What each
+    // covers is in tools/build_nordvogesen.py's SUBREGIONS and in docs/nordvogesen.md.
     subRegions: {
-      wissembourg: { label: "Wissembourg / Nordvogesen", color: "#3a6ea5" },
-      niederbronn: { label: "Niederbronn / Heidenkopf", color: "#a8452f" },
-      saverne: { label: "Saverne / Dabo / Wangenbourg", color: "#8a6a2f" },
+      wissembourg: { label: "Wissembourg", color: "#3a6ea5" },
+      niederbronn: { label: "Niederbronn", color: "#a8452f" },
+      saverne: { label: "Saverne", color: "#8a6a2f" },
       bruche: { label: "Bruche-Tal", color: "#2f8a7a" },
-      sainteodile: { label: "Barr / Mont Sainte-Odile", color: "#6a3a8a" },
-      ville: { label: "Val de Villé / Ribeauvillé", color: "#c2185b" },
+      sainteodile: { label: "Barr", color: "#6a3a8a" },
+      ville: { label: "Ribeauvillé", color: "#c2185b" },
       // On the Lorraine side and north of the line, so this region's, despite an earlier cut having put
       // it in the south -- see tools/vogesen_boundary.py.
-      vosges_ouest: { label: "Vogesen West (Saint-Dié)", color: "#7a7a2f" }
+      vosges_ouest: { label: "Saint-Dié", color: "#7a7a2f" }
     }
   },
   // `countries` is FR only: unlike Nordvogesen this one never reaches the German border. Three bike parks
@@ -686,18 +690,26 @@ const REGION_CATALOG = {
   suedvogesen: {
     countries: ["FR"], label: "Südvogesen", file: "regions/suedvogesen.json", trailCount: 474,
     bounds: [[47.74454, 6.36278], [48.17171, 7.28295]],
+    // Same shortening as Nordvogesen, plus the three BIKE PARKS as their own sub-regions (user,
+    // 2026-08-20). They are lift-served, operator-graded and ridden as a destination, so folding them into
+    // the valley around them hid them -- Lac Blanc's 8 pistes were a third of `kaysersberg`. Membership
+    // comes from each park's own Trailforks region, and the three lists came out exactly as the operators
+    // publish them. Each park sits directly after the bracket it lies in.
     subRegions: {
-      colmar: { label: "Colmar / Hohlandsbourg", color: "#a03a8a" },
-      kaysersberg: { label: "Kaysersberg / Lac Blanc", color: "#a8452f" },
+      colmar: { label: "Colmar", color: "#a03a8a" },
+      kaysersberg: { label: "Kaysersberg", color: "#a8452f" },
+      bp_lacblanc: { label: "Bikepark Lac Blanc", color: "#e07a1f" },
       munstertal: { label: "Münstertal", color: "#3a6ea5" },
-      guebwiller: { label: "Guebwiller / Markstein", color: "#c1440e" },
-      thann: { label: "Thann / Saint-Amarin", color: "#8a6a2f" },
-      masevaux: { label: "Masevaux / Ballon d'Alsace", color: "#2f8a7a" },
-      labresse: { label: "La Bresse / Hautes-Vosges", color: "#6a3a8a" },
+      guebwiller: { label: "Guebwiller", color: "#c1440e" },
+      bp_markstein: { label: "Bikepark Markstein", color: "#8a2f5a" },
+      thann: { label: "Thann", color: "#8a6a2f" },
+      masevaux: { label: "Masevaux", color: "#2f8a7a" },
+      labresse: { label: "La Bresse", color: "#6a3a8a" },
+      bp_labresse: { label: "Bikepark La Bresse", color: "#2f6ea8" },
       gerardmer: { label: "Gérardmer", color: "#4a7d3f" },
       // 65 km west of Colmar in the Lorraine plain rather than the massif, but below the line and 76 real
       // trails -- kept as its own bracket so it can be switched off in the sidebar instead of dropped.
-      epinal: { label: "Épinal / Vallon d'Olima", color: "#7a3a2f" }
+      epinal: { label: "Épinal", color: "#7a3a2f" }
     }
   },
   // Source: https://www.bergstrasse-odenwald.de/mountainbiking/mountainkbikestrecken -- Durchstich

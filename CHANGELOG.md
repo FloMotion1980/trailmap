@@ -30,6 +30,24 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   219-m-Lücke im Hin-und-zurück-Muster). Fall 4 (Projektion) kam auch hier nicht vor — dessen Grenzwerte
   bleiben nur an Rodalben Felsentrails geprüft.
 
+## 2026-08-20
+- **Vogesen nachgeschärft, alle drei Punkte aus dem ersten Blick des Nutzers** — (1) **Ortslabels
+  ausgedünnt**, 22+22 → **15+12**, über genau die zwei genannten Achsen: Mindestabstand zwischen zwei
+  Labels von 4 auf 8 km, plus eine **Quote pro Sub-Region** (`1 + Trails // 45`, max 4), damit eine
+  14-Trail-Klammer nicht so viele Namen bekommt wie eine mit 148. Ausnahme: der **Namensgeber einer
+  Sub-Region ist vom Abstand befreit** — sonst fällt genau der Name weg, nach dem die Klammer heißt
+  (La Bresse war an 150 m Grenzwert gegen Gérardmer gescheitert). (2) **Die drei Bikeparks sind eigene
+  Sub-Regionen**: `bp_lacblanc` (8), `bp_labresse` (9), `bp_markstein` (6) — liftbedient,
+  betreiberbewertet, als Ziel gefahren, und in der Talklammer ringsum untergegangen (Lac Blanc war ein
+  Drittel von `kaysersberg`). Zugehörigkeit aus der eigenen Trailforks-Region des Parks, vor der
+  Talklammer geprüft. Die beiden Lifte hängen jetzt an ihrem Park statt am Tal. (3) **Alle
+  Sub-Region-Labels auf je einen Namen gekürzt** — aus "Saverne / Dabo / Wangenbourg" wurde "Saverne",
+  aus "Épinal / Vallon d'Olima" "Épinal"; ein Seitenleisten-Chip hat ~14 Zeichen, bevor er umbricht.
+- Nebenbei geklärt: **Bikepark Markstein ist vollständig**, nicht lückenhaft. Als eigene Sub-Region
+  sichtbar sind es genau die 6 Pisten, die kelbikepark nennt (inkl. `Dexter`, das vorher in `guebwiller`
+  verborgen war) — eine ist bei Trailforks nur eine Stufe härter eingetragen als beim Betreiber, statt
+  wie vermutet zwei Pisten zu fehlen.
+
 ## 2026-08-19
 - **Zwei neue Regionen: Nordvogesen (483 Trails, 592 km) und Südvogesen (474 Trails, 533 km)** — zusammen
   957 Trails, 44 Orte, 2 Lifte, aus **Trailforks' eigenem `encodedpath` plus dem `ElevationChart`, das

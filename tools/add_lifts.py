@@ -59,12 +59,12 @@ LIFTS = {
     #   about summer bike transport anywhere, and no lift-served DH park -- excluded, see below.
     # ---------------------------------------------------------------------------------------------
     "suedvogesen": dict(bbox="47.99,6.94,48.17,7.12", lifts=[
-        dict(id="lift_sv_montjoie", name="Montjoie", region="kaysersberg",
+        dict(id="lift_sv_montjoie", name="Montjoie", region="bp_lacblanc",
              osm=r"^Montjoie$", aerialway="chair_lift",
              note="the Lac Blanc bike park's own lift -- the station calls it only 'un telesiege "
                   "debrayable'; it is the single chair_lift there and its top is 22 m from every DH "
                   "piste's start. A platter of the same name is a different lift"),
-        dict(id="lift_sv_vologne_express", name="Vologne Express", region="labresse",
+        dict(id="lift_sv_vologne_express", name="Vologne Express", region="bp_labresse",
              osm=r"^Vologne Express$",
              note="the lift for Bike Park La Bresse-Hohneck's 10 pistes, named as such by the operator; "
                   "its top is 9 m from the park trails' tops"),
