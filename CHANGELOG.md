@@ -22,6 +22,25 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Drei der vier offenen Wahrzeichen-Touren geschlossen: „Felsenwanderweg Rodalben" (16 Luecken, 44,29 km),
+  „Ost-West-Passage" (60, 78,32 km) und „Trans Pfaelzerwald" (58, 91,24 km).** Damit haben 17 Pfaelzerwald-
+  Trailrunden keine einzige offene innere Luecke mehr. Die vierte, „Dahner Felsenpfad", ist keine Lueckenarbeit:
+  sie besteht aus einem einzigen Segment, hat also gar keine Trail-Zuordnung. **Ein Fernweg ist keine Runde** --
+  die zwei Passagen beginnen 37 bzw. 38,6 km von ihrem Ende, und wer jede Tour als geschlossene Runde
+  durchlaeuft, sieht dort eine 37-km-"Luecke"; `MAX_GAP_M` faengt das ab und meldet es. Fuer lange Touren holt
+  `prefetch_gaps()` nur noch die Vereinigung der Lueckenboxen statt einer Box ueber die ganze Tour (534 km2 ->
+  46 km2 bei der Trans Pfaelzerwald), weiter in EINEM Abruf und beweisbar mit derselben Wegemenge.
+- **Zwei Verfahrensfehler, beide erst von diesen neuen Touren aufgedeckt — und beide haben Trail-Meter
+  zurueckgebracht.** (1) Der Freibetrag fuer den Anschluss-Versatz muss dieselbe Zahl sein wie die
+  Endpunkt-Toleranz; seit `ON_WAY_M` auf 20 ging, wurde ein bei 16 m akzeptierter Anschluss fuer genau diese
+  16 m bestraft. Gefunden an einer 124-m-Bruecke, die durchgehend auf einer Landstrasse laeuft (Kern 0,00 m
+  abseits) und trotzdem verworfen wurde. Die Kopplung hob vier erzwungene Kappungen auf: „Lambrecht Trail 7"
+  -39 % ist weg, „Felsenweg Nord" +199 m, „Gipfelstuermer" +163 m, „Curvy Up'N'Down" +23 m. (2) Die Kappung
+  gehoert in die Rangfolge, aber nur INNERHALB eines Falls: zwei Fall-5-Loesungen standen 654 m Bruecke mit
+  1095 m Kappung gegen 698 m mit 62 m, und ohne die Kappung im Schluessel gewann die erste. Vor die Fallnummer
+  gesetzt ist es der umgekehrte Fehler, auch gemessen. Alle 15 Touren wurden danach einmal mit dem
+  endgueltigen Verfahren neu gebaut; nur noch sieben Abschnitte im ganzen Bestand sind ueberhaupt gekappt.
+  Rodalben Felsentrails blieb auf Wunsch unangetastet.
 - **`nearbyTrailConnector` erreicht die zwei letzten Rodalben-Felsentrails-Loesungen wieder** (38/38 statt
   36/38), ueber einen zweiten Durchgang mit gelockerter Verhaeltnismaessigkeit — gleiche Bauform wie Fall 5,
   der auch nur anlaeuft, wenn die einfacheren Faelle nichts liefern. Beide Luecken sind vom Nutzer bestaetigt,

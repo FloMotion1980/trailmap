@@ -2,14 +2,14 @@
   "pw_kurztour_6_landstuhl_ost": {
     "cases": {
       "0_Ueberlappung": 1,
-      "1_ein-Weg-beide-Seiten": 15,
-      "2_Weg-folgen-und-kappen": 2,
+      "1_ein-Weg-beide-Seiten": 16,
+      "2_Weg-folgen-und-kappen": 1,
       "3_Schnittpunkt": 2,
       "5_Wegekette": 1
     },
     "closed": 21,
     "gaps": 21,
-    "length_m": 34221,
+    "length_m": 34262,
     "per_gap": [
       {
         "applied": "3_Schnittpunkt",
@@ -165,13 +165,13 @@
         "trim": 0
       },
       {
-        "applied": "2_Weg-folgen-und-kappen(B)",
-        "bridge": 163,
+        "applied": "1_ein-Weg-beide-Seiten",
+        "bridge": 181,
         "gap": 169.8,
         "relaxed": false,
         "seg": 3,
         "skipped": null,
-        "trim": 23
+        "trim": 0
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
@@ -207,7 +207,7 @@
     "trail_m": {
       "Blocks n Rocks": 223,
       "Bännjer Sportplatz": 368,
-      "Curvy Up´N´Down": 476,
+      "Curvy Up´N´Down": 499,
       "Landstuhl Ost Trail 2": 172,
       "Landstuhl Trail 1": 211,
       "Landstuhl Trail 2": 467,
@@ -357,7 +357,7 @@
     },
     "closed": 38,
     "gaps": 38,
-    "length_m": 41676,
+    "length_m": 41662,
     "per_gap": [
       {
         "applied": "1_ein-Weg-beide-Seiten",
@@ -379,7 +379,7 @@
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
-        "bridge": 43,
+        "bridge": 37,
         "gap": 27.7,
         "relaxed": false,
         "seg": 35,
@@ -433,7 +433,7 @@
       },
       {
         "applied": "1_ein-Weg-beide-Seiten",
-        "bridge": 27,
+        "bridge": 19,
         "gap": 19.1,
         "relaxed": false,
         "seg": 29,

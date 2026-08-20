@@ -99,6 +99,15 @@ OFF_TOL_M = 0.5
 RELAX_BRIDGE_FACTOR = 7.0
 RELAX_SEG_TRIM_FRACTION = 0.65
 
+# Oberhalb davon ist ein Uebergang keine Luecke mehr, die dieses Verfahren behandelt. Gefunden 2026-08-20 an
+# den zwei Fernwegen des Pfaelzerwalds: "Ost-West-Passage" und "Trans Pfaelzerwald" sind PUNKT-ZU-PUNKT, ihr
+# Anfang liegt 37 bzw. 38,6 km von ihrem Ende -- wer jede Tour als geschlossene Runde behandelt, sieht dort
+# eine 37-km-"Luecke". Die zu ueberbruecken ist nicht bloss falsch, es laedt auch ein halbes Bundesland an
+# OSM-Wegen. Die groesste ECHTE Luecke im ganzen Bestand ist 976m, also liegt die Grenze weit ueber allem
+# Vorkommenden und trifft nur den Unsinn. So ein Uebergang wird gemeldet, nicht stillschweigend uebergangen:
+# er kann auch bedeuten, dass die Tour zwei getrennte Teile hat, und das gehoert angesehen.
+MAX_GAP_M = 1500.0
+
 OVERLAP_M = 20.0          # so nah muss ein Punkt an der Linie der anderen Seite liegen, um als "darauf" zu gelten
 MIN_OVERLAP_M = 25.0      # kuerzere Ueberlappungen sind Endpunkt-Rauschen, kein doppelt gefahrenes Stueck
 
@@ -127,7 +136,7 @@ PROJ_NO_BRANCH_M = 25.0    # am Anschlusspunkt darf kein anderer Weg so nah abzw
 # gefaehrlichste Variante, weil der Ablationslauf dann "kein Unterschied" meldet und man das glaubt.
 for _k in ("ON_WAY_M", "MEET_M", "MAX_TRIM_FACTOR", "MAX_BRIDGE_FACTOR", "MAX_SEG_TRIM_FRACTION",
            "MIN_SEG_POINTS", "OFF_TOL_M", "OVERLAP_M", "MIN_OVERLAP_M", "PROJ_MAX_MEAN_M",
-           "RELAX_BRIDGE_FACTOR", "RELAX_SEG_TRIM_FRACTION",
+           "RELAX_BRIDGE_FACTOR", "RELAX_SEG_TRIM_FRACTION", "MAX_GAP_M",
            "PROJ_MIN_RATIO", "PROJ_MIN_SECOND_M", "PROJ_NO_BRANCH_M", "MERGE_ONLY", "CASE1_FIRST_ONLY"):
     if os.environ.get("NTC_" + _k) is not None:
         globals()[_k] = float(os.environ["NTC_" + _k])
@@ -208,6 +217,40 @@ def merge_roads(ways, tol=1.0):
             if changed:
                 break
     return items
+
+
+def prefetch_gaps(pairs, pad_m=BBOX_PAD_M):
+    """Wie prefetch(), aber nur die Umgebung der LUECKEN -- ein Abruf, viele Boxen, als Vereinigung.
+
+    Noetig fuer lange Touren: die Gesamtbox der "Trans Pfaelzerwald" ist 14 x 38 km = 534 km2, die
+    Vereinigung ihrer Lueckenboxen nur 46 km2. Einmal `way["highway"]` ueber ein halbes Bundesland zu holen
+    ist zehnmal so viel Daten fuer dieselbe Antwort.
+
+    Das Ergebnis ist DASSELBE, was die Gesamtbox liefern wuerde, denn `fetch()` filtert ohnehin auf die Box
+    der einzelnen Luecke mit demselben Rand -- und Overpass' Box-Filter und dieser Filter benutzen dasselbe
+    Kriterium (ein Stuetzpunkt liegt darin). An einer bereits bestaetigten Tour nachgemessen: bytegleich.
+    """
+    global _WAYS
+    dlat = pad_m / 111320.0
+    dlon = pad_m / 80000.0
+    boxes = sorted({"%.6f,%.6f,%.6f,%.6f" % (min(a[0], b[0]) - dlat, min(a[1], b[1]) - dlon,
+                                             max(a[0], b[0]) + dlat, max(a[1], b[1]) + dlon)
+                    for a, b in pairs})
+    import hashlib
+    cache = os.path.join(CACHE_DIR, "osm_ways_gaps_%s.json"
+                         % hashlib.md5("|".join(boxes).encode("utf-8")).hexdigest()[:12])
+    if os.path.exists(cache):
+        _WAYS = [{"geom": [tuple(q) for q in w["geom"]], "tags": w["tags"], "id": w["id"]}
+                 for w in json.load(open(cache, encoding="utf-8"))]
+        return _WAYS
+    q = "[out:json][timeout:300];(%s);out tags geom;" % "".join('way["highway"](%s);' % b for b in boxes)
+    W = [{"geom": [(round(p["lat"], 7), round(p["lon"], 7)) for p in e.get("geometry", [])],
+          "tags": e.get("tags", {}) or {}, "id": e.get("id")} for e in overpass(q).get("elements", [])]
+    _WAYS = [w for w in W if len(w["geom"]) >= 2]
+    os.makedirs(CACHE_DIR, exist_ok=True)
+    json.dump([{"geom": [list(q) for q in w["geom"]], "tags": w["tags"], "id": w["id"]} for w in _WAYS],
+              open(cache, "w", encoding="utf-8"))
+    return _WAYS
 
 
 def fetch(a, b):
@@ -302,7 +345,17 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
                     # ueber die GPS-Ungenauigkeit hinausgeht. 13m Versatz sind Rauschen und zaehlen nicht;
                     # die 21,9m querab am Hilschberghaus sind ein echtes Gelaendestueck und zaehlen -- genau
                     # der Unterschied, den der Nutzer auf der Karte gesehen hat.
-                    "off": off_way_core(bridge) + max(0.0, ends_off(bridge) - PROJ_MAX_MEAN_M),
+                    # Der Freibetrag fuer den Anschluss-Versatz ist ON_WAY_M, NICHT PROJ_MAX_MEAN_M. Beide
+                    # standen auf 15, bis ON_WAY_M am 2026-08-20 auf 20 ging -- danach wurde ein Anschluss,
+                    # der bei 16m als "auf dem Weg" akzeptiert wird, fuer genau diese 16m bestraft. Gefunden
+                    # an seg37 der Ost-West-Passage: 124m Bruecke fuer 109m Luecke, durchgehend auf einer
+                    # Landstrasse, Kern 0,00m abseits -- und trotzdem verworfen, weil der Trail-Endpunkt 16,3m
+                    # neben der Strasse aufgezeichnet ist. Das ist das GPS-Rauschen, das der Nutzer
+                    # ausdruecklich akzeptiert hat. Hier ON_WAY_M zu benutzen koppelt die beiden Zahlen per
+                    # Konstruktion, damit sie nicht wieder auseinanderlaufen; PROJ_MAX_MEAN_M gehoert Fall 4
+                    # und beantwortet eine andere Frage (wie weit ein ABSCHNITT im Mittel neben seinem Weg
+                    # laeuft), sie hatten nur denselben Wert.
+                    "off": off_way_core(bridge) + max(0.0, ends_off(bridge) - ON_WAY_M),
                     "off_ends": round(ends_off(bridge), 1),
                     "trim": trimmed, "beeline": beeline, "extra": extra})
 
@@ -463,7 +516,19 @@ def solve(A, B, trail_A=False, trail_B=False, relax=False):
     # round() faellt fuer alles unter einem halben Meter selbst auf 0 -- die Sortierung war also schon mit
     # OFF_TOL_M konsistent, nur Tor und Vorauswahl waren es nicht. Die Rundung hier NICHT feiner machen: das
     # loest Gleichstaende auf, die bisher die Fallnummer entschieden hat, und verschiebt damit Ergebnisse.
-    out.sort(key=lambda r: (bool(r["reject"]), round(r["off"]), r["name"][0], r["len"]))
+    #
+    # Die Kappung steht INNERHALB eines Falls in der Rangfolge, aber nie davor. Beide Haelften sind an echten
+    # Faellen belegt:
+    #   * Davor waere falsch: nach "Bruecke + Kappung" global sortiert rutschte Landstuhl (Ost) seg15 von
+    #     Fall 1 auf Fall 3 -- fuer wenige Meter kuerzere Bruecke schlechteres Vertrauen. Die Fallnummer
+    #     kodiert, wie gut die Zuordnung belegt ist, nicht wie lang sie ist.
+    #   * Gar nicht waere auch falsch: bei seg0 des Felsenwanderwegs Rodalben standen zwei Fall-5-Loesungen
+    #     nebeneinander, 654m Bruecke mit 1095m Kappung und 698m Bruecke mit 62m Kappung. Ohne die Kappung im
+    #     Schluessel entschied allein die Bruecke -- 44m kuerzer, dafuer 1033m echter Trail weg.
+    # Danach `trim` und erst zuletzt `len`: bei gleicher Summe ist die Loesung besser, die mehr reale
+    # Trail-Geometrie stehen laesst.
+    out.sort(key=lambda r: (bool(r["reject"]), round(r["off"]), r["name"][0],
+                            round(r["len"] + r["trim"]), r["trim"], r["len"]))
     return out
 
 
@@ -486,6 +551,12 @@ def close_gaps(s, gaps, names=None, write=False, report=None):
                "from": kind(s[i]), "to": kind(s[j]), "applied": None}
         if report:
             report("seg%-2d %6.1fm  %-22s -> %s" % (i, rec["gap"], rec["from"], rec["to"]))
+        if rec["gap"] > MAX_GAP_M:
+            rec["skipped"] = "%.0fm ist keine Luecke, sondern eine Strecke -- ansehen" % rec["gap"]
+            if report:
+                report("    -> %s" % rec["skipped"])
+            out.append(rec)
+            continue
         res = solve(A, B, trail_A=bool(s[i].get("trailId")), trail_B=bool(s[j].get("trailId")))
         usable = res and res[0]["off"] <= OFF_TOL_M and not res[0]["reject"]
         if res and not usable:
@@ -538,7 +609,8 @@ def main():
 
     d = json.load(open(args.region, encoding="utf-8"))
     s = d["trailSegments"][args.loop]
-    prefetch([q for seg in s for q in seg["coords"]])
+    pairs = [(s[i]["coords"][-1], s[(i + 1) % len(s)]["coords"][0]) for i in args.gap]
+    prefetch_gaps([(a, b) for a, b in pairs if haversine_m(a, b) <= MAX_GAP_M])
     names = {t["id"]: t["name"] for t in d["lineTrails"]}
     recs = close_gaps(s, args.gap, names=names, write=args.write, report=lambda t: print(t))
     chosen = {r["seg"]: r["best"] for r in recs if r["applied"]}

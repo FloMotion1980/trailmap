@@ -75,8 +75,26 @@ Verified by mutation (2026-08-20), all through `NTC_*` overrides so no source ed
 | `MEET_M` 20 -> 8 | 2 |
 | `OVERLAP_M` 20 -> 1 | 2 |
 | `MIN_OVERLAP_M` 25 -> 200 | 2 |
+| the join-offset allowance back to `PROJ_MAX_MEAN_M` instead of `ON_WAY_M` (source edit) | 4 |
+| the joint cost out of the sort key again, leaving case number then bridge length (source edit) | measured on a fourth tour, see below |
 | `RELAX_BRIDGE_FACTOR` 7 -> 6 | 2 |
 | `RELAX_SEG_TRIM_FRACTION` 0.65 -> 0.5 | 2 |
+
+Two of these are only reachable by editing the source, because they are structural rather than a threshold.
+Both were found by applying the procedure to a NEW tour rather than by reasoning, which is the argument for
+running it on one more tour before trusting a change:
+
+* **The join-offset allowance and the endpoint-attachment tolerance have to be the same number.** They both
+  read 15 until `ON_WAY_M` went to 20, after which a junction accepted at 16m was then penalised for being
+  16m. Found at the Ost-West-Passage's `seg37`: a 124m bridge for a 109m gap, running the whole way along a
+  secondary road, inner off-way 0.00m -- and rejected, because the trail's own endpoint is recorded 16.3m
+  from the road. Coupling the metric to `ON_WAY_M` fixed that gap and removed four trims elsewhere that the
+  same inconsistency had been forcing, including "Lambrecht Trail 7" at -39%.
+* **Trimming belongs in the sort key inside a case, and never in front of it.** At the Felsenwanderweg
+  Rodalben's `seg0` two case-5 candidates stood side by side: 654m bridge with 1095m of trimming, and 698m
+  bridge with 62m. With trimming absent from the key the bridge alone decided -- 44m shorter, 1033m of real
+  trail gone. Putting the joint cost in FRONT of the case number is the opposite error and was also measured:
+  Landstuhl (Ost) `seg15` then slipped from case 1 to case 3 for a few metres of bridge.
 
 One claim in the first version of this table was wrong and is worth remembering: it asserted that
 `MAX_TRIM_FACTOR` 4 -> 3 would stop Landstuhl's `seg17` from closing. That gap trims 196m over 92m, i.e.

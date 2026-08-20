@@ -406,6 +406,57 @@ Anlass, der eine erneute Durchsicht rechtfertigt.
 
 ---
 
+## Wahrzeichen-Touren und zwei Fernwege (2026-08-20)
+
+Vier der fünf Wahrzeichen-Touren waren offen. Drei davon sind jetzt zu, und die vierte ist eine andere
+Aufgabe:
+
+| Tour | Lücken | Ergebnis |
+|---|---|---|
+| Felsenwanderweg Rodalben | 16 | zu, 18 Segmente, 44,29 km |
+| Ost-West-Passage | 60 | zu, 71 Segmente, 78,32 km — **Punkt-zu-Punkt** |
+| Trans Pfälzerwald | 58 | zu, 65 Segmente, 91,24 km — **Punkt-zu-Punkt** |
+| Dahner Felsenpfad | 0 | ein einziges Segment, also **keine** Trail-Zuordnung — Zuordnungs-, nicht Lückenarbeit |
+
+**Ein Fernweg ist keine Runde, und das war lebensgefährlich für die Zählung.** Die „Ost-West-Passage" beginnt
+37 km von ihrem Ende, die „Trans Pfälzerwald" 38,6 km. Wer jede Tour über `(i+1) % n` durchläuft, sieht dort
+eine 37-km-„Lücke" — sie zu überbrücken wäre nicht bloß falsch, die Wegesuche würde dafür ein halbes
+Bundesland laden. `MAX_GAP_M = 1500` fängt das ab und **meldet** es, statt es zu überspringen: es kann auch
+bedeuten, dass eine Tour in zwei Teile zerfallen ist. Die größte echte Lücke im ganzen Bestand ist 976 m, die
+Grenze liegt also weit über allem Vorkommenden.
+
+**Lange Touren brauchen ein anderes Vorab-Laden.** Die Gesamtbox der „Trans Pfälzerwald" ist 14 × 38 km =
+534 km², die Vereinigung ihrer Lückenboxen nur 46 km². `prefetch_gaps()` holt letztere — weiter **ein** Abruf
+(die feste Regel bleibt gewahrt), nur zehnmal weniger Daten. Das Ergebnis ist beweisbar dasselbe, weil
+`fetch()` ohnehin auf die Box der einzelnen Lücke mit demselben Rand filtert und Overpass' Box-Filter dasselbe
+Kriterium benutzt; an zwei bestätigten Touren bytegleich nachgemessen.
+
+### Zwei Verfahrensfehler, beide von diesen Touren aufgedeckt
+
+Das ist das Argument dafür, eine Änderung erst auf einer *neuen* Tour laufen zu lassen, statt sie zu
+durchdenken:
+
+**1. Der Freibetrag für den Anschluss-Versatz muss dieselbe Zahl sein wie die Endpunkt-Toleranz.** Beide
+standen auf 15, bis `ON_WAY_M` heute Morgen auf 20 ging — danach wurde ein Anschluss, der bei 16 m als „auf
+dem Weg" akzeptiert wird, für genau diese 16 m bestraft. Gefunden an `seg37` der Ost-West-Passage: 124 m
+Brücke für 109 m Lücke, durchgehend auf einer Landstraße, Kern **0,00 m** abseits — und verworfen, weil der
+Trail-Endpunkt 16,3 m neben der Straße aufgezeichnet ist. Das Maß liest jetzt `ON_WAY_M`, was die beiden per
+Konstruktion koppelt. Das schloss nicht nur diese Lücke, sondern **hob vier Kappungen auf, die dieselbe
+Inkonsistenz erzwungen hatte** — darunter „Lambrecht Trail 7" mit −39 %, „Felsenweg Nord" +199 m und
+„Gipfelstürmer" +163 m in Kurztour 1 Rodalben, und „Curvy Up'N'Down" in Landstuhl Ost.
+
+**2. Die Kappung gehört in die Rangfolge — innerhalb eines Falls, nie davor.** An `seg0` des Felsenwanderwegs
+Rodalben standen zwei Fall-5-Lösungen nebeneinander: 654 m Brücke mit **1095 m** Kappung und 698 m Brücke mit
+62 m. Ohne die Kappung im Schlüssel entschied allein die Brücke — 44 m kürzer, dafür 1033 m echter Trail weg.
+Davor zu sortieren ist der umgekehrte Fehler und ebenfalls gemessen (siehe den Abschnitt zum zweiten
+Durchgang): Landstuhl Ost `seg15` rutschte dann von Fall 1 auf Fall 3.
+
+Danach wurden **alle 15 Touren einmal mit dem endgültigen Verfahren neu gebaut**, damit der ganze Bestand aus
+einem Verfahren stammt. Rodalben Felsentrails blieb auf Wunsch des Nutzers unangetastet. Ergebnis: 17 Touren
+ohne eine einzige offene innere Lücke, und nur noch sieben gekappte Abschnitte im ganzen Bestand.
+
+---
+
 ## Regressionstest (2026-08-20)
 
 `python tests/run.py --suite ntcregression` — 12 Fälle, ~60 s. Rechnet drei Touren aus ihrem Stand **vor** dem
