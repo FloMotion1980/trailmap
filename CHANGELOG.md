@@ -22,6 +22,17 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **„Felsenwanderweg Rodalben" umgebaut: die Runde beginnt und endet jetzt an der Jakobsweg-Kreuzung, der
+  Bahnhofs-Zubringer wird hin und zurueck gefahren** (Vorgabe des Nutzers). Vorher lag das Ende des
+  Rueckweg-Verbinders 379m vom Anfang der Runde weg, und der Connector hatte diese 379m mit einer
+  2391-m-Bruecke "geschlossen". Jetzt: Trail 1 -> Verbinder -> Jakobsweg hin -> Kreuzung -> Runde -> Kreuzung
+  -> Jakobsweg zurueck -> Verbinder, 20 Segmente, 43,88 km, Anfang gleich Ende, keine Luecke. Der Jakobsweg
+  steht zweimal in der Linie, gekappt wird nur der Teil von "Felsenweg Sued" vor der Kreuzung (202m), und die
+  beiden 354-m-Luecken des Zubringers schliessen symmetrisch identisch. **Neuer Fall dabei: eine geschlossene
+  Teil-Runde wird gedreht, nicht gekappt.** "Trail 1" ist eine geschlossene 308-m-Mini-Runde am Bahnhof, an der
+  die Tour mit beiden Enden haengt; der erste Lauf kappte sie von beiden Seiten (148m + 150m von 308m) und
+  konnte den zweiten Uebergang dann nicht mehr schliessen. Ihr Anfang gehoert dorthin, wo die Tour sie betritt
+  -- gedreht sind beide Luecken exakt 95m und nichts wird gekappt.
 - **Neues Mangelkriterium: eine Bruecke darf kein Stueck doppelt fahren lassen.** Der Nutzer meldete drei
   Stellen der Ost-West-Passage, an denen die Tour 87m, 73m und 85m hin und zurueck fuhr -- die Bruecke lief zu
   100 % auf der Linie des Abschnitts, zu dem sie fuehrt. `weglos` ist dafuer blind (alles liegt auf Wegen), die

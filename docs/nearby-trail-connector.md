@@ -511,6 +511,44 @@ wurden erneut neu gebaut, keine offene innere Luecke, fuenf Uebergaenge brauchte
 
 ---
 
+## Ein Zubringer ist keine Luecke -- Felsenwanderweg Rodalben (2026-08-20)
+
+Der Nutzer: „da man einen Zubringer vom Bahnhof hin und zurueck fahrt, bis man auf der eigentlichen Runde ist
+bzw. am Ende fertig ist und wieder zum Bahnhof geleitet wird. Da ist irgendwas durcheinander gekommen." Und
+seine Vorgabe: **dort, wo „Pfaelzer Jakobsweg-Verbindungsroute 1" auf die Runde trifft, beginnt und endet die
+Runde.**
+
+Vermessen sah die Naht so aus: die Runde schliesst sich, wo der 15 309-m-Teil von „Felsenweg Sued" endet --
+das liegt 0,0 m auf der Linie des 5273-m-Teils, 109 m hinter dessen Anfang. Der Jakobsweg beginnt 22 m davon
+(202 m entlang jenes Teils) und fuehrt 191 m zum Bahnhof. Der Rueckweg war ein eigener 290-m-Verbinder, dessen
+Ende **379 m** vom Anfang der Runde weg lag -- und genau diese 379 m hatte der Connector mit einer
+**2391-m-Bruecke** „geschlossen". Das war das Durcheinander.
+
+Der Umbau (Reihenfolge, Richtung und Kappung -- **keine** Geometrie verschoben):
+
+    Trail 1 (Mini-Runde am Bahnhof) -> Verbinder -> Jakobsweg HIN -> Kreuzung
+      -> Runde (Felsenweg Sued ab der Kreuzung ... Felsenweg Sued bis zur Kreuzung)
+      -> Jakobsweg ZURUECK -> Verbinder -> schliesst auf Trail 1
+
+Der 290-m-Verbinder faellt weg, der Jakobsweg steht zweimal in der Linie (191 -> 381 m), und gekappt wird nur
+der Teil von „Felsenweg Sued" vor der Kreuzung (202 m). Ergebnis: 20 Segmente, 43,88 km, Anfang gleich Ende,
+keine Luecke -- und die beiden 354-m-Luecken des Zubringers schliessen **symmetrisch identisch** (je 399 m
+Bruecke, Faktor 1,13, keine Kappung), was ein gutes Zeichen ist: Hin- und Rueckweg werden gleich behandelt.
+
+### Neuer Fall: die Phase einer geschlossenen Teil-Runde
+
+„Felsenwanderweg Rodalben Trail 1" ist selbst eine **geschlossene** Mini-Runde (308 m, Anfang 3,5 m vom Ende),
+und die Tour haengt mit beiden Enden daran. Der erste Lauf kappte sie von beiden Seiten -- 148 m fuer den einen
+Uebergang, 150 m fuer den anderen, zusammen 298 von 308 m, weshalb der zweite Uebergang gar nicht mehr
+schliessbar war. Der Fehler war nicht die Kappung, sondern die **Phase**: der Zubringer trifft die Mini-Runde
+163 m hinter ihrem aufgezeichneten Anfang, also muss sie **dort** beginnen und enden. Einmal gedreht sind beide
+Luecken exakt 95 m, sie wird einmal ganz gefahren, und nichts wird gekappt.
+
+**Regel:** eine geschlossene Teil-Runde nicht kappen, sondern drehen -- ihr Anfang gehoert dorthin, wo die Tour
+sie betritt. Kappen wuerde sie von beiden Seiten aufessen.
+
+---
+
 ## Regressionstest (2026-08-20)
 
 `python tests/run.py --suite ntcregression` — 12 Fälle, ~60 s. Rechnet drei Touren aus ihrem Stand **vor** dem

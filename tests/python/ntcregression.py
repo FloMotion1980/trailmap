@@ -45,7 +45,10 @@ than assumed -- with the other tours alone, the mutation left the suite complete
 * **Landstuhl (West)** for `OFF_TOL_M`: its `seg10` is the only place where a sub-metre off-way residual
   decides anything.
 * **Felsenwanderweg Rodalben** for `MAX_TRIM_ABS_M`: its `seg0` is where a solution cut 1362m off a 5273m
-  section -- within the fraction limit, indefensible in absolute terms.
+  section -- within the fraction limit, indefensible in absolute terms. Note the shipped tour was restructured
+  later the same day (the station feeder is now ridden out and back, see `docs/nearby-trail-connector.md`), so
+  this fixture holds a state the region no longer has. That is fine and deliberate: the fixture pins what the
+  PROCEDURE does with that input, which is the only thing this suite is about.
 * **Kurztour 3 Schopp** for `RELAX_DOUBLE_M`: its `seg5` is the only place where the ONLY solution rides a
   stretch twice, so rejecting it strictly would leave the gap open -- which is the worse outcome.
 
