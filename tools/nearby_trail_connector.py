@@ -68,22 +68,33 @@ PROJ_NO_BRANCH_M = 25.0    # am Anschlusspunkt darf kein anderer Weg so nah abzw
 # wiederverwendet. `fetch()` schneidet daraus nur noch lokal aus und geht NIE ins Netz, solange _WAYS steht.
 # Wer solve() direkt benutzt, muss prefetch() selbst vorher aufrufen -- sonst faellt fetch() auf eine
 # Einzelabfrage pro Luecke zurueck und alles ist wieder langsam.
-WAY_CACHE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".tmpwork", "osm_ways_cache.json")
+CACHE_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".tmpwork")
 _WAYS = None
 
 
-def prefetch(all_coords, pad_m=BBOX_PAD_M, cache=WAY_CACHE):
-    """Alle Wege im Umfeld der kompletten Tour EINMAL holen und ablegen."""
+def prefetch(all_coords, pad_m=BBOX_PAD_M, cache=None):
+    """Alle Wege im Umfeld der kompletten Tour EINMAL holen und ablegen.
+
+    Der Cache-Dateiname wird aus der BOUNDING BOX abgeleitet. Vorher hiess die Datei fuer jede Tour gleich,
+    sodass ein Lauf auf einer anderen Tour stillschweigend die Wege der vorigen benutzt haette -- also Wege
+    aus einer voellig anderen Ecke des Waldes. Bisher habe ich die Datei zwischen den Touren von Hand
+    geloescht; das faellt bei der ersten Unachtsamkeit auf, und zwar in Form von Bruecken, die aus dem
+    Nichts kommen. Deshalb jetzt pro Gebiet eine eigene Datei.
+    """
     global _WAYS
-    if os.path.exists(cache):
-        _WAYS = json.load(open(cache, encoding="utf-8"))
-        _WAYS = [{"geom": [tuple(q) for q in w["geom"]], "tags": w["tags"], "id": w["id"]} for w in _WAYS]
-        return _WAYS
     lat = [p[0] for p in all_coords]
     lon = [p[1] for p in all_coords]
     dlat = pad_m / 111320.0
     dlon = pad_m / 80000.0
     bbox = "%.6f,%.6f,%.6f,%.6f" % (min(lat) - dlat, min(lon) - dlon, max(lat) + dlat, max(lon) + dlon)
+    if cache is None:
+        import hashlib
+        key = hashlib.md5(bbox.encode("utf-8")).hexdigest()[:12]
+        cache = os.path.join(CACHE_DIR, "osm_ways_%s.json" % key)
+    if os.path.exists(cache):
+        _WAYS = json.load(open(cache, encoding="utf-8"))
+        _WAYS = [{"geom": [tuple(q) for q in w["geom"]], "tags": w["tags"], "id": w["id"]} for w in _WAYS]
+        return _WAYS
     q = '[out:json][timeout:180];way["highway"](%s);out tags geom;' % bbox
     W = [{"geom": [(round(p["lat"], 7), round(p["lon"], 7)) for p in e.get("geometry", [])],
           "tags": e.get("tags", {}) or {}, "id": e.get("id")} for e in overpass(q).get("elements", [])]

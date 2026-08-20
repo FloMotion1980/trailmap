@@ -251,6 +251,37 @@ Hin-und-zurück-Muster.
 **Fall 4 (Projektion) blieb auch hier ungenutzt** — seine Grenzwerte (`PROJ_MIN_SECOND_M`, `PROJ_MAX_MEAN_M`)
 sind damit weiterhin nur an Rodalben Felsentrails geprüft.
 
+## Fünf Touren, 114 Lücken (Stand 2026-08-20)
+
+| Tour | Lücken | km | Fälle |
+|---|---|---|---|
+| Rodalben Felsentrails | 36 | 41,81 | 27×1, 3×2, 2×3, 2×4, 2×5 |
+| Kurztour 1 – Leimen | 14 | 23,66 | 14×1 |
+| Kurztour 1 – Rodalben | 25 | 32,98 | 17×1, 2×2, 6×3, 1×5 |
+| Kurztour 3 – Finsterbrunnertal | 25 | 29,18 | 24×1, 1×5 |
+| Kurztour 5 – Johanniskreuz | 14 | 10,65 | 14×1 |
+
+**Alle mit weglos 0 m.** Gesamt: 86× Fall 1, 5× Fall 2, 8× Fall 3, 2× Fall 4, 4× Fall 5.
+
+Bemerkenswert an den letzten zwei Touren: **keine einzige Kappung, keine Verhältnismäßigkeits-Ablehnung**, und
+die beiden größten Lücken überhaupt schließen fast maßgenau — 468 m → 483 m Brücke (Faktor 1,03) und
+270 m → 271 m (Faktor 1,00). Dort spannt jeweils *ein* verketteter Weg die ganze Lücke, was die Bedeutung des
+Verkettungsschritts noch einmal unterstreicht.
+
+**Fall 4 kam in vier von fünf Touren nicht vor** — seine Grenzwerte sind weiterhin nur an zwei Lücken der
+ersten Tour geprüft. Das ist erwartbar (schwierige Sonderfälle sind selten), heißt aber: bei einer
+Automatisierung sollten Fall 4 und 5 weiter einzeln vorgelegt werden. Fall 1 mit Brücke ≈ Luftlinie und ohne
+Kappung wären 86 von 114 Fällen, die ohne Rückfrage durchlaufen könnten.
+
+### Bekannte Nebensache: `len` in `lineTrails` wird nicht mitgezogen
+
+Wächst die Geometrie durch eine Brücke, bleibt die Metadaten-Länge stehen (Abweichung +0,01 bis +0,26 km; die
+Seitenleiste zeigt den Metadaten-Wert). Bewusst nicht angefasst, weil laut `CLAUDE.md` offizielle
+veröffentlichte Längen Vorrang vor aus der Geometrie berechneten haben und unklar ist, welcher Wert hier
+welcher ist. Bei „Kurztour 3 – Finsterbrunnertal" besteht die Abweichung ohnehin schon vorher und ist groß
+(30,86 km Metadaten gegen 29,05 km Geometrie) — dort stammen die zwei Zahlen offensichtlich aus verschiedenen
+Quellen, unabhängig von diesem Verfahren.
+
 ## Offen
 
 - **Andere Trailrunden.** Bisher nur `pw_rodalben_felsentrails` behandelt; jede andere Tour mit

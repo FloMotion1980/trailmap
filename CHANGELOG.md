@@ -22,6 +22,16 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Zwei weitere Kurztouren geschlossen: „Kurztour 3 – Finsterbrunnertal" (25 Lücken, 29,18 km) und
+  „Kurztour 5 – Johanniskreuz" (14 Lücken, 10,65 km)** — beide ohne eine einzige Kappung und ohne
+  Verhältnismäßigkeits-Ablehnung, 38 von 39 Lücken über den einfachsten Fall. Die beiden größten Lücken
+  überhaupt schließen dabei fast maßgenau: 468 m → 483 m Brücke (Faktor 1,03) und 270 m → 271 m (Faktor
+  1,00), weil dort jeweils **ein** verketteter OSM-Weg die ganze Lücke spannt. Damit sind fünf Touren fertig,
+  114 Lücken, alle mit 0 m abseits gemappter Wege.
+- **Latenter Fehler im Wege-Cache behoben**, der beim Wechsel auf eine andere Tour zugeschlagen hätte: die
+  vorab geholten OSM-Wege lagen unter **einem** Dateinamen für alle Touren, ein Lauf hätte also stillschweigend
+  die Wege der vorigen Tour aus einer anderen Ecke des Waldes benutzt. Bisher nur durch manuelles Löschen
+  umgangen; der Cache-Name kommt jetzt aus der Bounding-Box.
 - **„Kurztour 1 – Rodalben" vollständig geschlossen: alle 25 Segment-Lücken, 32,98 km**, 0 m abseits
   gemappter Wege. Dritte Tour mit `nearbyTrailConnector`, und die erste, die das Verfahren breiter
   beansprucht: 17× ein verketteter Weg erreicht beide Seiten, 6× Schnittpunkt zweier Wege, 2× Weg folgen +
@@ -30,7 +40,6 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   219-m-Lücke im Hin-und-zurück-Muster). Fall 4 (Projektion) kam auch hier nicht vor — dessen Grenzwerte
   bleiben nur an Rodalben Felsentrails geprüft.
 
-## 2026-08-20
 - **Vogesen nachgeschärft, alle drei Punkte aus dem ersten Blick des Nutzers** — (1) **Ortslabels
   ausgedünnt**, 22+22 → **15+12**, über genau die zwei genannten Achsen: Mindestabstand zwischen zwei
   Labels von 4 auf 8 km, plus eine **Quote pro Sub-Region** (`1 + Trails // 45`, max 4), damit eine
