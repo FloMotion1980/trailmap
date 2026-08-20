@@ -1,7 +1,8 @@
 // @suite   lists
 // @area    The three sidebar list sections and their cards
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches makeTrailCard, renderTourList, renderLiftList, render, selectTrail, selectLiftCard, selectCardFor, clearSelection, highlightSelectedTrail, trail-card, lift-card, card-solo-btn, hub-title, region-group-title, card-tint, buildTrailListDom, appendTrailGroup, trailGroupMode, trailSortMode, trailSortDir, trailViewGearBtn, trailViewSettings, trailViewResetBtn, syncTrailViewChips, persistTrailListView, TRAIL_SORT_COMPARE, TRAIL_SORT_DEFAULT_DIR, TRAIL_VIEW_DEFAULTS, categoryBadge, badge-uphill, SORT_LABELS, sidebarScroll, sidebar-search-footer, syncSidebarToggleA11y, isMobileLayout, openSidebar, closeSidebar
+// @touches makeTrailCard, renderTourList, renderLiftList, render, selectTrail, selectLiftCard, selectCardFor, clearSelection, highlightSelectedTrail, trail-card, lift-card, card-solo-btn, hub-title, region-group-title, card-tint, buildTrailListDom, appendTrailGroup, trailGroupMode, trailSortMode, trailSortDir, trailViewGearBtn, trailViewSettings, trailViewResetBtn, syncTrailViewChips, persistTrailListView, TRAIL_SORT_COMPARE, TRAIL_SORT_DEFAULT_DIR, TRAIL_VIEW_DEFAULTS, categoryBadge, badge-uphill, SORT_LABELS, sidebarScroll, sidebar-search-footer, syncSidebarToggleA11y, isMobileLayout, openSidebar, closeSidebar, wireCardHover, syncStartDot, updateStartDotVisibility,
+//          showEndpoints, hideEndpoints, startDot, startMarker, START_DOT_MIN_ZOOM
 // @needs   region=bikekingdom, builder=off
 //
 // Trails, Touren and Lifte are three lists built by three different code paths that must not drift apart, so
@@ -406,12 +407,81 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
   const hoverCard = TM.ui.trailCards()[1];
   const widths = () => TM.map.overlay().map((p) => +p.getAttribute("stroke-width")).filter((w) => w > 5).length;
   const before = widths();
-  hoverCard.dispatchEvent(new MouseEvent("mouseenter"));
+  // pointerenter/pointerleave, not mouseenter/mouseleave: the handler reads the GESTURE off the event
+  // (`pointerType`) rather than asking a media query about the device, so a hybrid laptop keeps its real
+  // mouse hover. Dispatching a MouseEvent here reaches nothing at all any more, which is the point.
+  const point = (type, kind) => hoverCard.dispatchEvent(new PointerEvent(type, { pointerType: kind }));
+  point("pointerenter", "mouse");
   await TM.wait(200);
   T.ok("one line got thicker", widths() > before, widths(), "> " + before);
-  hoverCard.dispatchEvent(new MouseEvent("mouseleave"));
+  point("pointerleave", "mouse");
   await TM.wait(250);
   T.eq("and thin again", widths(), before);
+  // A tap on a touch screen synthesises the same enter event, so a trail selected from the list came out
+  // wearing BOTH the yellow selection outline (right) and the bold hover width (wrong), with no pointer left
+  // to move away again (user, 2026-08-16). Runs on this same desktop harness precisely because the rule is
+  // per-gesture, not per-device -- a `(hover: hover)` implementation could not be tested from here at all.
+  point("pointerenter", "touch");
+  await TM.wait(200);
+  T.eq("a touch pointer bolds nothing", widths(), before);
+  point("pointerleave", "touch");
+  await TM.wait(200);
+  T.eq("and leaving with one changes nothing either", widths(), before);
+
+  T.test("a selected trail shows its GREEN start marker, not the white dot underneath it");
+  // startDot (white) and startMarker (green) sit at the EXACT same coordinate with the same radius, so
+  // whichever was added to the map last covers the other -- and the white one is re-added on every zoomend,
+  // long after showEndpoints() brought the green pair to the front once. The Ziel marker has no white
+  // counterpart, which is why only the Start ever read wrong (user, 2026-08-16, seen in RIDE mode, where the
+  // map zooms and pans constantly). The fix removes the overlap instead of re-fighting the z-order, so what
+  // this checks is that ONE white dot disappears while the green marker is up and comes back on deselect.
+  //
+  // Counted as a DELTA, never as "no white dot at the green position": in a bike park several trails share a
+  // trailhead, so other trails' dots legitimately sit on that exact coordinate too (measured: 1 there while
+  // selected, 2 after deselecting). An absolute check reads that as the bug and fails a correct app.
+  //
+  // flyToTrailBounds animates for 0.6 s and lands around z16, well above START_DOT_MIN_ZOOM -- but the whole
+  // case is silent below that threshold, since no startDot is painted at all. Swapping flyTo for an
+  // unanimated setView removes both the wait and the doubt, and is the same trick used to verify the RIDE
+  // look-ahead offset (see CLAUDE.md). Restored in the finally, or every later suite inherits it.
+  const realFlyTo = L.Map.prototype.flyTo;
+  L.Map.prototype.flyTo = function (c, z) { return this.setView(c, z, { animate: false }); };
+  try {
+    closeInfoPanelAndDeselect();
+    await TM.wait(300);
+    const dAt = (fill) => TM.map.overlay()
+      .filter((p) => (p.getAttribute("fill") || "").toLowerCase() === fill)
+      .map((p) => p.getAttribute("d") || "");
+    TM.ui.trailCards()[0].click();
+    await TM.until(() => TM.$("#infoPanel").classList.contains("visible"));
+    await TM.wait(700);
+    const greens = dAt("#3fbf5e");
+    T.eq("exactly one green start marker is on the map", greens.length, 1);
+    const whiteHere = () => dAt("#fff").filter((d) => d === greens[0]).length;
+    if (!dAt("#fff").length) {
+      T.skip("the map is below START_DOT_MIN_ZOOM, so no startDot is painted to be covered");
+    } else {
+      const selectedHere = whiteHere(), selectedAll = dAt("#fff").length;
+      // The two paths that re-add a startDot while the endpoints are already showing. Both used to put the
+      // white dot straight back on top, and the zoomend one is what made this impossible to get rid of.
+      updateStartDotVisibility();
+      await TM.wait(200);
+      T.eq("a zoomend re-add does not put a dot back on the green marker", whiteHere(), selectedHere);
+      render();
+      await TM.wait(400);
+      T.eq("nor does a full render()", whiteHere(), selectedHere);
+      T.eq("and the map still has one green start marker", dAt("#3fbf5e").length, 1);
+      // Suppressed, not discarded: deselecting has to hand the neutral dot back, or a trail loses its start
+      // cue permanently once it has been looked at.
+      closeInfoPanelAndDeselect();
+      await TM.wait(500);
+      T.eq("the green marker goes with the selection", dAt("#3fbf5e").length, 0);
+      T.eq("and exactly one white dot returns to its spot", whiteHere(), selectedHere + 1);
+      T.eq("one more white dot on the map overall", dAt("#fff").length, selectedAll + 1);
+    }
+  } finally {
+    L.Map.prototype.flyTo = realFlyTo;
+  }
 
   T.test("a filter that hides the selected trail closes its panel and clears everything");
   // Leaving solo engaged for a trail that is no longer shown left every OTHER trail invisibly stuck dimmed.

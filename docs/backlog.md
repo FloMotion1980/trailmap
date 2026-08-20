@@ -16,6 +16,13 @@ Follow-up ideas from the same day RIDE mode shipped and was confirmed working on
 `CLAUDE.md`'s RIDE section for the feature itself). Not yet designed or scoped — clarify with the user
 before implementing any of these.
 
+**Swept 2026-08-20, after the user pointed out this section was reporting shipped work as open.** Four
+entries had been built (or deliberately dropped) without the backlog being nudged: the bigger RIDE-only
+control buttons, the basemap-contrast ask, the bolder selected line, and the record/stop icon. They are kept
+below as struck-through entries with what actually happened, rather than deleted — the reasoning behind a
+rejected option is worth as much as the reasoning behind a shipped one. **When one of these gets done, edit
+this section in the same commit as the code**, the same standing rule `CHANGELOG.md` already has.
+
 - **Infobox (`#rideInfoPanel`) is probably done for now** — 2026-08-16 shipped a live speed/altitude
   readout, then a redesign after the user reviewed mockups (dominant centred speed, smaller altitude
   badge, trail row hidden outright with nothing focused). Only revisit if the user reports something
@@ -26,38 +33,41 @@ before implementing any of these.
   means replacing the compass entirely (e.g. a button that flips between a couple of fixed
   orientations) or just adding a manual on/off toggle *for* the existing compass-driven rotation
   (which already sort of exists as `#bearingBtn`) — needs clarifying next time, don't assume.
-- **Possibly a record/stop icon instead of the mountain-bike emoji for the RIDE button** ("Aufnahme
-  Symbol und Stopp Button anstatt dem Mountainbiker") — a visual change to `#rideModeBtn`/`.ride-btn`
-  (🚵 → something like ⏺/⏹), tying into the next point.
+- ~~**Possibly a record/stop icon instead of the mountain-bike emoji for the RIDE button**~~ —
+  **settled 2026-08-16, rejected twice and the emoji changed instead.** ⏺️/⏹️ was turned down once for the
+  coloured background chip those render with on many platforms, and once on principle ("solange wir nix
+  aufnehmen ist das nicht das richtige" — nothing is actually being recorded). The button went 🚵 → 🚴 → 🚲
+  → 🚴‍♂️ instead. Re-open this only together with the Tracking point below, i.e. once something really is
+  being recorded.
 - **A separate "Tracking" concept in addition to RIDE mode** — the user explicitly said they don't yet
   know whether this is its own mode or connected to RIDE ("Ob das ein eigener Modus ist oder
   zusammenhängt weiß ich noch nicht"). Sounds like it could be about recording/saving a ridden track
   (GPX-style), distinct from RIDE's existing live GPS-follow display — but this is a guess, not
   confirmed. Needs a real discussion before any design/implementation, not just an assumption from the
   name.
-- **2026-08-16 phone-test follow-ups, still open, in discussion:**
-  - **Basemap contrast during RIDE**: "Straße" is the best basemap for navigation (colour-wise "Straße
-    hell" would be nicer, but it's missing paths, which is a problem if you get lost) — user wants to
-    know whether "Straße"'s own tile rendering can be dimmed/desaturated specifically during RIDE so
-    the app's own trail/tour lines stand out more. Likely feasible via a CSS filter on the tile pane,
-    scoped to `html.ride-mode` + the osm basemap only. User chose "erst als Mockup ansehen" — not yet
-    built.
-  - **Selected trail/tour line needs to be bolder AND higher-contrast in sunlight** — current 3.5px
-    line is hard to read on a bright phone screen. Went through several rounds of `visualize`-tool
-    mockups (variants A-F, see conversation) before landing on anything: variants B (just thicker)/C
-    (flat orange)/D (halo like Satellit/Relief) were shown first; the user pushed back that C/D lose
-    the *difficulty colour coding*, which they specifically called out as one of the app's core value
-    props ("das ist einer der großen Mehrwerte unserer App") — so the winning direction must keep
-    each trail's own diff colour visible as the core line, with a bold accent (orange and/or blue,
-    per the user's own suggestion) added around/through it for contrast, not replacing it. Variants E
-    (diff-colour core + orange halo) and F (three-tone combinations, dashed accent patterns) are the
-    current candidates — no final pick yet as of the last message in this thread. Only apply during
-    RIDE per the user's explicit scoping answer, not to normal trail selection everywhere.
-  - **Bigger `#mapControls` buttons for glove/on-bike use** — decided via AskUserQuestion: "deutlich
-    größer" (e.g. 44px → 64px) AND "nur während RIDE" (not a permanent size change). Not yet
-    implemented — the user flagged "Abstimmungsbedarf" for all three of these RIDE points together
-    before any of them get built, so treat this as agreed-on-paper but still gated on the user saying
-    go for the batch.
+- **2026-08-16 phone-test follow-ups:**
+  - ~~**Basemap contrast during RIDE**~~ — **shipped 2026-08-16, but as a GENERAL setting rather than the
+    RIDE-only one that was asked for.** The ask: "Straße" is the best basemap for navigation (colour-wise
+    "Straße hell" would be nicer, but it is missing paths, which is a problem if you get lost), so could its
+    own tile rendering be dimmed/desaturated while riding. What landed instead is "Straße / Straße dezent /
+    Straße hell" as three peer basemap options (the same osm tiles at three CSS filter levels on Leaflet's
+    own tile pane — no tile server involved, works offline), with **"Straße dezent" the default on a
+    first-ever visit**; the old CARTO/Positron layer was kept and renamed "Pastell". Left as a general
+    setting on purpose, so it is available outside RIDE too. **Still genuinely open, if the user wants it:**
+    automatically switching to the dezent level while `html.ride-mode` is on and back afterwards, so riding
+    does not need a manual basemap change first.
+  - ~~**Selected trail/tour line needs to be bolder AND higher-contrast in sunlight**~~ — **shipped
+    2026-08-16 as the three-layer RIDE focus halo**, after the mockup rounds recorded below (variants A-K).
+    The constraint the user set held: each segment keeps its own difficulty colour as the core, with the
+    accent added around it, never replacing it ("das ist einer der großen Mehrwerte unserer App"). What
+    landed: orange outer ring + light per-difficulty tint + the existing core line, applied only to whichever
+    trail/tour is open during RIDE. Tuned twice live afterwards — the ring went 14→18px and dropped its 0.75
+    opacity to fully opaque (two semi-transparent rings stacking where a loop crosses itself darkened toward
+    red), and any real gap between two consecutive segments is bridged with a plain orange line so an
+    un-closed tour still reads as one continuous ring. See `CLAUDE.md`'s RIDE focus halo bullet.
+  - ~~**Bigger `#mapControls` buttons for glove/on-bike use**~~ — **shipped 2026-08-16**: the three cells
+    grow 44px→64px (icon 20px→28px) while `html.ride-mode` is active, with the readout chip widened to match
+    so the joined-corner design still lines up. Unaffected outside RIDE, exactly as decided.
   - **Compass appears to freeze for a few seconds repeatedly while riding** — traced to intended
     behaviour, not a bug: `handleOrientation`'s bearing deliberately FREEZES (rather than resetting)
     when magnetometer readings go stale, and a bike's own metal frame/phone-mount magnets/vibration are
@@ -141,19 +151,25 @@ before implementing any of these.
   1 `infopanel` failure are unrelated, pre-existing flakes) — before the fix, `tests/browser/ride.js` and
   several unrelated suites (`lists`, `solo`, `regions`, `labels`) failed/threw inconsistently every run,
   because the corrupted rotation state this bug left behind bled into whatever suite ran next.
-- **Bug (reported 2026-08-16, not yet fixed): a trail selected from the sidebar list gets the yellow
-  selection outline (correct) AND the bold hover-width line style (wrong) on a TOUCH device.** On
-  desktop this is correct behaviour (a mouse genuinely hovering the sidebar should bold the
-  corresponding line), but a touch tap has no hover state distinct from selection, so a selected trail
-  should not also be forced into the hover-width look on phone. Needs the actual call site identified
-  (`highlightSelectedTrail`/`setHover`/`applyLineWeight`, or wherever a card selection currently also
-  triggers the hover width) and a touch-vs-desktop distinction added. No test exists for this yet —
-  add one alongside the fix.
-- **Bug (reported 2026-08-16, not yet fixed): during RIDE mode, a trail's END marker turns red correctly,
-  but its START marker stays white instead of turning green.** Likely in whatever code colours/recolours
-  `startMarker`/`endMarker` specifically for the RIDE focus (or the same code path used for a normal
-  selection, if RIDE reuses it) — needs the actual call site identified before fixing. No test exists for
-  this yet — add one alongside the fix.
+- **FIXED (2026-08-20): a trail selected from the sidebar list wore the yellow selection outline (correct)
+  AND the bold hover width (wrong) on a TOUCH device.** The call site was not in the selection code at all:
+  the CARD's own `mouseenter`/`mouseleave` handlers, which a tap synthesises on a touch screen just as a real
+  mouse does. Both list call sites go through one `wireCardHover()` now, on `pointerenter`/`pointerleave`,
+  skipping `pointerType === "touch"`. Read off the GESTURE rather than a `(hover: hover)` media query on
+  purpose: a hybrid laptop with a touchscreen and a mouse keeps its real hover and loses only the
+  tap-synthesised one — and the rule being per-gesture is also what makes it testable from a desktop harness
+  at all. Knock-on: `labels`/`lifts`/`solo` dispatch PointerEvents on cards now, since a MouseEvent reaches
+  nothing.
+- **FIXED (2026-08-20): a selected trail's START marker read white while its Ziel read red — and it was
+  never a RIDE bug.** The white `startDot` and the green `startMarker` sit at the EXACT same coordinate with
+  the same radius, so whichever was added to the map last covers the other: `showEndpoints()` brings the green
+  pair to the front once, but `updateStartDotVisibility()` re-adds the white dot on every zoomend. RIDE only
+  made it constant, because the map zooms and pans throughout; the Ziel marker has no white counterpart, which
+  is why only the Start looked wrong. Fixed by removing the overlap rather than re-fighting the z-order — one
+  `syncStartDot(layer)` decides a startDot's visibility everywhere and suppresses it while that trail's own
+  endpoints are showing. Two new mutation-checked cases in `tests/browser/lists.js`; the startDot one counts a
+  DELTA rather than "no white dot at the green position", because several trails legitimately share a
+  trailhead and that coordinate holds another trail's dot either way.
 - **General note from the same 2026-08-16 conversation: go through `CLAUDE.md`'s documented feature
   history looking for other behaviours that don't yet have a browser-suite case**, the same way this
   session's `ride.js` work surfaced a real bug purely from the exercise of writing tests for

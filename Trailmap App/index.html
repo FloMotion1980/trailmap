@@ -5030,8 +5030,25 @@ const LIFT_TYPE_LABEL = { gondola:"Gondelbahn", chair_lift:"Sesselbahn", cable_c
 // zoomed out to see the whole area at once (2026-07-24). Threshold picked to roughly match "a single
 // hub/tour area fills the screen", not the whole-region overview.
 const START_DOT_MIN_ZOOM = 13;
+// A trail's white startDot and its green "Start" marker sit at the EXACT same coordinate, so whichever was
+// added to the map last covers the other. showEndpoints() brings the green pair to the front once, but
+// updateStartDotVisibility() re-adds the white dot on every zoomend -- and a re-added layer lands on top.
+// That is why a selected trail's Start read white while its Ziel (which has no white counterpart) read red
+// (user, 2026-08-16, noticed during RIDE, where the map zooms and pans constantly; nothing about the bug is
+// RIDE-specific). Fixed by removing the OVERLAP rather than re-fighting the z-order on every re-add: while a
+// trail's own endpoints are on the map, the neutral dot has nothing left to say and steps aside for the green
+// marker. This is the one place a startDot's visibility is decided, so a call site that re-adds the line
+// cannot reintroduce the overlap by forgetting the rule -- which is exactly how it got in.
+function syncStartDot(layer){
+  if (!layer || !layer.startDot) return;
+  const endpointsShown = !!layer.startMarker && map.hasLayer(layer.startMarker);
+  const shouldShow = map.hasLayer(layer.line) && map.getZoom() >= START_DOT_MIN_ZOOM && !endpointsShown;
+  const isShown = map.hasLayer(layer.startDot);
+  if (shouldShow && !isShown) map.addLayer(layer.startDot);
+  else if (!shouldShow && isShown) map.removeLayer(layer.startDot);
+}
+
 function updateStartDotVisibility(){
-  const zoomOk = map.getZoom() >= START_DOT_MIN_ZOOM;
   // Arrows are a real, small vector shape now (not a fixed-pixel marker), but the underlying reason they still
   // need their OWN, higher threshold is unchanged: at a zoom where a whole region's trails are visible at once,
   // dozens of tiny chevrons would be exactly as much clutter as the old triangles were -- that is what the user
@@ -5039,14 +5056,9 @@ function updateStartDotVisibility(){
   const arrowZoomOk = map.getZoom() >= ARROW_MIN_ZOOM;
   if (arrowZoomOk) rescaleDirectionArrows();
   Object.values(lineLayers).forEach(layer => {
-    if (!layer.startDot) return;
-    const filterVisible = map.hasLayer(layer.line);
-    const shouldShow = filterVisible && zoomOk;
-    const isShown = map.hasLayer(layer.startDot);
-    if (shouldShow && !isShown) map.addLayer(layer.startDot);
-    else if (!shouldShow && isShown) map.removeLayer(layer.startDot);
+    syncStartDot(layer);
     if (!layer.directionArrowLayer) return;
-    const arrowsShouldShow = filterVisible && arrowZoomOk && showDirectionArrows;
+    const arrowsShouldShow = map.hasLayer(layer.line) && arrowZoomOk && showDirectionArrows;
     const arrowShown = map.hasLayer(layer.directionArrowLayer);
     if (arrowsShouldShow && !arrowShown) map.addLayer(layer.directionArrowLayer);
     else if (!arrowsShouldShow && arrowShown) map.removeLayer(layer.directionArrowLayer);
@@ -5943,6 +5955,9 @@ function showEndpoints(id){
   if (!map.hasLayer(layer.endMarker)) layer.endMarker.addTo(map);
   layer.startMarker.bringToFront();
   layer.endMarker.bringToFront();
+  // The green Start marker replaces the neutral white dot rather than sitting on top of it -- see
+  // syncStartDot's own comment for why the z-order alone could not be trusted to keep it visible.
+  syncStartDot(lineLayers[id]);
 }
 function hideEndpoints(id){
   const layer = endpointOwner(id);
@@ -5956,6 +5971,7 @@ function hideEndpoints(id){
   layer.endMarker.closeTooltip();
   map.removeLayer(layer.startMarker);
   map.removeLayer(layer.endMarker);
+  syncStartDot(lineLayers[id]); // the neutral dot comes back now that the green marker is gone
 }
 
 const lineLayers = {};
@@ -7130,8 +7146,7 @@ function renderLiftList(){
           showLiftInfo(l);
           closeSidebarIfMobile();
         });
-        card.addEventListener("mouseenter", () => { if (layer) layer.setHover(true); });
-        card.addEventListener("mouseleave", () => { if (layer) layer.setHover(false); });
+        wireCardHover(card, layer);
         if (layer) layer.card = card;
         group.appendChild(card);
       });
@@ -7156,6 +7171,20 @@ function renderLiftList(){
 // badge in the menu (tried and reverted the same day: "In den Traileinträgen im Menü will ich das blaue
 // Emoji nicht bei Downhill Trails"), since a regular trail is the unmarked default and every card already
 // carries one already, the difficulty dot.
+// Hovering a card bolds its line on the map -- but a TAP on a touch screen fires a synthetic mouseenter
+// too, so a trail selected from the list came out wearing BOTH the yellow selection outline (right) and the
+// bold hover width (wrong) on a phone, and stayed that way with no pointer left to move away (user,
+// 2026-08-16). On desktop the same handler is correct: a mouse genuinely over the card should bold its line.
+// The distinction is read off the EVENT rather than from a `(hover: hover)` media query, because the query
+// answers for the device and the event answers for the gesture -- a hybrid laptop with a touchscreen and a
+// mouse keeps its real mouse hover this way and loses only the tap-synthesised one. pointerenter/pointerleave
+// mirror mouseenter/mouseleave exactly (no bubbling from children), so nothing else about the behaviour moves.
+function wireCardHover(card, layer){
+  if (!layer) return;
+  card.addEventListener("pointerenter", (e) => { if (e.pointerType !== "touch") layer.setHover(true); });
+  card.addEventListener("pointerleave", (e) => { if (e.pointerType !== "touch") layer.setHover(false); });
+}
+
 function categoryBadge(t){
   return t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⬆️</span>` : "";
 }
@@ -7195,8 +7224,7 @@ function makeTrailCard(t, regionKey){
     selectTrail(t.id, card);
     closeSidebarIfMobile();
   });
-  card.addEventListener("mouseenter", () => { if (layer) layer.setHover(true); });
-  card.addEventListener("mouseleave", () => { if (layer) layer.setHover(false); });
+  wireCardHover(card, layer);
   if (layer) layer.card = card;
   return card;
 }
@@ -7375,7 +7403,8 @@ function render(){
         if (layer) {
           if (visible) {
             map.addLayer(layer.line); map.addLayer(layer.hitLine);
-            if (map.getZoom() >= START_DOT_MIN_ZOOM) map.addLayer(layer.startDot);
+            syncStartDot(layer); // never a bare addLayer: a selected/hovered trail's green Start marker
+                                 // is showing, and the white dot would land on top of it (see syncStartDot)
             if (showDirectionArrows && map.getZoom() >= ARROW_MIN_ZOOM && layer.directionArrowLayer) {
               map.addLayer(layer.directionArrowLayer);
             }

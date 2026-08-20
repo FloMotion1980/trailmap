@@ -1,7 +1,7 @@
 // @suite   labels
 // @area    Map name labels for trails, Tour segments and lifts
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches applyNameLabels, setLabelHovered, showNames, trailLabelHtml, tl-hover, tl-diff, segmentNameLabels, buildLiftLayer, setLiftHover, applyPlaceVisibility, buildPlaceMarkers, resetAllHoverStyles, render, trailSearchInput, matchesSearch
+// @touches applyNameLabels, setLabelHovered, showNames, trailLabelHtml, tl-hover, tl-diff, segmentNameLabels, buildLiftLayer, setLiftHover, applyPlaceVisibility, buildPlaceMarkers, resetAllHoverStyles, render, trailSearchInput, matchesSearch, wireCardHover
 // @needs   region=bikekingdom, builder=off
 //
 // Labels are where "it looks fine" hides the most. Three shipped bugs behind these cases:
@@ -18,6 +18,11 @@
 //     Namen OFF first and so never has an open label to lose in the first place.
 // Note the harness waits by polling: Leaflet FADES tooltips out, so a synchronous read right after a toggle
 // still sees elements that are logically gone. That produced a false "still there" reading once already.
+//
+// A card's hover is wired to pointerenter/pointerleave, not mouseenter/mouseleave (2026-08-20): a TAP
+// synthesises a mouseenter too, which left a trail selected from the list wearing the bold hover width on
+// top of its yellow outline on a phone. The handler reads `pointerType` off the event, so a dispatched
+// MouseEvent now reaches nothing at all -- which is why the card hovers below are PointerEvents.
 
 TM.add("labels", () => typeof applyNameLabels === "function" && TM.ui.cardNamed("liftCards", /Hörnli/) && TM.ui.cardNamed("tourCards", /Biketicket/), async (T) => {
 
@@ -74,14 +79,14 @@ TM.add("labels", () => typeof applyNameLabels === "function" && TM.ui.cardNamed(
   T.test("hovering a trail card marks its label in the trail's own colour");
   const card = TM.ui.trailCards().find((c) => c.querySelector(".badge.schwarz")) || TM.ui.trailCards()[0];
   const wantColour = getComputedStyle(card.querySelector(".badge")).backgroundColor;
-  card.dispatchEvent(new MouseEvent("mouseenter"));
+  card.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
   await TM.until(() => TM.map.markedLabels().length > 0, 2000);
   T.eq("exactly one label is marked", TM.map.markedLabels().length, 1);
   const marked = TM.map.markedLabels()[0];
   T.ok("its border is the trail's difficulty colour, not a fixed rust",
        marked.style.borderColor.replace(/\s/g, "") === wantColour.replace(/\s/g, ""),
        marked.style.borderColor, wantColour);
-  card.dispatchEvent(new MouseEvent("mouseleave"));
+  card.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse" }));
   await TM.until(() => TM.map.markedLabels().length === 0, 2000);
   T.eq("the mark is dropped again", TM.map.markedLabels().length, 0);
   T.ok("but the label itself stays open", TM.map.trailLabels().length > 0, TM.map.trailLabels().length, "> 0");
@@ -93,9 +98,9 @@ TM.add("labels", () => typeof applyNameLabels === "function" && TM.ui.cardNamed(
   T.eq("one marked label", TM.map.markedLabels().length, 1);
   // Hovering something else and leaving must not steal the mark from the selection.
   const other = TM.ui.trailCards().find((c) => c !== card);
-  other.dispatchEvent(new MouseEvent("mouseenter"));
+  other.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
   await TM.wait(250);
-  other.dispatchEvent(new MouseEvent("mouseleave"));
+  other.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse" }));
   await TM.wait(350);
   T.eq("the selected trail is still the marked one", TM.map.markedLabels().length, 1);
   closeInfoPanelAndDeselect();
@@ -105,12 +110,12 @@ TM.add("labels", () => typeof applyNameLabels === "function" && TM.ui.cardNamed(
   T.test("hovering a lift keeps its permanent label and marks it in the lift colour");
   const liftCard = TM.ui.liftCards()[0];
   const liftLabelCount = TM.map.liftLabels().length;
-  liftCard.dispatchEvent(new MouseEvent("mouseenter"));
+  liftCard.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
   await TM.until(() => TM.map.markedLabels().length > 0, 2000);
   const m = TM.map.markedLabels()[0];
   T.ok("the marked label is the lift's", /🚡/.test(m.textContent), m.textContent.trim(), "a lift label");
   T.eq("bordered in the lift's own symbol colour", m.style.borderColor, "rgb(0, 0, 0)");
-  liftCard.dispatchEvent(new MouseEvent("mouseleave"));
+  liftCard.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse" }));
   await TM.wait(400);
   // The old code closed the tooltip unconditionally here, which blanked the very label the switch is for.
   T.eq("the label is still open after the mouse leaves", TM.map.liftLabels().length, liftLabelCount);

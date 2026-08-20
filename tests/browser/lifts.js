@@ -1,7 +1,7 @@
 // @suite   lifts
 // @area    Lift map objects: drawing, stations, Tour routing, builder
 // @files   Trailmap App/index.html, Trailmap App/regions/*.json
-// @touches buildLiftLayer, destroyLiftLayer, liftLayers, showLiftInfo, highlightSelectedLift, clearLiftSelection, openTourRidingLift, selectTourSegment, showEndpoints, hideEndpoints, endpointOwner, hideAllLiftEndpoints, LIFT_MASK_COLOR, LIFT_MASK_WEIGHT, LIFT_LINE_COLOR, LIFT_HAIRLINE_WEIGHT, LIFT_DOT_WEIGHT, LIFT_DOT_DASH, LIFT_BAND_PANE, liftClimb, LIFT_TYPE_LABEL, builderTryAdd
+// @touches buildLiftLayer, destroyLiftLayer, liftLayers, showLiftInfo, highlightSelectedLift, clearLiftSelection, openTourRidingLift, selectTourSegment, showEndpoints, hideEndpoints, endpointOwner, hideAllLiftEndpoints, LIFT_MASK_COLOR, LIFT_MASK_WEIGHT, LIFT_LINE_COLOR, LIFT_HAIRLINE_WEIGHT, LIFT_DOT_WEIGHT, LIFT_DOT_DASH, LIFT_BAND_PANE, liftClimb, LIFT_TYPE_LABEL, builderTryAdd, wireCardHover
 // @needs   region=bikekingdom, builder=off
 //
 // A lift is drawn in two parts -- an opaque grey MASK covering the base map's own aerialway line, and a
@@ -11,6 +11,11 @@
 //
 // The station markers must stay bottom-first in the data: coords[0] is the valley station, which is what
 // makes the green Talstation / red Bergstation dots and the climb figure right.
+//
+// A card's hover is wired to pointerenter/pointerleave, not mouseenter/mouseleave (2026-08-20): a TAP
+// synthesises a mouseenter too, which left a trail selected from the list wearing the bold hover width on
+// top of its yellow outline on a phone. The handler reads `pointerType` off the event, so a dispatched
+// MouseEvent now reaches nothing at all -- which is why the card hovers below are PointerEvents.
 
 TM.add("lifts", () => typeof buildLiftLayer === "function" && TM.ui.cardNamed("liftCards", /Hörnli/) && TM.ui.cardNamed("tourCards", /Biketicket/), async (T) => {
   const bandPane = () => TM.$(".leaflet-liftBand-pane");
@@ -41,10 +46,10 @@ TM.add("lifts", () => typeof buildLiftLayer === "function" && TM.ui.cardNamed("l
   const greenDots = () => TM.map.overlay().filter((p) => (p.getAttribute("fill") || "").toLowerCase() === "#3fbf5e").length;
   const before = greenDots();
   const card = TM.ui.liftCards()[0];
-  card.dispatchEvent(new MouseEvent("mouseenter"));
+  card.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
   await TM.wait(300);
   T.ok("hovering reveals them", greenDots() > before, greenDots(), "> " + before);
-  card.dispatchEvent(new MouseEvent("mouseleave"));
+  card.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse" }));
   await TM.wait(300);
   T.eq("leaving hides them again", greenDots(), before);
   card.click();
@@ -104,11 +109,11 @@ TM.add("lifts", () => typeof buildLiftLayer === "function" && TM.ui.cardNamed("l
     !(p.getAttribute("stroke-dasharray") || "").startsWith("1,13")).map((p) => +p.getAttribute("stroke-width"));
   const dotsBefore = Math.max(...dotWidth()), hairBefore = Math.max(...hairWidth());
   const c2 = TM.ui.liftCards()[1] || TM.ui.liftCards()[0];
-  c2.dispatchEvent(new MouseEvent("mouseenter"));
+  c2.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
   await TM.wait(300);
   T.ok("one dotted stroke got wider", Math.max(...dotWidth()) > dotsBefore, Math.max(...dotWidth()), "> " + dotsBefore);
   T.eq("the hairline stayed a hairline", Math.max(...hairWidth()), hairBefore);
-  c2.dispatchEvent(new MouseEvent("mouseleave"));
+  c2.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse" }));
   await TM.wait(300);
   T.eq("and it goes back", Math.max(...dotWidth()), dotsBefore);
 

@@ -22,6 +22,26 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-20
+- **Fixed both open RIDE-era bugs from 2026-08-16, neither of which was actually RIDE-specific.** (1) *A
+  selected trail's Start marker read white instead of green.* The white `startDot` and the green `startMarker`
+  sit at the EXACT same coordinate with the same radius, so whichever was added to the map last covers the
+  other -- and `showEndpoints()` brings the green pair to the front once, while `updateStartDotVisibility()`
+  re-adds the white dot on every zoomend. During RIDE the map zooms and pans constantly, which is why it
+  looked like a RIDE bug; the Ziel marker has no white counterpart, which is why only the Start was wrong.
+  Fixed by removing the overlap rather than re-fighting the z-order: a new `syncStartDot(layer)` is now the one
+  place a startDot's visibility is decided, and it suppresses the dot while that trail's own endpoints are
+  showing. All three former add/remove sites (`updateStartDotVisibility`, `render()`'s visible branch,
+  `showEndpoints`/`hideEndpoints`) go through it, so a call site cannot reintroduce the overlap by forgetting
+  the rule -- which is exactly how it got in. (2) *A trail selected from the sidebar list wore the bold hover
+  width on top of its yellow selection outline on a touch device.* A tap synthesises a `mouseenter`, and the
+  card's hover handler could not tell that from a real one. Both list call sites now go through one
+  `wireCardHover()` using `pointerenter`/`pointerleave` and skipping `pointerType === "touch"` -- read off the
+  GESTURE rather than from a `(hover: hover)` media query, so a hybrid laptop keeps its real mouse hover and
+  loses only the tap-synthesised one. Two new cases in `tests/browser/lists.js`, both mutation-checked (see
+  `tests/MUTATIONS.md`); `labels`/`lifts`/`solo` dispatch PointerEvents on cards now, since a MouseEvent
+  reaches nothing. Full browser run afterwards: 147/151, the four remaining failures all pre-existing (two in
+  `bearing`, one in `infopanel`, plus one `infopanel` marker check that only fails as collateral of the
+  `bearing` throw in the same run).
 - **RIDE ist in der Infobox jetzt ein eigener, beschrifteter Balken; die Glyph-Buttons wachsen auf dem Handy
   auf 34px.** RIDE war bisher der letzte und kleinste Knopf (22px) in `.ip-btns` — auf genau dem Layout, auf
   dem er der wichtigste ist. Vier Entwuerfe wurden vorab als Mockup gezeigt, der Nutzer hat B gewaehlt:

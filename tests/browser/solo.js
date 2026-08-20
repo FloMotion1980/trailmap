@@ -1,7 +1,7 @@
 // @suite   solo
 // @area    Solo mode for trails, Tours and lifts
 // @files   Trailmap App/index.html
-// @touches applySolo, clearSolo, selectTourSegment, selectedSegmentIdx, applyLiftVisibility, applyLiftSegmentOpacity, liftHiddenBySolo, baselineLineOpacity, resetAllHoverStyles, applyLineWeight, syncSelectedCardSoloBtn, SOLO_DIM_OPACITY, liftSegments
+// @touches applySolo, clearSolo, selectTourSegment, selectedSegmentIdx, applyLiftVisibility, applyLiftSegmentOpacity, liftHiddenBySolo, baselineLineOpacity, resetAllHoverStyles, applyLineWeight, syncSelectedCardSoloBtn, SOLO_DIM_OPACITY, liftSegments, wireCardHover
 // @needs   region=bikekingdom, builder=off
 //
 // Solo has produced more repeat reports than anything else in the app, and each time for a DIFFERENT reason,
@@ -14,6 +14,11 @@
 //     never reached and stayed fully opaque after every standalone lift had gone.
 // All three are the same user sentence ("Solo blendet Lifte nicht aus" / "das Dimmen ist weg") and all three
 // have to fail independently, or one can mask another.
+//
+// A card's hover is wired to pointerenter/pointerleave, not mouseenter/mouseleave (2026-08-20): a TAP
+// synthesises a mouseenter too, which left a trail selected from the list wearing the bold hover width on
+// top of its yellow outline on a phone. The handler reads `pointerType` off the event, so a dispatched
+// MouseEvent now reaches nothing at all -- which is why the card hovers below are PointerEvents.
 
 TM.add("solo", () => typeof applySolo === "function" && TM.map.tourLiftStretches() > 0 && TM.ui.cardNamed("liftCards", /Hörnli/) && TM.ui.cardNamed("tourCards", /Biketicket/), async (T) => {
   const LIFTS_ON_MAP = TM.map.standaloneLifts();
@@ -46,10 +51,10 @@ TM.add("solo", () => typeof applySolo === "function" && TM.map.tourLiftStretches
   // No click needed to trigger the old bug: every mouseover runs resetAllHoverStyles over every other layer.
   const dimmedBefore = TM.map.dimmedTrails();
   const other = TM.ui.trailCards()[3] || TM.ui.trailCards()[1];
-  other.dispatchEvent(new MouseEvent("mouseenter"));
+  other.dispatchEvent(new PointerEvent("pointerenter", { pointerType: "mouse" }));
   await TM.wait(250);
   T.ok("still dimmed while hovering", TM.map.dimmedTrails() >= dimmedBefore - 1, TM.map.dimmedTrails(), "~" + dimmedBefore);
-  other.dispatchEvent(new MouseEvent("mouseleave"));
+  other.dispatchEvent(new PointerEvent("pointerleave", { pointerType: "mouse" }));
   await TM.wait(250);
   T.eq("and after the mouse leaves again", TM.map.dimmedTrails(), dimmedBefore);
 
