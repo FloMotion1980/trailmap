@@ -22,6 +22,23 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-21
+- **The ⬆️ and 🔁 badges can no longer be separated from the trail's name.** An ordinary space in front of them
+  is a break opportunity, so a long name could break right before the badge and leave it starting the next
+  line — where the only other thing is the button group, making it read as belonging to the buttons rather
+  than the trail (user: they must "nie zu den Buttons in die Zeile rutschen"). Both now use a NON-BREAKING
+  space, the same fix the nine counts elsewhere already use. **Reproduced before and after rather than
+  reasoned about**, and that took a sweep: at the desktop panel's own 345px NONE of Bike Kingdom's thirteen
+  badge-bearing trails showed it, so a check at that width would have passed against the broken build. Swept
+  across 220–440px, two do — "Aufstieg Mittelstation Weisshorn" at 310px and "Access Spundis/Lady Patricia"
+  at 266px — and with the fix, zero at any width in that range. The new case in `tests/browser/infopanel.js`
+  sweeps for the same reason.
+- **Two test defects fixed in the same area, both of which had been reporting the wrong thing for a while.**
+  "the glyph buttons grow on touch" read the height out of the touch media query, which stopped restating it
+  when desktop was pulled up to match — it now reads the base rule and asserts what actually matters, that
+  they are a full touch target on every layout. And "it sits behind the name where the name leaves room" took
+  `h3.firstChild` as the name, which has been the difficulty DOT since 2026-08-13 — an element, so
+  `.length` was undefined, the Range was empty and the check had been reporting 0 ever since, for a reason
+  with nothing to do with the layout it is about. It takes the first real text node now, and passes.
 - **The info panel's four action buttons are 34px on the desktop too**, not 22 (user: "die grösseren Buttons
   können wir am Desktop nachziehen"). The size was touch-only, where the reason was the touch target; desktop
   does not need a bigger target but does need the two layouts to look like the same panel, and 22px round

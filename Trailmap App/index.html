@@ -6004,7 +6004,9 @@ function buildInfoPanelHtml(t){
   const upShown = isReversed ? t.down : t.up;
   const downShown = isReversed ? t.up : t.down;
   const uphillBadge = categoryBadge(t);
-  const loopBadge = t.loop ? ` <span class="badge-loop" title="Tour (mehrere Trails kombiniert)">🔁</span>` : "";
+  // NON-BREAKING space, like categoryBadge's own -- see there for why. A badge belongs to the name, and a
+  // plain space in front of it is a break opportunity that lets it start the next line instead.
+  const loopBadge = t.loop ? ` <span class="badge-loop" title="Tour (mehrere Trails kombiniert)">🔁</span>` : "";
 
   // If this is a loop and one of its segments was last clicked, highlight that stretch in the
   // elevation profile and add a small section below the GPX button with that trail's own stats —
@@ -7504,7 +7506,13 @@ function wireCardHover(card, layer){
 }
 
 function categoryBadge(t){
-  return t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⬆️</span>` : "";
+  // NON-BREAKING space in front of the badge, not an ordinary one (2026-08-21, the user: the ⬆️ and 🔁 must
+  // "nie zu den Buttons in die Zeile rutschen"). An ordinary space is a break opportunity, so in the info
+  // panel's heading a long name could break right before the badge and leave it starting the next line --
+  // where the only other thing is the .ip-btns group, so it read as belonging to the buttons rather than to
+  // the trail. Glued to the last word it always travels with the name, wherever that word ends up. Same fix
+  // the counts in nine other places already use for the same reason (see the nbsp note in CLAUDE.md).
+  return t.uphill ? ` <span class="badge-uphill" title="EMTB Uphill-Trail">⬆️</span>` : "";
 }
 
 // One trail's (or Tour's) sidebar card. Shared by the Trails list and the Touren list rather than copied:

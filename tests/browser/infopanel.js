@@ -1,7 +1,7 @@
 // @suite   infopanel
 // @area    Info panel: trail, lift, Tour segments, reverse, GPX, elevation chart
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, categoryBadge, badge-uphill, ip-segment-info, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight, DIFF_LABEL, syncRideModeChrome, ip-ride-bar
+// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, categoryBadge, badge-uphill, badge-loop, ip-segment-info, ip-btns, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight, DIFF_LABEL, syncRideModeChrome, ip-ride-bar
 // @needs   region=bikekingdom, builder=off
 //
 // The panel is a custom div rather than a Leaflet popup so nothing covers the trail, which means every piece
@@ -91,6 +91,50 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   await TM.wait(250);
   T.ok("the new panel is not reversed", !content().querySelector(".reverse-btn").classList.contains("active"),
        content().querySelector(".reverse-btn").className, "not active");
+
+  T.test("the ⬆️ and 🔁 badges never start a line, however the heading wraps");
+  // They belong to the NAME, and an ordinary space in front of them is a break opportunity: a long name can
+  // then break right before the badge and leave it starting the next line, where the only other thing is the
+  // .ip-btns group -- so it reads as belonging to the buttons rather than to the trail (user, 2026-08-21:
+  // they must "nie zu den Buttons in die Zeile rutschen"). categoryBadge and the loop badge use a
+  // NON-BREAKING space now, the same fix the nine counts elsewhere already use.
+  //
+  // Swept across panel widths rather than measured at the one the layout happens to use: the failure needs a
+  // name that fills the line almost exactly, so it appears only at particular widths. At the desktop's own
+  // 345px NONE of Bike Kingdom's badge-bearing trails reproduced it, and a check taken there would have
+  // passed against the broken build. Two do reproduce it in 220-440px (measured: 310px and 266px).
+  {
+    const panelEl = TM.$("#infoPanel");
+    const badgeCards = [...TM.ui.trailCards(), ...TM.ui.tourCards()]
+      .filter((c) => c.querySelector(".badge-uphill") || /🔁/.test(c.textContent));
+    if (!badgeCards.length) {
+      T.skip("no uphill or Tour badge in the active regions");
+    } else {
+      const offenders = [];
+      let widthsProbed = 0;
+      badgeCards.forEach((c) => {
+        c.click();
+        const h3 = TM.$("#ipContent h3");
+        const badge = h3 && h3.querySelector(".badge-uphill, .badge-loop");
+        if (!badge) return;
+        for (let w = 220; w <= 440; w++) {
+          panelEl.style.width = w + "px";
+          widthsProbed++;
+          const left = h3.getBoundingClientRect().left + parseFloat(getComputedStyle(h3).paddingLeft || 0);
+          if (badge.getBoundingClientRect().left <= left + 3) {
+            offenders.push(c.querySelector(".trail-name").textContent.trim().slice(0, 24) + " @" + w + "px");
+            break;
+          }
+        }
+        panelEl.style.width = "";
+      });
+      T.ok("the sweep actually exercised a range of widths", widthsProbed > 200, widthsProbed, "> 200");
+      T.eq("no badge ever begins a line", offenders, []);
+    }
+    panelEl.style.width = "";
+    closeInfoPanelAndDeselect();
+    await TM.wait(200);
+  }
 
   T.test("a lift's panel is sparser: no reverse, no GPX, no chart");
   const liftCard = TM.ui.liftCards()[0];
@@ -423,9 +467,15 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
     if (Math.abs(first.top - last.top) > 1) worstOverflow = 1e9;
     worstOverflow = Math.max(worstOverflow, g.right - p.right);
     [...grp.children].forEach((b) => sizes.add(Math.round(b.getBoundingClientRect().height)));
-    const nameNode = h3.firstChild;
-    const r = document.createRange(); r.setStart(nameNode, 0); r.setEnd(nameNode, nameNode.length);
-    const lines = [...r.getClientRects()];
+    // The h3's FIRST child is the difficulty dot (a span, added 2026-08-13), not the name -- so
+    // `h3.firstChild` measured an element and `.length` on it is undefined, giving an empty Range and no
+    // client rects at all. This check has therefore reported 0 ever since that dot arrived, i.e. it was
+    // failing for a reason that had nothing to do with the layout it is about. Take the first real text node.
+    const nameNode = [...h3.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim().length);
+    const lines = nameNode ? (() => {
+      const r = document.createRange(); r.setStart(nameNode, 0); r.setEnd(nameNode, nameNode.length);
+      return [...r.getClientRects()];
+    })() : [];
     if (lines.length && Math.abs(g.top - lines[lines.length - 1].top) < 12) behind++; else ownLine++;
   }
   T.ok("every button is the same height", sizes.size === 1, [...sizes], "one height");
@@ -491,8 +541,13 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   T.eq("shown on touch", ruleValue("#infoPanel .ip-ride-bar", "display", true), "flex");
   const barH = parseFloat(ruleValue("#infoPanel .ip-ride-bar", "height", false) || "0");
   T.ok("and it is a full touch target tall", barH >= 44, barH, ">= 44");
-  const btnH = parseFloat(ruleValue("#infoPanel h3 .ip-btns > button", "height", true) || "0");
-  T.ok("the glyph buttons grow on touch", btnH >= 34, btnH, ">= 34");
+  // Read from the BASE rule, not the touch block: the 34px sizing moved out of the media query on 2026-08-21
+  // when desktop was pulled up to match ("die grösseren Buttons können wir am Desktop nachziehen"), so the
+  // touch block no longer restates it and this returned 0. The property worth pinning was never "the touch
+  // block makes them bigger" but "they are a full touch target" -- which is now true on both layouts, and is
+  // what a regression to 22px would break.
+  const btnH = parseFloat(ruleValue("#infoPanel h3 .ip-btns > button", "height", false) || "0");
+  T.ok("the glyph buttons are a full touch target, on every layout", btnH >= 34, btnH, ">= 34");
   // The heading's own group must stay ONE row of EQUAL buttons after the move (the case above measures that
   // where it can be painted); here it is only the count that changed, and a stray fifth child would mean the
   // bar was rendered in both places.
