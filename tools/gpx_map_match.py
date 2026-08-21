@@ -155,17 +155,63 @@ def closest_point_on_polyline(poly, pt):
     return best
 
 
-def _label_points(gpx_points, candidates, thresh_m, only_indices=None):
+#: Cell size for the candidate prefilter, in degrees -- roughly 450 m of latitude. Anything a point could
+#: match inside `thresh_m` is in its own cell or one of the eight around it, since a cell is far wider than
+#: any threshold this module is ever called with.
+_CELL_DEG = 0.004
+
+
+def _candidate_grid(candidates):
+    """{(cell_y, cell_x): [candidate ids]} -- every cell a candidate has a vertex in, plus the cells its
+    segments pass through, so a long straight segment between two distant vertices is not missed."""
+    grid = {}
+    for cid, cgeo in candidates.items():
+        cells = set()
+        for i, (lat, lng) in enumerate(cgeo):
+            cells.add((int(lat / _CELL_DEG), int(lng / _CELL_DEG)))
+            if i:
+                # Walk the segment in ~200 m steps so it registers in every cell it crosses.
+                a = cgeo[i - 1]
+                steps = int(haversine_m(a, (lat, lng)) / 200.0)
+                for s in range(1, steps + 1):
+                    f = s / float(steps + 1)
+                    cells.add((int((a[0] + f * (lat - a[0])) / _CELL_DEG),
+                               int((a[1] + f * (lng - a[1])) / _CELL_DEG)))
+        for c in cells:
+            grid.setdefault(c, []).append(cid)
+    return grid
+
+
+def _label_points(gpx_points, candidates, thresh_m, only_indices=None, grid=None):
     """Nearest candidate id (or None if beyond thresh_m) per gpx point. only_indices restricts
-    which point indices are (re)labelled -- used for the second, loosened pass over gaps only."""
+    which point indices are (re)labelled -- used for the second, loosened pass over gaps only.
+
+    `grid` is a spatial prefilter (see _candidate_grid): with it, a point is only measured against the
+    candidates in its own neighbourhood instead of all of them. That changes no answer -- a candidate
+    outside the neighbouring cells is hundreds of metres away, far beyond any threshold used here -- and
+    it is what makes this usable on a dense region at all: the Gardasee has 911 candidates against
+    Livigno's 21, and one 88 km tour is ~4 700 points, i.e. 860 million polyline projections per pass
+    without it (measured: no output in three minutes). The `gpxmatch` suite's committed per-case baseline
+    is what proves the answers really are unchanged.
+    """
     n = len(gpx_points)
     labels = [None] * n
     indices = only_indices if only_indices is not None else range(n)
+    if grid is None and len(candidates) > 40:
+        grid = _candidate_grid(candidates)
     for i in indices:
         p = gpx_points[i]
+        if grid is None:
+            near = candidates.keys()
+        else:
+            gy, gx = int(p[0] / _CELL_DEG), int(p[1] / _CELL_DEG)
+            near = set()
+            for dy in (-1, 0, 1):
+                for dx in (-1, 0, 1):
+                    near.update(grid.get((gy + dy, gx + dx), ()))
         best_id, best_d = None, None
-        for cid, cgeo in candidates.items():
-            d, _, _ = closest_point_on_polyline(cgeo, p)
+        for cid in near:
+            d, _, _ = closest_point_on_polyline(candidates[cid], p)
             if best_d is None or d < best_d:
                 best_d, best_id = d, cid
         labels[i] = best_id if (best_d is not None and best_d <= thresh_m) else None
@@ -313,7 +359,11 @@ def match_gpx_to_network(gpx_points, candidates, strict_thresh_m=15.0, loose_thr
     candidate_lengths_pts = {cid: cumulative_km(cgeo)[-1] * 1000 / spacing
                               for cid, cgeo in candidates.items() if len(cgeo) > 1}
 
-    pass1_labels = _smooth_mode(_label_points(gpx_points, candidates, strict_thresh_m), smooth_window)
+    # Built once and reused by both passes: on a dense network the grid itself costs real time, and pass 2
+    # would otherwise rebuild the identical structure.
+    grid = _candidate_grid(candidates) if len(candidates) > 40 else None
+    pass1_labels = _smooth_mode(_label_points(gpx_points, candidates, strict_thresh_m, grid=grid),
+                                smooth_window)
     pass1_runs = _consolidate(_run_length_encode(pass1_labels), gap_merge_pts, min_run_pts,
                                candidate_lengths_pts, min_run_fraction)
 
@@ -336,7 +386,8 @@ def match_gpx_to_network(gpx_points, candidates, strict_thresh_m=15.0, loose_thr
 
     pass2_labels = list(pass1_labels)
     for a, b in big_gaps:
-        loose = _label_points(gpx_points, candidates, loose_thresh_m, only_indices=range(a, b + 1))
+        loose = _label_points(gpx_points, candidates, loose_thresh_m, only_indices=range(a, b + 1),
+                              grid=grid)
         for k in range(a, b + 1):
             pass2_labels[k] = loose[k]
 

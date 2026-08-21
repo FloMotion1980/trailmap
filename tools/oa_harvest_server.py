@@ -16,16 +16,32 @@ The only cross-origin request is the one to outdooractive.com, which is what the
 
 Output: Material/BikeKingdom/oa_tours.json -- {id: {title, length, ascent, descent, difficulty, geometry}}
 """
+import io
 import json
 import os
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+#: Bike Kingdom's, and still the default so the original invocation keeps working unchanged. Every one of
+#: these four is overridable from the command line, because the second project to need this (Garda
+#: Trentino, 2026-08-21) differs in all four and copying the file would have been the third copy of the
+#: same browser trick:
+#:
+#:     python tools/oa_harvest_server.py --proj api-gardatrentino --key ATLFE9GX-EMWGKQIH-4OSSEBMT
+#:         --out "Material/Gardasee/oa_tours.json" --port 8766 --ids 9952405,9952384,...
+#:
+#: The project/key pair is not a secret: it sits in the tourism site's own page source, which is where
+#: each of these came from, and it only scopes the API to that project's own content.
 OUT = os.path.join(ROOT, "Material", "BikeKingdom", "oa_tours.json")
 IDS_FILE = os.path.join(ROOT, "Material", "BikeKingdom", "trails_api.tsv")
 PROJ = "api-arosalenzerheide"
 KEY = "IETVOSAR-EMWGMZIJ-4OSSIQCH"
+
+
+def _cli(argv, flag, default):
+    return argv[argv.index(flag) + 1] if flag in argv else default
+
 
 PAGE = """<!doctype html><meta charset="utf-8"><title>OA Harvest</title>
 <body style="font-family:system-ui;padding:20px;max-width:52em">
@@ -66,7 +82,11 @@ const say = (s) => { log.textContent = s + "\\n" + log.textContent.split("\\n").
 
 def wanted_ids(argv):
     if "--ids" in argv:
-        return argv[argv.index("--ids") + 1].split(",")
+        return [x for x in argv[argv.index("--ids") + 1].split(",") if x]
+    if "--ids-file" in argv:
+        path = argv[argv.index("--ids-file") + 1]
+        return [ln.split("	")[0].strip() for ln in io.open(path, encoding="utf-8")
+                if ln.strip() and not ln.startswith("#")]
     ids = []
     with open(IDS_FILE, encoding="utf-8") as fh:
         for line in fh:
@@ -78,11 +98,14 @@ def wanted_ids(argv):
 
 class Handler(BaseHTTPRequestHandler):
     ids = []
+    proj = PROJ
+    key = KEY
+    out = OUT
 
     def do_GET(self):
         if self.path.startswith("/harvest"):
             body = (PAGE.replace("%IDS%", json.dumps(self.ids))
-                        .replace("%PROJ%", PROJ).replace("%KEY%", KEY)).encode("utf-8")
+                        .replace("%PROJ%", self.proj).replace("%KEY%", self.key)).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -98,15 +121,20 @@ class Handler(BaseHTTPRequestHandler):
         # 2026-07-29) would otherwise replace the whole 126-tour harvest with a single entry, and
         # Material/ is the source this region is rebuilt from.
         fresh = len(data)
-        if os.path.exists(OUT):
+        out_path = self.out
+        if os.path.exists(out_path):
             try:
-                with open(OUT, encoding="utf-8") as fh:
+                with open(out_path, encoding="utf-8") as fh:
                     have = json.load(fh)
                 have.update(data)
                 data = have
             except ValueError:
                 pass
-        with open(OUT, "w", encoding="utf-8", newline="\n") as fh:
+        # `out_path`, NOT the module-global OUT. Getting this one line wrong while the merge-read above
+        # already used out_path is how a Garda Trentino harvest ended up merged into Bike Kingdom's own
+        # oa_tours.json (2026-08-21) -- silently, because merging never fails and the message still reports a
+        # plausible count. It also destroys the file it lands in, which is a source a region is rebuilt from.
+        with open(out_path, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(data, fh, ensure_ascii=False)
         msg = ("%d neu -> %d Touren, %d mit Geometrie"
                % (fresh, len(data), sum(1 for v in data.values() if v.get("geometry")))).encode("utf-8")
@@ -114,13 +142,23 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(msg)))
         self.end_headers()
         self.wfile.write(msg)
-        print("geschrieben:", OUT, msg.decode("utf-8"))
+        print("geschrieben:", out_path, msg.decode("utf-8"))
 
     def log_message(self, *a):
         pass
 
 
 if __name__ == "__main__":
-    Handler.ids = wanted_ids(sys.argv[1:])
-    print("%d ids -- http://localhost:8765/harvest.html" % len(Handler.ids))
-    HTTPServer(("127.0.0.1", 8765), Handler).serve_forever()
+    argv = sys.argv[1:]
+    Handler.proj = _cli(argv, "--proj", PROJ)
+    Handler.key = _cli(argv, "--key", KEY)
+    out = _cli(argv, "--out", OUT)
+    Handler.out = out if os.path.isabs(out) else os.path.join(ROOT, out)
+    Handler.ids = wanted_ids(argv)
+    print("%d ids, project %s -> %s" % (len(Handler.ids), Handler.proj, Handler.out))
+    # --port, because a stale server from an earlier run keeps listening on the default and silently
+    # ANSWERS the next harvest -- with its own --out, which is how a Garda harvest reached Bike Kingdom's
+    # file even after --out was fixed. A fresh port is the cheap way to be sure which process replied.
+    port = int(_cli(argv, "--port", "8765"))
+    print("open http://localhost:%d/harvest.html" % port)
+    HTTPServer(("127.0.0.1", port), Handler).serve_forever()

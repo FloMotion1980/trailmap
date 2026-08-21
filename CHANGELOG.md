@@ -22,6 +22,30 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-21
+- **Five Garda Trentino Touren, and a measure for which tours are worth building.** Source is the
+  destination's own MTB routes (`gardatrentino.it`), whose tracks come from Outdooractive and had to be
+  harvested through a real browser again — that API answers 404 to every plain HTTP client. Nine are
+  published; five are built. **The obvious measure was wrong and the user said why**: judging a tour by the
+  trail share of its whole track made every one look like a fireroad loop, because with 4 200 m of climbing
+  most of the distance IS the climb and a climb is a fireroad ("Uphill ist wohl immer Forststrasse" — the
+  climbs here measure 30–72 % fireroad). What decides is the DESCENT, split by the track's own smoothed
+  elevation and classified against OSM way types: Ronda Extrema 31,8 % of its 33 km descent on singletrail
+  (10,5 km), Ronda Grande 27,2 %, against Monte Velo's **0,8 % of 11,8 km** — a gravel descent whose
+  "schwer" grade comes from its climbing. Monte Velo, Lago di Ledro, Bio Palafitte and Duvredo Shortcut are
+  left out with the reason recorded in the build script, so a rerun cannot add them back.
+- **The map-matcher got a spatial prefilter, because 913 candidates broke it.** One 88 km tour against the
+  Gardasee's 911 trails plus 2 lifts is ~860 million polyline projections per pass, and produced no output
+  in three minutes. `_label_points` now measures a point only against candidates in its own grid
+  neighbourhood. It changes no answer — the `gpxmatch` baseline, Livigno's hand-built 20/20 ground truth
+  included, is unchanged, and the suite got faster (33 s → 25 s). Two thresholds (12/30 and the module's
+  validated 15/35) also produce identical attribution on all five tours, so the validated pair was kept
+  rather than an invented one.
+- **`tools/oa_harvest_server.py` takes `--proj/--key/--out/--port` now**, instead of being hardcoded to Bike
+  Kingdom. Worth knowing what it cost: the first version of that change updated the merge-READ to the new
+  path and left the WRITE on the old module global, so a Garda harvest was silently merged into Bike
+  Kingdom's own `oa_tours.json` — twice, since a stale server on the default port kept answering after the
+  fix. Both times restored from git; the write path and a `--port` flag are the fix, and the comment on that
+  line says why.
 - **The Gardasee's and Madeira's sub-region labels were too long, measured and fixed.** Every chip sat on its
   own line — ten lines for the Gardasee alone — because the chip row is 279px on a phone, two chips only fit
   at ~136px each, and the count (" (155)") spends six of a label's characters. Labels are capped at 15

@@ -528,7 +528,21 @@ bottom-first by elevation and require the join to keep climbing.
       anything at Prada / San Zeno, which nobody has researched.
     - **Coverage gaps with famous names**: Pernici, Tremalzo and Busatte are not in the region. The first
       two are on Trailforks mainly as *routes* rather than trails and the harvester reads trail pages only;
-      the 601 is present in pieces. A per-trail addition, not a re-harvest.
+      the 601 is present in pieces. A per-trail addition, not a re-harvest. **Intermaps has Pernici**: the
+      destination's own map API (`summer.intermaps.com/garda_trentino/data?lang=de`, anonymous, 289 routes
+      of which 68 Mountainbike) lists a "Rifugio Pernici Trail-Tour" with length/ascent/duration — but its
+      geometry is only a rendered 1024x613 overview SVG per layer, i.e. ~100 m per pixel, so it is a
+      METADATA source and not a geometry one.
+    - **~7 km of real descent singletrail the region is missing, with coordinates.** The five Touren built
+      on 2026-08-21 ride 10,5 km (Ronda Extrema) and 7,4 km (Ronda Grande) of OSM-`path` on the way down,
+      and only 2,9 / 1,3 km of that lies on trails we hold. The tour tracks in
+      `Material/Gardasee/oa_tours.json` plus the OSM way cache the classification used are enough to lift
+      those stretches out as trail candidates — the most promising lead for extending this region, and much
+      better targeted than another Trailforks sweep.
+    - **Four of the destination's nine MTB routes were deliberately not built** (Monte Velo, Lago di Ledro,
+      Bio Palafitte, Duvredo Shortcut): 0–3 % of their DESCENT is on singletrail. See `docs/gardasee.md`
+      for the measure and the build script's own `SKIP` dict for the per-tour reason. Revisit only if the
+      user wants gravel loops in the app as a category.
     - **Nobody has measured RIDE mode on a 911-trail region on a phone.** With Gardasee and Madeira both
       active the map paints 2 138 vector paths, against the 655 the RIDE memory work was measured against.
     The original research notes are kept below, since they still describe the area accurately:

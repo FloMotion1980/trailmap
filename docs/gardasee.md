@@ -90,6 +90,61 @@ looking authoritative. The data therefore states only the stable property, "this
 summer", and the window lives here. If it ever belongs in the app, it belongs as something that is fetched,
 not as a string in a region file.
 
+## Five Touren, and the measure that picked them
+
+Built 2026-08-21 by `tools/build_gardasee_tours.py` from **Garda Trentino's own MTB routes**
+(`gardatrentino.it`), whose tracks come from Outdooractive — harvested through a real browser, because
+that API answers 404 to every plain HTTP client (`tools/oa_harvest_server.py`, run with
+`--proj api-gardatrentino`). The destination publishes nine; five are built.
+
+**The obvious measure was wrong, and the user said why.** A first pass judged each tour by the share of its
+whole track running on trails the region already holds, and every tour looked like a fireroad loop (0–21 %).
+That is not a defect of the tours: with 4 200 m of climbing most of the DISTANCE is the climb, and a climb
+is a fireroad by nature ("Uphill ist wohl immer Forststrasse"). Measured separately, the climbs here are
+30–72 % fireroad, so the total share mostly reports how much climbing a tour has.
+
+What decides is the **descent**: split the track by its own smoothed elevation and ask what the descending
+kilometres run on, per OSM's way types.
+
+| tour | km | abwärts | Trail↓ | Schotter↓ | unsre Trails↓ | Singletrail↓ | |
+|---|---|---|---|---|---|---|---|
+| Ronda Extrema | 88,8 | 33,2 | **31,8 %** | 43,9 % | 8,8 % | **10,5 km** | gebaut |
+| Ronda Grande (All Mountain) | 74,7 | 27,4 | **27,2 %** | 38,1 % | 4,8 % | **7,4 km** | gebaut |
+| Variante Caset Pubregn | 12,3 | 7,5 | 31,1 % | 52,2 % | 19,2 % | 2,3 km | gebaut |
+| Malga Grassi Trail-Tour | 24,2 | 7,4 | 21,8 % | 57,3 % | 18,6 % | 1,6 km | gebaut |
+| Laghel-Tour | 10,3 | 2,2 | 31,3 % | 33,0 % | **63,3 %** | 0,7 km | gebaut |
+| Lago di Ledro - Tour | 16,5 | 5,1 | 3,2 % | 34,4 % | 0 % | 0,2 km | weggelassen |
+| Monte Velo - Tour | 29,4 | 11,8 | **0,8 %** | 59,0 % | 0,6 % | 0,1 km | weggelassen |
+| Bio Palafitte Bike Tour | 15,5 | 5,3 | 0,1 % | 52,5 % | 0 % | 0,0 km | weggelassen |
+| Duvredo Shortcut | 1,1 | 1,1 | 0 % | 81,5 % | 0 % | 0,0 km | weggelassen |
+
+Monte Velo is the instructive one: 11,8 km of descent and 100 m of it on singletrail. Its "schwer" grade
+comes from the 1 240 m of climbing, not the terrain. The four skipped ids are listed in the build script's
+own `SKIP` dict with the reason, so a rerun cannot helpfully add them back.
+
+**Difficulty** is the destination's own three-step wording, mapped the way `CLAUDE.md` documents for a
+German three-step scale (leicht→blau, mittel→rot, schwer→schwarz; `gruen` is unreachable from it), and
+**length/ascent/descent are the destination's published figures**, not track-derived ones.
+
+**Segments** come from `tools/gpx_map_match.py` against the region's own 911 trails and 2 lifts. Only 4–6
+trails per tour survive as named segments, so a Tour's line is ~90 % connector — which is the honest
+picture, not a matching failure: two thresholds (12/30 and the module's Livigno-validated 15/35) produce
+**identical** attribution and lengths on all five tours, and the tours simply ride a lot of ground the
+region does not hold. Both Rondas ride `gd_senter_dei_russi` twice; checked rather than assumed — the two
+passages cover non-overlapping stretches of that 3 605 m trail (1920→616 m reversed, then 2657→3108 m
+22 km later), so they are two real passages and not a duplicate.
+
+**This forced a real change in the matcher**: at 913 candidates one 88 km tour is ~860 million polyline
+projections per pass and produced no output in three minutes, so `_label_points` now takes a spatial grid
+prefilter. It changes no answer — the `gpxmatch` suite's committed per-case baseline, including Livigno's
+hand-built 20/20 ground truth, is unchanged — and it is what makes the matcher usable on a dense region at
+all.
+
+**The by-product is a list of missing trails.** The Ronda Extrema descends 10,5 km of singletrail and only
+2,9 km of that is on trails we hold: ~7 km of real Garda descent that Trailforks does not have in this
+region. Same for the Ronda Grande. That is the most promising lead for extending the region, and it is
+recorded in `docs/backlog.md`.
+
 ## What was dropped, and why it is worth knowing
 
 | | |
