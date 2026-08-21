@@ -22,6 +22,13 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-21
+- **The Garda Touren's 21 segment gaps are closed.** `close_loop_gaps.py` routed all of them against OSM:
+  20 Tier 1 (the bridge is built from the way the trail itself lies on), 1 Tier 3, route factors 1.00-1.73,
+  none flagged suspicious. Every joint over 30 m is gone; what remains is at most 25 m, which is the
+  threshold's own normal slop. `--no-wrap` was added for this and is the point worth remembering: the tool
+  treated LAST->FIRST as a gap unconditionally, which is right for a ring and wrong for the 18 % of the
+  app's Touren that are not one — on "Variante Caset Pubregn" (+230/−1080 m, start and finish genuinely
+  5 853 m apart) it proposed a 5.9 km bridge across ground nobody rides. Its own default is unchanged.
 - **Fixed: the Garda Touren's elevation charts drew one flat colour instead of their trail sections.** The
   segments were written without `distStart`/`distEnd`, and `buildInfoPanelHtml` skips any segment missing
   `distStart` — so the chart fell back to the Tour's own difficulty colour and showed no component trails.

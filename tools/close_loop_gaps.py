@@ -702,15 +702,25 @@ def find_reusable_connector(region_data, loop_id, a, b, max_off_m=60.0):
     return best[1], best[2]
 
 
-def boundary_gaps(segs, threshold_m):
+def boundary_gaps(segs, threshold_m, wrap=True):
+    """Segment boundaries further apart than `threshold_m`.
+
+    `wrap=False` leaves out the LAST->FIRST pair. That pair is only a gap if the Tour really is a ring, and
+    18 % of the app's Touren are not (the Sölden descents, the two Pfälzerwald passages, the Gardasee's
+    "Variante Caset Pubregn"). For a point-to-point route the wrap "gap" is the whole distance between its
+    start and its finish -- 5 853 m on Caset Pubregn -- and closing it would fabricate 5.9 km nobody rides.
+    """
     n = len(segs)
     gaps = []
     for i in range(n):
+        j = (i + 1) % n
+        if j == 0 and not wrap:
+            continue
         a = segs[i]["coords"][-1]
-        b = segs[(i + 1) % n]["coords"][0]
+        b = segs[j]["coords"][0]
         d = haversine_m(a, b)
         if d > threshold_m:
-            gaps.append((i, (i + 1) % n, d))
+            gaps.append((i, j, d))
     return gaps
 
 
@@ -766,7 +776,8 @@ def gap_cache_key(loop_id, a, b):
     return "v%d|%s|%.6f,%.6f|%.6f,%.6f" % (CACHE_VERSION, loop_id, a[0], a[1], b[0], b[1])
 
 
-def process_loop(region_data, loop_id, threshold_m, verbose=False, cache=None, cache_path=None):
+def process_loop(region_data, loop_id, threshold_m, verbose=False, cache=None, cache_path=None,
+                 wrap=True):
     cache = cache if cache is not None else {}
 
     def flush_cache():
@@ -777,7 +788,7 @@ def process_loop(region_data, loop_id, threshold_m, verbose=False, cache=None, c
     if not concat_ok(old_line, segs):
         return None, [{"loop": loop_id, "ok": False, "reason": "Segmente sind keine exakte Verkettung -- übersprungen"}]
 
-    gaps = boundary_gaps(segs, threshold_m)
+    gaps = boundary_gaps(segs, threshold_m, wrap=wrap)
     if not gaps:
         return None, []
 
@@ -849,6 +860,8 @@ def main():
                      help="routed/reused bridges are cached here, keyed by endpoint -- a re-run (after a "
                           "kill, or just to re-render the report) costs no network calls for an unchanged gap")
     ap.add_argument("--write", action="store_true", help="without this, the region file is left untouched")
+    ap.add_argument("--no-wrap", action="store_true",
+                    help="do not treat LAST->FIRST as a gap -- for a Tour that is not a ring")
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
 
@@ -869,7 +882,8 @@ def main():
             continue
         t0 = time.time()
         result, report = process_loop(d, loop_id, args.gap_threshold_m, verbose=args.verbose,
-                                       cache=cache, cache_path=args.cache)
+                                       cache=cache, cache_path=args.cache,
+                                       wrap=not args.no_wrap)
         for row in report:
             row.setdefault("ok", True)
         all_report.extend(report)
