@@ -20,3 +20,6 @@ tests/__pycache__/
 # Kratzverzeichnis dieser Sitzungen (Overpass-Caches, Zwischenstaende, Laufprotokolle).
 # Steht hier, weil ein `git add -A` es einmal komplett mitgenommen hat.
 .tmpwork/
+
+# Stray OpenTopoData cache when a script is run from the repo root instead of tools/.
+elevation_cache.json
