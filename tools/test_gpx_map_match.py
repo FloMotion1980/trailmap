@@ -20,11 +20,14 @@ import os
 import re
 import sys
 
-sys.path.insert(0, r"D:\Trailmap\tools")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from trailmap_pipeline import parse_gpx, cumulative_km, haversine_m
 from gpx_map_match import match_gpx_to_network, resolve_segments, closest_point_on_polyline
 
-ROOT = r"D:\Trailmap"
+#: Derived, not hardcoded: this file carried an absolute `D:\Trailmap` for both of these, which makes it
+#: unrunnable on any other machine -- and the whole reason the plan lives in the repo is that it has to
+#: survive a device change.
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _region_path(key):
@@ -236,14 +239,62 @@ CASES = {
     "pds": case_portesdusoleil,
 }
 
-if __name__ == "__main__":
-    names = sys.argv[1:] or list(CASES.keys())
-    totals = [0, 0, 0]
+#: Per-case scores this matcher is known to reach, as [id+order, direction, total]. Written by
+#: `--update-baseline`, compared on every plain run, and the whole reason this file is a TEST rather than a
+#: report: without it the harness printed its comparison and exited 0 WHATEVER happened, which is
+#: indistinguishable from passing (see tests/README.md's own note on exactly that). A score going up is
+#: reported as an improvement, not a failure, so the baseline gets refreshed deliberately.
+BASELINE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "gpx_map_match_baseline.json")
+
+
+def _run(names):
+    scores, totals = {}, [0, 0, 0]
     for name in names:
         title, gt, resolved = CASES[name]()
         a, b, c = _compare(title, gt, resolved)
+        scores[name] = [a, b, c]
         totals[0] += a
         totals[1] += b
         totals[2] += c
     print(f"\n=== TOTAL across {len(names)} case(s): "
           f"id+order {totals[0]}/{totals[2]}, direction {totals[1]}/{totals[2]} ===")
+    return scores
+
+
+if __name__ == "__main__":
+    flags = [a for a in sys.argv[1:] if a.startswith("--")]
+    names = [a for a in sys.argv[1:] if not a.startswith("--")] or list(CASES.keys())
+    scores = _run(names)
+    if "--update-baseline" in flags:
+        old = json.load(open(BASELINE, encoding="utf-8")) if os.path.exists(BASELINE) else {}
+        old.update(scores)
+        json.dump(old, open(BASELINE, "w", encoding="utf-8"), indent=1, sort_keys=True)
+        print("baseline written: " + BASELINE)
+        sys.exit(0)
+    if not os.path.exists(BASELINE):
+        print("NO BASELINE yet -- run once with --update-baseline to record the current scores.")
+        sys.exit(2)
+    base = json.load(open(BASELINE, encoding="utf-8"))
+    worse, better, unknown = [], [], []
+    for name in sorted(scores):
+        a, b, c = scores[name]
+        if name not in base:
+            unknown.append(name)
+            continue
+        ba, bb, bc = base[name]
+        if c != bc:
+            worse.append("%s: %d ground-truth elements, baseline had %d" % (name, c, bc))
+        if a < ba or b < bb:
+            worse.append("%s: id+order %d/%d (baseline %d), direction %d/%d (baseline %d)"
+                         % (name, a, c, ba, b, c, bb))
+        elif a > ba or b > bb:
+            better.append("%s: id+order %d (was %d), direction %d (was %d)" % (name, a, ba, b, bb))
+    for line in better:
+        print("IMPROVED  " + line)
+    for line in unknown:
+        print("NO BASELINE for case " + line)
+    if worse:
+        for line in worse:
+            print("REGRESSED " + line)
+        sys.exit(1)
+    print("OK: no case scores below its baseline (%d compared)" % len(scores))

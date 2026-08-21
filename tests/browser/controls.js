@@ -128,6 +128,18 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
   chip.click();
   await TM.wait(400);
   const shutWidth = box($("#liveStatus")).width;
+  // The fold is a CSS max-width TRANSITION on #liveStatusPanel, so the measured width only reaches 0 in a
+  // window that runs animation frames -- in one that does not (a background tab; this project's own preview
+  // pane) the transition never starts and every width check here fails against a correct app. That was the
+  // `controls` half of the "flaky suite" reports. The class is the contract and is asserted either way; the
+  // pixels are asserted only where they can move.
+  const animates = await TM.paints();
+  T.ok("the collapsed state is applied", $("#liveStatus").classList.contains("collapsed"),
+       $("#liveStatus").className, "collapsed");
+  if (!animates) {
+    T.ok("(widths not checked: this window runs no animation frames, so the fold's transition never starts)",
+         true, TM.paintFrames + " frames in 250ms", "skipped");
+  } else {
   T.ok("folding makes the readout narrower", shutWidth < openWidth - 20,
        [Math.round(shutWidth), Math.round(openWidth)], "narrower");
   // Folded, the readout is exactly as wide as the control column above it -- that is what makes the stack one
@@ -141,11 +153,17 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
        [Math.round(box($("#liveStatus")).right), Math.round(box($("#mapControls")).right)], "flush");
   T.ok("the accuracy is still on screen", $("#liveStatusShort").textContent.trim().length > 0 &&
        box($("#liveStatusShort")).width > 10, $("#liveStatusShort").textContent, "still shown");
+  }
+  // Hit-testing needs no animation: it is where the elements ARE, which is the bug this case was written for.
   T.ok("and the chip is still hittable while folded", hitTest(chip) === true, hitTest(chip), true);
   chip.click();
   await TM.wait(400);
-  T.ok("tapping again brings the details back", box($("#liveStatus")).width > shutWidth + 20,
-       Math.round(box($("#liveStatus")).width), "> " + Math.round(shutWidth + 20));
+  T.ok("tapping again removes the collapsed state", !$("#liveStatus").classList.contains("collapsed"),
+       $("#liveStatus").className, "not collapsed");
+  if (animates) {
+    T.ok("...and brings the details back", box($("#liveStatus")).width > shutWidth + 20,
+         Math.round(box($("#liveStatus")).width), "> " + Math.round(shutWidth + 20));
+  }
   if (!wasOpen) { chip.click(); await TM.wait(300); }
 
   T.test("the accuracy is shown once, not in both halves");
@@ -173,6 +191,24 @@ TM.add("controls", () => typeof updateLiveStatus === "function" && TM.$("#mapCon
   T.ok("the title is one of the two the merged button can show",
        locateBtn.title === "Position zeigen" || locateBtn.title === "Zurück zur Position",
        locateBtn.title, "Position zeigen | Zurück zur Position");
+
+  T.test("every text field is at least 16px, or iOS zooms the page and never zooms back");
+  // Not a design rule and not cosmetic: iOS Safari auto-zooms the whole page when a field under 16px takes
+  // focus, and nothing ever zooms it back -- the user is stranded in a zoomed map. It was reported for the
+  // region dialog's search box on 2026-08-02 and fixed there and on #builderExport, and the reason it is a
+  // TEST rather than a note is that the next field anyone adds will be styled by a rule that knows nothing
+  // about this. Every text-entry control in the document, not a named list, for the same reason.
+  //
+  // Deliberately NOT solved with `maximum-scale=1, user-scalable=no` on the viewport meta: on a map app the
+  // page's pinch-zoom is also its accessibility zoom.
+  const typed = new Set(["checkbox", "radio", "button", "submit", "reset", "range", "color", "file",
+                         "hidden", "image"]);
+  const fields = TM.$$("input, textarea, select").filter((el) => !typed.has((el.type || "").toLowerCase()));
+  const small = fields.map((el) => [el.id || el.tagName.toLowerCase(),
+                                    parseFloat(getComputedStyle(el).fontSize)])
+                      .filter((pair) => !(pair[1] >= 16));
+  T.ok("there is something to check", fields.length > 0, fields.length, "> 0");
+  T.eq("no text field is under 16px", small, []);
 
   await restore();
 });

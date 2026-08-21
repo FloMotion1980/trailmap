@@ -59,6 +59,29 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   user had removed on 2026-08-04 would fail it, and on a home-screen PWA that panel cannot be dismissed),
   and `.leaflet-interactive:focus{outline:none}` must stay in `style.css` — without it a clicked trail
   paints a stray black rectangle around its own SVG bounding box.
+- **Two new test suites, and one that existed but could not fail.** `loopgaps` covers the offline half of
+  `tools/close_loop_gaps.py` — the gap detection including the wrap-around boundary, all four `close_gap`
+  branches plus the degenerate no-intermediate-points case that once left 16 of 29 gaps silently open while
+  the report claimed a route factor of 1.00, the bicycle access rules (`vehicle=forestry` blocks, an explicit
+  `bicycle=yes` overrides), and the routing graph. `gpxmatch` wires in `tools/test_gpx_map_match.py`, the
+  matcher's ten-tour regression harness, which had been in the repo claimed by no suite and **always exited
+  0** — it prints a comparison, and reading it was left to a human. It compares against a committed per-case
+  baseline now and exits non-zero when a case regresses; its two absolute `D:\Trailmap` paths are derived,
+  so it runs on another machine at all. Found by asking the runner which tracked files no suite claims — that
+  sweep's leftovers are written up in `docs/backlog.md`.
+- **Nine more cases across six existing suites**, each for a documented behaviour nothing was watching: the
+  `safeMapStop` reentrancy guard behind the phone-reproduced RIDE crash, the RIDE toggle's cooldown,
+  `applyRideMapOffset`'s idempotence, the RIDE speed readout's centring in both orientations, every text
+  field being at least 16px (under that, iOS zooms the page on focus and never zooms back), the nine counts'
+  non-breaking space, the sidebar's scroll-to-top button, a dimmed trail's arrows being dimmed FILL and all,
+  the per-difficulty arrow tint, a connector's smaller hover delta, and the three "Straße" chips being one
+  tile layer at three filter levels with dezent the default. All mutation-checked; `tests/MUTATIONS.md` has
+  each mutation and the exact failure it produces.
+- **`TM.paints()`, and the rule it encodes.** A window that is not being painted runs no animation frames, so
+  neither a CSS transition nor Leaflet's animated pan progresses in it — and a case that measures the RESULT
+  of one then fails against a correct app. The harness answers that question once now; the `controls` fold
+  and `bearing`'s easing case ask it, and the scroll-to-top case asserts the requested scroll rather than its
+  arrival.
 - **Three `bearing` cases that had been lying were fixed, and with them the "flaky suite" reports.** The
   worst was a real defect rather than flake: the direction-arrow case dereferenced a `find()` result after
   turning the map, threw `Cannot read properties of undefined` on roughly every other run, and that throw

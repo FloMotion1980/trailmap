@@ -526,6 +526,55 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
     if (!wereOn) await TM.ui.setSwitch("showDirectionArrowsToggle", false);
   }
 
+  T.test("the sidebar's own scroll-to-top button appears once the list is scrolled, and works");
+  // It exists because on a phone the drawer is `position:fixed; top:0; z-index:2500` and covers the header
+  // entirely -- so the title, which used to do this job, is unreachable exactly when a long list needs it.
+  // A floating button was REJECTED for this on 2026-07-24 in favour of the title, and the phone measurement
+  // is what reversed that; it is `position:sticky` as the scroller's last child rather than fixed, so it
+  // positions itself against whichever width the sidebar has with no hardcoded geometry.
+  {
+    const scroller = TM.$("#sidebarScroll"), aside = TM.$("aside"), btn = TM.$("#sidebarTopBtn");
+    T.ok("the button exists", !!btn, !!btn, true);
+    if (btn && scroller && scroller.scrollHeight > scroller.clientHeight + 200) {
+      const was = scroller.scrollTop;
+      scroller.scrollTop = 0;
+      scroller.dispatchEvent(new Event("scroll"));
+      await TM.wait(120);
+      T.ok("at the top of the list it is hidden", !aside.classList.contains("scrolled"),
+           aside.className, "not scrolled");
+      scroller.scrollTop = 400;
+      scroller.dispatchEvent(new Event("scroll"));
+      await TM.wait(120);
+      T.ok("scrolled down it is shown", aside.classList.contains("scrolled"), aside.className, "scrolled");
+      T.eq("and it is sticky, not fixed -- so it follows the sidebar's own width",
+           getComputedStyle(btn).position, "sticky");
+      // The handler asks for `behavior:"smooth"`, which is driven by animation frames -- so in a window that
+      // is not being painted (a background tab, this project's own preview pane) the scroll never ARRIVES
+      // however long you poll, and asserting arrival would fail a correct app there. Assert the request,
+      // which is the contract, and treat arrival as a bonus that is only checked where it can happen.
+      let asked = null;
+      const realScrollTo = scroller.scrollTo;
+      scroller.scrollTo = function (opts) { asked = opts; return realScrollTo.apply(this, arguments); };
+      btn.click();
+      const arrived = await TM.until(() => scroller.scrollTop < 40, 1500);
+      delete scroller.scrollTo;
+      T.ok("clicking it asks the list to scroll back to its top",
+           !!asked && asked.top === 0, JSON.stringify(asked), '{"top":0,...}');
+      if (arrived) {
+        T.ok("and it gets there", scroller.scrollTop < 40, scroller.scrollTop, "< 40");
+      } else {
+        T.ok("(arrival not checked: smooth scrolling needs animation frames this window is not running)",
+             true, "skipped", "skipped");
+        scroller.scrollTop = 0;
+      }
+      scroller.scrollTop = was;
+      scroller.dispatchEvent(new Event("scroll"));
+      await TM.wait(120);
+    } else {
+      T.skip("the list is not tall enough to scroll in this region/viewport");
+    }
+  }
+
   T.test("a filter that hides the selected trail closes its panel and clears everything");
   // Leaving solo engaged for a trail that is no longer shown left every OTHER trail invisibly stuck dimmed.
   const victim = TM.ui.trailCards().find((c) => c.querySelector(".badge.schwarz"));

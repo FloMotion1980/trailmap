@@ -35,12 +35,17 @@ TM.add("lifts", () => typeof buildLiftLayer === "function" && TM.ui.cardNamed("l
   T.ok("one mask per lift (plus each Tour's own)", masks.length >= n, masks.length, ">= " + n);
   T.eq("one hairline per lift", hairlines.length, n);
   T.eq("one dotted stroke per lift", dots.length, n);
-  T.eq("the mask is wide enough to cover the tile's own line", masks[0].getAttribute("stroke-width"), "7");
+  // Read through a helper rather than indexing directly: a regression that removes a stroke entirely makes
+  // the count checks above fail AND makes `masks[0].getAttribute(...)` throw, and a throw aborts the whole
+  // suite, taking the six cases below with it. (bearing.js and ride.js both had that defect; it is what the
+  // "flaky suite" reports turned out to be.) A missing element reports itself as a failed check now.
+  const attr = (list, name) => (list.length ? list[0].getAttribute(name) : "(nothing painted)");
+  T.eq("the mask is wide enough to cover the tile's own line", attr(masks, "stroke-width"), "7");
   T.ok("the dots are fatter than the hairline",
-       +dots[0].getAttribute("stroke-width") > +hairlines[0].getAttribute("stroke-width"),
-       [dots[0].getAttribute("stroke-width"), hairlines[0].getAttribute("stroke-width")], "dots wider");
+       +attr(dots, "stroke-width") > +attr(hairlines, "stroke-width"),
+       [attr(dots, "stroke-width"), attr(hairlines, "stroke-width")], "dots wider");
   // Screen-space dashes: the spacing stays constant at every zoom, which is why no zoom handler is needed.
-  T.eq("a 1px dash with a round cap, i.e. a dot", dots[0].getAttribute("stroke-linecap"), "round");
+  T.eq("a 1px dash with a round cap, i.e. a dot", attr(dots, "stroke-linecap"), "round");
 
   T.test("station markers appear only for the hovered or selected lift");
   const greenDots = () => TM.map.overlay().filter((p) => (p.getAttribute("fill") || "").toLowerCase() === "#3fbf5e").length;

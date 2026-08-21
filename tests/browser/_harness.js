@@ -87,6 +87,26 @@
       await TM.wait(140);
     }
   };
+  // Does this window actually RUN animation frames? A hidden or background tab does not -- and this
+  // project's own preview pane measures zero even when fronted. Neither a CSS transition nor Leaflet's
+  // animated pan/zoom progresses there, so any case that measures the RESULT of one has to ask first or it
+  // reports a correct app as broken: that is what the `controls` fold "flake" and the `bearing` hit-testing
+  // skip both were. Measured once per session and cached (the answer cannot change without the window being
+  // fronted, and each probe costs 250 ms); TM.paintFrames keeps the count, for a skip message that says how
+  // it was decided rather than just asserting it.
+  TM.paintFrames = null;
+  TM.paints = async function () {
+    if (TM.paintFrames !== null) return TM.paintFrames >= 5;
+    let frames = 0;
+    await new Promise((done) => {
+      const t0 = performance.now();
+      const tick = () => { frames++; if (performance.now() - t0 < 250) requestAnimationFrame(tick); else done(); };
+      requestAnimationFrame(tick);
+      setTimeout(done, 1200);          // a window with no frames at all would never call back
+    });
+    TM.paintFrames = frames;
+    return frames >= 5;
+  };
   TM.$ = (sel, root) => (root || document).querySelector(sel);
   TM.$$ = (sel, root) => [...(root || document).querySelectorAll(sel)];
 

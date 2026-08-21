@@ -177,8 +177,11 @@ def run(t):
     t.ok("and every mapping lands on one of the app's four colours",
          set(B.TF_DIFF.values()) <= {"gruen", "blau", "rot", "schwarz"},
          sorted(set(B.TF_DIFF.values())), "gruen/blau/rot/schwarz")
+    # .get, not [] -- indexing here made the whole suite abort with a KeyError under the very mutation the
+    # case above exists to catch (a tier missing from TF_DIFF), which cost the four cases that follow it.
     t.eq("white and green share the bottom step, since the app has nothing below 'Sehr leicht'",
-         [B.TF_DIFF["Easiest / White Circle"], B.TF_DIFF["Easy / Green Circle"]], ["gruen", "gruen"])
+         [B.TF_DIFF.get("Easiest / White Circle"), B.TF_DIFF.get("Easy / Green Circle")],
+         ["gruen", "gruen"])
 
     t.case("an id is the region's prefix plus the Trailforks slug, so a trail is traceable to its page")
     t.eq("plain slug", B.sid("md", "ana-ferreira"), "md_ana_ferreira")

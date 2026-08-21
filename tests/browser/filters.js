@@ -363,6 +363,19 @@ TM.add("filters", () => typeof trailPassesFilters === "function" && trailPassesF
     }
   }
 
+  T.test("every rendered count is glued to its label by a NON-BREAKING space");
+  // An ordinary space is trimmed at the start of an inline-block's line box, and every count sits in one --
+  // so `Silvretta Bike Arena (26)` rendered as `...Arena(26)` while the chips, whose width reservation
+  // happens to leave visible slack, looked correct. There are nine of these in index.html and the next one
+  // anyone adds will be written by copying a line that may or may not be one of them, which is why this
+  // walks the DOM for the SHAPE of a count rather than checking a list of element ids or classes.
+  const countEls = TM.$$("aside *, #regionDialog *")
+    .filter((el) => el.children.length === 0 && /^\s*\(\d+\)\s*$/.test(el.textContent || ""));
+  T.ok("there are counts on screen to check", countEls.length >= 4, countEls.length, ">= 4");
+  const breakable = countEls.filter((el) => !/^ /.test(el.textContent))
+                            .map((el) => (el.className || el.tagName) + ": " + JSON.stringify(el.textContent));
+  T.eq("none of them starts with a collapsible space", breakable, []);
+
   T.test("render() is idempotent: calling it twice changes no number");
   const before = JSON.stringify(TM.ui.counts());
   render();

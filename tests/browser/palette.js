@@ -326,6 +326,57 @@ TM.add("palette", () => typeof TM.$ === "function" && TM.$("#baseLayerControl [d
   T.eq("lift line back to near-black, no dark-grey left from sat/topo", strokeCountOp(band(), "#5a5a5a", 1), 0);
   T.eq("lift mask back to plain grey, no violet left from sat/topo", strokeCountOp(band(), "#dab6f0", 1), 0);
 
+  T.test("the three Straße chips are one tile layer at three CSS filter levels, and dezent is the default");
+  // Shipped 2026-08-16 for the RIDE contrast ask, but as a GENERAL setting: "Straße", "Straße dezent" and
+  // "Straße hell" are the SAME osm tile layer with three different CSS filters on Leaflet's own tile pane
+  // (no tile server involved, so it works offline), and the old CARTO layer was renamed "Pastell" so the
+  // names would not collide. Two properties worth pinning, both invisible until they break: switching
+  // between the three must NOT remove and re-add the tile layer (that is a visible reload/flicker on every
+  // contrast change), and the filter must actually differ, or the three chips are one chip with three names.
+  {
+    const chips = [...TM.$$("#baseLayerControl .chip[data-layer='osm']")];
+    T.eq("there are three of them", chips.length, 3);
+    T.eq("and their contrast levels are the documented ones",
+         chips.map((c) => c.dataset.contrast || "normal"), ["normal", "a", "b"]);
+    chips[0].click();
+    await TM.wait(250);
+    const paneNode = TM.$(".leaflet-tile-pane .leaflet-layer");
+    const filters = [];
+    for (const c of chips) {
+      c.click();
+      await TM.wait(200);
+      filters.push(getComputedStyle(TM.$(".leaflet-tile-pane")).filter);
+    }
+    T.eq("the tile layer element is the very same node afterwards -- no remove/re-add, no reload",
+         TM.$(".leaflet-tile-pane .leaflet-layer") === paneNode, true);
+    T.eq("all three filters are distinct", new Set(filters).size, 3);
+    T.ok("...and only the plain 'Straße' has no filter at all",
+         filters[0] === "none" && filters[1] !== "none" && filters[2] !== "none",
+         filters, "none, then two real filters");
+    // Leaving osm must drop the filter entirely, or Pastell/Relief/Satellit inherit whatever Straße had.
+    TM.$("#baseLayerControl [data-layer='sat']").click();
+    await TM.wait(300);
+    T.eq("a non-osm basemap carries no Straße filter", getComputedStyle(TM.$(".leaflet-tile-pane")).filter, "none");
+    chips[1].click();
+    await TM.wait(300);
+    T.ok("and the active chip is the one that was clicked", chips[1].classList.contains("active"),
+         chips.map((c) => c.classList.contains("active")), "[false,true,false]");
+  }
+
+  T.test("a first-ever visit comes up on Straße dezent, not plain Straße");
+  // The user's own choice for the default (2026-08-16). It is a `let` initial value AND a
+  // restoreActiveState() fallback, and those two disagreeing is exactly the class of bug the region
+  // defaults had -- so this reads it out of a genuinely fresh boot rather than from the source.
+  {
+    const fresh = await TM.bootFresh(({ put }) => { put("state", null); });
+    const active = [...fresh.doc.querySelectorAll("#baseLayerControl .chip")].find((c) => c.classList.contains("active"));
+    T.ok("exactly one chip is marked active", !!active,
+         [...fresh.doc.querySelectorAll("#baseLayerControl .chip.active")].length, 1);
+    T.eq("and it is Straße dezent", active && (active.dataset.contrast || "normal"), "a");
+    T.eq("...which is an osm chip", active && active.dataset.layer, "osm");
+    fresh.done();
+  }
+
   T.test("an unknown basemap key falls back to the osm palette (colors, halo, AND mask opacity) rather than leaving stale state");
   // Not reachable through the UI (every chip's data-layer is a real key) -- calls the function directly,
   // which plain function declarations allow (see the harness notes on Annex B). The connector can no

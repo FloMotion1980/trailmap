@@ -720,14 +720,10 @@ TM.add("bearing", () => typeof setHeadingUp === "function" && typeof applyMapBea
   // window that is not (animation frames stop entirely then). Skipping beats failing: a case that cannot see
   // frames has nothing to say about the easing. The safety timer in startBearingTransition is what makes the
   // app itself survive that state -- and the last two checks below still hold either way.
-  let frames = 0;
-  await new Promise((done) => {
-    const t0 = performance.now();
-    const tick = () => { frames++; if (performance.now() - t0 < 250) requestAnimationFrame(tick); else done(); };
-    requestAnimationFrame(tick);
-    setTimeout(done, 1200);
-  });
-  const canSeeFrames = frames >= 5;
+  // One implementation of this question, in the harness -- `controls` needs the same answer for its own
+  // CSS-transition fold, and two copies of a probe like this drift.
+  const canSeeFrames = await TM.paints();
+  const frames = TM.paintFrames;
   const seenAngles = new Set();
   let sampling = true;
   const sampler = () => { seenAngles.add(angleOf(".leaflet-rotate-pane")); if (sampling) requestAnimationFrame(sampler); };

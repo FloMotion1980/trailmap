@@ -109,11 +109,17 @@ is a per-trail addition, not a re-harvest.
 
 ## Two things to weigh before extending it
 
-**It is one region group on purpose, and that has a cost.** With Gardasee and Madeira both active the
-map paints 2 138 vector paths. The measured RIDE-mode memory work (see `docs/backlog.md`) is about
-renderer SURFACE rather than path count, so this does not obviously make that worse — but nobody has
-measured RIDE on a 911-trail region on a phone yet. The sidebar's per-sub-region switches are the
-mitigation that exists today, and `MAX_ACTIVE_REGION_GROUPS` is still 3.
+**It is one region group on purpose, and the cost was measured rather than guessed.** At a 375x812 phone
+viewport with only this region active: 1 822 vector paths in a 450x908 renderer surface, **3.2 MB** across
+two panes; in RIDE, where rotation and the look-ahead pad that surface to 1 170x3 405, **30.4 MB**. Both are
+well under the 86 MB the RIDE memory work measured on Bike Kingdom's 655 paths, because what costs the
+memory is the SURFACE and not the path count — so a region three times as dense is not three times as
+expensive. No fatal panel and no white screen in either state here. With Madeira active as well the map
+paints 2 138 paths.
+
+**Half of that RIDE figure is an empty pane.** This region has no lifts, so `LIFT_BAND_PANE` holds zero
+paths and still pays a full 15.2 MB padded surface — the same waste the builder pane paid until 2026-08-20.
+It is the top item in `docs/backlog.md`'s memory list, and this region is the clearest evidence for it.
 
 **Place labels needed their own cap.** At the default `MAX_PLACES` of 10 the population ranking spent
 every label on Verona, Brescia, Trento and Rovereto and left the lake anonymous — no Salò, no

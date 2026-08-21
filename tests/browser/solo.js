@@ -186,6 +186,94 @@ TM.add("solo", () => typeof applySolo === "function" && TM.map.tourLiftStretches
     if (!was) { tourSwitch.click(); await TM.wait(300); }
   }
 
+  T.test("solo dims a trail's direction arrows, FILL and all -- and a connector grows less on hover than a trail");
+  // Two rules that live one function apart and were each a real bug. (1) setArrowOpacity has to set
+  // fillOpacity as well as opacity: since 2026-08-20 an arrow is a FILLED triangle, so dimming only the
+  // stroke left every dimmed trail's arrows glowing at full white. (2) applyLineWeight adds a SMALLER
+  // hover delta to a connector (0.8) than to a trail (3.0): at the full delta a marked Trailrunde's
+  // connectors reached 5.8px and their 6,6 dash pattern read as a solid grey line, which is the whole
+  // visual signal for "this is a connector, not a trail" (user, 2026-08-04, "dann verschwinden die Lücken
+  // fast"). Both are read off the painted SVG, since the constants themselves are unreachable from here.
+  await TM.ui.setSwitch("showDirectionArrowsToggle", true);
+  const arrowPolys = () => TM.map.overlay().filter((p) => p.getAttribute("stroke-width") === "1.2" &&
+                                                          p.getAttribute("fill") !== "none");
+  const card0 = TM.ui.trailCards()[0];
+  card0.click();
+  await TM.until(() => card0.classList.contains("selected"), 3000);
+  // Arrows only exist above ARROW_MIN_ZOOM (15) and only for trails in view, and the card click's own
+  // flyToTrailBounds is animated -- so in a window with no animation frames it never arrives and the view
+  // stays wherever the previous case left it. Borrow the map (the same getZoom trampoline bearing.js uses,
+  // since `map` is a const in the app's own scope) and put it at 15 with the whole region in view, which
+  // makes "are there arrows" a property of the app rather than of the last case's leftovers.
+  const grabMap = () => {
+    let m = null;
+    const orig = L.Map.prototype.getZoom;
+    L.Map.prototype.getZoom = function () { m = this; return orig.apply(this, arguments); };
+    try { updateStartDotVisibility(); } finally { L.Map.prototype.getZoom = orig; }
+    return m;
+  };
+  const map0 = grabMap();
+  if (map0) { map0.setZoom(15, { animate: false }); }
+  await TM.until(() => arrowPolys().length > 0, 3000);
+  if (!arrowPolys().length) {
+    T.skip("no direction arrows painted at this view -- nothing to read");
+  } else {
+    // Every arrow of the trail that is NOT soloed has to be dimmed on both channels. Reading the minimum
+    // over the whole set is what makes this independent of which trail happens to be soloed.
+    const soloBtn = TM.$("#infoPanel .solo-btn") || TM.$("#infoPanel .ip-btns button[title*='ur dies']");
+    if (!soloBtn) {
+      T.skip("no solo button in the open panel");
+    } else {
+      soloBtn.click();
+      await TM.wait(500);
+      // Leaflet's SVG renderer writes the `opacity` option as **stroke-opacity** and `fillOpacity` as
+      // **fill-opacity**; there is no plain `opacity` attribute to read, and looking for one reports every
+      // arrow as undimmed on a correct app.
+      const dimmed = arrowPolys().filter((p) => +(p.getAttribute("stroke-opacity") || 1) < 0.5);
+      T.ok("some arrows are dimmed by the solo", dimmed.length > 0, dimmed.length, "> 0");
+      const fillsMatch = dimmed.every((p) => {
+        const o = p.getAttribute("stroke-opacity"), f = p.getAttribute("fill-opacity");
+        return f !== null && Math.abs(+f - +o) < 0.001;
+      });
+      T.ok("and every dimmed arrow's FILL is dimmed by the same amount, not left opaque",
+           fillsMatch, dimmed.slice(0, 3).map((p) => p.getAttribute("stroke-opacity") + "/" +
+                                                     p.getAttribute("fill-opacity")), "fill == stroke");
+      soloBtn.click();
+      await TM.wait(400);
+    }
+    // The arrows are also the one place the trail's own difficulty is repeated as a light TINT (2026-08-21,
+    // replacing one fixed white); at least two different tints must be on the map, or the fill is not being
+    // taken from the trail at all. Inside the guard, because on an empty set it would report "no tints" as a
+    // failure -- which is what it did on the run that verified the mutation above, hiding it.
+    const tints = new Set(arrowPolys().map((p) => (p.getAttribute("fill") || "").toLowerCase()));
+    const known = ["#a8e8ba", "#a9cdf5", "#f5aa9d", "#c7c7c7"];
+    T.ok("arrow fills come from the per-difficulty tint set, not one fixed colour",
+         [...tints].every((c) => known.indexOf(c) > -1) && tints.size >= 2,
+         [...tints], ">= 2 of " + known.join("/"));
+  }
+  closeInfoPanelAndDeselect();
+  await TM.wait(200);
+
+  T.test("hovering a Trailrunde grows its connectors by less than a trail's own delta");
+  const hoverTourCard = TM.ui.tourCards()[0];
+  if (!hoverTourCard) {
+    T.skip("no Tour in this region");
+  } else {
+    const widths = () => TM.map.overlay().map((p) => p.getAttribute("stroke-width"));
+    const restWidths = widths();
+    T.ok("at rest a connector is the thin 2.2", restWidths.indexOf("2.2") > -1,
+         restWidths.filter((w) => w === "2.2").length + " at 2.2", ">= 1");
+    hoverTourCard.dispatchEvent(new PointerEvent("pointerenter", { bubbles: true, pointerType: "mouse" }));
+    await TM.wait(300);
+    const hovered = widths();
+    T.ok("hovered, its connectors are 3.0 -- not the trail delta's 5.2",
+         hovered.indexOf("3") > -1 && hovered.indexOf("5.2") === -1,
+         hovered.filter((w) => w === "3" || w === "5.2"), "3 present, 5.2 absent");
+    hoverTourCard.dispatchEvent(new PointerEvent("pointerleave", { bubbles: true, pointerType: "mouse" }));
+    await TM.wait(300);
+    T.ok("and it goes back to 2.2", widths().indexOf("2.2") > -1, "restored", "restored");
+  }
+
   // NOT covered here, deliberately: the sibling fix from the same report -- a Tour riding the same trail
   // twice highlighting the clicked occurrence rather than always the first (selectedSegmentIdx) -- cannot be
   // reached from a pasted suite. It needs `lineTrails` and `TRAIL_SEGMENTS` to find a Tour that repeats a

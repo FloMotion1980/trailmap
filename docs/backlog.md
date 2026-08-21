@@ -119,6 +119,15 @@ this section in the same commit as the code**, the same standing rule `CHANGELOG
     a segmented Tour, `applyRideMapOffset` in portrait AND landscape, and the info panel's speed/
     altitude/trail-row content) — while building it, it surfaced a REAL, previously-unreported crash (see
     the next bullet), not just a test-writing exercise.
+  - **2026-08-21: the suite is 22 cases and the crash fix itself is now pinned.** Added: `safeMapStop`'s
+    reentrancy guard (driven through the app's own `dragstart` listener, mutation-checked — without the
+    guard the stub records twelve nested `map.stop()` entries, which is the "Maximum call stack size
+    exceeded" the user hit on their phone), `withRideCooldown` (a double tap is ONE transition, and the
+    second tap is deferred rather than dropped), `applyRideMapOffset`'s cached-value early return (the
+    thing that stops it re-entering itself forever through the app's own ResizeObserver), the speed
+    number's centring in BOTH orientations, and `#rideInfoStats` not being baseline-aligned. Nothing on
+    this list is left uncovered except the RIDE-only look of `#mapControls` (the 44→64px growth), which
+    `controls` could take on cheaply. See `tests/MUTATIONS.md` for each mutation and its exact failure.
 - **FIXED (2026-08-16): entering RIDE mode (or just toggling "Blickrichtung oben" rapidly) could crash the
   whole app with "Karte konnte nicht geladen werden" / `Script error.`** — confirmed by the user on their own
   phone independently of this session's testing ("Immer beim Einschalten des Ride Modes... auch oft
@@ -191,7 +200,12 @@ this section in the same commit as the code**, the same standing rule `CHANGELOG
   materialising it by asking `map.getRenderer()` about a pane nothing used. 126 → 86 MB. **Still open, in
   order of appeal:**
   - **`LIFT_BAND_PANE` pays a full 39.9 MB for 63 short lift paths, and is a wholly empty surface in every
-    region that has no lifts** — Donnersberg, Pfälzerwald, Odenwald, Finale. Two questions worth separating:
+    region that has no lifts** — Donnersberg, Pfälzerwald, Odenwald, Finale, and now the Gardasee and
+    Madeira. **Measured again 2026-08-21 with only the Gardasee active** (911 trails, 1 822 paths, no lifts)
+    at a 375x812 viewport: RIDE costs 30.4 MB across two panes and **15.2 MB of that is the empty lift
+    pane** — half the region's entire vector footprint for zero paths. That is the same waste the builder
+    pane paid until it was removed, in a region that cannot ever use the pane at all, which makes this the
+    clearest case yet for gating it on whether the active regions have any lifts. Two questions worth separating:
     whether it needs the rotation padding at all (re-rasterising 63 short lines per degree is far cheaper than
     doing it for 655), and whether it should exist when the active regions have no lifts. The pane itself
     cannot simply be dropped: the lift's grey mask must sit UNDER the trails and OVER the tiles, and Leaflet
@@ -273,6 +287,30 @@ hat auch die verbliebenen kleinen Sprünge geschlossen.
   werden sollen. Aktuell liegt alles in `tools/close_loop_gaps.py` (Python, Build-Zeit) — der Tourenbuilder
   läuft im Browser, es ist also noch offen, ob die Logik portiert oder vorberechnet wird.
 
+
+## Test-Abdeckung: was noch keine Suite beansprucht
+
+Swept 2026-08-21 by asking the runner itself which tracked files no suite's `@files` claims — that list IS
+the to-do list for the library (`tests/README.md` says as much). Closed that night: the Trailforks
+harvest/build pair (new `trailforks` suite), `close_loop_gaps.py`'s offline half (new `loopgaps` suite), and
+`gpx_map_match.py`, whose own regression harness existed but **always exited 0** and was claimed by nothing
+— it compares against a committed per-case baseline now and is wired in as the `gpxmatch` suite (SLOW,
+~2–4 min, selected only when the matcher changes).
+
+Still unclaimed, in rough order of what a silent regression would cost:
+
+- **`tools/add_region_places.py`** — real logic nobody tests: the per-sub-region quota,
+  `MIN_SEPARATION_KM`, the population/type ranking. A bad change here quietly makes a region's labels
+  useless (it already needed a per-region cap for the Gardasee, see `docs/gardasee.md`). Offline-testable
+  apart from the Overpass call.
+- **`tools/region_dupe_check.py`** — the duplicate metric every new region's build leans on. The metric's
+  own primitives in `pfaelzerwald_containment.py` are claimed; the wrapper is not.
+- **`tools/harvest_schwarzwald_tf.py`** — superseded by `harvest_trailforks.py` for anything new. Worth
+  DELETING rather than testing, once someone confirms nothing still runs it.
+- One-off region scripts (`pfaelzerwald_*.py`, `vogesen_boundary.py`, `add_lifts.py`,
+  `add_harz_lifts_places.py`, `gap_variants.py`) and the two harvest servers (`harvest_receiver.py`,
+  `oa_harvest_server.py`). These ran once and produced committed data that IS checked (`regiondata`,
+  `validate_region.py`), so testing them now buys little — leave them.
 
 ## Regionen
 

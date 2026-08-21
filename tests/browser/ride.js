@@ -254,14 +254,21 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
       const atAnchor = async () => { m2.setView(anchorCentre, 16, { animate: false }); await TM.wait(600); };
       const withFocus = chevronShapes(), tri = triNodes();
       T.eq("exactly one triangle layer, holding several arrows in one node", tri.length, 1);
+      // `tri[0]` used to be dereferenced straight after that check. When the count is 0 -- which is what a
+      // real regression looks like -- the read THREW, and a throw here aborts the whole suite and takes the
+      // eight cases below it with it (bearing.js had the identical defect, and it is what its "flakes" were).
+      // A broken app has to produce failures, not an abort, so every read of it is guarded from here on.
+      const tri0 = tri.length ? tri[0] : null;
       T.ok("it is a filled polygon with a dark edge, not a stroke-only chevron",
-           tri[0].getAttribute("stroke") === "#2a2a2a" && (tri[0].getAttribute("d") || "").indexOf("z") > -1,
-           tri[0].getAttribute("stroke") + " / " + (tri[0].getAttribute("d") || "").slice(-2), "#2a2a2a / closed");
+           tri0 && tri0.getAttribute("stroke") === "#2a2a2a" &&
+           (tri0.getAttribute("d") || "").indexOf("z") > -1,
+           tri0 ? tri0.getAttribute("stroke") + " / " + (tri0.getAttribute("d") || "").slice(-2)
+                : "no triangle layer at all", "#2a2a2a / closed");
       // Batching, not quantity: every arrow is a sub-path of the SAME node. How MANY there are is a
       // property of the grid and the current view (see the grid case below) -- since RIDE started deriving
       // them from the visible stretch, one is a perfectly correct answer for a short trail, and this check
       // used to demand "more than one" from the old whole-trail sampling and failed on a correct app.
-      const triShapes = ((tri[0].getAttribute("d") || "").match(/M/g) || []).length;
+      const triShapes = tri0 ? ((tri0.getAttribute("d") || "").match(/M/g) || []).length : 0;
       T.ok("every arrow is a sub-path of that one node", triShapes >= 1 && tri.length === 1,
            triShapes + " arrows in " + tri.length + " node(s)", ">= 1 arrow in exactly 1 node");
       // The regression this case exists for as much as the feature: highlightSelectedTrail brings the
@@ -651,6 +658,122 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
   }
   exitRideMode();
   await TM.wait(400);
+
+  T.test("a map.stop() arriving while another is still unwinding is a no-op, not a recursion");
+  // The crash the user hit on their own phone, repeatedly, just by toggling RIDE: "Maximum call stack size
+  // exceeded", shown as the fatal panel. Cause (from a FULL stack trace, after several truncated ones each
+  // looked like a different Leaflet-internal bug): cancelling a mid-flight flyTo makes Leaflet's own stop()
+  // fire "zoomstart", this app's zoomstart listener turns that into handleUserGestureStart(), and THAT calls
+  // map.stop() again -- an infinite loop between our handler and Leaflet, not a Leaflet bug.
+  //
+  // The mid-flight animation is not reproducible on demand (and not reproducible AT ALL where animation
+  // frames do not run), so what is driven here is the mechanism rather than the trigger: stop() is stubbed to
+  // fire the event it really fires, which is exactly what Leaflet does. The stub is DEPTH-CAPPED on purpose --
+  // without a cap a missing guard hangs or kills the page instead of failing a check, and a test that takes
+  // the browser with it reports nothing.
+  {
+    const realStop = L.Map.prototype.stop;
+    let depth = 0, maxDepth = 0, entered = 0, fire = null;
+    L.Map.prototype.stop = function () {
+      entered++; depth++; maxDepth = Math.max(maxDepth, depth);
+      if (depth < 12 && fire) this.fire(fire);
+      try { return realStop.apply(this, arguments); } finally { depth--; }
+    };
+    try {
+      fire = "dragstart"; entered = 0; maxDepth = 0;
+      handleUserGestureStart();
+      // This is the check with teeth. "dragstart" re-enters through map.on("dragstart",
+      // handleUserGestureStart), which nothing suppresses, so ONLY safeMapStop's own `mapStopInProgress`
+      // reentrancy guard can stop it.
+      T.eq("a dragstart raised from inside stop() does not come back into stop()", maxDepth, 1);
+      T.eq("stop() itself was entered once", entered, 1);
+      fire = "zoomstart"; entered = 0; maxDepth = 0;
+      handleUserGestureStart();
+      // Belt and braces, and worth saying so rather than implying otherwise: this path is covered TWICE
+      // (safeMapStop sets expectingOwnZoomChange for its own duration, so the zoomstart listener bows out
+      // before it even calls handleUserGestureStart), so removing either guard alone leaves it passing.
+      T.eq("nor does a zoomstart", maxDepth, 1);
+    } finally {
+      L.Map.prototype.stop = realStop;
+    }
+  }
+
+  T.test("the RIDE button's cooldown collapses a double tap into one transition, then honours the second");
+  // Added with safeMapStop after the same crash: two taps landing inside RIDE_TOGGLE_COOLDOWN_MS must not
+  // fire two transitions into each other. The second tap is DEFERRED, not dropped ("a fast double-tap still
+  // ends up doing something, just slightly delayed"), which is what the second half checks -- a version that
+  // simply swallowed it would pass the first check and fail here.
+  exitRideMode();
+  await TM.wait(500);
+  TM.$("#rideModeBtn").click();
+  TM.$("#rideModeBtn").click();
+  await TM.wait(150);
+  T.ok("straight after a double tap the app is riding, not back where it started",
+       document.documentElement.classList.contains("ride-mode"),
+       document.documentElement.className, "ride-mode");
+  const left = await TM.until(() => !document.documentElement.classList.contains("ride-mode"), 2000);
+  T.ok("and once the cooldown elapses the deferred second tap leaves RIDE again", left, left, true);
+  await TM.wait(200);
+
+  T.test("applyRideMapOffset does nothing at all when nothing about the container changed");
+  // map.getContainer() IS #map, the very element this function resizes, and the app's own ResizeObserver
+  // watches it -- so a version without the cached-value early return re-enters itself through its own
+  // resize, forever, re-panning the map on every pass. The cheapest proof that the early return is real:
+  // poke the inline style it would write and demand the function leave it alone.
+  enterRideMode();
+  await TM.wait(400);
+  {
+    const mapEl = TM.$("#map");
+    const applied = mapEl.style.top;
+    mapEl.style.top = "-999px";
+    applyRideMapOffset();
+    T.eq("a repeat call left the poked style untouched, i.e. it really returned early",
+         mapEl.style.top, "-999px");
+    mapEl.style.top = applied;
+    clearRideMapOffset();
+    T.eq("clearRideMapOffset resets the inline offset", mapEl.style.top, "");
+    applyRideMapOffset();
+    T.ok("and after that reset it applies the offset again rather than staying skipped",
+         /^-?\d+px$/.test(mapEl.style.top), mapEl.style.top, "a px offset");
+  }
+
+  T.test("the RIDE readout's speed number is centred in the panel, in both orientations");
+  // Reported twice by the user from the phone, and misattributed to the wrong orientation in between. The
+  // cause was structural: `.ride-big-stat` lays the number and its "km/h" unit out as ONE inline-flex box,
+  // and centring THAT box puts the unit's own width on one side of the number, so the number itself sits
+  // left of centre. Landscape never had it because its own override stacks number and unit as separate
+  // lines. The portrait fix takes the unit out of flow (position:absolute, left:100%), so what gets centred
+  // is the number's own box -- which is exactly what this measures, in both layouts.
+  {
+    const centreDelta = () => {
+      const panel = TM.$("#rideInfoPanel").getBoundingClientRect();
+      const num = TM.$("#rideInfoSpeed").getBoundingClientRect();
+      return Math.round((num.left + num.width / 2) - (panel.left + panel.width / 2));
+    };
+    document.documentElement.classList.remove("landscape-compact");
+    applyRideMapOffset();
+    await TM.wait(200);
+    T.ok("portrait: the km/h number's own centre is the panel's centre",
+         Math.abs(centreDelta()) <= 4, centreDelta(), "within 4px of 0");
+    document.documentElement.classList.add("landscape-compact");
+    applyRideMapOffset();
+    await TM.wait(250);
+    T.ok("landscape-compact: still centred in its own column",
+         Math.abs(centreDelta()) <= 4, centreDelta(), "within 4px of 0");
+    document.documentElement.classList.remove("landscape-compact");
+    applyRideMapOffset();
+    await TM.wait(200);
+  }
+
+  T.test("the RIDE readout's three trail stats sit on one visual line");
+  // iOS's own emoji font has different vertical metrics from plain digits, so a baseline-aligned row put the
+  // two Hm spans (each starting with an emoji) visibly lower than the length -- reported from the phone and
+  // invisible in this sandbox's Chromium, which is why the fix was `align-items:center` rather than a
+  // measured per-font nudge. What is checkable anywhere is that nothing in the row is baseline-aligned any
+  // more: the property, not the symptom.
+  T.eq("#rideInfoStats centres its children instead of aligning their baselines",
+       getComputedStyle(TM.$("#rideInfoStats")).alignItems, "center");
+  T.eq("and so does the row around it", getComputedStyle(TM.$("#rideInfoTrail")).alignItems, "center");
 
   T.test("teardown: leave RIDE mode, restore the real geolocation API");
   exitRideMode();

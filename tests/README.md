@@ -17,12 +17,15 @@ takes **~25 seconds** in a visible window and does not finish at all in a hidden
 hang part-way through is almost always this, not a failure.
 
 Current state, all green:
-**19 suites.** The Python half is **80 cases / 200 checks**, measured 2026-08-20 and green (`appshell`,
-`geomerge`, `ntcregression`, `pipeline`, `regiondata`, `runner`). The browser bundle was last counted on
-2026-08-05 at **133 cases / 605 checks** (bearing 17, controls 6, filters 10, geometry 17, infopanel 16,
-labels 9, lifts 8, lists 16, palette 7, regions 17, solo 10) — `ride` joined it afterwards and is not in that
-figure; `builder` runs on its own with 19 cases / 97 checks. Browser counts are only ever as fresh as the last
-time someone pasted the bundle, so treat the date, not the number, as the claim.
+**20 suites.** The Python half is **101 cases / 286 checks**, measured 2026-08-21 and green (`appshell`,
+`geomerge`, `ntcregression`, `pipeline`, `regiondata`, `runner`, `trailforks`). The browser bundle was last
+counted on 2026-08-21 at **193 cases** across the twelve bundled suites; `builder` runs on its own with 19
+cases / 97 checks. Browser counts are only ever as fresh as the last time someone pasted the bundle, so treat
+the date, not the number, as the claim.
+
+**Two of those cases are skipped on purpose in a window that does not paint** (`bearing`'s eased-transition
+case and `controls`' fold), and one is skipped when the active region happens to have no schwarz Trailrunde
+segment (`palette`). See `TM.paints()` below.
 
 **`ntcregression` is the slow one (~60 s)** and it is a Python suite that runs a real algorithm over three
 tours' worth of OSM ways, not a unit test. That is deliberate — see its own docstring for why a faster
@@ -98,6 +101,7 @@ Two properties this buys, both deliberate:
 | `regions` | activate/deactivate, the limit, persistence, four fresh boots | slowest suite; it really loads data |
 | `controls` | the map control cluster: the segmented column, the readout chip, what covers what | hit-tests five points per control — a covered button is not a state bug, nothing errors |
 | `runner` | `run.py` itself: which suites `--changed` selects, and the GAP report | `@always`; a suite that never runs looks exactly like one that passes |
+| `trailforks` | `harvest_trailforks.py` + `build_trailforks_region.py`: the table/trail-page parsers, the paging rule, the difficulty mapping | the mapping case is data-driven against every harvested table, so it catches a tier nobody has seen yet |
 | `builder` | Tourenbuilder junctions, direction, clipping, drag/swipe | `@standalone`, needs `bikecircus` + builder ON + a phone viewport |
 
 ## Conventions that exist for a reason
@@ -120,6 +124,21 @@ all read like broken filter rules.
 that use Bike Kingdom ids check for a Bike Kingdom card by name, not merely "some lifts exist" — Paznaun has
 lifts and Tours too, and the weak version let six suites run against ids that were not loaded and report
 fifteen confusing failures instead of one honest skip.
+
+**Ask `TM.paints()` before measuring anything an animation produces.** A hidden or background tab runs no
+animation frames — and this project's own preview pane measures zero even when fronted — so neither a CSS
+transition nor Leaflet's animated pan/zoom progresses there. A case that measures the *result* of one reports
+a correct app as broken: that is what the `controls` fold "flake" was (its fold is a `max-width` transition),
+and what made `bearing`'s hit-testing case skip silently (its `flyToTrailBounds` never arrived). Assert the
+contract that holds either way — the class, the requested scroll, the pixel positions — and gate only the
+animated part. `TM.paintFrames` carries the count, so the skip can say how it decided.
+
+**Never dereference `list[0]` after asserting `list.length`.** The assertion fails and the very next line
+throws, and a throw takes out the whole suite — every case after it, plus the app state it was mid-way
+through changing. `bearing`, `ride` and `lifts` all had exactly this, and between them it produced most of
+the "flaky suite" reports: one arrow that had left the view aborted `bearing` half-way through, which left
+the map mid-turn for `controls` and `infopanel` and made three unrelated cases fail. Read through a helper
+that reports `"(nothing painted)"` instead.
 
 **Never sleep to wait for the app; poll.** `TM.until(fn)` for a condition, `TM.settle(fn)` for anything read
 in **pixels**. `flyToTrailBounds` animates for 0.6 s and Leaflet re-projects every marker throughout, which
