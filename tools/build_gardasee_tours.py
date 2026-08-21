@@ -142,6 +142,20 @@ def main(argv):
         coords = [[round(c[0], 6), round(c[1], 6)] for c in flat]
         for s in segs:
             s["coords"] = [[round(c[0], 6), round(c[1], 6)] for c in s["coords"]]
+        # distStart/distEnd per segment, in cumulative km along the concatenated line -- WITHOUT these the
+        # info panel's elevation chart silently falls back to ONE flat colour for the whole Tour (the
+        # trail's own diff), showing no component-trail sections at all. `buildInfoPanelHtml` skips any
+        # segment missing `distStart`, so the failure is invisible in the data and only shows up on screen;
+        # the user reported exactly that. The convention is the one every shipped Tour already uses, checked
+        # against Donnersberg's own numbers rather than guessed: distStart is the cumulative km at the
+        # segment's FIRST point, distEnd at its LAST one, rounded to 3 decimals.
+        seg_cum = cumulative_km(coords)
+        off = 0
+        for s in segs:
+            n = len(s["coords"])
+            s["distStart"] = round(seg_cum[off], 3)
+            s["distEnd"] = round(seg_cum[off + n - 1], 3)
+            off += n
         ele = []
         for c in coords:
             near = min(pts, key=lambda p: haversine_m(c, p[:2]))

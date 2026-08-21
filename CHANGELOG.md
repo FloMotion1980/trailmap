@@ -22,6 +22,17 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-21
+- **Fixed: the Garda Touren's elevation charts drew one flat colour instead of their trail sections.** The
+  segments were written without `distStart`/`distEnd`, and `buildInfoPanelHtml` skips any segment missing
+  `distStart` — so the chart fell back to the Tour's own difficulty colour and showed no component trails.
+  Invisible to everything automated: the concatenation invariant held, the region validated, the browser
+  suites were green (the `infopanel` per-segment-colour case runs against Bike Kingdom, whose Touren have the
+  fields). The user's own eye caught it. Ronda Extrema's chart now draws 14 polylines in 4 colours. The
+  convention was checked against Donnersberg's stored numbers rather than guessed, `validate_region.py` now
+  rejects a Tour whose segments lack the fields, and `regiondata` pins that with a mutation. Running the new
+  check over every region also turned up **7 Touren in four other regions whose last segment ends 0,3–1,4 km
+  early** — real but cosmetic, and recorded in `docs/backlog.md` rather than enforced, since failing four
+  shipped regions would block every commit.
 - **Five Garda Trentino Touren, and a measure for which tours are worth building.** Source is the
   destination's own MTB routes (`gardatrentino.it`), whose tracks come from Outdooractive and had to be
   harvested through a real browser again — that API answers 404 to every plain HTTP client. Nine are

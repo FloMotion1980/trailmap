@@ -91,6 +91,39 @@ def run(t):
     t.ok("and it says what it found", said, said, True)
     t.eq("the region file was restored", io.open(src, encoding="utf-8").read(), backup)
 
+    t.case("a Tour whose segments lost distStart/distEnd is rejected")
+    # The bug this pins was invisible in every automated check and shipped: the five Gardasee Touren were
+    # written without distStart/distEnd, `buildInfoPanelHtml` skips any segment missing distStart, and the
+    # info panel's elevation chart therefore drew ONE flat colour for the whole Tour instead of its
+    # component-trail sections. The concatenation invariant held, the region validated, the browser suites
+    # were green -- the user's own eye caught it. Note the `infopanel` suite's per-segment colour case could
+    # not have: it runs against Bike Kingdom, whose Touren have the fields.
+    seg_region = next((k for k in keys
+                       if (json.loads(io.open(os.path.join(REGIONS, k + ".json"), encoding="utf-8").read())
+                           .get("trailSegments"))), None)
+    if not seg_region:
+        t.ok("no region has trailSegments -- nothing to check", True, "skipped", "skipped")
+    else:
+        src2 = os.path.join(REGIONS, seg_region + ".json")
+        backup2 = io.open(src2, encoding="utf-8").read()
+        data2 = json.loads(backup2)
+        code = None
+        try:
+            first = list(data2["trailSegments"])[0]
+            for fld in ("distStart", "distEnd"):
+                data2["trailSegments"][first][0].pop(fld, None)
+            io.open(src2, "w", encoding="utf-8", newline="\n").write(json.dumps(data2, ensure_ascii=False))
+            out2 = subprocess.run([sys.executable, os.path.join(TOOLS, "validate_region.py"), seg_region],
+                                  capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                  cwd=ROOT)
+            code = out2.returncode
+            named = "distStart" in (out2.stdout + out2.stderr)
+        finally:
+            io.open(src2, "w", encoding="utf-8", newline="\n").write(backup2)
+        t.ok("non-zero exit when a segment has no distStart/distEnd", code not in (0, None), code, "non-zero")
+        t.ok("and it names the missing field", named, named, True)
+        t.eq("the region file was restored", io.open(src2, encoding="utf-8").read(), backup2)
+
     t.case("every trailCount in the catalog matches its region file")
     counts = dict(re.findall(r'file:\s*"regions/([a-z0-9_]+)\.json",\s*\n?\s*trailCount:\s*(\d+)', catalog_body))
     if not counts:      # the fields may be on one line in either order; fall back to a per-entry scan

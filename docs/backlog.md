@@ -250,6 +250,30 @@ this section in the same commit as the code**, the same standing rule `CHANGELOG
   already-shipped behaviour. Not scoped into a concrete list yet — do this as a deliberate pass next time,
   cross-referencing CLAUDE.md's per-feature bullets against `tests/browser/*.js`'s `@touches` headers.
 
+## Touren-Segmentbereiche (distStart/distEnd)
+
+**7 Touren enden zu früh, kosmetisch.** Found 2026-08-21 by the validator check added the same day: their
+last segment's `distEnd` falls short of the line's own length, so the elevation chart's final tint stops
+before the end of the profile. The FIELDS are present, so the per-segment colouring itself is correct —
+this is only the tail.
+
+| Tour | distEnd | Linie | fehlt |
+|---|---|---|---|
+| `laax_tour_vorab` | 20,711 | 21,768 | 1,06 km (4,9 %) |
+| `laax_tour_crap_masegn` | 18,823 | 19,371 | 0,55 km (2,8 %) |
+| `laax_tour_gletscher_rhein` | 43,232 | 43,508 | 0,28 km (0,6 %) |
+| `pag_lake_to_lake` | 75,296 | 76,726 | 1,43 km (1,9 %) |
+| `pag_bear_trails` | 61,141 | 61,931 | 0,79 km (1,3 %) |
+| `pds_tour_vtt_2025` | 100,246 | 100,911 | 0,67 km (0,7 %) |
+| `ow_soe_combo_rotkogl` | 12,441 | 12,330 | 0,11 km **zu viel** |
+
+Cause: those were built by older scripts that took the ranges from the recording's own cumulative distance
+rather than from the concatenated segment line. The fix is one pass per region recomputing the ranges the
+way `tools/build_gardasee_tours.py` now does (`distStart = cum[offset]`, `distEnd = cum[offset+n-1]` over
+the concatenated coords, 3 decimals — verified against Donnersberg's own stored numbers). Deliberately NOT
+enforced by `validate_region.py`, because failing four shipped regions would block every commit for a
+defect nobody has reported; see the comment at that check.
+
 ## Trailrunden-Lückenschließen (tools/close_loop_gaps.py)
 
 **Die Methodik steht jetzt in `docs/trailrunden-lueckenschliessen.md`** — Leitgedanken, Prioritätsstufen,

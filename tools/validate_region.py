@@ -187,6 +187,28 @@ def check(key, cat):
                 bad.append("%s: segment references unknown trail %r" % (tid, s["trailId"]))
             if s.get("liftId") and s["liftId"] not in {l["id"] for l in lifts}:
                 bad.append("%s: segment references unknown lift %r" % (tid, s["liftId"]))
+        # Every segment needs distStart/distEnd, and the failure without them is INVISIBLE in the data:
+        # buildInfoPanelHtml skips any segment missing distStart, so the info panel's elevation chart
+        # silently falls back to ONE flat colour for the whole Tour and shows no component-trail sections at
+        # all. The five Gardasee Touren shipped that way on 2026-08-21 and only the user's own eye caught it.
+        # A Tourenbuilder export legitimately omits these fields (its gaps are unclosed, so the distances
+        # would be fabrications) -- but an export is not a region file, and every Tour in every shipped
+        # region has them.
+        missing = [i for i, s in enumerate(seglist)
+                   if s.get("distStart") is None or s.get("distEnd") is None]
+        if missing:
+            bad.append("%s: %d of %d segments have no distStart/distEnd -- the elevation chart will draw "
+                       "one flat colour instead of per-segment sections"
+                       % (tid, len(missing), len(seglist)))
+        elif seglist and abs(seglist[0]["distStart"]) > 0.002:
+            bad.append("%s: first segment starts at %.3f km, not 0" % (tid, seglist[0]["distStart"]))
+        # NOT checked: whether the LAST segment's distEnd reaches the end of the line. It does not, for 7
+        # Touren across laax/paganella/portesdusoleil/soelden, falling short by 0.3-1.4 km (up to 4.9 % of
+        # the line) -- those were built by older scripts that took the ranges from the recording rather than
+        # from the concatenated segment line. Real, but purely cosmetic: the FIELDS are present, so the
+        # chart still colours per segment and only its last tint stops early. Failing four shipped regions
+        # on it would block every commit for a defect nobody has reported, so it is recorded in
+        # docs/backlog.md instead of enforced here.
 
     # A region with no place labels is unreadable zoomed out -- and it is a silent failure, because nothing
     # else complains. It happened on 2026-07-30: a rebuild of Bike Kingdom's trail geometry rewrote the region
