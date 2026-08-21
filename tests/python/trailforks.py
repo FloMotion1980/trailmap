@@ -2,7 +2,7 @@
 """
 @suite   trailforks
 @area    The Trailforks harvest and the region build that runs on it
-@files   tools/harvest_trailforks.py, tools/build_trailforks_region.py
+@files   tools/harvest_trailforks.py, tools/build_trailforks_region.py, Material/*/trailforks_table.json
 @touches parse_table, parse_trail, decode_polyline, harvest_tables, ALL_DIFF, PAGE_ROWS, ACCESS_DIFF, TF_DIFF, sid, CONFIGS, build
 
 Two regions (Madeira, Gardasee) are built entirely from what these two files read out of Trailforks' own
