@@ -87,6 +87,11 @@ def sid(prefix, tf_slug):
 # --------------------------------------------------------------------------------------------------
 # The per-region data. An anchor is (lat, lon, sub-region key, name shown in the drop report).
 # --------------------------------------------------------------------------------------------------
+#: A sub-region label is capped at 15 characters, measured rather than chosen: the sidebar's chip row is
+#: 299px, two chips fit a line only at ~146px each, and the count (" (155)") spends six of those characters.
+#: Both of these regions shipped at an average of 21 and put every chip on its own line -- ten lines for the
+#: Gardasee alone. Keep the name a rider would type (it is also the region dialog's search haystack) and put
+#: the full place list in the region's doc instead.
 CONFIGS = {
     # Madeira: a shuttle island, not a lift island -- every classic descent starts from a van drop, so
     # there is deliberately NO `lifts` array, the same as Odenwald/Pfälzerwald/Donnersberg.
@@ -94,12 +99,12 @@ CONFIGS = {
         prefix="md", label="Madeira", countries=["PT"], material="Madeira",
         max_anchor_km=15.0,
         subregions=[
-            ("md_east",        "Machico & Santo da Serra", "#3a7a4a"),
-            ("md_funchal",     "Funchal & Pico do Arieiro", "#3a6b8a"),
-            ("md_north",       "Santana & São Vicente",     "#8a3a63"),
-            ("md_west",        "Calheta & Paul da Serra",   "#8a6a2a"),
-            ("md_northwest",   "Porto Moniz & Ponta do Pargo", "#2a7a7a"),
-            ("md_porto_santo", "Porto Santo",               "#6b4a8a"),
+            ("md_east",        "Machico",         "#3a7a4a"),
+            ("md_funchal",     "Funchal/Arieiro", "#3a6b8a"),
+            ("md_north",       "São Vicente",     "#8a3a63"),
+            ("md_west",        "Calheta",         "#8a6a2a"),
+            ("md_northwest",   "Ponta do Pargo",  "#2a7a7a"),
+            ("md_porto_santo", "Porto Santo",     "#6b4a8a"),
         ],
         anchors=[
             (32.7186, -16.7674, "md_east", "Machico"),
@@ -140,16 +145,16 @@ CONFIGS = {
         prefix="gd", label="Gardasee & Trentino", countries=["IT"], material="Gardasee",
         max_anchor_km=12.0,
         subregions=[
-            ("gd_garda_trentino", "Riva, Torbole & Arco",      "#0f766e"),
-            ("gd_sarca",          "Valle del Sarca & Laghi",   "#0891b2"),
-            ("gd_baldo",          "Monte Baldo & Gardaostufer", "#be185d"),
-            ("gd_garda_west",     "Gardawestufer",             "#c2410c"),
-            ("gd_valsabbia",      "Valle Sabbia & Idrosee",    "#7c3aed"),
-            ("gd_brescia",        "Brescia & Val Trompia",     "#475569"),
-            ("gd_verona",         "Verona & Lessinia",         "#7f1d1d"),
-            ("gd_trento",         "Trento & Monte Bondone",    "#1d4ed8"),
-            ("gd_rovereto",       "Rovereto & Vallagarina",    "#b45309"),
-            ("gd_valsugana",      "Valsugana & Altopiani",     "#4d7c0f"),
+            ("gd_garda_trentino", "Riva/Torbole",    "#0f766e"),
+            ("gd_sarca",          "Valle del Sarca", "#0891b2"),
+            ("gd_baldo",          "Monte Baldo",     "#be185d"),
+            ("gd_garda_west",     "Gardawestufer",   "#c2410c"),
+            ("gd_valsabbia",      "Valle Sabbia",    "#7c3aed"),
+            ("gd_brescia",        "Brescia",         "#475569"),
+            ("gd_verona",         "Verona",          "#7f1d1d"),
+            ("gd_trento",         "Trento",          "#1d4ed8"),
+            ("gd_rovereto",       "Rovereto",        "#b45309"),
+            ("gd_valsugana",      "Valsugana",       "#4d7c0f"),
         ],
         anchors=[
             (45.8856, 10.8434, "gd_garda_trentino", "Riva del Garda"),

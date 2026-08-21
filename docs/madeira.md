@@ -48,14 +48,19 @@ useless area name "Madeira" or "Madeira Island", and they are spread over the wh
 goes to the sub-region of its **nearest anchor town** (23 anchors, in
 `tools/build_trailforks_region.py`'s `CONFIGS`), with a 15 km ceiling that nothing reached.
 
-| sub-region | trails | what it is |
-|---|---|---|
-| `md_funchal` | 52 | Funchal, Monte, Poiso, Pico do Arieiro, Curral das Freiras, Câmara de Lobos |
-| `md_east` | 27 | Machico, Santo da Serra, Caniçal, Porto da Cruz |
-| `md_west` | 27 | Calheta, Paul da Serra, Prazeres, Ribeira Brava |
-| `md_northwest` | 25 | Porto Moniz, Fanal, Ponta do Pargo |
-| `md_north` | 23 | Santana, Faial, São Vicente, Encumeada, Seixal |
-| `md_porto_santo` | 4 | the second island |
+| sub-region | label | trails | what it covers |
+|---|---|---|---|
+| `md_funchal` | Funchal/Arieiro | 52 | Funchal, Monte, Poiso, Pico do Arieiro, Curral das Freiras, Câmara de Lobos |
+| `md_east` | Machico | 27 | Machico, Santo da Serra, Caniçal, Porto da Cruz |
+| `md_west` | Calheta | 27 | Calheta, Paul da Serra, Prazeres, Ribeira Brava |
+| `md_northwest` | Ponta do Pargo | 25 | Ponta do Pargo, Fanal, Porto Moniz |
+| `md_north` | São Vicente | 23 | São Vicente, Santana, Faial, Encumeada, Seixal |
+| `md_porto_santo` | Porto Santo | 4 | the second island |
+
+**The labels are capped at 15 characters**, for the measured reason written up in `docs/gardasee.md`: at the
+first version's average of 22 every one of these six chips sat on its own line. The label doubles as the
+region dialog's search haystack, so each keeps one name a rider would type; the rest of each hub's places are
+in the right-hand column.
 
 Difficulties come out 10 grün / 75 blau / 55 rot / 18 schwarz.
 

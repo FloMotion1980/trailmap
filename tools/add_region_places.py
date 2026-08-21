@@ -75,6 +75,15 @@ MAX_PLACES_BY_REGION = {
     # region named after that lake. 20 is what gives each of the ten brackets its own two.
     "gardasee": 20,
 }
+#: Places a region must keep whatever the ranking decides, by their exact OSM name. Only ever for a name the
+#: USER has called out, because "this settlement matters" is not something this script can derive from
+#: geometry or population. The Gardasee's **Riva del Garda and Torbole** are the two best-known shuttle
+#: starts on the lake (user, 2026-08-21) and both were being dropped: Riva by MIN_SEPARATION_KM against Arco
+#: 3 km away, Torbole by its own bracket's quota. A forced place is exempt from the separation rule AND the
+#: quota, and sorts first, exactly like a sub-region namesake.
+FORCE_PLACES = {
+    "gardasee": ("Riva del Garda", "Torbole"),
+}
 MIN_VILLAGE_POP = 600     # see the note below
 KNOWN_MAX_KM = 2.0        # for places that carry a wikidata/wikipedia tag but are small
 RANK = {"city": 0, "town": 1, "village": 2, "hamlet": 3}
@@ -151,7 +160,7 @@ def fetch_places(data):
     return overpass(query)["elements"]
 
 
-def pick(data, elements, sub_labels, allow_hamlets, cap=None):
+def pick(data, elements, sub_labels, allow_hamlets, cap=None, key=None):
     """Which OSM place nodes deserve a label on this region's map.
 
     Distance alone is not enough. Austria in particular tags a lot of tiny hamlet-sized settlements as
@@ -165,7 +174,11 @@ def pick(data, elements, sub_labels, allow_hamlets, cap=None):
     # would be millions of pairs for Pfälzerwald's 437 trails.
     coarse = trail_points(data, 25)
     fine = trail_points(data, 3)
-    haystack = " ".join(sub_labels).lower()
+    forced_names = set(FORCE_PLACES.get(key, ()))
+    # Split on "/" and "&" as well as on the label boundary: "Fiss/Ladis" is two names, and each has to be
+    # matchable on its own (that is the case the namesake rule was built for).
+    parts = [x.strip().lower() for lab in sub_labels for x in re.split(r"[/&]", lab)
+             if len(x.strip()) >= 4]
     out = []
     for el in elements:
         tags = el["tags"]
@@ -193,7 +206,17 @@ def pick(data, elements, sub_labels, allow_hamlets, cap=None):
         # and then knocked out Freiburg itself, a city of 230 000, for sitting within 8 km of it. Found
         # 2026-08-20 while building the Schwarzwald; a region only re-picks its places under --force, so
         # this changes no shipped list until one is deliberately rebuilt.
-        named = re.search(r"\b%s\b" % re.escape(name.lower()), haystack) is not None
+        # A whole LABEL PART, not merely a whole word inside one. The word rule let "Monte" (pop 0) and
+        # "Valle" (pop 0) in as namesakes of the Gardasee the moment its sub-region labels were shortened to
+        # "Monte Baldo" and "Valle Sabbia" -- and a namesake both sorts first and is exempt from
+        # MIN_SEPARATION_KM, so two empty hamlets took slots from real towns. It is also a cleaner fix for
+        # the same bug the word rule was itself written for ("Au" matching inside "Bikepark Todtnau"):
+        # a part has to BE the place, or be the start of its name ("Riva" for "Riva del Garda"), and the
+        # generic head of an Italian name is never a part on its own.
+        low = name.lower()
+        named = any(low == part or re.match(r"%s" % re.escape(part), low)
+                    for part in parts)
+        forced = name in forced_names
         # Three ways for a small settlement to qualify, and proximity is deliberately NOT one of them: in a
         # bike park the trails run past everything, so distance alone gave Bikecircus three slots to Grießen
         # (79 inhabitants), Berg (130) and Rain (229), and gave Sölden nine unnamed hamlets (Wildmoos, Platte,
@@ -212,10 +235,10 @@ def pick(data, elements, sub_labels, allow_hamlets, cap=None):
                 continue
         out.append({"name": name, "lat": round(el["lat"], 5), "lng": round(el["lon"], 5),
                     "_kind": kind, "_km": round(exact, 2), "_pop": pop, "_named": named,
-                    "_known": known})
+                    "_known": known, "_forced": forced})
     # Sub-region namesakes first, then bigger before smaller, then nearer before further: what survives the
     # cap should be what a rider would use to orient themselves.
-    out.sort(key=lambda p: (not p["_named"], RANK[p["_kind"]], -p["_pop"], p["_km"]))
+    out.sort(key=lambda p: (not p["_forced"], not p["_named"], RANK[p["_kind"]], -p["_pop"], p["_km"]))
 
     # Which sub-region each candidate belongs to, and how many labels that sub-region may have.
     per_sub = {}
@@ -238,11 +261,11 @@ def pick(data, elements, sub_labels, allow_hamlets, cap=None):
         # called by, so losing it to a merely-bigger neighbour defeats the point of having labels at all.
         # La Bresse (4 041, and the name of an 82-trail bracket plus a bike park) was dropped for sitting
         # 8.15 km from Gerardmer, i.e. by 150 m of threshold.
-        if not cand["_named"] and any(
+        if not cand["_named"] and not cand["_forced"] and any(
                 haversine_m(here, (k["lat"], k["lng"])) / 1000.0 < MIN_SEPARATION_KM for k in kept):
             continue
         sub = min(owner, key=lambda sr: min(haversine_m(here, c) for c in owner[sr]))
-        if used.get(sub, 0) >= quota.get(sub, SUB_QUOTA_MAX):
+        if used.get(sub, 0) >= quota.get(sub, SUB_QUOTA_MAX) and not cand["_forced"]:
             continue
         used[sub] = used.get(sub, 0) + 1
         cand["_sub"] = sub
@@ -268,14 +291,14 @@ def main(argv):
             continue
         labels = sub_region_labels(key) or build_script_labels(key) or [key]
         cap = MAX_PLACES_BY_REGION.get(key, MAX_PLACES)
-        picked = pick(data, elements, labels, allow_hamlets=False, cap=cap)
+        picked = pick(data, elements, labels, allow_hamlets=False, cap=cap, key=key)
         if len(picked) < 2:      # a park whose valley village is tagged as a hamlet would end up empty
-            picked = pick(data, elements, labels, allow_hamlets=True, cap=cap)
+            picked = pick(data, elements, labels, allow_hamlets=True, cap=cap, key=key)
         print("%-16s %2d von %3d Kandidaten: %s" % (
             key, len(picked), len(elements),
             ", ".join("%s (%s, %.1f km, pop %d%s%s)" % (
                 p["name"], p.get("_sub", p["_kind"]), p["_km"], p["_pop"],
-                ", Namensgeber" if p["_named"] else "",
+                ", gesetzt" if p.get("_forced") else ", Namensgeber" if p["_named"] else "",
                 ", bekannt" if p["_known"] and not p["_named"] else "")
                       for p in picked)))
         if dry or not picked:

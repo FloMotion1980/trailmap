@@ -22,6 +22,32 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-21
+- **The Gardasee's and Madeira's sub-region labels were too long, measured and fixed.** Every chip sat on its
+  own line — ten lines for the Gardasee alone — because the chip row is 279px on a phone, two chips only fit
+  at ~136px each, and the count (" (155)") spends six of a label's characters. Labels are capped at 15
+  characters now (`Riva/Torbole`, `Valle del Sarca`, `Monte Baldo`, `Funchal/Arieiro` …): five lines of two
+  for the Gardasee, three for Madeira, with 13px of headroom on the worst pair — deliberately not tuned to
+  the exact shortfall, since the first attempt kept `Verona/Lessinia` + `Trento/Bondone` at 137px each, i.e.
+  280 against 279, and they wrapped. The full place list per hub moved into the two region docs, because the
+  label is also the region dialog's search haystack and each one now keeps the name a rider would type.
+- **The Malcesine–Monte Baldo cable car is in, both sections.** The user researched the summer bike transport
+  themselves, which is the operator-side statement `docs/lifts-feature.md` requires (OSM's own
+  `aerialway:bicycle=yes` agrees on both ways but never decides). Geometry from OSM, elevations from
+  OpenTopoData, stored bottom-station-first: Malcesine 98→545 m and San Michele 550→1741 m, both in
+  `gd_baldo`. **The restricted bike window (mornings and afternoons only) is deliberately NOT in the data** —
+  the same call the user made when a per-lift `closed`/`note` pair was built and dropped: nothing here
+  synchronises lift operating status, so a hardcoded timetable would rot while looking authoritative. It is
+  written up in `docs/gardasee.md`.
+- **Riva del Garda and Torbole are forced into the Gardasee's place labels** (`FORCE_PLACES` in
+  `tools/add_region_places.py`), on the user's own instruction — they are the two best-known shuttle starts,
+  and both were being dropped: Riva by `MIN_SEPARATION_KM` against Arco 3 km away, Torbole by its bracket's
+  quota. Arco loses its label as a direct consequence of that separation rule; it is still in the region's own
+  doc. **The namesake rule was also tightened in the same pass**: it matched any whole WORD inside a
+  sub-region label, so shortening the labels to "Monte Baldo" and "Valle Sabbia" promoted the hamlets "Monte"
+  and "Valle" (population 0 each) to namesakes — which sort first and are exempt from the separation rule, so
+  two empty hamlets took slots from real towns. A namesake now has to match a whole label PART, or be a name
+  that starts with one ("Riva" for "Riva del Garda"), which is also a cleaner fix for the bug the word rule
+  was itself written for ("Au" matching inside "Bikepark Todtnau").
 - **Two new regions, both Trailforks-only: Gardasee & Trentino (911 trails) and Madeira (158).** Source is
   Trailforks end to end — geometry from each trail page's `encodedpath` polyline, elevation from the same
   page's `ElevationChart` (so no elevation API at all; the two lengths cross-check and agreed within 60 m on

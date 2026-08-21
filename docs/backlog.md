@@ -522,9 +522,10 @@ bottom-first by elevation and require the join to keep climbing.
     ("bis Trento, Brescia, Valsugana"), with the lake in the name. See `docs/gardasee.md` for what is in,
     what is deliberately out (the Dolomites north of Trento, Lago d'Iseo, the Val Camonica) and the two new
     data rules it forced out (the White Circle tier, paved cycle infrastructure). **Still open here:**
-    - **The Malcesine–Monte Baldo cable car is missing**, and it is a genuine summer bike lift. Deliberate:
-      a lift's data comes from the operator's own summer page (`docs/lifts-feature.md`), never from OSM's
-      `aerialway:bicycle` tag, and this build was scoped to Trailforks only. Same for anything at Prada.
+    - ~~**The Malcesine–Monte Baldo cable car is missing**~~ — **added 2026-08-21**, both sections, once the
+      user supplied the operator-side fact the lift rule needs (summer bike transport, mornings and
+      afternoons only). The time window is deliberately not stored; see `docs/gardasee.md`. **Still open:**
+      anything at Prada / San Zeno, which nobody has researched.
     - **Coverage gaps with famous names**: Pernici, Tremalzo and Busatte are not in the region. The first
       two are on Trailforks mainly as *routes* rather than trails and the harvester reads trail pages only;
       the 601 is present in pieces. A per-trail addition, not a re-harvest.

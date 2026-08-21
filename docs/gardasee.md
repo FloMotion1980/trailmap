@@ -1,6 +1,6 @@
 # Gardasee & Trentino
 
-**911 trails, 10 sub-regions, no lifts, one source.** Built 2026-08-21 by
+**911 trails, 10 sub-regions, 2 lifts, one source.** Built 2026-08-21 by
 `tools/build_trailforks_region.py gardasee` from a Trailforks harvest
 (`tools/harvest_trailforks.py`). By trail count this is now the largest region in the app — 289 more
 than the Schwarzwald — and its file is 2.9 MB.
@@ -46,23 +46,49 @@ away. So every trail goes to the sub-region of its **nearest anchor town** (88 a
 `tools/build_trailforks_region.py`'s `CONFIGS`), and one further than 12 km from every anchor is not in
 the region at all.
 
-| sub-region | trails | |
-|---|---|---|
-| `gd_valsugana` | 155 | Pergine, Levico, Caldonazzo, Panarotta, Lavarone, Pinè |
-| `gd_verona` | 114 | Verona, Valpolicella, Lessinia |
-| `gd_garda_west` | 114 | Limone, Tremosine, Tignale, Gargnano, Toscolano, Salò |
-| `gd_trento` | 107 | Trento, Monte Bondone, Marzola, Calisio, Terlago |
-| `gd_rovereto` | 90 | Rovereto, Pomarolo, Volano, Mori, Brentonico, Folgaria |
-| `gd_brescia` | 86 | Brescia, Monte Maddalena, Val Trompia, Lumezzane |
-| `gd_garda_trentino` | 82 | Riva, Torbole, Arco, Nago, Ledro, Tremalzo |
-| `gd_valsabbia` | 72 | Idrosee, Bagolino, Vestone, Gavardo, Serle |
-| `gd_sarca` | 49 | Dro, Pietramurata, Sarche, Cavedine, Vezzano |
-| `gd_baldo` | 42 | Malcesine, Brenzone, San Zeno, Prada, Garda, Bardolino |
+**The sidebar label is short on purpose and this table is where the full list lives.** A sub-region label is
+capped at 15 characters, measured rather than chosen: the chip row is 279px on a phone, two chips fit a line
+only at ~136px each, and the count (" (155)") spends six of those characters. The first version averaged 21
+and put **every one of these ten chips on its own line** — ten lines for one region, which is what the user
+noticed. At the short labels it is five lines of two, with 13px of headroom on the worst pair.
 
-248 grün / 374 blau / 183 rot / 106 schwarz. **No `lifts` array**: the Malcesine–Monte Baldo cable car
-is a genuine summer bike lift and belongs here eventually, but a lift's data comes from the operator's
-own summer page (see `docs/lifts-feature.md`), and this build was explicitly scoped to Trailforks only.
-That is a known gap, listed in `docs/backlog.md`, not an oversight.
+| sub-region | label | trails | what it covers |
+|---|---|---|---|
+| `gd_valsugana` | Valsugana | 155 | Pergine, Levico, Caldonazzo, Panarotta, Lavarone, Pinè, the Altopiani |
+| `gd_verona` | Verona | 114 | Verona, Valpolicella, Lessinia |
+| `gd_garda_west` | Gardawestufer | 114 | Limone, Tremosine, Tignale, Gargnano, Toscolano, Salò |
+| `gd_trento` | Trento | 107 | Trento, Monte Bondone, Marzola, Calisio, Terlago |
+| `gd_rovereto` | Rovereto | 90 | Rovereto, Pomarolo, Volano, Mori, Brentonico, Folgaria, Vallagarina |
+| `gd_brescia` | Brescia | 86 | Brescia, Monte Maddalena, Val Trompia, Lumezzane |
+| `gd_garda_trentino` | Riva/Arco | 82 | Riva, Torbole, Arco, Nago, Ledro, Tremalzo |
+| `gd_valsabbia` | Valle Sabbia | 72 | Idrosee, Bagolino, Vestone, Gavardo, Serle |
+| `gd_sarca` | Valle del Sarca | 49 | Dro, Pietramurata, Sarche, Cavedine, Vezzano, Valle dei Laghi |
+| `gd_baldo` | Monte Baldo | 42 | Malcesine, Brenzone, San Zeno, Prada, Garda, Bardolino |
+
+The label is also the region dialog's own **search haystack** (region name + sub-region labels + country, and
+nothing else), so each one keeps the name a rider would actually type — Riva and Arco rather than the
+tourist-board "Garda Trentino". The names that fell out of it are in the right-hand column above.
+
+248 grün / 374 blau / 183 rot / 106 schwarz.
+
+## The one lift, and the thing about it that is deliberately not stored
+
+**Both sections of the Malcesine–Monte Baldo cable car are in**, as two lifts (`lift_gd_malcesine_i`,
+`lift_gd_malcesine_ii`) in `gd_baldo`: Malcesine 98 m → San Michele 545 m (1 423 m of line) and San Michele
+550 m → Monte Baldo 1 741 m (2 547 m). Geometry from OSM ways 117463249 and 338522120, elevations from
+OpenTopoData, stored bottom-station-first like every other lift.
+
+It is in the data because **the user researched the summer bike transport themselves** (2026-08-21) — which
+is the operator-side statement `docs/lifts-feature.md` demands. OSM happens to carry
+`aerialway:bicycle=yes` on both ways and agrees, but per that doc the tag is information only and never the
+decision.
+
+**Bikes only go up in a restricted window — mornings and afternoons — and that is NOT in the data**, on
+purpose. A per-lift `closed`/`note` pair was built once and dropped the same day on the user's own call:
+nothing in this app synchronises lift operating status, so a hardcoded timetable would silently rot while
+looking authoritative. The data therefore states only the stable property, "this lift carries bikes in
+summer", and the window lives here. If it ever belongs in the app, it belongs as something that is fetched,
+not as a string in a region file.
 
 ## What was dropped, and why it is worth knowing
 
@@ -117,9 +143,11 @@ memory is the SURFACE and not the path count — so a region three times as dens
 expensive. No fatal panel and no white screen in either state here. With Madeira active as well the map
 paints 2 138 paths.
 
-**Half of that RIDE figure is an empty pane.** This region has no lifts, so `LIFT_BAND_PANE` holds zero
-paths and still pays a full 15.2 MB padded surface — the same waste the builder pane paid until 2026-08-20.
-It is the top item in `docs/backlog.md`'s memory list, and this region is the clearest evidence for it.
+**Half of that RIDE figure was an empty pane** when the region had no lifts at all: `LIFT_BAND_PANE` held
+zero paths and still paid a full 15.2 MB padded surface, the same waste the builder pane paid until
+2026-08-20. The two Malcesine sections put six paths in it, which does not change the arithmetic — the cost
+is the SURFACE — so this is still the clearest evidence for the top item in `docs/backlog.md`'s memory list,
+just no longer the pure zero-path case. Madeira is that now.
 
 **Place labels needed their own cap.** At the default `MAX_PLACES` of 10 the population ranking spent
 every label on Verona, Brescia, Trento and Rovereto and left the lake anonymous — no Salò, no

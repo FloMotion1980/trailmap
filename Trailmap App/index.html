@@ -1515,13 +1515,14 @@ const REGION_CATALOG = {
   madeira: {
     countries: ["PT"], label: "Madeira", file: "regions/madeira.json", trailCount: 158,
     bounds: [[32.64482, -17.2628], [33.10392, -16.30393]],
+    // Same 15-character budget as the Gardasee above, and for the same measured reason.
     subRegions: {
-      md_east:        { label: "Machico & Santo da Serra",    color: "#3a7a4a" },
-      md_funchal:     { label: "Funchal & Pico do Arieiro",   color: "#3a6b8a" },
-      md_north:       { label: "Santana & São Vicente",       color: "#8a3a63" },
-      md_west:        { label: "Calheta & Paul da Serra",     color: "#8a6a2a" },
-      md_northwest:   { label: "Porto Moniz & Ponta do Pargo", color: "#2a7a7a" },
-      md_porto_santo: { label: "Porto Santo",                 color: "#6b4a8a" }
+      md_east:        { label: "Machico",         color: "#3a7a4a" },
+      md_funchal:     { label: "Funchal/Arieiro", color: "#3a6b8a" },
+      md_north:       { label: "São Vicente",     color: "#8a3a63" },
+      md_west:        { label: "Calheta",         color: "#8a6a2a" },
+      md_northwest:   { label: "Ponta do Pargo",  color: "#2a7a7a" },
+      md_porto_santo: { label: "Porto Santo",     color: "#6b4a8a" }
     }
   },
   // Gardasee & Trentino, 2026-08-21: Trailforks only, on the user's own instruction ("Rein Trailforks, keine
@@ -1531,22 +1532,45 @@ const REGION_CATALOG = {
   // the Sarca and Ledro valleys, Vallagarina, Trento, the Valsugana and Altopiani, Verona's Lessinia, the
   // Valle Sabbia and Brescia. Deliberately OUT: the Dolomites/Val di Sole/Val di Non/Primiero group north of
   // Trento (Dolomiti Paganella is its own region already) and Lago d'Iseo plus the whole Val Camonica.
+  // TWO LIFTS, both sections of the Malcesine-Monte Baldo cable car: the user researched the summer bike
+  // transport themselves (2026-08-21), which is the operator-side statement docs/lifts-feature.md requires --
+  // OSM's own aerialway:bicycle=yes on both ways agrees but never decides. Bikes only go up in a restricted
+  // window (mornings and afternoons); that is deliberately NOT in the data, per the same doc's rule that
+  // nothing here synchronises lift operating status, so a hardcoded flag would rot while looking
+  // authoritative. It is written up in docs/gardasee.md instead.
   // At 957 trails this is by far the largest region in the app -- see docs/gardasee.md on why that is a
   // deliberate one-group decision and what it costs.
   gardasee: {
     countries: ["IT"], label: "Gardasee & Trentino", file: "regions/gardasee.json", trailCount: 911,
     bounds: [[45.44359, 10.10792], [46.22794, 11.38366]],
+    // Labels kept to 15 characters or fewer, which is not a style choice: the sidebar's chip row is 299px
+    // wide, so two chips fit a line only at ~146px each, and the count (" (155)") eats six of those
+    // characters. The first version averaged 21 and put every one of these ten on its own line -- ten lines
+    // for one region (user, 2026-08-21: "dass die Namen der Unterregionen nicht zu lange werden"). Where a
+    // pair of names is worth keeping, "/" buys two characters over " & " (the same style Paznaun's
+    // "Ischgl/Samnaun" already uses). What the shorter label drops is the dialog's SEARCH haystack, which is
+    // the region label plus these -- so each one keeps the name a rider would actually type: Riva and Torbole
+    // rather than the tourist-board "Garda Trentino", and the full place list moved to docs/gardasee.md.
+    // Riva AND Torbole specifically, on the user's own instruction (2026-08-21): "Die Orte Riva del Garda und
+    // Torbole brauchen wir. Das sind die bekanntesten Orte wo die Shuttles starten." Arco keeps its own map
+    // PLACE label, and both of those two are forced into the place list as well -- see FORCE_PLACES in
+    // tools/add_region_places.py, since Riva was losing to Arco 3 km away and Torbole to its bracket's quota.
+    // Measured on the PHONE, whose chip row is 279px and not the desktop's 299: "Verona/Lessinia" and
+    // "Trento/Bondone" were 137px each, i.e. 280 for the pair -- one pixel short, and they wrapped. Both are
+    // the bare city now, which also matches "Brescia" covering Val Trompia. The widest chip left is 130px,
+    // so the worst possible pair has 13px of headroom; do NOT tune that back to the exact shortfall, since
+    // iOS renders the same names slightly wider than Chrome does.
     subRegions: {
-      gd_garda_trentino: { label: "Riva, Torbole & Arco",       color: "#0f766e" },
-      gd_sarca:          { label: "Valle del Sarca & Laghi",    color: "#0891b2" },
-      gd_baldo:          { label: "Monte Baldo & Gardaostufer", color: "#be185d" },
-      gd_garda_west:     { label: "Gardawestufer",              color: "#c2410c" },
-      gd_valsabbia:      { label: "Valle Sabbia & Idrosee",     color: "#7c3aed" },
-      gd_brescia:        { label: "Brescia & Val Trompia",      color: "#475569" },
-      gd_verona:         { label: "Verona & Lessinia",          color: "#7f1d1d" },
-      gd_trento:         { label: "Trento & Monte Bondone",     color: "#1d4ed8" },
-      gd_rovereto:       { label: "Rovereto & Vallagarina",     color: "#b45309" },
-      gd_valsugana:      { label: "Valsugana & Altopiani",      color: "#4d7c0f" }
+      gd_garda_trentino: { label: "Riva/Torbole",    color: "#0f766e" },
+      gd_sarca:          { label: "Valle del Sarca", color: "#0891b2" },
+      gd_baldo:          { label: "Monte Baldo",     color: "#be185d" },
+      gd_garda_west:     { label: "Gardawestufer",   color: "#c2410c" },
+      gd_valsabbia:      { label: "Valle Sabbia",    color: "#7c3aed" },
+      gd_brescia:        { label: "Brescia",         color: "#475569" },
+      gd_verona:         { label: "Verona",          color: "#7f1d1d" },
+      gd_trento:         { label: "Trento",          color: "#1d4ed8" },
+      gd_rovereto:       { label: "Rovereto",        color: "#b45309" },
+      gd_valsugana:      { label: "Valsugana",       color: "#4d7c0f" }
     }
   }
 };
