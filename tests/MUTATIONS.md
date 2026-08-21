@@ -105,6 +105,10 @@ current; a stale count is worse than none, because it looks like evidence.
 | `solo` | drop `fillOpacity` from `setArrowOpacity` | "solo dims a trail's direction arrows, FILL and all" fails: every dimmed arrow reports its stroke at 0.15 and its fill still at 1. Since 2026-08-20 an arrow is a FILLED triangle, so dimming only the stroke leaves a dimmed trail's arrows glowing white. Note the attribute to read is **stroke-opacity**, not `opacity` — Leaflet's SVG renderer writes the option under that name, and the first version of this case looked for `opacity`, found nothing, and reported every arrow as undimmed against a correct app |
 | `solo` | give a connector the trail's own hover delta in `applyLineWeight`, ignoring `_tmBaseWeight` | "hovering a Trailrunde grows its connectors by less than a trail's own delta" fails: a 5.2 turns up where only a 3 should be. At the full delta a marked loop's connectors reach 5.8px and their `6,6` dash reads as a solid grey line — and those gaps ARE the signal for "this is a connector, not a trail" (user, 2026-08-04) |
 
+| `regions` | remove the `PT` entries from `COUNTRY_NAME` and `COUNTRY_FLAG` | "every country in the catalog has a real flag and a German name" fails with `got ["🏳 PT (1)"]`. Both maps fall back (`|| code`, `|| "🏳"`), so a missing country never breaks anything — it just renders a white flag and a two-letter code, and stops the dialog's search finding that region by country name. Madeira was the first PT region and shipped exactly that for an hour |
+
+| `gpxmatch` | raise one case's baseline in `tools/gpx_map_match_baseline.json` (livigno 20 -> 21) | "no tour matches worse than its recorded baseline" fails with the harness exiting 1 and *"REGRESSED livigno: id+order 20/20 (baseline 21)"*. Verifies the mechanism the whole suite rests on -- before this the harness printed the same comparison and exited 0 either way |
+
 ## Not yet mutation-checked
 
 `geometry`, `infopanel`, `lifts` and `builder`'s newer cases have not had a mutation applied. They pass, and

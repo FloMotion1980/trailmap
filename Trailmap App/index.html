@@ -6845,8 +6845,13 @@ regionSlotsEl.dataset.max = MAX_ACTIVE_REGION_GROUPS;   // read by tests; the ap
 // The FIRST entry is the primary and decides the group, so every region appears exactly once; the others are
 // shown as extra flags on the row, which makes the border crossing visible instead of tidying it away. The
 // search field covers the other direction: it matches countries too, so "Schweiz" finds Silvretta as well.
-const COUNTRY_NAME = { AT: "Österreich", CH: "Schweiz", IT: "Italien", DE: "Deutschland", FR: "Frankreich" };
-const COUNTRY_FLAG = { AT: "🇦🇹", CH: "🇨🇭", IT: "🇮🇹", DE: "🇩🇪", FR: "🇫🇷" };
+const COUNTRY_NAME = { AT: "Österreich", CH: "Schweiz", IT: "Italien", DE: "Deutschland", FR: "Frankreich",
+                       PT: "Portugal" };
+const COUNTRY_FLAG = { AT: "🇦🇹", CH: "🇨🇭", IT: "🇮🇹", DE: "🇩🇪", FR: "🇫🇷", PT: "🇵🇹" };
+// Every use of both maps falls back (`|| code`, `|| "🏳"`), so a new country degrades to a white flag and a
+// two-letter code rather than breaking -- which is exactly why a missing entry is easy to ship unnoticed:
+// Madeira (2026-08-21) was the first PT region and showed "🏳 PT", and "Portugal" found nothing in the
+// dialog's search. There is a test for it now (`regions`), because the next new country will be the same.
 
 // Diacritics-insensitive, punctuation-insensitive matching: "galtur" has to find "Galtür" and "pfalzer" has to
 // find "Pfälzer Wald", or the search is useless on a phone keyboard.

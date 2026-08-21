@@ -251,6 +251,23 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
          crossBorder.map((r) => r.querySelector(".rd-label").textContent.trim()), ">= 3 of them");
   }
 
+  T.test("every country in the catalog has a real flag and a German name");
+  await openDialog();
+  // Both maps fall back (`COUNTRY_FLAG[c] || "🏳"`, `COUNTRY_NAME[c] || c`), so a new country degrades to a
+  // white flag and a two-letter code instead of breaking -- which is exactly why a missing entry ships
+  // unnoticed. Madeira was the first PT region and its dialog row read "🏳 PT", with "Portugal" matching
+  // nothing in the search. Read off the rendered dialog rather than from the maps (which are consts in the
+  // app's own scope): a group heading is `<flag> <name>`, and a bare two-letter code IS the failure.
+  {
+    const headTexts = TM.$$("#regionDialogList .rd-country")
+      .map((el) => (el.textContent || "").trim()).filter((x) => x.length);
+    T.ok("the dialog groups by country", headTexts.length > 0, headTexts.length, "> 0");
+    // The failure looks like "🏳 PT (1)" -- a white flag and/or a bare two-letter code where a real flag
+    // and a German name belong.
+    const bare = headTexts.filter((h) => h.indexOf("🏳") > -1 || /^[A-Z]{2}/.test(h));
+    T.eq("no heading is a raw country code or a white flag", bare, []);
+  }
+
   T.test("search matches the name, a sub-region and a country");
   {
     const all = rows().length;

@@ -59,6 +59,11 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   user had removed on 2026-08-04 would fail it, and on a home-screen PWA that panel cannot be dismissed),
   and `.leaflet-interactive:focus{outline:none}` must stay in `style.css` — without it a clicked trail
   paints a stray black rectangle around its own SVG bounding box.
+- **Portugal was missing from the region dialog's country maps**, which Madeira was the first region to need.
+  Neither map ever throws — every use falls back to `|| code` / `|| "🏳"` — so the row simply read "🏳 PT" and
+  the dialog's search could not find Madeira under "Portugal". Added, with a `regions` case that reads the
+  rendered headings and treats a bare two-letter code as the failure, so the next new country cannot ship the
+  same way.
 - **Two new test suites, and one that existed but could not fail.** `loopgaps` covers the offline half of
   `tools/close_loop_gaps.py` — the gap detection including the wrap-around boundary, all four `close_gap`
   branches plus the degenerate no-intermediate-points case that once left 16 of 29 gaps silently open while

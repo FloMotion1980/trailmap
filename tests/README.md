@@ -17,10 +17,10 @@ takes **~25 seconds** in a visible window and does not finish at all in a hidden
 hang part-way through is almost always this, not a failure.
 
 Current state, all green:
-**20 suites.** The Python half is **101 cases / 286 checks**, measured 2026-08-21 and green (`appshell`,
-`geomerge`, `ntcregression`, `pipeline`, `regiondata`, `runner`, `trailforks`). The browser bundle was last
-counted on 2026-08-21 at **193 cases** across the twelve bundled suites; `builder` runs on its own with 19
-cases / 97 checks. Browser counts are only ever as fresh as the last time someone pasted the bundle, so treat
+**22 suites.** The Python half is green as of 2026-08-21 (`appshell`, `geomerge`, `gpxmatch`, `loopgaps`,
+`ntcregression`, `pipeline`, `regiondata`, `runner`, `trailforks`) — 90 cases / 250 checks for the seven fast
+ones, plus `ntcregression` (~60 s) and `gpxmatch` (~35 s). The browser bundle was last counted on 2026-08-21
+at **194 cases / 898 checks**; `builder` runs on its own with 19 cases / 97 checks. Browser counts are only ever as fresh as the last time someone pasted the bundle, so treat
 the date, not the number, as the claim.
 
 **Two of those cases are skipped on purpose in a window that does not paint** (`bearing`'s eased-transition
@@ -102,6 +102,8 @@ Two properties this buys, both deliberate:
 | `controls` | the map control cluster: the segmented column, the readout chip, what covers what | hit-tests five points per control — a covered button is not a state bug, nothing errors |
 | `runner` | `run.py` itself: which suites `--changed` selects, and the GAP report | `@always`; a suite that never runs looks exactly like one that passes |
 | `trailforks` | `harvest_trailforks.py` + `build_trailforks_region.py`: the table/trail-page parsers, the paging rule, the difficulty mapping | the mapping case is data-driven against every harvested table, so it catches a tier nobody has seen yet |
+| `loopgaps` | `close_loop_gaps.py`'s offline half: gap detection, all four `close_gap` branches, bicycle access rules, the routing graph | synthetic and offline on purpose — the routing itself goes through Overpass, and no suite here makes a request |
+| `gpxmatch` | the GPX map-matcher, against five already-built tours and a committed per-case baseline | ~35 s, not `@always`; the other five harness cases are minutes each and stay a manual run |
 | `builder` | Tourenbuilder junctions, direction, clipping, drag/swipe | `@standalone`, needs `bikecircus` + builder ON + a phone viewport |
 
 ## Conventions that exist for a reason
