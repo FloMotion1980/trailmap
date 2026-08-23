@@ -1,0 +1,147 @@
+{
+ "mapping": {
+  "hz_hk_aline": "aline-hahnenklee",
+  "hz_hk_jump_line": "jump-line-184348",
+  "hz_hk_sprung_boeckchen": "sprung-bockchen",
+  "hz_hk_wilder_bock": "wilder-bock--ex-north-shore",
+  "hz_hk_dh_race_jump": "hahnenklee-dh-race-straight-jump-109259",
+  "hz_hk_spiegelthaler": "spiegelthalertrail",
+  "hz_bt_felsenweg": "felsenweg-637714",
+  "hz_bt_bodetrail": "bodetrail",
+  "hz_bl_wurmberg_roller": "wurmberg-roller-upper-dh"
+ },
+ "ambiguous": [
+  [
+   "hz_tp_eselsstieg",
+   "bester Abstand 1446 m (hz-ilsenburger-pfad), naechster 1573 m"
+  ],
+  [
+   "hz_tp_jack_the_ripper",
+   "bester Abstand 2248 m (schnelles-ende), naechster 2792 m"
+  ],
+  [
+   "hz_tp_jack_the_ripper_alt",
+   "bester Abstand 2155 m (schnelles-ende), naechster 2740 m"
+  ],
+  [
+   "hz_tp_stumpfruecken",
+   "bester Abstand 1007 m (hz-ilsenburger-pfad), naechster 1825 m"
+  ],
+  [
+   "hz_tp_wassertal",
+   "bester Abstand 728 m (polterbergtrail), naechster 1766 m"
+  ],
+  [
+   "hz_hk_flowtrail",
+   "bester Abstand 217 m (bockchen--flowtrail), naechster 223 m"
+  ],
+  [
+   "hz_hk_downhill",
+   "bester Abstand 54 m (wilder-bock--ex-north-shore), naechster 161 m"
+  ],
+  [
+   "hz_hk_freeride",
+   "bester Abstand 438 m (wilder-bock--ex-north-shore), naechster 494 m"
+  ],
+  [
+   "hz_hk_race_track",
+   "bester Abstand 225 m (wilder-bock--ex-north-shore), naechster 296 m"
+  ],
+  [
+   "hz_hk_wildpig_enduro",
+   "bester Abstand 630 m (race-track-middle), naechster 635 m"
+  ],
+  [
+   "hz_bt_brunhildenritt",
+   "bester Abstand 827 m (harzer-roller-3), naechster 1034 m"
+  ],
+  [
+   "hz_bt_harzer_roller",
+   "bester Abstand 653 m (rosstrappendownhill-3), naechster 669 m"
+  ],
+  [
+   "hz_bt_bodopass",
+   "bester Abstand 0 m (bodopass), naechster 21 m"
+  ],
+  [
+   "hz_bt_rosstrappendownhill",
+   "bester Abstand 565 m (rosstrappendownhill-3), naechster 711 m"
+  ],
+  [
+   "hz_sb_flowtrail",
+   "bester Abstand 5914 m (schalkerturmtrail), naechster 6854 m"
+  ],
+  [
+   "hz_sb_freeride",
+   "bester Abstand 5920 m (schalkerturmtrail), naechster 6853 m"
+  ],
+  [
+   "hz_sb_hidden_track",
+   "bester Abstand 5906 m (schalkerturmtrail), naechster 6856 m"
+  ],
+  [
+   "hz_sb_hidden_track_alt",
+   "bester Abstand 6327 m (jagerstiegtrail), naechster 6403 m"
+  ],
+  [
+   "hz_sb_bx",
+   "bester Abstand 5973 m (schalkerturmtrail), naechster 6793 m"
+  ],
+  [
+   "hz_sb_downhill",
+   "bester Abstand 5901 m (schalkerturmtrail), naechster 6852 m"
+  ],
+  [
+   "hz_sb_stempelstieg",
+   "bester Abstand 5955 m (schalkerturmtrail), naechster 6833 m"
+  ],
+  [
+   "hz_ab_flowtrail",
+   "bester Abstand 1715 m (wolfskuppe), naechster 14384 m"
+  ],
+  [
+   "hz_ab_singletrail",
+   "bester Abstand 1636 m (wolfskuppe), naechster 14030 m"
+  ],
+  [
+   "hz_ab_funride",
+   "bester Abstand 1642 m (wolfskuppe), naechster 14297 m"
+  ],
+  [
+   "hz_ab_freeride",
+   "bester Abstand 1742 m (wolfskuppe), naechster 14413 m"
+  ],
+  [
+   "hz_ab_enduro",
+   "bester Abstand 1859 m (wolfskuppe), naechster 14528 m"
+  ],
+  [
+   "hz_ab_downhill",
+   "bester Abstand 1942 m (wolfskuppe), naechster 14679 m"
+  ],
+  [
+   "hz_ab_jump_line",
+   "bester Abstand 2172 m (wolfskuppe), naechster 13900 m"
+  ],
+  [
+   "hz_ab_loam_line",
+   "bester Abstand 2075 m (wolfskuppe), naechster 14759 m"
+  ],
+  [
+   "hz_bl_freeride",
+   "bester Abstand 739 m (freeride-upper), naechster 1033 m"
+  ],
+  [
+   "hz_bl_enduro",
+   "bester Abstand 914 m (enduro-lower), naechster 1097 m"
+  ],
+  [
+   "hz_bl_evil_rocks",
+   "bester Abstand 1104 m (evil-rocks-upper), naechster 1192 m"
+  ],
+  [
+   "hz_bl_downhill",
+   "bester Abstand 1320 m (downhill-lower-section), naechster 1363 m"
+  ]
+ ]
+}

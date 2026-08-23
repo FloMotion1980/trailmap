@@ -1,0 +1,133 @@
+{
+ "mapping": {
+  "ow_captain_hiob": "captain-hiob",
+  "ow_lumberjack": "lumberjack-644475",
+  "ow_wally": "wally-642608",
+  "ow_woody": "woody-642609",
+  "ow_zweiarmiger_bandit": "zweiarmiger-bandit",
+  "ow_alle_farben": "alle-farben",
+  "ow_bockn_soul": "bock--soul",
+  "ow_coffee_und_cream": "coffee--cream",
+  "ow_hebert_trail": "heberttrail",
+  "ow_neckarcoaster": "neckarcoaster",
+  "ow_einarmiger_bandit": "einarmiger-bandit",
+  "mi_kirchbergtrail": "kirchberg-trail-303206",
+  "mi_kreuzwegtrail": "kreuzweg-trail-443825",
+  "mi_viehtrieb": "viehtrieb-trail",
+  "mi_silvantrail": "silvan-trail",
+  "mi_schwimmbadtrail": "schwimmbadtrail-komplett",
+  "ow_mil_tobistrail": "tobis-trail",
+  "ow_mil_teutonenschneise": "teutonenschneise",
+  "ow_mil_quellentrail": "quellentrail",
+  "ow_mil_akazienwaeldchen": "akazien-trail",
+  "ow_mil_jaegersteig": "jagersteig",
+  "ow_dos_nistler_pump": "nistler-pump",
+  "ow_dos_kniebreche": "kniebreche",
+  "ow_dos_kronenburg_trail": "kronenburgtrail",
+  "ow_dos_zimmerholz": "zimmerholztrail",
+  "ow_dos_die_lore": "die-lore",
+  "ow_ha_margarethentrail": "margarethentrail-i-ii"
+ },
+ "ambiguous": [
+  [
+   "ow_bockn_roll",
+   "bester Abstand 188 m (bock--roll), naechster 405 m"
+  ],
+  [
+   "mi_kiliantrail",
+   "bester Abstand 252 m (kilianstrail), naechster 1304 m"
+  ],
+  [
+   "mi_schlangenpfaedchen",
+   "bester Abstand 921 m (silvan-trail), naechster 1110 m"
+  ],
+  [
+   "mi_ritterstein",
+   "bester Abstand 94 m (ritterstein-trail-komplett), naechster 2252 m"
+  ],
+  [
+   "mi_wurzelpfaedchen",
+   "bester Abstand 139 m (wurzelpfadchen-1), naechster 331 m"
+  ],
+  [
+   "mi_enge_ding",
+   "bester Abstand 205 m (wurzelpfadchen-2), naechster 637 m"
+  ],
+  [
+   "mi_muehlgrundtrail",
+   "bester Abstand 236 m (muhlgrund-trail), naechster 516 m"
+  ],
+  [
+   "mi_buergermeisterstueck",
+   "bester Abstand 399 m (burgermeister-stuck), naechster 2533 m"
+  ],
+  [
+   "ow_mil_funtrack",
+   "bester Abstand 1877 m (quellentrail), naechster 1968 m"
+  ],
+  [
+   "ow_mil_keltensteig",
+   "bester Abstand 248 m (keltensteig-part-1), naechster 582 m"
+  ],
+  [
+   "ow_col_weinbergspfaedle",
+   "bester Abstand 17448 m (teutonenschneise), naechster 19650 m"
+  ],
+  [
+   "ow_col_schneid",
+   "bester Abstand 15535 m (teutonenschneise), naechster 17801 m"
+  ],
+  [
+   "ow_col_eschauer_pfad",
+   "bester Abstand 23977 m (teutonenschneise), naechster 26314 m"
+  ],
+  [
+   "ow_col_graebele",
+   "bester Abstand 24328 m (teutonenschneise), naechster 26702 m"
+  ],
+  [
+   "ow_col_laterndl",
+   "bester Abstand 22779 m (teutonenschneise), naechster 25154 m"
+  ],
+  [
+   "ow_col_boarderline",
+   "bester Abstand 20712 m (teutonenschneise), naechster 23100 m"
+  ],
+  [
+   "ow_gh_hunnensteintrail",
+   "bester Abstand 6593 m (felsenmeer-2), naechster 7044 m"
+  ],
+  [
+   "ow_gh_sh_trail",
+   "bester Abstand 5797 m (felsenmeer-2), naechster 6248 m"
+  ],
+  [
+   "ow_gh_hirschtrail",
+   "bester Abstand 9044 m (felsenmeer-2), naechster 9495 m"
+  ],
+  [
+   "ow_gh_einhorntrail",
+   "bester Abstand 10218 m (felsenmeer-2), naechster 10668 m"
+  ],
+  [
+   "ow_gh_rehkidz_trail",
+   "bester Abstand 10235 m (felsenmeer-2), naechster 10684 m"
+  ],
+  [
+   "ow_gh_doehner_trail",
+   "bester Abstand 6582 m (felsenmeer-2), naechster 6956 m"
+  ],
+  [
+   "ow_dos_weisser_stein_trail",
+   "bester Abstand 66 m (weiszer-stein-trail), naechster 169 m"
+  ],
+  [
+   "ow_ha_wolfstrail",
+   "bester Abstand 100 m (wolftrail-iiii), naechster 1004 m"
+  ],
+  [
+   "ow_am_russenpfad",
+   "bester Abstand 713 m (russenpfad-4), naechster 1244 m"
+  ]
+ ]
+}

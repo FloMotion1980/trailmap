@@ -1,0 +1,91 @@
+{
+ "mapping": {
+  "ow_soe_6003": "teare-line",
+  "ow_soe_6007": "ohn-line",
+  "ow_soe_6008": "harbe-line",
+  "ow_soe_6027": "broate-line",
+  "ow_soe_6028": "gahe-line-188140",
+  "ow_soe_6034": "troaln-line",
+  "ow_soe_6058": "schtirggar-line",
+  "ow_soe_6036": "hupfar-line",
+  "ow_soe_6060": "schlender-line",
+  "ow_soe_6054": "drimmle-line",
+  "ow_soe_672": "leiterberg-trail",
+  "ow_soe_696": "nene-trail",
+  "ow_soe_6052": "gaislach-trail",
+  "ow_soe_698": "kaiser-trail",
+  "ow_soe_6042": "stallwies-trail",
+  "ow_soe_699": "kleble-alm-trail",
+  "ow_soe_6014": "lochle-alm-trail"
+ },
+ "ambiguous": [
+  [
+   "ow_soe_6004",
+   "bester Abstand 78 m (zaahe-line), naechster 531 m"
+  ],
+  [
+   "ow_soe_6005",
+   "bester Abstand 128 m (eebme-line), naechster 1593 m"
+  ],
+  [
+   "ow_soe_6009",
+   "bester Abstand 102 m (lettn-line), naechster 553 m"
+  ],
+  [
+   "ow_soe_6010",
+   "bester Abstand 165 m (ollweite-line), naechster 1613 m"
+  ],
+  [
+   "ow_soe_6040",
+   "bester Abstand 113 m (olm-volle-line), naechster 337 m"
+  ],
+  [
+   "ow_soe_676",
+   "bester Abstand 115 m (bartig-s-bodele-line), naechster 679 m"
+  ],
+  [
+   "ow_soe_678",
+   "bester Abstand 183 m (lople-s-trail-59981), naechster 1027 m"
+  ],
+  [
+   "ow_soe_6026",
+   "bester Abstand 223 m (schteckler-trail), naechster 326 m"
+  ],
+  [
+   "ow_soe_6029",
+   "bester Abstand 381 m (schlender-line), naechster 418 m"
+  ],
+  [
+   "ow_soe_6041",
+   "bester Abstand 742 m (fernar-trail), naechster 3951 m"
+  ],
+  [
+   "ow_soe_668",
+   "bester Abstand 408 m (nach-bodenegg), naechster 2234 m"
+  ],
+  [
+   "ow_soe_677",
+   "bester Abstand 391 m (olm-volle-line), naechster 575 m"
+  ],
+  [
+   "ow_soe_673",
+   "bester Abstand 101 m (jagers-notweg-trail), naechster 667 m"
+  ],
+  [
+   "ow_soe_6000",
+   "bester Abstand 143 m (windach-trail), naechster 659 m"
+  ],
+  [
+   "ow_soe_664",
+   "bester Abstand 325 m (kuhtrainschlucht-trail), naechster 3319 m"
+  ],
+  [
+   "ow_soe_bartigs_boedele_alt",
+   "bester Abstand 837 m (bartig-s-bodele-line), naechster 1506 m"
+  ],
+  [
+   "ow_soe_rettenbachtrail",
+   "bester Abstand 886 m (rettenbachalm-trail), naechster 1588 m"
+  ]
+ ]
+}

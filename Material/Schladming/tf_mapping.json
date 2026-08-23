@@ -1,0 +1,101 @@
+{
+ "mapping": {
+  "planai_402_peak_flowline": "peak-flowline",
+  "planai_411_downtown_line": "downtown-line",
+  "reiteralm_103_gassl_trail": "gassl-trail-186210",
+  "reiteralm_66_route_66": "route-66-221753",
+  "hausaich_801_madame_flow_trail": "recycle-track",
+  "hausaich_802_jumper_trail": "gradenbach-track",
+  "hausaich_803_dr_drop_trail": "larchen-track"
+ },
+ "ambiguous": [
+  [
+   "planai_400_bike_area_1",
+   "bester Abstand 1753 m (pro-downhill), naechster 1772 m"
+  ],
+  [
+   "planai_400_bike_area_2",
+   "bester Abstand 1757 m (pro-downhill), naechster 1776 m"
+  ],
+  [
+   "planai_400_bike_area_3",
+   "bester Abstand 1754 m (pro-downhill), naechster 1773 m"
+  ],
+  [
+   "planai_401_uphill_flow_trail",
+   "bester Abstand 178 m (peak-flowline), naechster 186 m"
+  ],
+  [
+   "planai_403_pro_downhill",
+   "bester Abstand 13 m (rookie-downhill), naechster 17 m"
+  ],
+  [
+   "planai_404_rookie_downhill",
+   "bester Abstand 13 m (rookie-downhill), naechster 17 m"
+  ],
+  [
+   "planai_405_99_jumpline",
+   "bester Abstand 335 m (99-jumpline), naechster 538 m"
+  ],
+  [
+   "planai_406_monster_jumpline",
+   "bester Abstand 661 m (99-jumpline), naechster 1372 m"
+  ],
+  [
+   "planai_407_kessler_line",
+   "bester Abstand 385 m (kessler-line), naechster 549 m"
+  ],
+  [
+   "planai_408_stadium_flowline",
+   "bester Abstand 327 m (stadium-flowline), naechster 341 m"
+  ],
+  [
+   "planai_409_jack_lumber_trail",
+   "bester Abstand 91 m (jack-lumber), naechster 502 m"
+  ],
+  [
+   "planai_410_worldcup_downhill",
+   "bester Abstand 281 m (stadium-flowline), naechster 352 m"
+  ],
+  [
+   "reiteralm_100_eiskar_trail",
+   "bester Abstand 1463 m (gassl-trail-186210), naechster 2550 m"
+  ],
+  [
+   "reiteralm_101_buckelwald_trail",
+   "bester Abstand 1577 m (gassl-trail-186210), naechster 2055 m"
+  ],
+  [
+   "reiteralm_102_schnepfenwald_trail",
+   "bester Abstand 1317 m (route-66-221753), naechster 3471 m"
+  ],
+  [
+   "reiteralm_104_hochalm_trail",
+   "bester Abstand 1657 m (gassl-trail-186210), naechster 2007 m"
+  ],
+  [
+   "reiteralm_105_junior_trails",
+   "bester Abstand 736 m (gassl-trail-186210), naechster 3643 m"
+  ],
+  [
+   "reiteralm_106_holzer_trail",
+   "bester Abstand 680 m (gassl-trail-186210), naechster 3138 m"
+  ],
+  [
+   "reiteralm_107_jump_trail",
+   "bester Abstand 1647 m (gassl-trail-186210), naechster 2337 m"
+  ],
+  [
+   "reiteralm_108_enduro_trail",
+   "bester Abstand 912 m (route-66-221753), naechster 2813 m"
+  ],
+  [
+   "reiteralm_109_hochalm_enduro_trail",
+   "bester Abstand 1781 m (route-66-221753), naechster 1887 m"
+  ],
+  [
+   "reiteralm_110_skill_area",
+   "bester Abstand 1282 m (gassl-trail-186210), naechster 2430 m"
+  ]
+ ]
+}

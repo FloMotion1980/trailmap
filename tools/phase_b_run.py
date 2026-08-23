@@ -49,6 +49,10 @@ def main(argv):
     ap.add_argument("--order", help="comma-separated region keys; default every key in the seed file")
     ap.add_argument("--only")
     ap.add_argument("--as-of", default="2026-08-24")
+    ap.add_argument("--union-only", action="store_true",
+                    help="nichts ernten: nur streng+unscharf zusammenfuehren und schreiben. Der zweite "
+                         "Durchgang, nachdem die Ernte einmal durch ist -- der unscharfe Abgleich braucht "
+                         "die Geometrie, die die Ernte erst gebracht hat.")
     a = ap.parse_args(argv)
     seeds = json.load(io.open(a.seeds, encoding="utf-8"))
     order = [k for k in (a.order.split(",") if a.order else sorted(seeds)) if k in seeds]
@@ -64,16 +68,18 @@ def main(argv):
         print("\n" + "#" * 90)
         print("# %s  <-  %s" % (key, slugs))
         sys.stdout.flush()
-        if run([sys.executable, os.path.join(TOOLS, "harvest_trailforks.py"),
-                "--dir", mat, "--seeds", slugs, "--tables"], key + " Tabelle"):
-            print("!! Tabelle fehlgeschlagen, Region uebersprungen")
-            continue
-        if run([sys.executable, os.path.join(TOOLS, "harvest_trailforks.py"),
-                "--dir", mat, "--geo", "--sleep", "0.5"], key + " Seiten"):
-            print("!! Seiten fehlgeschlagen, weiter mit dem, was da ist")
-        mp = os.path.join(mat, "tf_mapping.json")
-        if run([sys.executable, os.path.join(TOOLS, "map_tf_slugs.py"), key,
-                "--material", mat, "--json", mp], key + " Zuordnung"):
+        if not a.union_only:
+            if run([sys.executable, os.path.join(TOOLS, "harvest_trailforks.py"),
+                    "--dir", mat, "--seeds", slugs, "--tables"], key + " Tabelle"):
+                print("!! Tabelle fehlgeschlagen, Region uebersprungen")
+                continue
+            if run([sys.executable, os.path.join(TOOLS, "harvest_trailforks.py"),
+                    "--dir", mat, "--geo", "--sleep", "0.5"], key + " Seiten"):
+                print("!! Seiten fehlgeschlagen, weiter mit dem, was da ist")
+        mp = os.path.join(mat, "tf_mapping_union.json" if a.union_only else "tf_mapping.json")
+        tool = "union_mapping.py" if a.union_only else "map_tf_slugs.py"
+        if run([sys.executable, os.path.join(TOOLS, tool), key,
+                "--material", mat, "--out" if a.union_only else "--json", mp], key + " Zuordnung"):
             continue
         if not json.load(io.open(mp, encoding="utf-8"))["mapping"]:
             print("keine Zuordnung -- nichts zu schreiben")

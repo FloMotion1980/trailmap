@@ -1,0 +1,103 @@
+{
+ "mapping": {
+  "ow_sh_panorama": "panorama-trail",
+  "ow_sh_blue": "blue-line",
+  "ow_sh_thurner": "thurnerline",
+  "ow_sh_pro": "pro-line",
+  "ow_sh_hoellen": "hollen-trail",
+  "ow_sh_fairy": "fairy-line",
+  "ow_sh_z": "zline",
+  "ow_sh_bearly_legal": "bearly-legalline",
+  "ow_sh_buchegg": "buchegg-trail",
+  "ow_sh_hacklberg": "hacklberg-trail",
+  "ow_sh_bergstadl": "bergstadl-trail",
+  "ow_sh_wurzel": "wurzel-trail",
+  "ow_sh_asitz": "asitz-trail",
+  "ow_sh_backtoblack": "backtoblackline",
+  "ow_sh_vink": "vink-link-933931",
+  "ow_sh_huberalm": "huberalm-trail",
+  "ow_sh_wetterkreuz": "wetterkreuz-trail",
+  "ow_leo_hangman1": "hangman-i",
+  "ow_leo_antonius": "antonius-trail",
+  "ow_leo_flow_link": "flow-link",
+  "ow_leo_flying_gangster": "flying-gangster",
+  "ow_leo_speedster": "speedster",
+  "ow_leo_bongo_bongo": "bongo-bongo",
+  "ow_leo_matzalm": "matzalm-trail",
+  "ow_leo_forsthof": "forsthof-trail",
+  "ow_leo_schwarzleo": "schwarzleo-trail",
+  "ow_leo_knappen": "knappentrail",
+  "ow_leo_steinberg_link": "steinberg-link",
+  "ow_leo_hangover": "hangover-911298",
+  "ow_leo_gateway": "gateway-858127",
+  "ow_leo_back_to_roots": "back-to-the-roots-863473",
+  "ow_leo_alteschmiede": "alteschmiede-trail",
+  "ow_leo_lumberjack": "lumberjack-line"
+ },
+ "ambiguous": [
+  [
+   "ow_sh_monti",
+   "bester Abstand 83 m (montitrail), naechster 2247 m"
+  ],
+  [
+   "ow_sh_x",
+   "bester Abstand 143 m (xline), naechster 1455 m"
+  ],
+  [
+   "ow_sh_12er_sky",
+   "bester Abstand 137 m (12er-skyline), naechster 2079 m"
+  ],
+  [
+   "ow_sh_scheeleitn",
+   "bester Abstand 2445 m (wurzel-trail), naechster 3038 m"
+  ],
+  [
+   "ow_sh_evil_eye",
+   "bester Abstand 65 m (the-evil-eye-trail), naechster 759 m"
+  ],
+  [
+   "ow_sh_sheepy_hollow",
+   "bester Abstand 295 m (sheepy-hollowline), naechster 2226 m"
+  ],
+  [
+   "ow_sh_wildenkaramba",
+   "bester Abstand 1774 m (thurnerline), naechster 1922 m"
+  ],
+  [
+   "ow_sh_hochalm",
+   "bester Abstand 1846 m (hochalm-trail), naechster 8224 m"
+  ],
+  [
+   "ow_leo_steinberg",
+   "bester Abstand 1552 m (steinberg-line-by-fox), naechster 2352 m"
+  ],
+  [
+   "ow_leo_hangman2",
+   "bester Abstand 462 m (hangman-ii), naechster 905 m"
+  ],
+  [
+   "ow_leo_hot_shots",
+   "bester Abstand 708 m (hangman-i), naechster 725 m"
+  ],
+  [
+   "ow_leo_valis_hoelle",
+   "bester Abstand 1 m (vali-s-holle-435503), naechster 22 m"
+  ],
+  [
+   "ow_leo_tline",
+   "bester Abstand 1 m (tline-911297), naechster 22 m"
+  ],
+  [
+   "ow_fb_schweinestberg",
+   "bester Abstand 15293 m (hollen-trail), naechster 15625 m"
+  ],
+  [
+   "ow_fb_streuboden",
+   "bester Abstand 15500 m (hollen-trail), naechster 15878 m"
+  ],
+  [
+   "ow_fb_iglmoos",
+   "bester Abstand 15936 m (hollen-trail), naechster 16116 m"
+  ]
+ ]
+}

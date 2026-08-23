@@ -1,0 +1,1615 @@
+{
+ "mapping": {
+  "pw_drei_eichen": "drei-eichen-sponsored-by-sigma-rv-edelweiss-1924-deidesheim-e-v",
+  "pw_tf_1914_trail": "1914-trail",
+  "pw_tf_3_eichen": "3-eichen",
+  "pw_tf_above_langental": "above-langental",
+  "pw_tf_abtskopf_downhill": "abtskopf-downhill",
+  "pw_tf_abtskopf_uphill": "abtskopf-uphill",
+  "pw_tf_adelsberg": "adelsberg",
+  "pw_tf_alte_schmelz": "alte-schmelz",
+  "pw_tf_am_hauschen_trail": "am-hauschen-trail",
+  "pw_tf_am_hauschen_trail_ost": "am-hauschen-trail-ost",
+  "pw_tf_am_ritterstein": "am-ritterstein",
+  "pw_tf_am_sportplatz": "am-sportplatz",
+  "pw_tf_aschbach_pfad": "aschbach-pfad",
+  "pw_tf_atzel_fun": "atzel-fun",
+  "pw_tf_augspurgermuhlentrail": "augspurgermuhlentrail",
+  "pw_tf_aussichtspunkt_peterskopf_schlagbaum": "aussichtspunkt-peterskopf-schlagbaum",
+  "pw_tf_backelstein": "backelstein",
+  "pw_tf_backelstein_down": "backelstein-down",
+  "pw_tf_badischkopfchen_1": "badischkopfchen-1",
+  "pw_tf_badischkopfchen_2": "badischkopfchen-2",
+  "pw_tf_bannjer_sportplatz": "bannjer-sportplatz",
+  "pw_tf_barenloch_trail": "barenloch-trail",
+  "pw_tf_barenloch_trail_ii": "barenloch-trail-ii",
+  "pw_tf_bbq_337449": "bbq-337449",
+  "pw_tf_bellachini": "bellachini",
+  "pw_tf_bildbaumtrail": "bildbaumtrail",
+  "pw_tf_birkenkopf": "birkenkopf",
+  "pw_tf_bismarckturm": "bismarckturm",
+  "pw_tf_bismarckturm_nach_hardenburg": "bismarckturm-nach-hardenburg",
+  "pw_tf_bismarckturm_nach_hardenburg_wurzelpassage": "bismarckturm-nach-hardenburg-wurzelpassage",
+  "pw_tf_bismarckturm_zum_schlagbaum": "bismarckturm-zum-schlagbaum",
+  "pw_tf_bismarkturm_serpentinen": "bismarkturm-serpentinen",
+  "pw_tf_blackline": "blackline",
+  "pw_tf_blattersberg": "blattersberg",
+  "pw_tf_blattersberg_schweizerhaus": "blattersberg-schweizerhaus",
+  "pw_tf_blaue_bank_schlangenweiher": "blaue-bank-schlangenweiher",
+  "pw_tf_blauer_punkt_lindenberg": "blauer-punkt--lindenberg",
+  "pw_tf_blauer_punkt_meisental": "blauer-punkt--meisental",
+  "pw_tf_blaues_kreuz": "blaues-kreuz",
+  "pw_tf_blocks_n_rocks": "blocks-n-rocks",
+  "pw_tf_blueline": "blueline",
+  "pw_tf_boar_trail": "boar-trail",
+  "pw_tf_bockenbrunnen_switchbacks": "bockenbrunnen-switchbacks",
+  "pw_tf_brauningerfelsen": "brauningerfelsen",
+  "pw_tf_breitenberg_trail": "breitenberg-trail",
+  "pw_tf_brenn": "brenn",
+  "pw_tf_bubenrecht": "bubenrecht",
+  "pw_tf_buchkammer_lourdes": "buchkammer-lourdes",
+  "pw_tf_buhlstein": "buhlstein",
+  "pw_tf_burgenweg_flowtrail": "burgenweg-flowtrail",
+  "pw_tf_burgunder_rastplatz_krummbachtal_grunes_kreuz": "burgunder-rastplatz-krummbachtal-grunes-kreuz",
+  "pw_tf_burgunder_rastplatz_laurahutte": "burgunder-rastplatz-laurahutte",
+  "pw_tf_butzelweg": "butzelweg",
+  "pw_tf_camp_789613": "camp-789613",
+  "pw_tf_chaisenweg": "chaisenweg",
+  "pw_tf_cramers": "cramers",
+  "pw_tf_curvy_up_n_down": "curvy-up-n-down",
+  "pw_tf_dahnerhals": "dahnerhals",
+  "pw_tf_dansenberg_jagdhaus": "dansenberg-jagdhaus",
+  "pw_tf_deimersdolle": "deimersdolle",
+  "pw_tf_der_schwarze_punkt_lower": "der-schwarze-punkt-lower",
+  "pw_tf_der_schwarze_punkt_upper_487128": "der-schwarze-punkt-upper-487128",
+  "pw_tf_dickkopfpfad": "dickkopfpfad",
+  "pw_tf_dorniggraben_trail": "dorniggraben-trail",
+  "pw_tf_downhilltrail_ins_erdbeertal": "downhilltrail-ins-erdbeertal",
+  "pw_tf_dr_karl_baszler": "dr-karl-baszler",
+  "pw_tf_dr_sprater_pfad": "dr-sprater-pfad",
+  "pw_tf_drachenfels_sud": "drachenfels-sud",
+  "pw_tf_drei_eichen": "drei-eichen",
+  "pw_tf_drei_eichen_naturfreundehaus": "drei-eichen-naturfreundehaus",
+  "pw_tf_dreispitz_west": "dreispitz-west",
+  "pw_tf_dschungelfieber": "dschungelfieber",
+  "pw_tf_ebersberg_connector": "ebersberg-connector",
+  "pw_tf_ebersberg_poppental_trail": "ebersberg-poppental-trail",
+  "pw_tf_ebersberg_poppental_upper": "ebersberg-poppental-upper",
+  "pw_tf_eckkopf_flowtrail": "eckkopf-flowtrail",
+  "pw_tf_eckkopf_grune_bank": "eckkopf-grune-bank",
+  "pw_tf_eckkopf_west": "eckkopf-west",
+  "pw_tf_eichelberg": "eichelberg",
+  "pw_tf_eichentrail": "eichentrail",
+  "pw_tf_eiskanal": "eiskanal",
+  "pw_tf_emilohlerpfad_lower": "emilohlerpfad-lower",
+  "pw_tf_emilohlerpfad_upper": "emilohlerpfad-upper",
+  "pw_tf_engelsleiter": "engelsleiter",
+  "pw_tf_eremitage": "eremitage",
+  "pw_tf_erlenbach_trail_444020": "erlenbach-trail-444020",
+  "pw_tf_eselsweg_ab_hohler_felsen": "eselsweg-ab-hohler-felsen",
+  "pw_tf_eselsweg_ins_benjental": "eselsweg-ins-benjental",
+  "pw_tf_espensteig": "espensteig",
+  "pw_tf_ewiger_weg": "ewiger-weg",
+  "pw_tf_eyberg_02": "eyberg-02",
+  "pw_tf_felsbrunnen": "felsbrunnen",
+  "pw_tf_felsenweg_nord": "felsenweg-nord",
+  "pw_tf_felsenweg_sud": "felsenweg-sud",
+  "pw_tf_fischerbacher_1": "fischerbacher-1",
+  "pw_tf_fleischackerloch": "fleischackerloch",
+  "pw_tf_flow_line_1": "flow-line-1",
+  "pw_tf_flow_rider_487127": "flow-rider-487127",
+  "pw_tf_flowtrail_landstuhl": "flowtrail-landstuhl",
+  "pw_tf_flowy_115726": "flowy-115726",
+  "pw_tf_fohrle_ans": "fohrle-ans",
+  "pw_tf_fohrle_zwa": "fohrle-zwa",
+  "pw_tf_franzosenweg": "franzosenweg",
+  "pw_tf_freinstaltrail": "freinstaltrail",
+  "pw_tf_fuchs_trail_284453": "fuchs-trail-284453",
+  "pw_tf_full_pull_176769": "full-pull-176769",
+  "pw_tf_funfguldenberg_naturfreundehaus": "funfguldenberg-naturfreundehaus",
+  "pw_tf_funkstation_heidenfels": "funkstation-heidenfels",
+  "pw_tf_funkturmtrail": "funkturmtrail",
+  "pw_tf_gaistal_downhill": "gaistal-downhill",
+  "pw_tf_gayersbrunnen_schlagbaum": "gayersbrunnen-schlagbaum",
+  "pw_tf_geiersteine": "geiersteine",
+  "pw_tf_geissloch_no_2": "geissloch-no-2",
+  "pw_tf_geissloch_nord_lower": "geissloch-nord-lower",
+  "pw_tf_geissloch_nord_upper": "geissloch-nord-upper",
+  "pw_tf_geiszbock_trail": "geiszbock-trail",
+  "pw_tf_gelber_weg_wolfskaut_richtung_molschbach": "gelber-weg-wolfskaut-richtung-molschbach",
+  "pw_tf_gelbes_kreuz_kaisergartchen_murrmirnichtviel": "gelbes-kreuz-kaisergartchen-murrmirnichtviel",
+  "pw_tf_gelbes_kreuz_lambertskreuz_kaisergartchen": "gelbes-kreuz-lambertskreuz-kaisergartchen",
+  "pw_tf_gelbes_kreuz_murmirnichtviel_eppental": "gelbes-kreuz-murmirnichtviel-eppental",
+  "pw_tf_gelbes_x": "gelbes-x",
+  "pw_tf_gerstberg": "gerstberg",
+  "pw_tf_giebelstein_to_hellerhutte": "giebelstein-to-hellerhutte",
+  "pw_tf_gipfelsturmer": "gipfelsturmer",
+  "pw_tf_gleisbergtrail": "gleisbergtrail",
+  "pw_tf_grosser_eyberg_hundel": "grosser-eyberg-hundel",
+  "pw_tf_groszer_eyberg": "groszer-eyberg",
+  "pw_tf_groszer_hahnstein_trail": "groszer-hahnstein-trail",
+  "pw_tf_groszer_humberg_ost": "groszer-humberg-ost",
+  "pw_tf_groszes_eppental": "groszes-eppental",
+  "pw_tf_groszwinterstal_downhill": "groszwinterstal-downhill",
+  "pw_tf_grune_bank_wachenheim": "grune-bank-wachenheim",
+  "pw_tf_grunes_kreuz_weisenheim_am_berg": "grunes-kreuz--weisenheim-am-berg",
+  "pw_tf_grunes_kreuz_connector": "grunes-kreuz-connector",
+  "pw_tf_guttenberg": "guttenberg",
+  "pw_tf_guttenbergkehrweg425": "guttenbergkehrweg425",
+  "pw_tf_h324": "h324",
+  "pw_tf_h331": "h331",
+  "pw_tf_haardtline": "haardtline",
+  "pw_tf_haardtrand": "haardtrand",
+  "pw_tf_hahnberg_dh": "hahnberg-dh",
+  "pw_tf_hahnberg_zickzag": "hahnberg-zickzag",
+  "pw_tf_hahnenschritt_blauer_punkt": "hahnenschritt-blauer-punkt",
+  "pw_tf_hangeler_pfad": "hangeler-pfad",
+  "pw_tf_hardtmuhleflutgraben_trail": "hardtmuhleflutgraben-trail",
+  "pw_tf_hartplatzholle_hollenbergtrails": "hartplatzholle-hollenbergtrails",
+  "pw_tf_harzweilerkopf_flow_upper": "harzweilerkopf-flow-upper",
+  "pw_tf_haukensee_trail": "haukensee-trail",
+  "pw_tf_hauptline": "hauptline",
+  "pw_tf_haus_am_weinberg_tail": "haus-am-weinberg-tail",
+  "pw_tf_heidefelstrail": "heidefelstrail",
+  "pw_tf_heidelsburg": "heidelsburg",
+  "pw_tf_heidenberg_1": "heidenberg-1",
+  "pw_tf_heidenberg_waldsofa": "heidenberg-waldsofa",
+  "pw_tf_heidenbrunnentrail": "heidenbrunnentrail",
+  "pw_tf_heidenbrunnertal": "heidenbrunnertal",
+  "pw_tf_heidenfelsen_nord": "heidenfelsen-nord",
+  "pw_tf_heidenfelsen_sud": "heidenfelsen-sud",
+  "pw_tf_heidenlocher_michaelskapelle": "heidenlocher-michaelskapelle",
+  "pw_tf_heidentrail_i": "heidentrail-i",
+  "pw_tf_heilbachpfad": "heilbachpfad",
+  "pw_tf_heiligental": "heiligental",
+  "pw_tf_hellerhutte_nord": "hellerhutte-nord",
+  "pw_tf_herbertweg": "herbertweg",
+  "pw_tf_hesselbach_hutte_downhill": "hesselbach-hutte-downhill",
+  "pw_tf_hettrum_trail_1": "hettrum-trail-1",
+  "pw_tf_hexenstein_trail": "hexenstein-trail",
+  "pw_tf_hexenweg": "hexenweg",
+  "pw_tf_hindenburgpfad": "hindenburgpfad",
+  "pw_tf_hinkelstein": "hinkelstein",
+  "pw_tf_hirschbrunnen_trail": "hirschbrunnen-trail",
+  "pw_tf_hirschsprungtal": "hirschsprungtal",
+  "pw_tf_hirzeck_gipfel_lower": "hirzeck-gipfel-lower",
+  "pw_tf_hirzeck_gipfel_middle": "hirzeck-gipfel-middle",
+  "pw_tf_hirzeck_gipfel_upper": "hirzeck-gipfel-upper",
+  "pw_tf_hochspeyer_04_1": "hochspeyer-04-1",
+  "pw_tf_hohe_derst_450": "hohe-derst-450",
+  "pw_tf_hohe_derst_561": "hohe-derst-561",
+  "pw_tf_hohe_loog": "hohe-loog",
+  "pw_tf_hohe_loog_bildbaum": "hohe-loog-bildbaum",
+  "pw_tf_hohe_loog_roter_punkt": "hohe-loog-roter-punkt",
+  "pw_tf_hohenberg_wurzeltrail": "hohenberg-wurzeltrail",
+  "pw_tf_hohenberg_zickzack_trail": "hohenberg-zickzack-trail",
+  "pw_tf_hohler_felsen_lower": "hohler-felsen-lower",
+  "pw_tf_hohler_felsen_upper": "hohler-felsen-upper",
+  "pw_tf_humberg_tower_downhill": "humberg-tower-downhill",
+  "pw_tf_humberturm_zu_bremerhof": "humberturm-zu-bremerhof",
+  "pw_tf_hungerbrunnen": "hungerbrunnen",
+  "pw_tf_isenach_ursprung": "isenach-ursprung",
+  "pw_tf_isenachweiher": "isenachweiher",
+  "pw_tf_jahntrail": "jahntrail",
+  "pw_tf_jellinek_trail": "jellinek-trail",
+  "pw_tf_jogitrail": "jogitrail",
+  "pw_tf_jumpline_landstuhl": "jumpline-landstuhl",
+  "pw_tf_k31_trail": "k31-trail",
+  "pw_tf_kaiser_wilhelm_hohe_sonnwende": "kaiser-wilhelm-hohe-sonnwende",
+  "pw_tf_kaisergartchen_poppental": "kaisergartchen-poppental",
+  "pw_tf_kaisergarten": "kaisergarten",
+  "pw_tf_kaladuro_trail": "kaladuro-trail",
+  "pw_tf_kaletschkopf_1": "kaletschkopf-1",
+  "pw_tf_kaletschkopf_rosenteich": "kaletschkopf-rosenteich",
+  "pw_tf_kalmit_jump_line": "kalmit-jump-line",
+  "pw_tf_kalmitschranke_straightline": "kalmitschranke-straightline",
+  "pw_tf_kandeler_flutgrabentrail": "kandeler-flutgrabentrail",
+  "pw_tf_kanzeltrail_453709": "kanzeltrail-453709",
+  "pw_tf_kapeller_schneise": "kapeller-schneise",
+  "pw_tf_kehrenkopf_sommerfels_trail": "kehrenkopf-sommerfels-trail",
+  "pw_tf_kellerfels": "kellerfels",
+  "pw_tf_keschdeweg_am_schutzenhaus": "keschdeweg-am-schutzenhaus",
+  "pw_tf_kesselberg_kamm_trail": "kesselberg-kamm-trail",
+  "pw_tf_kesselbrunnen_trail": "kesselbrunnen-trail",
+  "pw_tf_khyberpass": "khyberpass",
+  "pw_tf_kiesbuckel_trail_1": "kiesbuckel-trail-1",
+  "pw_tf_kieselweg": "kieselweg",
+  "pw_tf_kleiner_eyberg": "kleiner-eyberg",
+  "pw_tf_kleiner_eyberg_2": "kleiner-eyberg-2",
+  "pw_tf_kleiner_humberg_nord": "kleiner-humberg-nord",
+  "pw_tf_kleiner_humberg_sud": "kleiner-humberg-sud",
+  "pw_tf_kleiner_peterskopf_fusz_schlagbaum": "kleiner-peterskopf-fusz--schlagbaum",
+  "pw_tf_kleines_eppental": "kleines-eppental",
+  "pw_tf_kleinwinterstal_groszwinterstal_trail": "kleinwinterstal-groszwinterstal-trail",
+  "pw_tf_klingbach_shorty": "klingbach-shorty",
+  "pw_tf_koala_trail_284452": "koala-trail-284452",
+  "pw_tf_kochbunkertrail": "kochbunkertrail",
+  "pw_tf_kolmerbergkapelleschutzenverein": "kolmerbergkapelleschutzenverein",
+  "pw_tf_krappentrail": "krappentrail",
+  "pw_tf_kreuzeck_2": "kreuzeck-2",
+  "pw_tf_kreuzeck_3": "kreuzeck-3",
+  "pw_tf_kreuzeck_845684": "kreuzeck-845684",
+  "pw_tf_krumbachtal_brombeerwald": "krumbachtal-brombeerwald",
+  "pw_tf_krumbachtal_trail": "krumbachtal-trail",
+  "pw_tf_krummbach_trail": "krummbach-trail",
+  "pw_tf_kuhhungerfels": "kuhhungerfels",
+  "pw_tf_kupferberg_downhill": "kupferberg-downhill",
+  "pw_tf_kupferberg_nord_dh_lower": "kupferberg-nord-dh-lower",
+  "pw_tf_kupferberg_nord_downhill": "kupferberg-nord-downhill",
+  "pw_tf_kupferbergfelsen_variante": "kupferbergfelsen-variante",
+  "pw_tf_kurtal_trail": "kurtal-trail",
+  "pw_tf_kurz_buendig": "kurz-buendig",
+  "pw_tf_l518_forsthaus_weilach": "l518-forsthaus-weilach",
+  "pw_tf_lafitenia": "lafitenia",
+  "pw_tf_lambertskreuz_herbertweg": "lambertskreuz-herbertweg",
+  "pw_tf_lambertskreuz_wilhelmsweg": "lambertskreuz-wilhelmsweg",
+  "pw_tf_landeck_abfahrt": "landeck-abfahrt",
+  "pw_tf_langenbach_trail_1": "langenbach-trail-1",
+  "pw_tf_langenbach_trail_2": "langenbach-trail-2",
+  "pw_tf_langenbach_trail_3": "langenbach-trail-3",
+  "pw_tf_langenberg_ii_top": "langenberg-ii-top",
+  "pw_tf_langenberg_trail_2": "langenberg-trail-2",
+  "pw_tf_langental_middle": "langental-middle",
+  "pw_tf_langental_old_upper": "langental-old-upper",
+  "pw_tf_langmuhle": "langmuhle",
+  "pw_tf_lebenshilfe_bauernhof_downhill": "lebenshilfe-bauernhof-downhill",
+  "pw_tf_letzbachbrunnen": "letzbachbrunnen",
+  "pw_tf_letzberg": "letzberg",
+  "pw_tf_lichensacher_eck": "lichensacher-eck",
+  "pw_tf_lichtenberg_spitzkehren": "lichtenberg-spitzkehren",
+  "pw_tf_lidl_kurven": "lidl-kurven",
+  "pw_tf_liebfrauenbergkurtal": "liebfrauenbergkurtal",
+  "pw_tf_lindemannsruhe_langental": "lindemannsruhe-langental",
+  "pw_tf_lindemannsruhe_ungeheuersee": "lindemannsruhe-ungeheuersee",
+  "pw_tf_loeffelberg": "loeffelberg",
+  "pw_tf_loeffelsberg_2": "loeffelsberg-2",
+  "pw_tf_loog_in": "loog-in",
+  "pw_tf_looganlage_trail": "looganlage-trail",
+  "pw_tf_ludwigstrail": "ludwigstrail",
+  "pw_tf_madenburg": "madenburg",
+  "pw_tf_madenburg_switchbacks": "madenburg-switchbacks",
+  "pw_tf_mandeltal_flowtrail": "mandeltal-flowtrail",
+  "pw_tf_mandeltal_sportplatz_trail": "mandeltal-sportplatz-trail",
+  "pw_tf_mandeltal_sportplatz_trail_upper": "mandeltal-sportplatz-trail-upper",
+  "pw_tf_mandeltal_straight": "mandeltal-straight",
+  "pw_tf_mandeltal_trail": "mandeltal-trail",
+  "pw_tf_margarethentrail": "margarethentrail",
+  "pw_tf_martental_trail": "martental-trail",
+  "pw_tf_martinbutzerhaus_drei_eichen": "martinbutzerhaus-drei-eichen",
+  "pw_tf_meisenkopf_nord": "meisenkopf-nord",
+  "pw_tf_meisentalbach_trail": "meisentalbach-trail",
+  "pw_tf_melkerei_trail": "melkerei-trail",
+  "pw_tf_michaelskapelle_downhill_i": "michaelskapelle-downhill-i",
+  "pw_tf_mini_flow_trail": "mini-flow-trail",
+  "pw_tf_misscc": "misscc",
+  "pw_tf_muhlbach_trail": "muhlbach-trail",
+  "pw_tf_murmirnichtviel_hammelsbrunnen": "murmirnichtviel--hammelsbrunnen",
+  "pw_tf_murrmirnichtviel_dicke_eiche": "murrmirnichtviel-dicke-eiche",
+  "pw_tf_nanstein_castle_trail": "nanstein-castle-trail",
+  "pw_tf_neugraben_schmerbach_pfad": "neugraben-schmerbach-pfad",
+  "pw_tf_neuscharfeneck_full": "neuscharfeneck-full",
+  "pw_tf_neuscharfeneck_trail": "neuscharfeneck-trail",
+  "pw_tf_no_12": "no-12",
+  "pw_tf_no_4": "no-4",
+  "pw_tf_no_6_flowtrail_lower": "no-6-flowtrail-lower",
+  "pw_tf_no_6_flowtrail_upper": "no-6-flowtrail-upper",
+  "pw_tf_nollenkopf_dh": "nollenkopf-dh",
+  "pw_tf_nonnenfels_trail": "nonnenfels-trail",
+  "pw_tf_nonnenfelsen_upper_part": "nonnenfelsen-upper-part",
+  "pw_tf_oberscheidtrail": "oberscheidtrail",
+  "pw_tf_otto_eisel": "otto-eisel",
+  "pw_tf_panoramaweg_kaiserweg": "panoramaweg-kaiserweg",
+  "pw_tf_pavillon_on_the_rocks": "pavillon-on-the-rocks",
+  "pw_tf_pavillonplatz_trail": "pavillonplatz-trail",
+  "pw_tf_pfaffenbrunnen_zu_bremerhof": "pfaffenbrunnen-zu-bremerhof",
+  "pw_tf_pfaffenbrunnen_zu_tsgbrunnen": "pfaffenbrunnen-zu-tsgbrunnen",
+  "pw_tf_pfaffendolle": "pfaffendolle",
+  "pw_tf_pfalzer_weinsteig": "pfalzer-weinsteig",
+  "pw_tf_pfalzer_weinsteig_trail": "pfalzer-weinsteig-trail",
+  "pw_tf_pick_downhill": "pick-downhill",
+  "pw_tf_plattenquerung": "plattenquerung",
+  "pw_tf_polska": "polska",
+  "pw_tf_rahnfels_nord": "rahnfels-nord",
+  "pw_tf_rahnfels_sud": "rahnfels-sud",
+  "pw_tf_rahnfels_sud_2": "rahnfels-sud-2",
+  "pw_tf_rahnfels_sud_2_lower": "rahnfels-sud-2-lower",
+  "pw_tf_rambach_tal": "rambach-tal",
+  "pw_tf_redline_87849": "redline-87849",
+  "pw_tf_rehberg_trail": "rehberg-trail",
+  "pw_tf_rehbergquelle": "rehbergquelle",
+  "pw_tf_rehline_teil_1": "rehline-teil-1",
+  "pw_tf_rehline_teil_2": "rehline-teil-2",
+  "pw_tf_rietburg_uphill_on_trails": "rietburg-uphill-on-trails",
+  "pw_tf_rietburg_wildgehege_flowtrail": "rietburg-wildgehege-flowtrail",
+  "pw_tf_rietburgstrasze": "rietburgstrasze",
+  "pw_tf_rindspfad": "rindspfad",
+  "pw_tf_rinnthal_trail_1": "rinnthal-trail-1",
+  "pw_tf_rinnthal_trail_2": "rinnthal-trail-2",
+  "pw_tf_roda_845085": "roda-845085",
+  "pw_tf_romerfels": "romerfels",
+  "pw_tf_rosskegel": "rosskegel",
+  "pw_tf_rote_hohl_flowtrail": "rote-hohl-flowtrail",
+  "pw_tf_rote_hohl_trail_gelbes_kreuz": "rote-hohl-trail-gelbes-kreuz",
+  "pw_tf_roter_punkt": "roter-punkt",
+  "pw_tf_roter_punkt_muhlbachtal": "roter-punkt-muhlbachtal",
+  "pw_tf_roter_punkt_nach_st_martin": "roter-punkt-nach-st-martin",
+  "pw_tf_roter_punkt_nach_st_martin_214717": "roter-punkt-nach-st-martin-214717",
+  "pw_tf_rotes_dreieck_zum_campingplatz": "rotes-dreieck-zum-campingplatz",
+  "pw_tf_rothsteige_downhill_1": "rothsteige-downhill-1",
+  "pw_tf_rothsteige_downhill_2": "rothsteige-downhill-2",
+  "pw_tf_rothsteige_kleinwinterstal_downhill": "rothsteige-kleinwinterstal-downhill",
+  "pw_tf_rotsteig_i": "rotsteig-i",
+  "pw_tf_rotsteig_ii": "rotsteig-ii",
+  "pw_tf_roxel": "roxel",
+  "pw_tf_russenweg": "russenweg",
+  "pw_tf_sangerfels": "sangerfels",
+  "pw_tf_saufels": "saufels",
+  "pw_tf_schafkopf_trail_456396": "schafkopf-trail-456396",
+  "pw_tf_schieszplatz_rocks": "schieszplatz-rocks",
+  "pw_tf_schlagbaum_zur_sonnwende": "schlagbaum-zur-sonnwende",
+  "pw_tf_schlossacker_downhill": "schlossacker-downhill",
+  "pw_tf_schlossacker_flowtrail": "schlossacker-flowtrail",
+  "pw_tf_schlossberg_sud": "schlossberg-sud",
+  "pw_tf_schlossel_dh": "schlossel-dh",
+  "pw_tf_schnapspfad": "schnapspfad",
+  "pw_tf_schultrail_weisenheim_lower": "schultrail-weisenheim-lower",
+  "pw_tf_schultrail_weisenheim_upper": "schultrail-weisenheim-upper",
+  "pw_tf_schutzenhaus_trail": "schutzenhaus-trail",
+  "pw_tf_schwalbeneck_upper_eastside": "schwalbeneck-upper-eastside",
+  "pw_tf_schwanheim": "schwanheim",
+  "pw_tf_schwarzsohl_flowtrail_s1": "schwarzsohl-flowtrail-s1",
+  "pw_tf_schwarzwild_831471": "schwarzwild-831471",
+  "pw_tf_schweigi_s_trail": "schweigi-s-trail",
+  "pw_tf_seelenfelsen": "seelenfelsen",
+  "pw_tf_seibertsbach_1": "seibertsbach-1",
+  "pw_tf_seibertsbach_3": "seibertsbach-3",
+  "pw_tf_seitersbach_2": "seitersbach-2",
+  "pw_tf_silversurfer": "silversurfer",
+  "pw_tf_silzer_linde": "silzer-linde",
+  "pw_tf_snake_88900": "snake-88900",
+  "pw_tf_snakes_on_a_plane_401725": "snakes-on-a-plane-401725",
+  "pw_tf_sommerbergpfad": "sommerbergpfad",
+  "pw_tf_sommerfels_euszenthal": "sommerfels-euszenthal",
+  "pw_tf_sommerhalder": "sommerhalder",
+  "pw_tf_sommertrail": "sommertrail",
+  "pw_tf_sonnenberg_trail_1": "sonnenberg-trail-1",
+  "pw_tf_sonnenberg_trail_2": "sonnenberg-trail-2",
+  "pw_tf_sonnenberg_trail_2_470271": "sonnenberg-trail-2-470271",
+  "pw_tf_sonnenberg_trail_3": "sonnenberg-trail-3",
+  "pw_tf_sorgental": "sorgental",
+  "pw_tf_spitzenberg": "spitzenberg",
+  "pw_tf_spitzkehren_lambrecht": "spitzkehren-lambrecht",
+  "pw_tf_spitzkehren_zum_naturkundemuseum": "spitzkehren-zum-naturkundemuseum",
+  "pw_tf_stabenberg_rockgarden": "stabenberg-rockgarden",
+  "pw_tf_stabenberg_sangerklause": "stabenberg-sangerklause",
+  "pw_tf_staffelsberg_downhill": "staffelsberg-downhill",
+  "pw_tf_staffelsberg_trail": "staffelsberg-trail",
+  "pw_tf_steinbach_trail_481061": "steinbach-trail-481061",
+  "pw_tf_steinkopfel": "steinkopfel",
+  "pw_tf_stelzenberg_down": "stelzenberg-down",
+  "pw_tf_steps_heidenfelsen": "steps-heidenfelsen",
+  "pw_tf_sterntaler_walkenhang": "sterntaler-walkenhang",
+  "pw_tf_stockwooktrail": "stockwooktrail",
+  "pw_tf_stoney_joe": "stoney-joe",
+  "pw_tf_straight_794146": "straight-794146",
+  "pw_tf_straucherpfad_am_wingertsberg": "straucherpfad-am-wingertsberg",
+  "pw_tf_suppenschuessel": "suppenschuessel",
+  "pw_tf_swinger_s_club_descent_couples_only_92999": "swinger-s-club-descent-couples-only-92999",
+  "pw_tf_sxtrail": "sxtrail",
+  "pw_tf_taubeneck": "taubeneck",
+  "pw_tf_taubenkopf_weiszgrun": "taubenkopf-weiszgrun",
+  "pw_tf_taubersberg_dh": "taubersberg-dh",
+  "pw_tf_teufelsstein_sonnwende": "teufelsstein-sonnwende",
+  "pw_tf_teufelsstein_teufelsfelstrail": "teufelsstein-teufelsfelstrail",
+  "pw_tf_teufelsstein_treppen": "teufelsstein-treppen",
+  "pw_tf_teufelstisch": "teufelstisch",
+  "pw_tf_thuringer_rastplatz_trail": "thuringer-rastplatz-trail",
+  "pw_tf_totenkopfweg": "totenkopfweg",
+  "pw_tf_tour_4_schwarzsohl": "tour-4-schwarzsohl",
+  "pw_tf_trail_214950": "trail-214950",
+  "pw_tf_trail_214952": "trail-214952",
+  "pw_tf_trail_214955": "trail-214955",
+  "pw_tf_trail_456400": "trail-456400",
+  "pw_tf_trail_bei_lindemansruh": "trail-bei-lindemansruh",
+  "pw_tf_trail_zum_roten_punkt": "trail-zum-roten-punkt",
+  "pw_tf_triefenbachpfad": "triefenbachpfad",
+  "pw_tf_triforstbrunnen_downhill": "triforstbrunnen-downhill",
+  "pw_tf_triforstbrunnen_woogtal_flowtrail": "triforstbrunnen-woogtal-flowtrail",
+  "pw_tf_two_beers": "two-beers",
+  "pw_tf_uberzwerchbergtrail": "uberzwerchbergtrail",
+  "pw_tf_ukraineweg_zur_waldschenke": "ukraineweg-zur-waldschenke",
+  "pw_tf_um_den_scharfenberg": "um-den-scharfenberg",
+  "pw_tf_umfahrung_bollenborn": "umfahrung-bollenborn",
+  "pw_tf_ungeheuer_see_downhill_trail_section": "ungeheuer-see-downhill-trail-section",
+  "pw_tf_ungeheuersee_ost_downhill": "ungeheuersee-ost-downhill",
+  "pw_tf_ungeheuersee_west_downhill": "ungeheuersee-west-downhill",
+  "pw_tf_up_to_schiesstand": "up-to-schiesstand",
+  "pw_tf_versteckter_trail": "versteckter-trail",
+  "pw_tf_vom_kapellenweg_nach_birkenhordt": "vom-kapellenweg-nach-birkenhordt",
+  "pw_tf_waldleiningen_leinbachtal": "waldleiningen-leinbachtal",
+  "pw_tf_wallberg_martental": "wallberg-martental",
+  "pw_tf_wallberg_sensental": "wallberg-sensental",
+  "pw_tf_wallberg_straight_down": "wallberg-straight-down",
+  "pw_tf_wallberg_trail": "wallberg-trail",
+  "pw_tf_wegscheid_to_langenberg": "wegscheid-to-langenberg",
+  "pw_tf_weihersebene": "weihersebene",
+  "pw_tf_weilach_downhill": "weilach-downhill",
+  "pw_tf_weilerskopf_krummholzener_stuhl_downhill": "weilerskopf--krummholzener-stuhl-downhill",
+  "pw_tf_weilerskopf_sud_downhill": "weilerskopf-sud-downhill",
+  "pw_tf_weimersberg_umrundung": "weimersberg-umrundung",
+  "pw_tf_weinbiet_gruner_punkt": "weinbiet-gruner-punkt",
+  "pw_tf_weisenheim_rollercoaster": "weisenheim-rollercoaster",
+  "pw_tf_weisze_bank_kaiser_wilhelm_hohe": "weisze-bank-kaiser-wilhelm-hohe",
+  "pw_tf_weiszer_punkt": "weiszer-punkt",
+  "pw_tf_weiszer_punkt_nach_konigsbach": "weiszer-punkt-nach-konigsbach",
+  "pw_tf_weiszer_punkt_zum_naturfreundehaus": "weiszer-punkt-zum-naturfreundehaus",
+  "pw_tf_weiszer_stein_hammelsbrunnen": "weiszer-stein-hammelsbrunnen",
+  "pw_tf_weiszer_stein_k16": "weiszer-stein-k16",
+  "pw_tf_weiszer_stein_schwabenbach": "weiszer-stein-schwabenbach",
+  "pw_tf_weiszer_stich_koppenweth": "weiszer-stich-koppenweth",
+  "pw_tf_weltachs": "weltachs",
+  "pw_tf_windhof_trail": "windhof-trail",
+  "pw_tf_winterkirchel": "winterkirchel",
+  "pw_tf_winzental": "winzental",
+  "pw_tf_wolfgangfrary_alternativtrail": "wolfgangfrary-alternativtrail",
+  "pw_tf_wolfsburgserpentinen": "wolfsburgserpentinen",
+  "pw_tf_wolfshorn_up_n_down": "wolfshorn-up--n--down",
+  "pw_tf_wolfskaut_flach": "wolfskaut-flach",
+  "pw_tf_wolfsohl": "wolfsohl",
+  "pw_tf_wolkenbruchweg": "wolkenbruchweg",
+  "pw_tf_wolmersbergtrail": "wolmersbergtrail",
+  "pw_tf_wolselquellen_trail": "wolselquellen-trail",
+  "pw_tf_wolverine_179658": "wolverine-179658",
+  "pw_tf_woogtal_downhill": "woogtal-downhill",
+  "pw_tf_zickzack_794143": "zickzack-794143",
+  "pw_tf_zickzackpfad": "zickzackpfad",
+  "pw_tf_zigeunerfels_dh": "zigeunerfels-dh",
+  "pw_tf_zigeunerfels_zur_konigsmuhle": "zigeunerfels-zur-konigsmuhle",
+  "pw_tf_zimmerberg_nord_dh": "zimmerberg-nord-dh",
+  "pw_tf_zimmerberg_nw_lower": "zimmerberg-nw-lower",
+  "pw_tf_zimmerberg_nw_middle": "zimmerberg-nw-middle",
+  "pw_tf_zimmerberg_nw_rinne": "zimmerberg-nw-rinne",
+  "pw_tf_zimmerberg_nw_upper": "zimmerberg-nw-upper",
+  "pw_tf_zimmerberg_rinne": "zimmerberg-rinne",
+  "pw_tf_zimmerberg_se_dh_lower": "zimmerberg-se-dh-lower",
+  "pw_tf_zimmerberg_se_dh_upper": "zimmerberg-se-dh-upper",
+  "pw_tf_zimmerberg_south_dh": "zimmerberg-south-dh",
+  "pw_tf_zimmerberg_trail_uphill": "zimmerberg-trail-uphill",
+  "pw_tf_zimmerberg_west_upper": "zimmerberg-west-upper",
+  "pw_tf_zum_biedenbacherwoog": "zum-biedenbacherwoog",
+  "pw_tf_zum_ramschelweiher": "zum-ramschelweiher",
+  "pw_tf_zum_walzwerk": "zum-walzwerk",
+  "pw_tf_zundelsberg": "zundelsberg",
+  "pw_tf_zweites_brunnel": "zweites-brunnel"
+ },
+ "ambiguous": [
+  [
+   "pw_hochspeyer_trail_1",
+   "bester Abstand 2657 m (redline-87849), naechster 2676 m"
+  ],
+  [
+   "pw_hochspeyer_wanderweg_3_1",
+   "bester Abstand 578 m (blueline), naechster 696 m"
+  ],
+  [
+   "pw_westpfalz_wanderweg_blaues_w_barbarossa_wanderweg_1",
+   "bester Abstand 3596 m (heiligental), naechster 3689 m"
+  ],
+  [
+   "pw_pfaelzerwald_weisser_punkt_1",
+   "bester Abstand 1659 m (weltachs), naechster 2181 m"
+  ],
+  [
+   "pw_wanderweg_moelschbach",
+   "bester Abstand 870 m (weltachs), naechster 1335 m"
+  ],
+  [
+   "pw_wanderweg_am_hirschsprung_2",
+   "bester Abstand 5858 m (rambach-tal), naechster 7258 m"
+  ],
+  [
+   "pw_wanderweg_am_hirschsprung_4",
+   "bester Abstand 5672 m (rambach-tal), naechster 6628 m"
+  ],
+  [
+   "pw_pfaelzerwald_blaues_kreuz_1",
+   "bester Abstand 6099 m (rambach-tal), naechster 6778 m"
+  ],
+  [
+   "pw_pfaelzerwald_blaues_kreuz_2",
+   "bester Abstand 6326 m (badischkopfchen-1), naechster 6642 m"
+  ],
+  [
+   "pw_pfaelzerwald_blaues_kreuz_3",
+   "bester Abstand 5605 m (badischkopfchen-1), naechster 7565 m"
+  ],
+  [
+   "pw_pfaelzerwald_blaues_kreuz_4",
+   "bester Abstand 2382 m (badischkopfchen-1), naechster 6246 m"
+  ],
+  [
+   "pw_pfaelzerwald_blaues_kreuz_5",
+   "bester Abstand 1739 m (badischkopfchen-1), naechster 5632 m"
+  ],
+  [
+   "pw_westpfalz_wanderweg_blaues_w_barbarossa_wanderweg_2",
+   "bester Abstand 3897 m (waldleiningen-leinbachtal), naechster 5369 m"
+  ],
+  [
+   "pw_pfaelzerwald_weiss_roter_balken_1",
+   "bester Abstand 2838 m (wolfsohl), naechster 4964 m"
+  ],
+  [
+   "pw_hochspeyer_trail_5",
+   "bester Abstand 1061 m (schlossberg-sud), naechster 2431 m"
+  ],
+  [
+   "pw_saar_pfalz_weg_1",
+   "bester Abstand 1629 m (schlossberg-sud), naechster 2256 m"
+  ],
+  [
+   "pw_saar_pfalz_weg_2",
+   "bester Abstand 2387 m (schlossberg-sud), naechster 2505 m"
+  ],
+  [
+   "pw_hochspeyer_trail_7",
+   "bester Abstand 2158 m (zum-biedenbacherwoog), naechster 2893 m"
+  ],
+  [
+   "pw_hochspeyer_trail_8",
+   "bester Abstand 2185 m (ewiger-weg), naechster 2725 m"
+  ],
+  [
+   "pw_hochspeyer_wanderweg_5",
+   "bester Abstand 1576 m (meisenkopf-nord), naechster 2708 m"
+  ],
+  [
+   "pw_hochspeyer_trail_9",
+   "bester Abstand 2336 m (meisenkopf-nord), naechster 3049 m"
+  ],
+  [
+   "pw_rodalben_trail_1",
+   "bester Abstand 3619 m (felsenweg-nord), naechster 3766 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_weisser_balken_1",
+   "bester Abstand 2795 m (gipfelsturmer), naechster 4432 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_weisser_balken_2",
+   "bester Abstand 3070 m (gipfelsturmer), naechster 4744 m"
+  ],
+  [
+   "pw_rodalben_trail_2",
+   "bester Abstand 5973 m (heidelsburg), naechster 6984 m"
+  ],
+  [
+   "pw_rodalben_trail_3",
+   "bester Abstand 6633 m (heidelsburg), naechster 7565 m"
+  ],
+  [
+   "pw_rodalben_trail_4",
+   "bester Abstand 6872 m (heidelsburg), naechster 7346 m"
+  ],
+  [
+   "pw_rodalben_trail_5",
+   "bester Abstand 7684 m (heidelsburg), naechster 7878 m"
+  ],
+  [
+   "pw_rodalben_trail_6",
+   "bester Abstand 8389 m (seelenfelsen), naechster 9267 m"
+  ],
+  [
+   "pw_westpfalz_wanderweg_schwarzes_w_grosser_westpfalz_wanderweg",
+   "bester Abstand 5729 m (zum-ramschelweiher), naechster 10081 m"
+  ],
+  [
+   "pw_spurensuche_2",
+   "bester Abstand 2862 m (badischkopfchen-2), naechster 5460 m"
+  ],
+  [
+   "pw_pfaelzerwald_gelb_roter_balken",
+   "bester Abstand 3599 m (badischkopfchen-2), naechster 6803 m"
+  ],
+  [
+   "pw_pfaelzerwald_gruenes_kreuz",
+   "bester Abstand 5067 m (badischkopfchen-2), naechster 6357 m"
+  ],
+  [
+   "pw_pfaelzerwald_weisser_punkt",
+   "bester Abstand 5708 m (zum-ramschelweiher), naechster 6802 m"
+  ],
+  [
+   "pw_pfaelzerwald_gelber_balken_3_blieskastel_germersheim",
+   "bester Abstand 5405 m (zum-ramschelweiher), naechster 8660 m"
+  ],
+  [
+   "pw_wandern_in_clausen_c10",
+   "bester Abstand 5909 m (seelenfelsen), naechster 6921 m"
+  ],
+  [
+   "pw_saar_rhein_main_weg_teil_1",
+   "bester Abstand 4582 m (heidelsburg), naechster 5160 m"
+  ],
+  [
+   "pw_waldfischbach_trail_1",
+   "bester Abstand 4122 m (heidelsburg), naechster 4503 m"
+  ],
+  [
+   "pw_waldfischbach_trail_2",
+   "bester Abstand 4305 m (jahntrail), naechster 5860 m"
+  ],
+  [
+   "pw_waldfischbach_trail_3",
+   "bester Abstand 3363 m (jahntrail), naechster 6529 m"
+  ],
+  [
+   "pw_waldfischbach_trail_5",
+   "bester Abstand 4736 m (flow-line-1), naechster 4777 m"
+  ],
+  [
+   "pw_waldfischbach_trail_7",
+   "bester Abstand 1984 m (jahntrail), naechster 4713 m"
+  ],
+  [
+   "pw_waldfischbach_trail_8",
+   "bester Abstand 2293 m (jahntrail), naechster 7277 m"
+  ],
+  [
+   "pw_waldfischbach_trail_9",
+   "bester Abstand 3513 m (jahntrail), naechster 7423 m"
+  ],
+  [
+   "pw_waldfischbach_trail_10",
+   "bester Abstand 7156 m (heidelsburg), naechster 7462 m"
+  ],
+  [
+   "pw_naturfreundewege_kaiserslautern",
+   "bester Abstand 3860 m (zum-walzwerk), naechster 5995 m"
+  ],
+  [
+   "pw_schopp_trail_1",
+   "bester Abstand 1232 m (stelzenberg-down), naechster 2001 m"
+  ],
+  [
+   "pw_pfaelzerwald_gruen_gelbes_kreuz_1",
+   "bester Abstand 4782 m (flow-line-1), naechster 4824 m"
+  ],
+  [
+   "pw_pfaelzerwald_gruen_gelbes_kreuz_2",
+   "bester Abstand 5595 m (flow-line-1), naechster 5635 m"
+  ],
+  [
+   "pw_pfaelzerwald_blaues_kreuz_1_2",
+   "bester Abstand 3530 m (badischkopfchen-1), naechster 7371 m"
+  ],
+  [
+   "pw_pfaelzerwald_gruener_balken",
+   "bester Abstand 2513 m (schieszplatz-rocks), naechster 2828 m"
+  ],
+  [
+   "pw_pfaelzerwald_gelb_blauer_balken",
+   "bester Abstand 8027 m (espensteig), naechster 8416 m"
+  ],
+  [
+   "pw_schopp_trail_4",
+   "bester Abstand 8391 m (barenloch-trail-ii), naechster 8507 m"
+  ],
+  [
+   "pw_pfaelzerwald_gruen_gelbes_kreuz_3",
+   "bester Abstand 6680 m (zum-walzwerk), naechster 8217 m"
+  ],
+  [
+   "pw_pfaelzerwald_gruen_gelbes_kreuz_4",
+   "bester Abstand 7026 m (jahntrail), naechster 7057 m"
+  ],
+  [
+   "pw_schopp_trail_5",
+   "bester Abstand 5030 m (zum-walzwerk), naechster 6877 m"
+  ],
+  [
+   "pw_schopp_trail_6",
+   "bester Abstand 3260 m (zum-walzwerk), naechster 5011 m"
+  ],
+  [
+   "pw_lambrecht_trail_1",
+   "bester Abstand 2049 m (zweites-brunnel), naechster 4205 m"
+  ],
+  [
+   "pw_lambrecht_trail_2",
+   "bester Abstand 3131 m (zweites-brunnel), naechster 5488 m"
+  ],
+  [
+   "pw_lambrecht_trail_3",
+   "bester Abstand 4864 m (zweites-brunnel), naechster 7129 m"
+  ],
+  [
+   "pw_lambrecht_trail_4",
+   "bester Abstand 3973 m (trail-214950), naechster 5112 m"
+  ],
+  [
+   "pw_brunnenwanderweg",
+   "bester Abstand 5136 m (gleisbergtrail), naechster 5358 m"
+  ],
+  [
+   "pw_lambrecht_trail_5",
+   "bester Abstand 6586 m (schwarzsohl-flowtrail-s1), naechster 7303 m"
+  ],
+  [
+   "pw_lambrecht_trail_6",
+   "bester Abstand 7100 m (gleisbergtrail), naechster 7639 m"
+  ],
+  [
+   "pw_lambrecht_trail_7",
+   "bester Abstand 7706 m (gleisbergtrail), naechster 8896 m"
+  ],
+  [
+   "pw_lambrecht_trail_8",
+   "bester Abstand 7636 m (badischkopfchen-1), naechster 9126 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_gelber_balken_lauterecken_st_germanshof_1",
+   "bester Abstand 6901 m (badischkopfchen-1), naechster 8511 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_gelber_balken_lauterecken_st_germanshof_2",
+   "bester Abstand 4805 m (badischkopfchen-1), naechster 6036 m"
+  ],
+  [
+   "pw_westpfalz_wanderweg_gelbes_w_pfalzgrafen_wanderweg",
+   "bester Abstand 1975 m (badischkopfchen-1), naechster 4094 m"
+  ],
+  [
+   "pw_saar_rhein_main_weg_teil_1_2",
+   "bester Abstand 4477 m (badischkopfchen-1), naechster 7354 m"
+  ],
+  [
+   "pw_lambrecht_trail_9",
+   "bester Abstand 6596 m (badischkopfchen-1), naechster 8511 m"
+  ],
+  [
+   "pw_lambrecht_trail_10",
+   "bester Abstand 7194 m (badischkopfchen-1), naechster 8936 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_gelber_balken_lauterecken_st_germanshof_3",
+   "bester Abstand 7799 m (badischkopfchen-1), naechster 9330 m"
+  ],
+  [
+   "pw_lambrecht_trail_11",
+   "bester Abstand 9310 m (wolfsohl), naechster 9489 m"
+  ],
+  [
+   "pw_lambrecht_trail_12",
+   "bester Abstand 10215 m (gleisbergtrail), naechster 10377 m"
+  ],
+  [
+   "pw_lambrecht_trail_13",
+   "bester Abstand 7899 m (gleisbergtrail), naechster 9408 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_roter_balken",
+   "bester Abstand 6607 m (gleisbergtrail), naechster 9677 m"
+  ],
+  [
+   "pw_landstuhl_trail_1",
+   "bester Abstand 328 m (curvy-up-n-down), naechster 926 m"
+  ],
+  [
+   "pw_landstuhl_trail_2",
+   "bester Abstand 502 m (steps-heidenfelsen), naechster 877 m"
+  ],
+  [
+   "pw_pfaelzerwald_gelb_blauer_balken_1",
+   "bester Abstand 1958 m (barenloch-trail-ii), naechster 2164 m"
+  ],
+  [
+   "pw_landstuhl_trail_3",
+   "bester Abstand 440 m (bannjer-sportplatz), naechster 1099 m"
+  ],
+  [
+   "pw_westpfalz_wanderweg_schwarzes_w_grosser_westpfalz_wanderweg_1",
+   "bester Abstand 758 m (bannjer-sportplatz), naechster 802 m"
+  ],
+  [
+   "pw_landstuhl_trail_6",
+   "bester Abstand 1046 m (melkerei-trail), naechster 1203 m"
+  ],
+  [
+   "pw_landstuhl_trail_7",
+   "bester Abstand 2180 m (fleischackerloch), naechster 2899 m"
+  ],
+  [
+   "pw_westpfalz_wanderweg_oranges_w_saarpfalz_wanderweg",
+   "bester Abstand 1784 m (fleischackerloch), naechster 2600 m"
+  ],
+  [
+   "pw_landstuhl_trail_8",
+   "bester Abstand 1764 m (bbq-337449), naechster 1793 m"
+  ],
+  [
+   "pw_albersweiler_trail_1",
+   "bester Abstand 3020 m (neuscharfeneck-full), naechster 3482 m"
+  ],
+  [
+   "pw_buerstenbinderweg_1",
+   "bester Abstand 2387 m (neuscharfeneck-trail), naechster 2565 m"
+  ],
+  [
+   "pw_buerstenbinderweg_2",
+   "bester Abstand 1989 m (neuscharfeneck-full), naechster 2470 m"
+  ],
+  [
+   "pw_pfaelzerwald_weisser_punkt_1_2",
+   "bester Abstand 2052 m (neuscharfeneck-full), naechster 2564 m"
+  ],
+  [
+   "pw_pfaelzerwald_weisser_punkt_2_2",
+   "bester Abstand 349 m (kiesbuckel-trail-1), naechster 2741 m"
+  ],
+  [
+   "pw_annweiler_trail_1",
+   "bester Abstand 1896 m (hartplatzholle-hollenbergtrails), naechster 5345 m"
+  ],
+  [
+   "pw_pfaelzerwald_gelb_gruener_balken",
+   "bester Abstand 2916 m (kellerfels), naechster 5093 m"
+  ],
+  [
+   "pw_annweiler_trail_2",
+   "bester Abstand 2925 m (kellerfels), naechster 5234 m"
+  ],
+  [
+   "pw_annweiler_trail_3",
+   "bester Abstand 3702 m (abtskopf-downhill), naechster 3967 m"
+  ],
+  [
+   "pw_annweiler_trail_4",
+   "bester Abstand 3245 m (groszer-hahnstein-trail), naechster 3875 m"
+  ],
+  [
+   "pw_pfaelzerwald_weiss_blau_alsenztalweg_2",
+   "bester Abstand 1086 m (roxel), naechster 2373 m"
+  ],
+  [
+   "pw_annweiler_trail_5",
+   "bester Abstand 854 m (roxel), naechster 1736 m"
+  ],
+  [
+   "pw_quellenweg_klingenmuenster",
+   "bester Abstand 1050 m (roxel), naechster 1524 m"
+  ],
+  [
+   "pw_annweiler_nordic_walking_1",
+   "bester Abstand 620 m (schlossacker-downhill), naechster 665 m"
+  ],
+  [
+   "pw_bad_bergzabern_trail_1",
+   "bester Abstand 2222 m (liebfrauenbergkurtal), naechster 2639 m"
+  ],
+  [
+   "pw_birkenhoerdter_hoehenweg",
+   "bester Abstand 2875 m (h324), naechster 3834 m"
+  ],
+  [
+   "pw_rund_um_den_steinkopf_blankenborn",
+   "bester Abstand 1762 m (abtskopf-downhill), naechster 2044 m"
+  ],
+  [
+   "pw_pfaelzer_weinsteig_etappe_10",
+   "bester Abstand 1180 m (liebfrauenbergkurtal), naechster 1585 m"
+  ],
+  [
+   "pw_oberotterbach_trail_1",
+   "bester Abstand 2143 m (winzental), naechster 2614 m"
+  ],
+  [
+   "pw_oberotterbach_trail_2",
+   "bester Abstand 2115 m (winzental), naechster 2388 m"
+  ],
+  [
+   "pw_oberotterbach_trail_3",
+   "bester Abstand 3107 m (winzental), naechster 3536 m"
+  ],
+  [
+   "pw_oberotterbach_trail_4",
+   "bester Abstand 1167 m (haardtrand), naechster 2714 m"
+  ],
+  [
+   "pw_oberotterbach_trail_5",
+   "bester Abstand 1606 m (wegscheid-to-langenberg), naechster 2124 m"
+  ],
+  [
+   "pw_oberotterbach_trail_6",
+   "bester Abstand 3479 m (wegscheid-to-langenberg), naechster 6185 m"
+  ],
+  [
+   "pw_pfaelzerwald_rotes_dreieck_bobenthal_bad_bergzabern_1_2",
+   "bester Abstand 4977 m (chaisenweg), naechster 5736 m"
+  ],
+  [
+   "pw_pfaelzerwald_rotes_dreieck_bobenthal_bad_bergzabern_2_2",
+   "bester Abstand 3843 m (chaisenweg), naechster 4325 m"
+  ],
+  [
+   "pw_pfaelzerwald_rotes_dreieck_bobenthal_bad_bergzabern_3",
+   "bester Abstand 3143 m (guttenberg), naechster 3413 m"
+  ],
+  [
+   "pw_oberotterbach_trail_7",
+   "bester Abstand 361 m (teufelstisch), naechster 501 m"
+  ],
+  [
+   "pw_dornroeschen_rundwanderweg_doerrenbach",
+   "bester Abstand 451 m (hohe-derst-561), naechster 639 m"
+  ],
+  [
+   "pw_pfaelzerwald_rot_weisser_balken",
+   "bester Abstand 6057 m (hangeler-pfad), naechster 7128 m"
+  ],
+  [
+   "pw_hauenstein_trail_1",
+   "bester Abstand 12103 m (hartplatzholle-hollenbergtrails), naechster 12331 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_weisser_balken_1_2",
+   "bester Abstand 11363 m (jellinek-trail), naechster 11533 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_weisser_balken_2_2",
+   "bester Abstand 10065 m (jellinek-trail), naechster 10503 m"
+  ],
+  [
+   "pw_paelzer_keschdeweg_1",
+   "bester Abstand 2123 m (schnapspfad), naechster 2493 m"
+  ],
+  [
+   "pw_paelzer_keschdeweg_2",
+   "bester Abstand 871 m (weimersberg-umrundung), naechster 1156 m"
+  ],
+  [
+   "pw_hauensteiner_schusterpfad_1",
+   "bester Abstand 3019 m (weimersberg-umrundung), naechster 3276 m"
+  ],
+  [
+   "pw_hauenstein_west_trail_1",
+   "bester Abstand 2803 m (weimersberg-umrundung), naechster 3185 m"
+  ],
+  [
+   "pw_hauensteiner_nr_4_1",
+   "bester Abstand 759 m (stockwooktrail), naechster 2335 m"
+  ],
+  [
+   "pw_hauensteiner_nr_4_2",
+   "bester Abstand 2174 m (stockwooktrail), naechster 2693 m"
+  ],
+  [
+   "pw_hauenstein_west_trail_2",
+   "bester Abstand 5485 m (brenn), naechster 6562 m"
+  ],
+  [
+   "pw_hauenstein_west_trail_3",
+   "bester Abstand 903 m (wolmersbergtrail), naechster 1101 m"
+  ],
+  [
+   "pw_hauenstein_west_trail_4",
+   "bester Abstand 307 m (hahnberg-dh), naechster 355 m"
+  ],
+  [
+   "pw_hauensteiner_schusterpfad_2",
+   "bester Abstand 853 m (wolfshorn-up--n--down), naechster 1296 m"
+  ],
+  [
+   "pw_dahn_trail_2",
+   "bester Abstand 1003 m (kurz-buendig), naechster 1228 m"
+  ],
+  [
+   "pw_dahn_trail_3",
+   "bester Abstand 747 m (kurz-buendig), naechster 1009 m"
+  ],
+  [
+   "pw_juengstberg_tour",
+   "bester Abstand 1071 m (kurz-buendig), naechster 1672 m"
+  ],
+  [
+   "pw_dahn_trail_4",
+   "bester Abstand 1261 m (kurz-buendig), naechster 1625 m"
+  ],
+  [
+   "pw_dahn_trail_5",
+   "bester Abstand 1418 m (kurz-buendig), naechster 1744 m"
+  ],
+  [
+   "pw_dahn_trail_6",
+   "bester Abstand 985 m (misscc), naechster 1678 m"
+  ],
+  [
+   "pw_dahn_trail_7",
+   "bester Abstand 510 m (misscc), naechster 2060 m"
+  ],
+  [
+   "pw_dahn_trail_8",
+   "bester Abstand 549 m (misscc), naechster 1914 m"
+  ],
+  [
+   "pw_wildsau_tour",
+   "bester Abstand 5901 m (adelsberg), naechster 6066 m"
+  ],
+  [
+   "pw_dahn_trail_9",
+   "bester Abstand 4272 m (grosser-eyberg-hundel), naechster 4522 m"
+  ],
+  [
+   "pw_dahn_trail_10",
+   "bester Abstand 4801 m (grosser-eyberg-hundel), naechster 5129 m"
+  ],
+  [
+   "pw_schlangenberg_tour",
+   "bester Abstand 4948 m (grosser-eyberg-hundel), naechster 5417 m"
+  ],
+  [
+   "pw_dahn_trail_11",
+   "bester Abstand 474 m (grosser-eyberg-hundel), naechster 1281 m"
+  ],
+  [
+   "pw_dahn_trail_13",
+   "bester Abstand 289 m (groszer-eyberg), naechster 1088 m"
+  ],
+  [
+   "pw_dahn_trail_15",
+   "bester Abstand 465 m (eyberg-02), naechster 1230 m"
+  ],
+  [
+   "pw_dahn_trail_17",
+   "bester Abstand 2290 m (sangerfels), naechster 2597 m"
+  ],
+  [
+   "pw_dahner_rundwanderweg_2",
+   "bester Abstand 1367 m (sangerfels), naechster 1493 m"
+  ],
+  [
+   "pw_bundenthal_suedost_trail_1",
+   "bester Abstand 5928 m (adelsberg), naechster 6914 m"
+  ],
+  [
+   "pw_bundenthal_suedost_trail_2",
+   "bester Abstand 5793 m (adelsberg), naechster 7015 m"
+  ],
+  [
+   "pw_bundenthal_suedost_trail_3",
+   "bester Abstand 6314 m (misscc), naechster 7009 m"
+  ],
+  [
+   "pw_bundenthal_suedost_trail_4",
+   "bester Abstand 6973 m (misscc), naechster 7163 m"
+  ],
+  [
+   "pw_grubenweg_1",
+   "bester Abstand 8220 m (misscc), naechster 9030 m"
+  ],
+  [
+   "pw_grubenweg_2",
+   "bester Abstand 7473 m (misscc), naechster 7911 m"
+  ],
+  [
+   "pw_niederschlettenbach_2_lauterweg_und_silbergrube",
+   "bester Abstand 5766 m (hirzeck-gipfel-upper), naechster 5946 m"
+  ],
+  [
+   "pw_wegelnburg_tour_1",
+   "bester Abstand 5873 m (adelsberg), naechster 6946 m"
+  ],
+  [
+   "pw_bundenthal_sued_trail_1",
+   "bester Abstand 5342 m (adelsberg), naechster 6114 m"
+  ],
+  [
+   "pw_bundenthal_sued_trail_2",
+   "bester Abstand 5236 m (adelsberg), naechster 6073 m"
+  ],
+  [
+   "pw_brunnen_und_quellenweg_1",
+   "bester Abstand 5135 m (adelsberg), naechster 5327 m"
+  ],
+  [
+   "pw_hohe_list_tour",
+   "bester Abstand 12423 m (zundelsberg), naechster 12640 m"
+  ],
+  [
+   "pw_dachs_weg",
+   "bester Abstand 2562 m (zundelsberg), naechster 4052 m"
+  ],
+  [
+   "pw_pfaelzerwald_gelber_punkt_5",
+   "bester Abstand 3704 m (zundelsberg), naechster 4684 m"
+  ],
+  [
+   "pw_eulenfels_tour_1",
+   "bester Abstand 16729 m (roda-845085), naechster 21466 m"
+  ],
+  [
+   "pw_eulenfels_tour_2",
+   "bester Abstand 13968 m (roda-845085), naechster 16743 m"
+  ],
+  [
+   "pw_eppenbrunn_trail_1",
+   "bester Abstand 8600 m (roda-845085), naechster 15078 m"
+  ],
+  [
+   "pw_eppenbrunn_trail_2",
+   "bester Abstand 6638 m (roda-845085), naechster 13878 m"
+  ],
+  [
+   "pw_eppenbrunn_trail_3",
+   "bester Abstand 10248 m (roda-845085), naechster 16475 m"
+  ],
+  [
+   "pw_eppenbrunn_trail_4",
+   "bester Abstand 11000 m (roda-845085), naechster 16977 m"
+  ],
+  [
+   "pw_eppenbrunn_trail_5",
+   "bester Abstand 13279 m (roda-845085), naechster 19368 m"
+  ],
+  [
+   "pw_eppenbrunn_trail_6",
+   "bester Abstand 13542 m (roda-845085), naechster 19489 m"
+  ],
+  [
+   "pw_eppenbrunn_trail_7",
+   "bester Abstand 14142 m (roda-845085), naechster 20698 m"
+  ],
+  [
+   "pw_eppenbrunn_trail_8",
+   "bester Abstand 16588 m (roda-845085), naechster 22681 m"
+  ],
+  [
+   "pw_langmuehle_trail_1",
+   "bester Abstand 3056 m (roda-845085), naechster 5444 m"
+  ],
+  [
+   "pw_lemberger_rothenberg_weg",
+   "bester Abstand 3058 m (roda-845085), naechster 6302 m"
+  ],
+  [
+   "pw_langmuehle_trail_2",
+   "bester Abstand 2197 m (roda-845085), naechster 9301 m"
+  ],
+  [
+   "pw_pfaelzerwald_rotes_dreieck",
+   "bester Abstand 1966 m (roda-845085), naechster 8780 m"
+  ],
+  [
+   "pw_langmuehle_trail_3",
+   "bester Abstand 3651 m (roda-845085), naechster 10007 m"
+  ],
+  [
+   "pw_pfaelzerwald_weisses_kreuz",
+   "bester Abstand 3996 m (roda-845085), naechster 10239 m"
+  ],
+  [
+   "pw_langmuehle_trail_4",
+   "bester Abstand 5796 m (roda-845085), naechster 9617 m"
+  ],
+  [
+   "pw_langmuehle_trail_5",
+   "bester Abstand 4606 m (langmuhle), naechster 5138 m"
+  ],
+  [
+   "pw_lemberger_floessertour_1",
+   "bester Abstand 2970 m (langmuhle), naechster 5024 m"
+  ],
+  [
+   "pw_lemberger_floessertour_2",
+   "bester Abstand 2272 m (langmuhle), naechster 5889 m"
+  ],
+  [
+   "pw_langmuehle_trail_6",
+   "bester Abstand 2098 m (langmuhle), naechster 6859 m"
+  ],
+  [
+   "pw_lemberger_floessertour_3",
+   "bester Abstand 1739 m (langmuhle), naechster 7138 m"
+  ],
+  [
+   "pw_lemberg_trail_1",
+   "bester Abstand 3827 m (roda-845085), naechster 4465 m"
+  ],
+  [
+   "pw_lemberg_trail_2",
+   "bester Abstand 2865 m (langmuhle), naechster 8345 m"
+  ],
+  [
+   "pw_lemberg_trail_3",
+   "bester Abstand 1942 m (langmuhle), naechster 6890 m"
+  ],
+  [
+   "pw_lemberg_trail_6",
+   "bester Abstand 1589 m (langmuhle), naechster 6645 m"
+  ],
+  [
+   "pw_lemberg_trail_7",
+   "bester Abstand 1649 m (langmuhle), naechster 6547 m"
+  ],
+  [
+   "pw_lemberger_graf_heinrich_weg",
+   "bester Abstand 2139 m (langmuhle), naechster 7752 m"
+  ],
+  [
+   "pw_pirmasens_trail_1",
+   "bester Abstand 7446 m (roda-845085), naechster 9922 m"
+  ],
+  [
+   "pw_pirmasens_trail_2",
+   "bester Abstand 7431 m (roda-845085), naechster 9942 m"
+  ],
+  [
+   "pw_pirmasens_trail_3",
+   "bester Abstand 4463 m (roda-845085), naechster 8907 m"
+  ],
+  [
+   "pw_pirmasens_trail_4",
+   "bester Abstand 4076 m (roda-845085), naechster 7983 m"
+  ],
+  [
+   "pw_teufelspfad",
+   "bester Abstand 8693 m (roda-845085), naechster 15050 m"
+  ],
+  [
+   "pw_westpfalz_wanderweg_schwarzes_w_grosser_westpfalz_wanderweg_3",
+   "bester Abstand 9082 m (roda-845085), naechster 16567 m"
+  ],
+  [
+   "pw_pirmasens_trail_5",
+   "bester Abstand 8010 m (roda-845085), naechster 15697 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_roter_balken_2",
+   "bester Abstand 5357 m (roda-845085), naechster 11506 m"
+  ],
+  [
+   "pw_pirmasens_trail_6",
+   "bester Abstand 5413 m (roda-845085), naechster 11108 m"
+  ],
+  [
+   "pw_pfaelzerwald_gelb_roter_balken_2",
+   "bester Abstand 5020 m (gleisbergtrail), naechster 5413 m"
+  ],
+  [
+   "pw_johanniskreuz_trail_1",
+   "bester Abstand 5652 m (badischkopfchen-1), naechster 8050 m"
+  ],
+  [
+   "pw_spurensuche_2_2",
+   "bester Abstand 3739 m (badischkopfchen-1), naechster 4789 m"
+  ],
+  [
+   "pw_wanderweg_trippstadt_4_karlstalrundweg",
+   "bester Abstand 3469 m (am-sportplatz), naechster 5027 m"
+  ],
+  [
+   "pw_pfaelzerwald_gelb_roter_balken_3",
+   "bester Abstand 725 m (melkerei-trail), naechster 785 m"
+  ],
+  [
+   "pw_leimen_trail_1",
+   "bester Abstand 1905 m (badischkopfchen-2), naechster 4698 m"
+  ],
+  [
+   "pw_heltersberg_trail_2",
+   "bester Abstand 619 m (jahntrail), naechster 5286 m"
+  ],
+  [
+   "pw_heltersberg_trail_3",
+   "bester Abstand 1234 m (jahntrail), naechster 5777 m"
+  ],
+  [
+   "pw_pfaelzerwald_gelb_roter_balken_1",
+   "bester Abstand 752 m (blocks-n-rocks), naechster 909 m"
+  ],
+  [
+   "pw_landstuhl_ost_trail_2",
+   "bester Abstand 4870 m (flowtrail-landstuhl), naechster 4908 m"
+  ],
+  [
+   "pw_rodalben_trail_1_2",
+   "bester Abstand 4424 m (felsenweg-nord), naechster 4671 m"
+  ],
+  [
+   "pw_waldfischbach_trail_1_2",
+   "bester Abstand 6557 m (seelenfelsen), naechster 6570 m"
+  ],
+  [
+   "pw_ost_west_passage_trail_1",
+   "bester Abstand 598 m (melkerei-trail), naechster 706 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_roter_balken_1",
+   "bester Abstand 8665 m (badischkopfchen-2), naechster 9934 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_roter_balken_2_2",
+   "bester Abstand 9595 m (badischkopfchen-2), naechster 9863 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_weisser_balken_1_3",
+   "bester Abstand 13114 m (hangeler-pfad), naechster 13696 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_weisser_balken_2_3",
+   "bester Abstand 12458 m (hangeler-pfad), naechster 13086 m"
+  ],
+  [
+   "pw_pfaelzerwald_blaues_kreuz_1_3",
+   "bester Abstand 2786 m (hartplatzholle-hollenbergtrails), naechster 5609 m"
+  ],
+  [
+   "pw_trans_pfaelzerwald_trail_1",
+   "bester Abstand 2411 m (hartplatzholle-hollenbergtrails), naechster 4175 m"
+  ],
+  [
+   "pw_bad_bergzaberner_landweg_1",
+   "bester Abstand 1968 m (h324), naechster 2072 m"
+  ],
+  [
+   "pw_felsenwanderweg_rodalben_trail_1",
+   "bester Abstand 4517 m (felsenweg-nord), naechster 4762 m"
+  ],
+  [
+   "pw_pfaelzer_jakobsweg_verbindungsroute_1",
+   "bester Abstand 4985 m (felsenweg-nord), naechster 5067 m"
+  ],
+  [
+   "pw_felsenwanderweg_rodalben_trail_2",
+   "bester Abstand 2094 m (gipfelsturmer), naechster 3983 m"
+  ],
+  [
+   "pw_rodalber_felsenwanderweg_15",
+   "bester Abstand 1368 m (gipfelsturmer), naechster 5124 m"
+  ],
+  [
+   "pw_rodalber_felsenwanderweg_16",
+   "bester Abstand 1209 m (gipfelsturmer), naechster 4885 m"
+  ],
+  [
+   "pw_rodalber_felsenwanderweg_17",
+   "bester Abstand 2243 m (gipfelsturmer), naechster 4867 m"
+  ],
+  [
+   "pw_clauser_haweweg_1",
+   "bester Abstand 2238 m (gipfelsturmer), naechster 4973 m"
+  ],
+  [
+   "pw_clauser_haweweg_2",
+   "bester Abstand 3794 m (gipfelsturmer), naechster 5876 m"
+  ],
+  [
+   "pw_clauser_haweweg_3",
+   "bester Abstand 3954 m (gipfelsturmer), naechster 4775 m"
+  ],
+  [
+   "pw_clauser_haweweg_4",
+   "bester Abstand 3146 m (gipfelsturmer), naechster 4154 m"
+  ],
+  [
+   "pw_rodalben_felsentrails_trail_1",
+   "bester Abstand 3047 m (heidelsburg), naechster 3485 m"
+  ],
+  [
+   "pw_wandern_in_clausen_c9_1",
+   "bester Abstand 1041 m (heidelsburg), naechster 1332 m"
+  ],
+  [
+   "pw_wandern_in_clausen_c9_2",
+   "bester Abstand 1573 m (seelenfelsen), naechster 2329 m"
+  ],
+  [
+   "pw_rodalben_felsentrails_trail_2",
+   "bester Abstand 4547 m (gipfelsturmer), naechster 4608 m"
+  ],
+  [
+   "pw_gelber_strich_kreuz_rinne_trail_1",
+   "bester Abstand 3214 m (gelber-weg-wolfskaut-richtung-molschbach), naechster 3418 m"
+  ],
+  [
+   "pw_gelber_strich_kreuz_rinne_trail_2",
+   "bester Abstand 191 m (hauptline), naechster 243 m"
+  ],
+  [
+   "pw_gelber_strich_kreuz_rinne_trail_3",
+   "bester Abstand 1069 m (schieszplatz-rocks), naechster 1990 m"
+  ],
+  [
+   "pw_wanderweg_bremerhof_4",
+   "bester Abstand 1367 m (schieszplatz-rocks), naechster 1607 m"
+  ],
+  [
+   "pw_bei_kl_trail_1",
+   "bester Abstand 1662 m (lidl-kurven), naechster 3548 m"
+  ],
+  [
+   "pw_bei_kl_trail_2",
+   "bester Abstand 1160 m (lidl-kurven), naechster 3248 m"
+  ],
+  [
+   "pw_bei_kl_trail_3",
+   "bester Abstand 213 m (kleiner-humberg-sud), naechster 491 m"
+  ],
+  [
+   "pw_wanderweg_moelschbach_10_1",
+   "bester Abstand 358 m (weltachs), naechster 946 m"
+  ],
+  [
+   "pw_bei_kl_trail_4",
+   "bester Abstand 2033 m (weltachs), naechster 2532 m"
+  ],
+  [
+   "pw_bei_kl_trail_5",
+   "bester Abstand 3032 m (weltachs), naechster 3496 m"
+  ],
+  [
+   "pw_wanderweg_am_hirschsprung_2_1",
+   "bester Abstand 4084 m (rambach-tal), naechster 6017 m"
+  ],
+  [
+   "pw_wanderweg_am_hirschsprung_2_2",
+   "bester Abstand 4306 m (rambach-tal), naechster 5957 m"
+  ],
+  [
+   "pw_wanderweg_bremerhof_4_2",
+   "bester Abstand 1170 m (pfaffenbrunnen-zu-bremerhof), naechster 1722 m"
+  ],
+  [
+   "pw_bei_kl_trail_6",
+   "bester Abstand 1130 m (lidl-kurven), naechster 1584 m"
+  ],
+  [
+   "pw_uni_villa_wanderweg_2",
+   "bester Abstand 1308 m (lidl-kurven), naechster 2315 m"
+  ],
+  [
+   "pw_bei_kl_trail_7",
+   "bester Abstand 1423 m (lidl-kurven), naechster 2719 m"
+  ],
+  [
+   "pw_bei_kl_trail_8",
+   "bester Abstand 1667 m (lidl-kurven), naechster 3389 m"
+  ],
+  [
+   "pw_pfaelzerwald_weiss_roter_balken_1_2",
+   "bester Abstand 1526 m (eiskanal), naechster 1688 m"
+  ],
+  [
+   "pw_bei_neustadt_trail_1",
+   "bester Abstand 1435 m (weiszer-punkt-nach-konigsbach), naechster 1468 m"
+  ],
+  [
+   "pw_bei_neustadt_trail_2",
+   "bester Abstand 658 m (looganlage-trail), naechster 927 m"
+  ],
+  [
+   "pw_pfaelzerwald_weiss_blauer_balken_1",
+   "bester Abstand 830 m (eselsweg-ins-benjental), naechster 974 m"
+  ],
+  [
+   "pw_bei_neustadt_trail_3",
+   "bester Abstand 964 m (weiszer-stich-koppenweth), naechster 1155 m"
+  ],
+  [
+   "pw_bei_neustadt_trail_4",
+   "bester Abstand 903 m (geiszbock-trail), naechster 1837 m"
+  ],
+  [
+   "pw_pfaelzerwald_rotes_dreieck_2",
+   "bester Abstand 2232 m (geiszbock-trail), naechster 3178 m"
+  ],
+  [
+   "pw_bei_neustadt_trail_5",
+   "bester Abstand 2487 m (silversurfer), naechster 2588 m"
+  ],
+  [
+   "pw_bei_neustadt_trail_6",
+   "bester Abstand 1592 m (blauer-punkt--lindenberg), naechster 1901 m"
+  ],
+  [
+   "pw_bei_neustadt_trail_7",
+   "bester Abstand 1693 m (blauer-punkt--lindenberg), naechster 1882 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_weisser_balken_3",
+   "bester Abstand 1365 m (wolverine-179658), naechster 1949 m"
+  ],
+  [
+   "pw_pfaelzerwald_roter_punkt_2",
+   "bester Abstand 951 m (wolverine-179658), naechster 1521 m"
+  ],
+  [
+   "pw_pfaelzer_weinsteig_etappe_4",
+   "bester Abstand 980 m (haardtline), naechster 1611 m"
+  ],
+  [
+   "pw_bei_neustadt_trail_8",
+   "bester Abstand 1062 m (haardtline), naechster 2135 m"
+  ],
+  [
+   "pw_pfaelzerwald_weiss_roter_balken_3",
+   "bester Abstand 1835 m (panoramaweg-kaiserweg), naechster 1905 m"
+  ],
+  [
+   "pw_dubbels_bei_neustadt_trail_1",
+   "bester Abstand 1210 m (panoramaweg-kaiserweg), naechster 1484 m"
+  ],
+  [
+   "pw_saar_pfalz_weg",
+   "bester Abstand 1117 m (eiskanal), naechster 1478 m"
+  ],
+  [
+   "pw_dubbels_bei_neustadt_trail_2",
+   "bester Abstand 1593 m (roter-punkt), naechster 1604 m"
+  ],
+  [
+   "pw_dubbels_bei_neustadt_trail_3",
+   "bester Abstand 1956 m (blauer-punkt--lindenberg), naechster 2354 m"
+  ],
+  [
+   "pw_dubbels_bei_neustadt_trail_4",
+   "bester Abstand 2547 m (blauer-punkt--lindenberg), naechster 2954 m"
+  ],
+  [
+   "pw_dubbels_bei_neustadt_trail_5",
+   "bester Abstand 2822 m (geiszbock-trail), naechster 3135 m"
+  ],
+  [
+   "pw_dubbels_bei_neustadt_trail_6",
+   "bester Abstand 398 m (churchner-sponsored-by-raaw-rv-edelweiss-1924-deidesheim-e-v--teil-1), naechster 607 m"
+  ],
+  [
+   "pw_pfaelzerwald_weisser_punkt_1_3",
+   "bester Abstand 2564 m (gelbes-kreuz-lambertskreuz-kaisergartchen), naechster 2839 m"
+  ],
+  [
+   "pw_pfaelzerwald_weisser_punkt_2_3",
+   "bester Abstand 1953 m (drachenfels-sud), naechster 2629 m"
+  ],
+  [
+   "pw_pfaelzerwald_weisser_punkt_3",
+   "bester Abstand 984 m (drachenfels-sud), naechster 2109 m"
+  ],
+  [
+   "pw_pfaelzerwald_blau_weisser_balken_4",
+   "bester Abstand 1196 m (silversurfer), naechster 2700 m"
+  ],
+  [
+   "pw_pfaelzerwald_weisser_punkt_4",
+   "bester Abstand 1659 m (silversurfer), naechster 2810 m"
+  ],
+  [
+   "pw_eckkopf_trail_3",
+   "bester Abstand 898 m (geiszbock-trail), naechster 1101 m"
+  ],
+  [
+   "pw_eckkopf_trail_5",
+   "bester Abstand 1153 m (freinstaltrail), naechster 1248 m"
+  ],
+  [
+   "pw_eckkopf_trail_7",
+   "bester Abstand 734 m (weiszer-stein-schwabenbach), naechster 1206 m"
+  ],
+  [
+   "pw_eckkopf_trail_8",
+   "bester Abstand 1695 m (brauningerfelsen), naechster 2096 m"
+  ],
+  [
+   "pw_eckkopf_trail_9",
+   "bester Abstand 520 m (rotsteig-i), naechster 900 m"
+  ],
+  [
+   "pw_pechstein",
+   "bester Abstand 668 m (pechstein-upper-sponsored-by-trp-rv-edelweiss-1924-deidesheim-e-v), naechster 773 m"
+  ],
+  [
+   "pw_churchner",
+   "bester Abstand 367 m (churchner-sponsored-by-raaw-rv-edelweiss-1924-deidesheim-e-v--teil-2), naechster 705 m"
+  ]
+ ]
+}
