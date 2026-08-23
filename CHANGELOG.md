@@ -22,6 +22,14 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-21
+- **A trail card shows the value it is currently sorted by** — `⭐ 4,71` under Bewertung, `🔥 100` under
+  Beliebtheit, never both. One at a time is a measured decision: the meta row is 275px on a phone and the
+  two values together leave ~8px of headroom, which is what put two Bike Kingdom names onto a second line
+  once before. `.trail-meta-rating` pins `line-height: 12px`, because an emoji's line box is taller than a
+  text line and without it every card grew 52 → 55px on a sort switch — a card that resizes is exactly what
+  the `lists` suite forbids elsewhere. Worth recording how that was nearly missed: the first measurement
+  counted distinct element top edges to detect a wrap and reported the 2px-higher emoji span as a second
+  line. It never wrapped.
 - **Trail rating and popularity, Stufe 1, live in Finale.** 131 of its 219 trails now carry Trailforks'
   `rating_bayesian`, vote count and popularity score, matched onto our Outdooractive-sourced ids by
   `tools/match_trailforks.py`. Two new sort axes in the Trails list, a **"Nur Highlights"** switch that dims

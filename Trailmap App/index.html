@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=184" />
+<link rel="stylesheet" href="style.css?v=186" />
 </head>
 <body>
 <div id="fatalError">
@@ -4066,6 +4066,24 @@ function ratingRowHtml(t){
   return `<div class="ip-rating">${stars} <span class="${cls}">★</span> ` +
          `<span class="ip-rating-votes">(${votes}${asOf})</span>${pop}</div>`;
 }
+// The value a card shows for the axis it is CURRENTLY sorted by -- ⭐ for the rating, 🔥 for popularity.
+// Only the active one, never both, and that is a measured decision rather than restraint for its own sake:
+// the meta row is 295px on the desktop sidebar and the tightest Finale card already uses 145px of it, with
+// the card's solo button reserving another 26px. Both values together are ~100px, which fits there but
+// leaves about 8px on a 375px phone (the drawer is min(88vw,340px)) -- and single-digit headroom in this
+// row is exactly what put two Bike Kingdom names onto a second line once before. One value at a time has
+// ~50px of slack on every layout.
+// A card with no value for the active axis shows nothing at all, rather than a dash: the "ohne Bewertung"
+// heading above it already says why, and repeating it per card would be noise.
+function ratingMetaHtml(t){
+  if (trailSortMode === "rate" && typeof t.rate === "number") {
+    return `<span class="trail-meta-rating">⭐ ${t.rate.toFixed(2).replace(".", ",")}</span>`;
+  }
+  if (trailSortMode === "pop" && typeof t.pop === "number") {
+    return `<span class="trail-meta-rating">🔥 ${t.pop}</span>`;
+  }
+  return "";
+}
 function trailLabelHtml(t){
   // The ★ is the same argument the coloured dot won on 2026-07-28: the label is the one place that names a
   // trail, and it often covers the very line whose colour would have told you the difficulty. "Is it any
@@ -7774,7 +7792,7 @@ function makeTrailCard(t, regionKey){
   // card there and on none anywhere else. It stays in the info panel, where a Tour and a trail do meet.
   card.innerHTML = `
     <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${categoryBadge(t)}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
-    <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span></div>`;
+    <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span>${ratingMetaHtml(t)}</div>`;
   card.addEventListener("click", (e) => {
     const soloBtn = e.target.closest(".card-solo-btn");
     if (soloBtn) {
@@ -8315,7 +8333,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v184"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v186"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

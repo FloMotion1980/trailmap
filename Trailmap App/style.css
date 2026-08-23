@@ -1720,6 +1720,13 @@ header{ position:relative; z-index:1; }
 /* Das ★ im Kartenlabel: dieselbe Rolle wie der Schwierigkeitspunkt davor, nur fuer "lohnt sich".
    Bernstein, weil es die einzige Farbe in diesem Label ist, die mit keiner Schwierigkeitsfarbe
    kollidiert -- gruen/blau/rot/schwarz sind alle belegt. */
+/* Der Wert der aktiven Sortierachse in der Kachel. Nicht fett, nicht farbig: er steht neben Laenge und
+   Hoehenmetern und soll gleichwertig lesen, nicht als Auszeichnung.
+   `line-height` ist der wichtige Teil, nicht Kosmetik: eine Emoji-Zeilenbox ist hoeher als eine Textzeile,
+   und ohne die Fesselung wuchs die Kachel beim Umschalten der Sortierung von 52 auf 55px -- gemessen. Eine
+   Kachel, die ihre Groesse aendert, ist genau das, was die `lists`-Suite an anderer Stelle verbietet
+   ("selecting a card does not resize it"). 12px ist die natuerliche Hoehe der Zeile ohne Emoji. */
+.trail-meta-rating { white-space: nowrap; line-height: 12px; }
 .tl-star { color: #e0a300; margin-right: 2px; font-size: 11px; }
 /* Die Bewertungszeile im Info-Panel. Die Stimmenzahl ist absichtlich kleiner und grauer als der Wert:
    sie qualifiziert ihn, sie konkurriert nicht mit ihm. */

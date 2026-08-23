@@ -155,6 +155,41 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   T.ok("and it reads 'noch nicht bewertet'", /noch nicht bewertet/.test(noneTxt), noneTxt, "noch nicht bewertet");
   T.ok("with no 0 and no stray star", !/0,00|★/.test(noneTxt), noneTxt, "no zero, no star");
 
+  T.test("the sorted-by value appears in the card, on ONE line, without resizing the card");
+  // The card must not change size when the sort axis changes. It did: an emoji's line box is taller than a
+  // text line, so ⭐/🔥 grew every card from 52 to 55 px until .trail-meta-rating got a fixed line-height.
+  // A card that resizes is what the `lists` suite forbids for selection, for the same reason -- the list
+  // twitches under a finger.
+  const cardNamed = () => TM.ui.cardNamed("trailCards", /Ingegnere/);
+  const shape = () => {
+    const c = cardNamed();
+    const m = c.querySelector(".trail-meta");
+    return { card: Math.round(c.getBoundingClientRect().height),
+             row: Math.round(m.getBoundingClientRect().height),
+             items: m.children.length,
+             text: [...m.children].map((e) => e.textContent).join(" | ") };
+  };
+  chip("sort", "diff").click();
+  await TM.wait(400);
+  const plain = shape();
+  T.eq("without a rating sort the row has just length and elevation", plain.items, 2);
+
+  chip("sort", "rate").click();
+  await TM.wait(400);
+  const rated = shape();
+  T.eq("sorting by rating adds one item", rated.items, 3);
+  T.ok("and it is the star value", /⭐ \d,\d\d/.test(rated.text), rated.text, "⭐ x,xx");
+  T.eq("the card is exactly as tall as before", rated.card, plain.card);
+  T.eq("and the meta row is still ONE line", rated.row, plain.row);
+
+  chip("sort", "pop").click();
+  await TM.wait(400);
+  const pop = shape();
+  T.ok("sorting by popularity shows the flame value instead", /🔥 \d+/.test(pop.text), pop.text, "🔥 n");
+  T.ok("never both at once", !/⭐/.test(pop.text), pop.text, "no star");
+  T.eq("still the same card height", pop.card, plain.card);
+  T.eq("still one line", pop.row, plain.row);
+
   TM.$("#trailViewResetBtn").click();
   await TM.wait(300);
 });
