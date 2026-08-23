@@ -155,11 +155,13 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   T.ok("and it reads 'noch nicht bewertet'", /noch nicht bewertet/.test(noneTxt), noneTxt, "noch nicht bewertet");
   T.ok("with no 0 and no stray star", !/0,00|★/.test(noneTxt), noneTxt, "no zero, no star");
 
-  T.test("the sorted-by value appears in the card, on ONE line, without resizing the card");
-  // The card must not change size when the sort axis changes. It did: an emoji's line box is taller than a
-  // text line, so ⭐/🔥 grew every card from 52 to 55 px until .trail-meta-rating got a fixed line-height.
-  // A card that resizes is what the `lists` suite forbids for selection, for the same reason -- the list
-  // twitches under a finger.
+  T.test("a card shows BOTH numbers whenever it has them, on one line, without resizing");
+  // Both, always, independent of the sort axis (the user's call). Two things are pinned here because both
+  // were got wrong once: the card must not change height when the sort changes -- an emoji's line box is
+  // taller than a text line, which grew every card 52 -> 55px until .trail-meta-rating pinned its
+  // line-height -- and the row must stay ONE line, which an earlier version of this check misread by
+  // counting element top edges (the emoji span sits 2px higher without wrapping). Measure the CARD, not
+  // the tops.
   const cardNamed = () => TM.ui.cardNamed("trailCards", /Ingegnere/);
   const shape = () => {
     const c = cardNamed();
@@ -167,28 +169,29 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
     return { card: Math.round(c.getBoundingClientRect().height),
              row: Math.round(m.getBoundingClientRect().height),
              items: m.children.length,
-             text: [...m.children].map((e) => e.textContent).join(" | ") };
+             text: [...m.children].map((e) => e.textContent).join(" ") };
   };
   chip("sort", "diff").click();
   await TM.wait(400);
-  const plain = shape();
-  T.eq("without a rating sort the row has just length and elevation", plain.items, 2);
-
-  chip("sort", "rate").click();
-  await TM.wait(400);
   const rated = shape();
-  T.eq("sorting by rating adds one item", rated.items, 3);
-  T.ok("and it is the star value", /⭐ \d,\d\d/.test(rated.text), rated.text, "⭐ x,xx");
-  T.eq("the card is exactly as tall as before", rated.card, plain.card);
-  T.eq("and the meta row is still ONE line", rated.row, plain.row);
+  T.eq("length, elevation, rating and popularity -- four items", rated.items, 4);
+  T.ok("the star value is there", /⭐ \d,\d\d/.test(rated.text), rated.text, "⭐ x,xx");
+  T.ok("and the flame value too, without sorting by either", /🔥 \d+/.test(rated.text), rated.text, "🔥 n");
 
-  chip("sort", "pop").click();
-  await TM.wait(400);
-  const pop = shape();
-  T.ok("sorting by popularity shows the flame value instead", /🔥 \d+/.test(pop.text), pop.text, "🔥 n");
-  T.ok("never both at once", !/⭐/.test(pop.text), pop.text, "no star");
-  T.eq("still the same card height", pop.card, plain.card);
-  T.eq("still one line", pop.row, plain.row);
+  // An unrated trail is the height reference: its card carries two items and must be exactly as tall.
+  const unratedCard = TM.ui.trailCards().find((c) => !/⭐/.test(c.textContent));
+  T.ok("there is an unrated card to compare against", !!unratedCard, !!unratedCard, true);
+  T.eq("a rated card is exactly as tall as an unrated one",
+       rated.card, Math.round(unratedCard.getBoundingClientRect().height));
+
+  for (const mode of ["rate", "pop"]) {
+    chip("sort", mode).click();
+    await TM.wait(400);
+    const s2 = shape();
+    T.eq(`sorting by ${mode} changes no card height`, s2.card, rated.card);
+    T.eq(`and the row is still one line under ${mode}`, s2.row, rated.row);
+    T.eq(`and both values are still shown under ${mode}`, s2.items, 4);
+  }
 
   TM.$("#trailViewResetBtn").click();
   await TM.wait(300);

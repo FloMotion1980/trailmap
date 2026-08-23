@@ -4066,23 +4066,23 @@ function ratingRowHtml(t){
   return `<div class="ip-rating">${stars} <span class="${cls}">★</span> ` +
          `<span class="ip-rating-votes">(${votes}${asOf})</span>${pop}</div>`;
 }
-// The value a card shows for the axis it is CURRENTLY sorted by -- ⭐ for the rating, 🔥 for popularity.
-// Only the active one, never both, and that is a measured decision rather than restraint for its own sake:
-// the meta row is 295px on the desktop sidebar and the tightest Finale card already uses 145px of it, with
-// the card's solo button reserving another 26px. Both values together are ~100px, which fits there but
-// leaves about 8px on a 375px phone (the drawer is min(88vw,340px)) -- and single-digit headroom in this
-// row is exactly what put two Bike Kingdom names onto a second line once before. One value at a time has
-// ~50px of slack on every layout.
-// A card with no value for the active axis shows nothing at all, rather than a dash: the "ohne Bewertung"
-// heading above it already says why, and repeating it per card would be noise.
+// Both numbers, always, whenever the trail has them -- ⭐ the rating, 🔥 the popularity. Independent of
+// which axis the list is sorted by, at the user's own call ("Zeig das doch einfach immer an. Das wäre viel
+// besser"), and they were right on the facts too: an earlier version showed only the active axis because a
+// SCALED ESTIMATE said both together would leave ~8px on a phone. Measured properly they leave far more --
+// see the numbers pinned in the `rating` suite. The lesson is the usual one in this row: measure it, do not
+// scale a desktop number down.
+// A trail with no rating shows nothing rather than a dash: the "ohne Bewertung" heading already says why
+// when it matters, and a per-card placeholder would be noise on 88 of Finale's 219 cards.
 function ratingMetaHtml(t){
-  if (trailSortMode === "rate" && typeof t.rate === "number") {
-    return `<span class="trail-meta-rating">⭐ ${t.rate.toFixed(2).replace(".", ",")}</span>`;
+  let out = "";
+  if (typeof t.rate === "number") {
+    out += `<span class="trail-meta-rating">⭐ ${t.rate.toFixed(2).replace(".", ",")}</span>`;
   }
-  if (trailSortMode === "pop" && typeof t.pop === "number") {
-    return `<span class="trail-meta-rating">🔥 ${t.pop}</span>`;
+  if (typeof t.pop === "number") {
+    out += `<span class="trail-meta-rating">🔥 ${t.pop}</span>`;
   }
-  return "";
+  return out;
 }
 function trailLabelHtml(t){
   // The ★ is the same argument the coloured dot won on 2026-07-28: the label is the one place that names a
