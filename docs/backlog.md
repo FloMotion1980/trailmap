@@ -44,6 +44,41 @@ and eventually ship through the real stores rather than only as an installable P
 **Milestones**, deliberately incremental: M1 Google login + route sync (web/PWA) → M2 GPX import synced →
 M3 link-sharing UI → M4–M6 per the plan file (Apple login, Capacitor, store submission).
 
+**Ordering insight (2026-08-21, from the user's own question): shipping the CURRENT app to the stores first,
+before accounts exist, is cheaper than the milestone order implies — and partly inverts its premise.** Apple's
+"Sign in with Apple" obligation is triggered by offering Google login (Guideline 4.8); an app with **no**
+accounts does not trigger it at all, so a first submission without auth is the simplest one this project will
+ever make, not the hardest. It also has no server: nothing to run, nothing to pay monthly, nothing to break.
+And store review is the big unknown in this whole plan, so meeting it once before auth is bolted on removes
+risk from the sequence rather than adding it. Google Play first (25 $ once, milder review, buildable on
+Windows), and its 14-day / 12-tester requirement for new personal accounts then runs down in the background
+instead of blocking later. The one review risk to design for is Apple's Guideline 4.2 ("Minimum
+Functionality"), which regularly catches apps that are a WebView pointed at a website — this app is not that
+in substance (offline, GPS, real local computation), but the FORM has to match: Capacitor must bundle the
+files into the app, never load `github.io`. That is what the `mobile/` plan already says.
+
+**Three prerequisites that are NOT technical, found 2026-08-21 and verified in the repo. None of them is
+about the stores' own rules — the stores do not care that something is also free on GitHub, and with no
+`LICENSE` file the code is the user's own by default copyright. These are what actually blocks a release:**
+- **`leaflet-rotate.js` is GPL-3** — the licence is in the file's own header, and the app ships it. GPL-3
+  requires the whole combined work to be distributed under GPL-3 with source available, and GPL terms are
+  a known conflict with App Store distribution terms (VLC was pulled over exactly this). **This applies
+  whether or not the app costs anything**, so it is the first thing to settle before any Apple submission.
+  The ways out are to replace the plugin or to solve map rotation without it — see `CLAUDE.md`'s rotation
+  section for how deeply it is wired in (it patches Leaflet's core and every pane parent depends on it).
+- **The tile servers are not licensed for this.** The app calls `tile.openstreetmap.org` directly, plus
+  OpenTopoMap and Esri's World Imagery. OSM's Tile Usage Policy covers small, non-commercial use and rules
+  out heavy or commercial traffic; a store app pointing a growing user base at donated infrastructure is
+  what that policy exists to prevent. A store release realistically needs a paid tile provider, which is an
+  ongoing cost the plan does not currently budget for.
+- **Provenance of the trail data.** A large share of the geometry comes from Trailforks harvesting (see the
+  region docs). That is one thing for private use and a materially different one when redistributed in a
+  store app, and worse again in a paid one. Not a question the assistant can settle — flagged so it is a
+  deliberate decision rather than an oversight.
+
+**Consequence for pricing:** the honest reading is stores yes, **money not at first**. Shipping free defuses
+the data question considerably and makes the tile question less pressing; GPL-3 has to be solved either way.
+
 **Prerequisites the user has not started yet, and which gate M1**: a Supabase project and the OAuth app
 registrations. Confirm those exist before writing code. The user also wants to revisit hosting options when
 this resumes — specifically whether a backend could replace GitHub Pages entirely.
