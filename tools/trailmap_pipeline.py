@@ -545,11 +545,14 @@ def build_trail(trail_id, name, region, diff, raw_points, *, uphill=False,
 
 
 def write_region(path, line_trails, trail_geo, elevation_profiles, places=None, lifts=None,
-                 trail_segments=None):
+                 trail_segments=None, ratings=None):
     """Write a regions/<key>.json in the app's own shape and formatting.
 
     The separators match the existing files, so a rebuild produces a readable diff rather than one giant
     changed line.
+
+    `ratings` is the optional provenance block for the community numbers on the trails themselves
+    ({source, asOf, matched, trails}) -- see tools/apply_trailforks_ratings.py for why it carries a date.
     """
     data = {"lineTrails": line_trails, "trailGeo": trail_geo,
             "elevationProfiles": elevation_profiles, "places": places or []}
@@ -557,6 +560,8 @@ def write_region(path, line_trails, trail_geo, elevation_profiles, places=None, 
         data["trailSegments"] = trail_segments
     if lifts:
         data["lifts"] = lifts
+    if ratings:
+        data["ratings"] = ratings
     json.dump(data, open(path, "w", encoding="utf-8"), ensure_ascii=False,
               separators=(", ", ": "))
     return data

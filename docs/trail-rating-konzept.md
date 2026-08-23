@@ -1,6 +1,7 @@
 # Konzept: Trail-Bewertung und Beliebtheit
 
-**Status: Konzept, nichts davon gebaut.** Angefragt vom Nutzer am 2026-08-21: Trailforks' eigene Bewertung
+**Status: Stufe 1 ist gebaut (2026-08-23, Testregion Finale) — siehe den letzten Abschnitt. Der Rest
+ist Konzept.** Angefragt vom Nutzer am 2026-08-21: Trailforks' eigene Bewertung
 und Beliebtheit pro Trail in die App holen. Seine Begründung ist der Maßstab, an dem der Entwurf gemessen
 werden muss — *"gerade in größeren Regionen mit vielen Trails kann das ein echter Mehrwert sein"*.
 
@@ -217,3 +218,59 @@ allein die Frage schon beantwortet.
 2. **Soll die Sortierung nach Bewertung der neue Standard der Trails-Liste werden** (heute: Schwierigkeit
    innerhalb der Sub-Region), oder bleibt sie eine Option, die man wählt?
 3. **Reicht Stufe 1**, oder soll der Schwellenfilter (5.4) gleich mit?
+
+---
+
+# Stufe 1 ist gebaut (2026-08-23, Testregion Finale)
+
+Der Nutzer hat Finale als Testregion gewählt — große Zielregion, gute Datenlage, und er kennt sie selbst.
+Bikeparks stehen bewusst hinten an ("Für Bikeparks sehe ich da wenig Mehrwert"), und die Gruppierung
+"Top 3 pro Hub" ist bewusst NICHT gebaut: ob Hubs die richtige Klammer sind, hängt an der Region.
+
+## Was drin ist
+
+| | |
+|---|---|
+| Daten | `rate`/`votes`/`pop` an 131 der 219 Finale-Trails (60 %), plus ein `ratings`-Block mit Quelle und Datum |
+| Sortierachsen | **Bewertung** und **Beliebtheit** in der bestehenden Zahnrad-Leiste, absteigend als Standard |
+| Unbewertete | eigene Überschrift "ohne Bewertung (n)", NICHT als 0 untensortiert |
+| Karte | Schalter **"Nur Highlights"** in Kartenoptionen — dimmt alles außerhalb des oberen Fünftels der Region |
+| Label | ★ vor dem Namen, nur bei Highlights |
+| Info-Panel | `4,77 ★ (124 Stimmen · Stand 2026-08-23) Beliebtheit 95`, bzw. "noch nicht bewertet" |
+| Gate | die ganze Rating-UI blendet sich aus, wenn die aktiven Regionen unter 35 % Abdeckung liegen |
+
+## Die Entscheidungen, die sich beim Bauen geschärft haben
+
+**Die Highlight-Schwelle ist relativ, nicht absolut.** Ein festes "ab 4,4 Sterne" wäre genau die
+regionsübergreifende Aussage, gegen die dieses Dokument argumentiert. Gebaut ist stattdessen das obere
+Fünftel der bewerteten Trails **je Region** (`HIGHLIGHT_QUANTILE`), mindestens 5 Stimmen, und nur wenn die
+Region überhaupt 10 bewertete Trails hat. In Finale ergibt das 22 Trails von 219 — ein langes Wochenende.
+
+**Der Schalter erfindet keine Mechanik.** Er ruft dieselbe `baselineLineOpacity()`, die jedes Hover-Ende
+und jedes Solo-Ende schon fragt. Solo gewinnt über Highlights, weil es die spezifischere Anfrage ist.
+
+**Das Gate ist der Grund, warum das Feature in anderen Regionen nicht peinlich wird.** Gemessene
+Abdeckung: Finale 60 %, Madeira 34 %, Pfälzerwald 0–3 %. Unter 35 % verschwinden Chips und Schalter, und
+ein gespeicherter Highlights-Zustand wird aktiv zurückgesetzt — sonst bliebe die Karte gedimmt, während der
+Schalter zum Ausschalten nicht mehr da ist.
+
+## Drei Fehler, die das Bauen selbst aufgedeckt hat
+
+Alle drei sind jetzt mutationsgeprüft (`tests/browser/rating.js`, 8 Fälle / 32 Checks):
+
+1. **`clearSolo()` stellte fest 0,85 wieder her.** Mit Highlights an ist das falsch: es gibt jetzt zwei
+   Ruhezustände. Dieselbe Konstante hatte hier schon einmal einen echten Fehler verursacht.
+2. **Die Highlight-Schwellen wurden nach dem Bauen der Layer berechnet** — und ein Trail-Label wird EINMAL
+   beim Bauen gebunden. Ergebnis: das Dimmen funktionierte, die Sterne nicht, still.
+3. **Der Stern stand doppelt im Info-Panel** (`★4,77 ★`).
+
+Und eine vierte Falle, die die Suite selbst aufdeckte: der Highlights-Schalter ist **persistiert**, also
+erbte die nächste Suite eine Karte mit 197 gedimmten Linien. Er wird jetzt in `TM.baseline()`
+zurückgesetzt, wie die anderen Kartenschalter.
+
+## Was als Nächstes offen ist
+
+Im Backlog unter diesem Themenkomplex: die zwei Presets ("Muss man fahren" / "Versteckte Perlen"),
+"In der Nähe", die Abfahrten je Bergstation, das Ranken der Tourenbuilder-Kandidaten, Touren, die die
+Bewertung ihrer Komponenten erben — und die 22 Vorlage-Fälle plus 39 Trailforks-Linien ohne Gegenstück aus
+dem Zuordnungslauf.

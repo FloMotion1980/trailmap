@@ -181,6 +181,11 @@
     await TM.ui.setSwitch("showPlacesToggle", true);
     await TM.ui.setSwitch("showNamesToggle", false);
     await TM.ui.setSwitch("showDirectionArrowsToggle", false);
+    // Highlights-only is PERSISTED, and it dims every trail outside a region's top fifth -- so a session
+    // that left it on would hand the next suite a map where 197 of 219 lines sit at 0.15 opacity. That
+    // breaks far more than the rating suite: `solo` counts dimmed lines, `palette` reads stroke opacity,
+    // and `lists` reads what is visible. Reset here rather than per suite, same as the switches above.
+    if (TM.$("#showHighlightsToggle")) await TM.ui.setSwitch("showHighlightsToggle", false);
     await TM.wait(250);
   };
 

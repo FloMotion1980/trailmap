@@ -1708,3 +1708,24 @@ header{ position:relative; z-index:1; }
 /* Where the focused element's stretch ENDS: same dot, same number, red instead of green — the same
    green/red pairing the app already uses for a trail's own Start/Ziel markers. */
 .builder-num.is-end{ background:#e0392b; border-color:#5c0f0a; }
+
+/* ---- Trail-Bewertung / Beliebtheit (Trailforks), 2026-08-23 ------------------------------------------
+   Die Sortier-Chips und der Highlights-Schalter sind standardmaessig AUSGEBLENDET und werden nur
+   eingeblendet, wenn die aktiven Regionen genug Bewertungen tragen (syncRatingChrome). Das ist bewusst
+   CSS und keine JS-Sichtbarkeit: so bleibt die Reihenfolge im Markup stabil, und ein Chip taucht an
+   seiner Stelle auf statt am Ende. */
+.rating-chip, .rating-chrome { display: none; }
+.rating-chip.rating-available { display: inline-block; }
+.rating-chrome.rating-available { display: flex; }
+/* Das ★ im Kartenlabel: dieselbe Rolle wie der Schwierigkeitspunkt davor, nur fuer "lohnt sich".
+   Bernstein, weil es die einzige Farbe in diesem Label ist, die mit keiner Schwierigkeitsfarbe
+   kollidiert -- gruen/blau/rot/schwarz sind alle belegt. */
+.tl-star { color: #e0a300; margin-right: 2px; font-size: 11px; }
+/* Die Bewertungszeile im Info-Panel. Die Stimmenzahl ist absichtlich kleiner und grauer als der Wert:
+   sie qualifiziert ihn, sie konkurriert nicht mit ihm. */
+.ip-rating { margin-top: 4px; font-size: 12px; color: #2f4a3a; }
+.ip-rating-star { color: #8a948a; }
+.ip-rating-votes { font-size: 11px; color: #6b7a6b; }
+.ip-rating-none { color: #8a948a; font-style: italic; }
+/* Ueberschrift der unbewerteten Gruppe in der Trail-Liste -- gedaempft, weil sie keine Wertung ist. */
+.rating-unrated-title { color: #8a948a !important; margin-top: 8px; }

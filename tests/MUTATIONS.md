@@ -109,6 +109,10 @@ current; a stale count is worse than none, because it looks like evidence.
 
 | `gpxmatch` | raise one case's baseline in `tools/gpx_map_match_baseline.json` (livigno 20 -> 21) | "no tour matches worse than its recorded baseline" fails with the harness exiting 1 and *"REGRESSED livigno: id+order 20/20 (baseline 21)"*. Verifies the mechanism the whole suite rests on -- before this the harness printed the same comparison and exited 0 either way |
 
+| `rating` | drop the rated/unrated split in `appendTrailGroup` (`const rated = sorted; const unrated = [];`) | "sorting by rating is best-first, and unrated trails get their OWN heading" fails 4 checks and the popularity case a fifth: the heading count goes to 0, its text to `undefined`, the index lookup to −1. That is the whole honesty of the feature gone — 88 of Finale's 219 trails silently sort as if they had scored 0, since the comparator really does return −1 for them |
+| `rating` | put the hardcoded restore back in `clearSolo` (`opacity: 0.85` for every line instead of asking `baselineLineOpacity(lid)`) | "solo wins over Highlights, and leaving solo returns to the HIGHLIGHT state" fails on **got 0, want 197**: leaving solo while Highlights is on brightens the entire map. Worth knowing this is the SECOND bug that same constant has caused here — hovering any trail during solo mode used to cancel the dimming for the same reason |
+| `rating` | move `recomputeHighlightCuts()` back to after `data.lineTrails.forEach(buildTrailLayer)` | "a highlight carries a ★ in its own map label" fails with **0 stars, want > 5**. This was a real half-working state found while building: a trail's permanent label is bound ONCE at build time, so with the cut-offs computed afterwards the dimming worked and the stars silently did not. Nothing else in the suite notices — the dimming case passes either way |
+
 ## Not yet mutation-checked
 
 `geometry`, `infopanel`, `lifts` and `builder`'s newer cases have not had a mutation applied. They pass, and

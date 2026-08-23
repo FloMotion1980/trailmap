@@ -97,9 +97,41 @@ reasoning is the part that should drive the design: *"gerade in größeren Regio
 ein echter Mehrwert sein"*. That is a real problem statement — the Gardasee holds 916 trails and the
 Pfälzerwald 805, and a difficulty colour alone does not tell a visitor which twenty are worth the day.
 
-Concept: **`docs/trail-rating-konzept.md`**. Read it before building. It covers what the data actually is
-(and is not), the sparse-votes trap, where the numbers belong in the UI, the per-region rollout, and the one
-thing that must NOT happen — hiding unrated trails, which in a freshly-swept region is most of them.
+Concept: **`docs/trail-rating-konzept.md`**. Read it before building.
+
+**Stufe 1 ist gebaut (2026-08-23), Testregion Finale** — zwei Sortierachsen, der "Nur Highlights"-Schalter,
+das ★ im Kartenlabel, die Info-Panel-Zeile und ein Datendichte-Gate, das die ganze UI ausblendet, wo die
+Region die Daten nicht hat. 131 der 219 Finale-Trails tragen eine Bewertung. Suite: `tests/browser/rating.js`
+(8 Fälle / 32 Checks, drei Mutationen geprüft).
+
+**Offen, in der Reihenfolge, in der es der Nutzer priorisiert hat:**
+- **Die zwei Presets statt Zahlenschieber:** *"Muss man fahren"* (hoch bewertet UND viel gefahren — für den
+  Erstbesucher) und *"Versteckte Perlen"* (hoch bewertet, wenig gefahren — für den, der die Region kennt).
+  Der zweite Fall existiert nur, weil Bewertung und Beliebtheit zwei getrennte Zahlen sind; genau deshalb
+  dürfen sie nie zu einem Score verrechnet werden.
+- **Stern-Endpunkte auf der Karte** (Idee des Nutzers, 2026-08-23): bei Highlight-Trails statt weißem,
+  grünem und rotem Kreis ein Sternchen als Start-/Endpunkt. **Vor dem Bauen lesen:** die drei
+  Endpunkt-Marker sind die am stärksten verdrahteten Objekte der Karte — `syncStartDot` (vier Aufrufstellen),
+  `showEndpoints`/`hideEndpoints`, `applyEndpointSize` (RIDE vergrößert sie), `endpointsCollide` (verschmilzt
+  Start und Ziel zu einem zweifarbigen Marker), `applyReversedEndpoints` und die Solo-/Highlight-Deckkraft.
+  Ein Wechsel des Layer-Typs (`L.circleMarker` → divIcon-Marker) bricht `setStyle`/`setRadius` an allen
+  diesen Stellen. Risikoarme Bauform: den Kreis als tragendes Objekt behalten und unsichtbar schalten, den
+  Stern als dekorative Schicht darüber legen — wie der RIDE-Fokus-Halo es macht.
+- **"In der Nähe"** — bestbewertete Trails im Radius um die eigene Position, nur sichtbar mit Position.
+- **"Abfahrten von dieser Bergstation"** im Lift-Info-Panel, nach Bewertung sortiert. Trägt die
+  Liftregionen (Bike Kingdom, Paganella, Sölden), nicht Finale.
+- **Tourenbuilder-Kandidaten ranken** — `junctionCandidates` liefert die Anschlüsse schon, sie nach
+  Bewertung zu ordnen ist ein Zweizeiler mit echtem Effekt.
+- **Touren erben die Bewertung ihrer Komponenten** (längengewichtet aus `trailSegments`), damit der
+  Touren-Abschnitt überhaupt sortierbar wird.
+- **Weitere Regionen**: Gardasee und Madeira sind aus Trailforks gebaut, dort joint die Bewertung gratis
+  über den Slug — nur der Feld-Harvest fehlt. Bei gemischten Regionen (Schwarzwald, Pfälzerwald, Harz)
+  bekommen nur die Trailforks-Trails Werte.
+- **Aus dem Zuordnungslauf offen**: 22 Vorlage-Fälle (darunter `Radici` ↔ *Sentiero indiano* und `Din` ↔
+  *Via Caffaro*, beide sehen nach demselben Trail unter zwei Namen aus) und **39 Trailforks-Linien ohne
+  Gegenstück** bei uns — die Kandidatenliste für fehlende Finale-Trails. Dazu drei Duplikat-Kandidaten in
+  unseren eigenen Daten, die der Mehrfachanspruch aufgedeckt hat (`Cava - Tappeto Verde` ↔ `Cava-Green
+  Carpet`, `Bondi Traverse` ↔ `Bondi`, `Roller Coaster` ↔ `Rollercoaster-San Pantaleo`).
 
 ## 3. Regionen, die noch offen sind
 

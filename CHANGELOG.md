@@ -22,6 +22,22 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-21
+- **Trail rating and popularity, Stufe 1, live in Finale.** 131 of its 219 trails now carry Trailforks'
+  `rating_bayesian`, vote count and popularity score, matched onto our Outdooractive-sourced ids by
+  `tools/match_trailforks.py`. Two new sort axes in the Trails list, a **"Nur Highlights"** switch that dims
+  everything outside a region's own top fifth, a ★ on a highlight's map label, and a panel row reading
+  `4,77 ★ (124 Stimmen · Stand 2026-08-23) Beliebtheit 95`. Three design points are the substance: the
+  highlight cut is **per region** and never a fixed number of stars (a 4.3 in Finale and a 4.3 in the
+  Pfälzerwald are different communities with sample sizes a factor of thirty apart); unrated trails get their
+  **own heading** instead of sorting last as if they scored zero (88 of 219 in Finale, and the best-covered
+  region there is); and the whole UI **hides itself** below 35 % coverage, measured as Finale 60 %, Madeira
+  34 %, Pfälzerwald 0–3 %. Suite `tests/browser/rating.js`, 8 cases / 32 checks, three verified mutations.
+  Building it surfaced three real bugs, all now pinned: `clearSolo()` restored a hardcoded 0.85 (wrong once
+  there are two resting states — and the second bug that same constant has caused here); the highlight
+  cut-offs were computed AFTER the layers, and a trail label is bound once at build time, so the dimming
+  worked while the stars silently did not; and the panel printed the star twice. A fourth was found by the
+  suite itself — the switch is persisted, so a session that left it on handed the next suite a map with 197
+  dimmed lines, which now resets in `TM.baseline()` like the other map switches.
 - **`docs/backlog.md` rebuilt to the user's own priorities (645 -> 324 lines).** Out, because finished
   rather than forgotten: all Touren rework, the remaining region items for Gardasee/Schwarzwald/Sauerland/
   Vogesen, and rebuilding the Saalbach loops. Moved to a new **Zurückgestellt** part, kept in full: the RIDE

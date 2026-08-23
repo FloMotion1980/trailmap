@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=183" />
+<link rel="stylesheet" href="style.css?v=184" />
 </head>
 <body>
 <div id="fatalError">
@@ -173,6 +173,10 @@
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showNamesToggle"><span class="slider"></span></span>Namen</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showPlacesToggle"><span class="slider"></span></span>Orte</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDirectionArrowsToggle" checked><span class="slider"></span></span>Richtungspfeile</label>
+            <!-- Hidden unless the active regions actually carry ratings (syncRatingChrome) -- a switch that
+                 dims nothing is worse than no switch. Dims everything outside the region's own top fifth,
+                 reusing the solo dim value rather than inventing a second one. -->
+            <label class="toggle-row rating-chrome" id="highlightsRow"><span class="ios-switch"><input type="checkbox" id="showHighlightsToggle"><span class="slider"></span></span>Nur Highlights</label>
           </div>
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
           <!-- Which build is actually running. Added 2026-07-29 after several rounds of "is this fixed or am I
@@ -224,6 +228,12 @@
               <button type="button" class="chip" data-value="length">Länge</button>
               <button type="button" class="chip" data-value="up">Bergauf</button>
               <button type="button" class="chip" data-value="down">Bergab</button>
+              <!-- Rating/popularity, and BOTH of these chips are hidden unless the active regions carry
+                   enough of the data to be worth offering (syncRatingChrome). A sort axis that puts 88 of
+                   219 trails in an "ohne Bewertung" bucket is not a feature, it is a disappointment -- and
+                   in the Pfälzerwald, where 0-3 % of trails have three votes, it would be all of them. -->
+              <button type="button" class="chip rating-chip" data-value="rate">Bewertung</button>
+              <button type="button" class="chip rating-chip" data-value="pop">Beliebtheit</button>
             </div>
           </div>
           <button type="button" id="trailViewResetBtn" class="trail-view-reset">↺ Zurücksetzen</button>
@@ -1581,6 +1591,9 @@ const REGIONS = {};
 // ---- Trails mit echtem GPX ----
 const lineTrails = [];
 
+//: groupKey -> {source, asOf, matched, trails} for regions whose trails carry a community rating. Filled
+//: by activateRegionGroup, emptied by deactivateRegionGroup, exactly like every other per-group register.
+const REGION_RATING_META = {};
 let activeRegionGroups = new Set(); // which REGION_CATALOG groups are currently fetched/loaded
 let activeRegions = new Set(Object.keys(REGIONS));
 let activeDiffs = new Set(["gruen","blau","rot","schwarz"]);
@@ -1823,6 +1836,13 @@ document.getElementById("showLiftsToggle").addEventListener("change", (e) => {
   render();
 });
 
+document.getElementById("showHighlightsToggle").addEventListener("change", (e) => {
+  showHighlightsOnly = e.target.checked;
+  applyHighlightDimming();
+  // No label rebuild here on purpose: the ★ marks a highlight whether or not the dimming is on, so it is
+  // bound once with the label and does not depend on this switch.
+  persistActiveState();
+});
 document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
   showPlaces = e.target.checked;
   persistActiveState();
@@ -1920,7 +1940,8 @@ function persistTrailListView(){
 // choice active on boot and keeps exactly one .chip.active per row on every click. The sort row's ACTIVE
 // chip additionally gets an arrow appended to its own label (↑/↓, from SORT_LABELS' base text) -- the only
 // visible indicator of trailSortDir, since a plain "selected" state can't show a direction at all.
-const SORT_LABELS = { diff: "Schwierigkeit", name: "Name", length: "Länge", up: "Bergauf", down: "Bergab" };
+const SORT_LABELS = { diff: "Schwierigkeit", name: "Name", length: "Länge", up: "Bergauf",
+                      down: "Bergab", rate: "Bewertung", pop: "Beliebtheit" };
 function syncTrailViewChips(){
   document.querySelectorAll(".trail-view-chips").forEach(row => {
     const isSort = row.dataset.target === "sort";
@@ -4021,8 +4042,37 @@ const RIDE_CONNECTOR_CORE_COLOR = "#3d3d3d";
 // the map named a trail without saying anything about how hard it is, and the line's own colour is often
 // hidden under the label itself. Names are interpolated raw, like everywhere else in this file (the data is
 // ours, not user input).
+// The rating line in the info panel. Three deliberate choices, all of them about not overstating:
+//   * the VOTE COUNT is always shown next to the stars -- "4,5 aus 3 Stimmen" and "4,5 aus 271" are not the
+//     same claim, and across Madeira 59 % of trails have two votes or fewer;
+//   * "noch nicht bewertet" instead of a zero or an empty row, because unrated is a third state and by far
+//     the most common one in a freshly harvested region;
+//   * the harvest DATE, from the region's own `ratings` block. Nothing synchronises these numbers, so an
+//     undated figure silently ages -- the same reasoning that keeps lift operating hours out of the data.
+function ratingRowHtml(t){
+  if (!t || t.loop) return "";                 // a Tour has no rating of its own (yet)
+  const meta = REGION_RATING_META[groupOfSubRegion(t.region)];
+  if (!meta && typeof t.rate !== "number") return "";
+  if (typeof t.rate !== "number") {
+    return '<div class="ip-rating ip-rating-none">noch nicht bewertet</div>';
+  }
+  const stars = t.rate.toFixed(2).replace(".", ",");
+  const votes = t.votes === 1 ? "1 Stimme" : `${t.votes} Stimmen`;
+  const pop = typeof t.pop === "number" ? `<span class="ip-gap"></span>Beliebtheit ${t.pop}` : "";
+  // ONE star glyph, amber only when this trail is a highlight -- the first version printed the marker AND
+  // a plain "★" after the number, which read as "★4,77 ★".
+  const cls = isHighlight(t) ? "tl-star" : "ip-rating-star";
+  const asOf = meta && meta.asOf ? ` · Stand ${meta.asOf}` : "";
+  return `<div class="ip-rating">${stars} <span class="${cls}">★</span> ` +
+         `<span class="ip-rating-votes">(${votes}${asOf})</span>${pop}</div>`;
+}
 function trailLabelHtml(t){
-  return `<span class="tl-diff" style="background:${diffColor[t.diff]}"></span>${t.name}`;
+  // The ★ is the same argument the coloured dot won on 2026-07-28: the label is the one place that names a
+  // trail, and it often covers the very line whose colour would have told you the difficulty. "Is it any
+  // good" is the second question a label could answer and did not. Only on a highlight, so it stays a
+  // signal rather than decoration -- and it needs no palette entry, because it is text, not geometry.
+  const star = isHighlight(t) ? '<span class="tl-star">★</span>' : "";
+  return `<span class="tl-diff" style="background:${diffColor[t.diff]}"></span>${star}${t.name}`;
 }
 // A full round trip back to the original neutral mid-grey (#5a5a5a), the SAME hex it started at on
 // 2026-07-24 -- deliberately far from every diffColor tone (especially schwarz #1c1c1c, which the old
@@ -5409,19 +5459,68 @@ function applySolo(id){
   syncSelectedCardSoloBtn();
 }
 function clearSolo(){
-  Object.values(lineLayers).forEach(layer => {
-    layer.styleTarget.setStyle({ opacity: 0.85 });
-    applyHaloOpacity(layer, 0.85);
-    layer.startDot.setStyle({ opacity:1, fillOpacity:1 });
-    layer.startMarker.setStyle({ opacity:1, fillOpacity:1 });
-    layer.endMarker.setStyle({ opacity:1, fillOpacity:1 });
-    setArrowOpacity(layer, 1);
+  soloId = null;      // BEFORE the loop: baselineLineOpacity() reads it, and a stale soloId would make
+                      // every line restore to the dim value instead of its resting one.
+  // Asks baselineLineOpacity() rather than restoring a hardcoded 0.85. That constant was already the cause
+  // of one real bug here (hovering any trail during solo mode silently cancelled the dimming, see
+  // CLAUDE.md), and with the Highlights switch there is now a second resting state to get wrong: leaving
+  // solo while Highlights is on has to go back to dimmed-except-highlights, not to "everything bright".
+  Object.entries(lineLayers).forEach(([lid, layer]) => {
+    const o = baselineLineOpacity(lid);
+    layer.styleTarget.setStyle({ opacity: o });
+    applyHaloOpacity(layer, o);
+    const marker = o < 0.5 ? o : 1;
+    layer.startDot.setStyle({ opacity: marker, fillOpacity: marker });
+    layer.startMarker.setStyle({ opacity: marker, fillOpacity: marker });
+    layer.endMarker.setStyle({ opacity: marker, fillOpacity: marker });
+    setArrowOpacity(layer, marker);
   });
-  soloId = null;
   applyLiftVisibility();     // after soloId is cleared -- brings the other lifts back onto the map
   applyLiftSegmentOpacity(); // ditto for the Tours' own lift stretches
   applyNameLabels();
   syncSelectedCardSoloBtn();
+}
+// The Highlights switch. Nothing here is new machinery: it re-applies whatever baselineLineOpacity() now
+// says, which is the same call every hover-off and every solo-exit already goes through. A solo is left
+// alone on purpose -- it is the more specific request of the two, and overruling it would make the switch
+// feel like it broke the map.
+// The data-density gate. The rating UI (two sort chips, the Highlights switch) is only offered where the
+// active regions actually carry the data -- measured coverage: Finale 60 %, Madeira 34 %, the Pfälzerwald's
+// own brackets 0-3 %. Below RATING_DENSITY_MIN a "sort by rating" chip would bucket nearly every trail as
+// unrated, which is not a feature but a disappointment, and a Highlights switch would dim the entire map.
+// The info panel is deliberately NOT gated: if a single trail happens to carry a rating, showing it there
+// costs nothing and hides nothing.
+function syncRatingChrome(){
+  const on = ratingDensity() >= RATING_DENSITY_MIN;
+  document.querySelectorAll(".rating-chip, .rating-chrome").forEach((el) => {
+    el.classList.toggle("rating-available", on);
+  });
+  if (!on && showHighlightsOnly) {
+    // A saved "Highlights only" must not survive into a region that cannot honour it -- the switch would be
+    // gone from the UI while the map stayed dimmed, with nothing to turn it off.
+    showHighlightsOnly = false;
+    const box = document.getElementById("showHighlightsToggle");
+    if (box) box.checked = false;
+    applyHighlightDimming();
+  }
+  if (!on && (trailSortMode === "rate" || trailSortMode === "pop")) {
+    trailSortMode = TRAIL_VIEW_DEFAULTS.sortMode;
+    trailSortDir = TRAIL_SORT_DEFAULT_DIR[trailSortMode];
+    syncTrailViewChips();
+  }
+}
+function applyHighlightDimming(){
+  if (soloId) return;
+  Object.entries(lineLayers).forEach(([lid, layer]) => {
+    const o = baselineLineOpacity(lid);
+    layer.styleTarget.setStyle({ opacity: o });
+    applyHaloOpacity(layer, o);
+    const marker = o < 0.5 ? o : 1;
+    layer.startDot.setStyle({ opacity: marker, fillOpacity: marker });
+    layer.startMarker.setStyle({ opacity: marker, fillOpacity: marker });
+    layer.endMarker.setStyle({ opacity: marker, fillOpacity: marker });
+    setArrowOpacity(layer, marker);
+  });
 }
 // Keeps the sidebar's own card-solo-btn (only ever visible on the currently-selected card, via the
 // ".trail-card.selected .card-solo-btn" CSS rule, not a render()-time check) in sync with the real
@@ -6153,6 +6252,7 @@ function buildInfoPanelHtml(t){
     <div class="ip-trail">
       <span class="dot-start">●</span> → ${t.len} km → <span class="dot-end">●</span><span
         class="ip-gap"></span>${upShown} m ⬆️<span class="ip-gap"></span>${downShown} m ⬇️
+      ${ratingRowHtml(t)}
       ${profile ? buildElevationSvg(profile, highlight, diffColor[t.diff], t.id, isReversed, chartSegments) : ""}
       ${segmentInfoHtml}
     </div>
@@ -6354,8 +6454,56 @@ const lineLayers = {};
 // except the soloed trail while solo mode is active, normal 0.85 otherwise. Used by both
 // resetAllHoverStyles and setHover's "off" branch so that hovering a trail (even just passing the
 // mouse over it, no click needed) never overrides/undoes solo mode's dimming of the other trails.
+// Whether a trail counts as a highlight is decided PER REGION, against that region's own top quintile --
+// never against a fixed number of stars. A 4.3 in Finale and a 4.3 in the Pfälzerwald are not the same
+// statement: different communities, and sample sizes that differ by a factor of thirty (Finale's median
+// trail has 8 votes, the Pfälzerwald's has 0). A fixed threshold would silently mean "good" in one region
+// and "everything" or "nothing" in another. `highlightCut` holds each group's own cut-off, recomputed when a
+// region loads; MIN_VOTES keeps a single enthusiastic vote from promoting a trail.
+const HIGHLIGHT_QUANTILE = 0.2;
+const HIGHLIGHT_MIN_VOTES = 5;
+let showHighlightsOnly = false;
+const highlightCut = {};          // groupKey -> rating a trail must reach in THAT region
+function recomputeHighlightCuts(){
+  Object.keys(highlightCut).forEach(k => { delete highlightCut[k]; });
+  Object.keys(REGION_GROUPS).forEach((gk) => {
+    const subs = Object.keys(REGION_CATALOG[gk] ? REGION_CATALOG[gk].subRegions : {});
+    const rated = lineTrails.filter(t => subs.indexOf(t.region) >= 0 &&
+                                         typeof t.rate === "number" && (t.votes || 0) >= HIGHLIGHT_MIN_VOTES)
+                            .map(t => t.rate).sort((a, b) => b - a);
+    if (rated.length >= 10) {
+      highlightCut[gk] = rated[Math.max(0, Math.floor(rated.length * HIGHLIGHT_QUANTILE) - 1)];
+    }
+  });
+}
+function groupOfSubRegion(sub){
+  return Object.keys(REGION_CATALOG).find(gk => REGION_CATALOG[gk].subRegions &&
+                                               REGION_CATALOG[gk].subRegions[sub]);
+}
+function isHighlight(t){
+  if (!t || typeof t.rate !== "number" || (t.votes || 0) < HIGHLIGHT_MIN_VOTES) return false;
+  const cut = highlightCut[groupOfSubRegion(t.region)];
+  return cut !== undefined && t.rate >= cut;
+}
+//: The share of a region's trails that carry a rating at all. Below this the rating UI stays hidden rather
+//: than offering a sort axis that buckets nearly everything as "unrated" -- measured: Finale 60 %, Madeira
+//: 34 %, the Pfälzerwald's own brackets 0-3 %.
+const RATING_DENSITY_MIN = 0.35;
+function ratingDensity(){
+  const shown = lineTrails.filter(t => activeRegions.has(t.region));
+  if (!shown.length) return 0;
+  return shown.filter(t => typeof t.rate === "number").length / shown.length;
+}
 function baselineLineOpacity(lid){
-  if (!soloId) return 0.85;
+  if (!soloId) {
+    // The Highlights switch dims everything below the region's own cut, reusing solo's own dim value
+    // rather than inventing a second one -- it is the same visual question ("show me this, not that").
+    if (showHighlightsOnly) {
+      const t = lineTrails.find(x => x.id === lid);
+      return isHighlight(t) ? 0.9 : SOLO_DIM_OPACITY;
+    }
+    return 0.85;
+  }
   return lid === soloId ? 0.9 : SOLO_DIM_OPACITY;
 }
 
@@ -6701,6 +6849,7 @@ function persistActiveState(){
       showDownhill,
       showLifts,
       showPlaces,
+      showHighlightsOnly,
       showDirectionArrows,
       liveStatusOpen,
       strasseContrast,
@@ -6732,6 +6881,7 @@ function restoreActiveState(){
     if (typeof saved.showDownhill !== "boolean") saved.showDownhill = true;
     if (typeof saved.showLifts !== "boolean") saved.showLifts = true;
     if (typeof saved.showPlaces !== "boolean") saved.showPlaces = false;
+    if (typeof saved.showHighlightsOnly !== "boolean") saved.showHighlightsOnly = false;
     if (typeof saved.liveStatusOpen !== "boolean") saved.liveStatusOpen = true;
     if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = true;
     if (!STRASSE_CONTRAST_FILTERS.hasOwnProperty(saved.strasseContrast)) saved.strasseContrast = "a";
@@ -6792,12 +6942,22 @@ async function activateRegionGroup(groupKey){
     Object.assign(TRAIL_GEO, data.trailGeo);
     Object.assign(ELEVATION_PROFILES, data.elevationProfiles);
     if (data.trailSegments) Object.assign(TRAIL_SEGMENTS, data.trailSegments);
+    // Where a region's community numbers came from and when. Per GROUP, not per trail: it is a statement
+    // about the harvest, and the info panel needs it to date the figure it shows.
+    if (data.ratings) REGION_RATING_META[groupKey] = data.ratings;
     // Lifts are optional per region -- a low-mountain region has none. The DATA has to land before
     // buildTrailLayer runs, because a Trailrunde's lift segments resolve seg.liftId against LIFTS while
     // being built; filling LIFTS afterwards left those stretches drawn as plain grey connectors.
     // The LAYERS are still built after the trails, so the dotted cables end up above the trail lines in
     // Leaflet's add-order z-stack and stay readable where a lift runs alongside a trail.
     if (data.lifts) LIFTS.push(...data.lifts);
+    // BEFORE buildTrailLayer, not after: a trail's permanent name label is bound ONCE at build time
+    // (`hitLine.bindTooltip(trailLabelHtml(t), …)`), and trailLabelHtml asks isHighlight() for the ★. With
+    // the cut-offs computed afterwards every label was built starless and never rebuilt -- the dimming
+    // worked while the stars silently did not, which is exactly the kind of half-working state a
+    // build-time-bound tooltip produces. Called again at the end of activation too, since the LAST group
+    // to load must not leave an earlier group's cut stale.
+    recomputeHighlightCuts();
     data.lineTrails.forEach(buildTrailLayer);
     if (data.lifts) data.lifts.forEach(buildLiftLayer);
     buildPlaceMarkers(groupKey, data.places);
@@ -6806,6 +6966,11 @@ async function activateRegionGroup(groupKey){
     activeRegionGroups.add(groupKey);
     persistActiveState();
     rebuildRegionChips();
+    // Both of these depend on WHICH regions are loaded, so they belong here rather than at boot: the
+    // highlight cut-off is per region's own rating distribution, and the rating UI hides itself when the
+    // active regions do not carry enough of the data to be worth offering.
+    recomputeHighlightCuts();
+    syncRatingChrome();
     render();
     return "activated";
   })();
@@ -6845,10 +7010,13 @@ function deactivateRegionGroup(groupKey){
   subKeys.forEach(subKey => { delete REGIONS[subKey]; activeRegions.delete(subKey); });
   destroyPlaceMarkers(groupKey);
   delete REGION_GROUPS[groupKey];
+  delete REGION_RATING_META[groupKey];
   activeRegionGroups.delete(groupKey);
 
   persistActiveState();
   rebuildRegionChips();
+  recomputeHighlightCuts();
+  syncRatingChrome();
   render();
 }
 
@@ -7694,18 +7862,28 @@ const DIFF_LABEL = { gruen:"Sehr leicht", blau:"Leicht", rot:"Mittel", schwarz:"
 // this only ever decides how that same set is grouped into headings and ordered within each one.
 // Every comparator returns its OWN natural ascending order; trailSortDir (±1, see the chip-click handler)
 // is multiplied in separately so one comparator serves both directions instead of needing a mirrored pair.
+// An unrated trail sorts as -1, BELOW the worst real rating (the Bayesian scale bottoms out near 3) --
+// deliberately, and only because appendTrailGroup() splits the unrated ones into their own group before
+// sorting ever runs. Without that split this would be the dishonest version of the feature: "no votes yet"
+// is not "bad", and in a freshly harvested region most trails have no votes at all.
+const ratingOf = (t) => (typeof t.rate === "number" ? t.rate : -1);
+const popOf = (t) => (typeof t.pop === "number" ? t.pop : -1);
 const TRAIL_SORT_COMPARE = {
   diff: (a, b) => DIFF_ORDER[a.diff] - DIFF_ORDER[b.diff] || a.name.localeCompare(b.name, "de", { numeric: true }),
   name: (a, b) => a.name.localeCompare(b.name, "de", { numeric: true }),
   length: (a, b) => a.len - b.len,
   up: (a, b) => a.up - b.up,
   down: (a, b) => a.down - b.down,
+  // Ties on the rating fall back to the vote count: 4.52 from 271 votes is a stronger statement than 4.52
+  // from 6, and putting them in an arbitrary order throws that away.
+  rate: (a, b) => ratingOf(a) - ratingOf(b) || (a.votes || 0) - (b.votes || 0),
+  pop: (a, b) => popOf(a) - popOf(b) || ratingOf(a) - ratingOf(b),
 };
 // The direction each chip STARTS at when newly picked (not while already active -- see the chip-click
 // handler for the flip). Difficulty/name/length read naturally ascending; Bergauf/Bergab read naturally
 // biggest-first, the same downhill-first bias the rest of the app already has (Downhill/Uphill/Touren split,
 // "sorted by Höhenmeter" meaning "biggest climbs/descents on top" before this was even two separate chips).
-const TRAIL_SORT_DEFAULT_DIR = { diff: 1, name: 1, length: 1, up: -1, down: -1 };
+const TRAIL_SORT_DEFAULT_DIR = { diff: 1, name: 1, length: 1, up: -1, down: -1, rate: -1, pop: -1 };
 function appendTrailGroup(list, headingText, headingColor){
   if (!list.length) return;
   const compare = TRAIL_SORT_COMPARE[trailSortMode] || TRAIL_SORT_COMPARE.diff;
@@ -7723,7 +7901,26 @@ function appendTrailGroup(list, headingText, headingColor){
     title.appendChild(count);
     group.appendChild(title);
   }
-  sorted.forEach(t => group.appendChild(makeTrailCard(t, t.region)));
+  // Sorting by rating or popularity splits the group in two, with the unrated ones under their own
+  // sub-heading rather than trailing the list as if they had scored badly. That distinction is the whole
+  // honesty of this feature: "no votes yet" is a third state, not a zero. It is also the normal state --
+  // 60 % of Finale's trails carry a rating, and Finale is the BEST-covered region there is.
+  const rating = trailSortMode === "rate" || trailSortMode === "pop";
+  const value = trailSortMode === "pop" ? popOf : ratingOf;
+  const rated = rating ? sorted.filter(t => value(t) >= 0) : sorted;
+  const unrated = rating ? sorted.filter(t => value(t) < 0) : [];
+  rated.forEach(t => group.appendChild(makeTrailCard(t, t.region)));
+  if (unrated.length) {
+    const sub = document.createElement("div");
+    sub.className = "hub-title rating-unrated-title";
+    sub.textContent = trailSortMode === "pop" ? "ohne Beliebtheitswert" : "ohne Bewertung";
+    const c = document.createElement("span");
+    c.className = "region-count";
+    c.textContent = ` (${unrated.length})`;
+    sub.appendChild(c);
+    group.appendChild(sub);
+    unrated.forEach(t => group.appendChild(makeTrailCard(t, t.region)));
+  }
   listEl.appendChild(group);
 }
 function buildTrailListDom(trails){
@@ -7928,6 +8125,7 @@ async function boot(){
     showDownhill = saved.showDownhill;
     showLifts = saved.showLifts;
     showPlaces = saved.showPlaces;
+    showHighlightsOnly = saved.showHighlightsOnly;
     liveStatusOpen = saved.liveStatusOpen;
     showDirectionArrows = saved.showDirectionArrows;
     strasseContrast = saved.strasseContrast;
@@ -7960,6 +8158,7 @@ async function boot(){
     document.getElementById("showDownhillToggle").checked = showDownhill;
     document.getElementById("showLiftsToggle").checked = showLifts;
     document.getElementById("showPlacesToggle").checked = showPlaces;
+    document.getElementById("showHighlightsToggle").checked = showHighlightsOnly;
     applyLiveStatusOpen();
     document.getElementById("showDirectionArrowsToggle").checked = showDirectionArrows;
     // "Blickrichtung oben" always starts OFF, whatever the last session did (user, 2026-08-04). The mode needs
@@ -8116,7 +8315,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v183"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v184"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

@@ -1,0 +1,109 @@
+# -*- coding: utf-8 -*-
+"""Write Trailforks' community rating and popularity into a region file.
+
+    python tools/apply_trailforks_ratings.py finale --material "Finale Ligure" --dry-run
+    python tools/apply_trailforks_ratings.py finale --material "Finale Ligure"
+
+Reads the match report `tools/match_trailforks.py` produced (or recomputes it) and copies three fields onto
+the matched trails' `lineTrails` entries:
+
+    "rate": 4.64      # rating_bayesian, 0-5, vote-count-shrunk -- NEVER the raw average
+    "votes": 108      # so the app can show how thin the basis is
+    "pop": 95         # popularity_score 0-100, a year of check-ins, NOT a quality statement
+
+Only `verdict == "match"` rows are used. A review or unmatched trail gets nothing, which is a third state
+the app has to render honestly ("noch nicht bewertet"), never a zero.
+
+**`rate` is the Bayesian value on purpose.** Across Madeira's trails 59 % have two votes or fewer, so a raw
+star average is noise for most of a region; Trailforks already shrinks toward the regional mean and the job
+here is not to undo that. `votes` ships alongside so nothing has to be taken on trust.
+
+The region also gets a `ratings` block of its own:
+
+    "ratings": {"source": "trailforks", "asOf": "2026-08-23", "matched": 131, "trails": 219}
+
+`asOf` matters because nothing synchronises these numbers — same reasoning that keeps lift operating status
+out of the data (`docs/lifts-feature.md`), only slower-moving: a star rating drifts over years, a lift
+timetable over weeks. Dated, it is honest; undated, it silently ages.
+"""
+import argparse
+import io
+import json
+import os
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from match_trailforks import run as run_match  # noqa: E402
+from trailmap_pipeline import write_region  # noqa: E402
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REGIONS = os.path.join(ROOT, "Trailmap App", "regions")
+
+
+def main(argv):
+    ap = argparse.ArgumentParser()
+    ap.add_argument("region")
+    ap.add_argument("--material", required=True)
+    ap.add_argument("--report", help="reuse an existing match report instead of recomputing")
+    ap.add_argument("--as-of", required=True, help="harvest date, YYYY-MM-DD -- see the module docstring")
+    ap.add_argument("--dry-run", action="store_true")
+    a = ap.parse_args(argv)
+
+    if a.report and os.path.exists(a.report):
+        rows = json.load(io.open(a.report, encoding="utf-8"))
+        print("Bericht wiederverwendet: %s" % a.report)
+    else:
+        rows, _ = run_match(a.region, a.material)
+
+    mat = a.material if os.path.isabs(a.material) else os.path.join(ROOT, "Material", a.material)
+    table = json.load(io.open(os.path.join(mat, "trailforks_table.json"), encoding="utf-8"))
+    by_id = {}
+    for r in rows:
+        if r["verdict"] != "match" or not r["candidates"]:
+            continue
+        t = table.get(r["candidates"][0]["slug"]) or {}
+        if not t.get("rating_bayesian"):
+            continue
+        by_id[r["id"]] = {"rate": round(float(t["rating_bayesian"]), 2),
+                          "votes": int(t.get("votes") or 0),
+                          "pop": int(t["popularity_score"]) if t.get("popularity_score") is not None else None,
+                          "slug": r["candidates"][0]["slug"]}
+
+    path = os.path.join(REGIONS, a.region + ".json")
+    data = json.load(io.open(path, encoding="utf-8"))
+    applied = 0
+    for t in data["lineTrails"]:
+        for k in ("rate", "votes", "pop"):
+            t.pop(k, None)
+        v = by_id.get(t["id"])
+        if not v or not v["votes"]:
+            continue
+        t["rate"] = v["rate"]
+        t["votes"] = v["votes"]
+        if v["pop"] is not None:
+            t["pop"] = v["pop"]
+        applied += 1
+
+    rated = [t for t in data["lineTrails"] if t.get("rate")]
+    print("%s: %d von %d Trails mit Bewertung (%.0f %%)"
+          % (a.region, applied, len(data["lineTrails"]), 100.0 * applied / len(data["lineTrails"])))
+    if rated:
+        best = sorted(rated, key=lambda t: -t["rate"])[:3]
+        print("  Beste: " + ", ".join("%s %.2f (%d Stimmen)" % (t["name"], t["rate"], t["votes"])
+                                      for t in best))
+    if a.dry_run:
+        print("--dry-run: nichts geschrieben")
+        return 0
+    write_region(path, data["lineTrails"], data["trailGeo"], data["elevationProfiles"],
+                 places=data.get("places"), lifts=data.get("lifts"),
+                 trail_segments=data.get("trailSegments"),
+                 ratings={"source": "trailforks", "asOf": a.as_of,
+                          "matched": applied, "trails": len(data["lineTrails"])})
+    print("geschrieben: %s" % os.path.basename(path))
+    print("weiter: python tools/validate_region.py %s && python tools/update_region_versions.py" % a.region)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+    sys.exit(main(sys.argv[1:]))
