@@ -1,0 +1,8165 @@
+[
+ {
+  "id": "andrassa_new",
+  "name": "Andrassa",
+  "len_km": 1.0,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.256,
+    "cov_theirs_on_ours": 0.179,
+    "geo": 0.256,
+    "name_sim": 1.0,
+    "end_gap_m": 1108,
+    "len_ratio": 0.92,
+    "shape": "loose",
+    "slug": "andrassa",
+    "their_name": "Andrassa #14"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.47,
+    "end_gap_m": 695,
+    "len_ratio": 0.18,
+    "shape": "loose",
+    "slug": "scorciatoia-per-l-andrassa",
+    "their_name": "Scorciatoia per l'Andrassa"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.76,
+    "end_gap_m": 442,
+    "len_ratio": 0.22,
+    "shape": "loose",
+    "slug": "andrassa-easy",
+    "their_name": "andrassa easy"
+   }
+  ]
+ },
+ {
+  "id": "baltera_dh_new",
+  "name": "Baltera Dh new",
+  "len_km": 0.761,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "baltera-dh-new",
+    "their_name": "Baltera Dh new"
+   }
+  ]
+ },
+ {
+  "id": "bondi_traverse",
+  "name": "Bondi Traverse",
+  "len_km": 2.0,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.94)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.96,
+    "shape": "1:1",
+    "slug": "bondi-traverse",
+    "their_name": "Bondi Traverse #211"
+   },
+   {
+    "cov_ours_on_theirs": 0.057,
+    "cov_theirs_on_ours": 0.049,
+    "geo": 0.057,
+    "name_sim": 0.17,
+    "end_gap_m": 828,
+    "len_ratio": 0.61,
+    "shape": "loose",
+    "slug": "caprazoppa",
+    "their_name": "Caprazoppa #213"
+   },
+   {
+    "cov_ours_on_theirs": 0.029,
+    "cov_theirs_on_ours": 0.037,
+    "geo": 0.037,
+    "name_sim": 0.29,
+    "end_gap_m": 466,
+    "len_ratio": 0.53,
+    "shape": "loose",
+    "slug": "terra-di-mezzo-82636",
+    "their_name": "Terra di Mezzo #218"
+   }
+  ]
+ },
+ {
+  "id": "calvisio",
+  "name": "Calvisio",
+  "len_km": 0.585,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.90)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "calvisio",
+    "their_name": "Calvisio"
+   },
+   {
+    "cov_ours_on_theirs": 0.1,
+    "cov_theirs_on_ours": 0.085,
+    "geo": 0.1,
+    "name_sim": 0.12,
+    "end_gap_m": 484,
+    "len_ratio": 0.9,
+    "shape": "loose",
+    "slug": "sporting",
+    "their_name": "Sporting #58"
+   },
+   {
+    "cov_ours_on_theirs": 0.05,
+    "cov_theirs_on_ours": 0.053,
+    "geo": 0.053,
+    "name_sim": 0.19,
+    "end_gap_m": 514,
+    "len_ratio": 0.66,
+    "shape": "loose",
+    "slug": "borgata-costa",
+    "their_name": "Borgata Costa #61"
+   }
+  ]
+ },
+ {
+  "id": "carcere_duro",
+  "name": "Carcere duro",
+  "len_km": 1.0,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "carcere-duro",
+    "their_name": "Carcere duro"
+   }
+  ]
+ },
+ {
+  "id": "cava_tappeto_verde",
+  "name": "Cava - Tappeto Verde",
+  "len_km": 0.672,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.94)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "cava-tappeto-verde",
+    "their_name": "Cava - Tappeto Verde #292"
+   },
+   {
+    "cov_ours_on_theirs": 0.059,
+    "cov_theirs_on_ours": 0.033,
+    "geo": 0.059,
+    "name_sim": 0.3,
+    "end_gap_m": 907,
+    "len_ratio": 0.26,
+    "shape": "loose",
+    "slug": "mao-crest-162103",
+    "their_name": "Mao Crest #291"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.24,
+    "end_gap_m": 1324,
+    "len_ratio": 0.45,
+    "shape": "loose",
+    "slug": "monte-sant-elena-decolli",
+    "their_name": "Monte Sant'Elena - Decolli #295"
+   }
+  ]
+ },
+ {
+  "id": "ciottolato",
+  "name": "Ciottolato",
+  "len_km": 0.437,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "ciottolato",
+    "their_name": "Ciottolato"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.25,
+    "end_gap_m": 1083,
+    "len_ratio": 0.35,
+    "shape": "loose",
+    "slug": "briga-sinistra",
+    "their_name": "Briga Sinistra #11"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.27,
+    "end_gap_m": 1470,
+    "len_ratio": 0.15,
+    "shape": "loose",
+    "slug": "briga-destra",
+    "their_name": "Briga Destra #10"
+   }
+  ]
+ },
+ {
+  "id": "collegamento_vilmar",
+  "name": "Collegamento Vilmar",
+  "len_km": 0.837,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.973,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 32,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "collegamento-vilmar",
+    "their_name": "Collegamento Vilmar #303"
+   }
+  ]
+ },
+ {
+  "id": "da_u_millin_olle_to_olle_link",
+  "name": "Da U Millin - Olle to Olle link",
+  "len_km": 0.88,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "da-u-millin-olle-to-olle-link",
+    "their_name": "Da U Millin - Olle to Olle link"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.33,
+    "end_gap_m": 5722,
+    "len_ratio": 0.14,
+    "shape": "loose",
+    "slug": "roller-coaster-54111",
+    "their_name": "Roller Coaster #171"
+   }
+  ]
+ },
+ {
+  "id": "dh_men",
+  "name": "DH Men",
+  "len_km": 1.34,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.73)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.44,
+    "end_gap_m": 2,
+    "len_ratio": 0.96,
+    "shape": "1:1",
+    "slug": "dh-uomini",
+    "their_name": "DH Uomini #6"
+   },
+   {
+    "cov_ours_on_theirs": 0.049,
+    "cov_theirs_on_ours": 0.273,
+    "geo": 0.273,
+    "name_sim": 0.4,
+    "end_gap_m": 971,
+    "len_ratio": 0.21,
+    "shape": "loose",
+    "slug": "collegamento-563761",
+    "their_name": "collegamento"
+   },
+   {
+    "cov_ours_on_theirs": 0.049,
+    "cov_theirs_on_ours": 0.115,
+    "geo": 0.115,
+    "name_sim": 0.12,
+    "end_gap_m": 971,
+    "len_ratio": 0.41,
+    "shape": "loose",
+    "slug": "prologo-donne",
+    "their_name": "prologo donne"
+   }
+  ]
+ },
+ {
+  "id": "dh_women",
+  "name": "DH Women",
+  "len_km": 1.29,
+  "verdict": "match",
+  "why": "geometry decides (0.98, lead 0.71)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.86,
+    "cov_theirs_on_ours": 0.979,
+    "geo": 0.979,
+    "name_sim": 0.4,
+    "end_gap_m": 103,
+    "len_ratio": 0.88,
+    "shape": "1:1",
+    "slug": "dh-donne",
+    "their_name": "DH Donne #5"
+   },
+   {
+    "cov_ours_on_theirs": 0.08,
+    "cov_theirs_on_ours": 0.273,
+    "geo": 0.273,
+    "name_sim": 0.47,
+    "end_gap_m": 743,
+    "len_ratio": 0.22,
+    "shape": "loose",
+    "slug": "collegamento-563761",
+    "their_name": "collegamento"
+   },
+   {
+    "cov_ours_on_theirs": 0.12,
+    "cov_theirs_on_ours": 0.269,
+    "geo": 0.269,
+    "name_sim": 0.22,
+    "end_gap_m": 743,
+    "len_ratio": 0.43,
+    "shape": "loose",
+    "slug": "prologo-donne",
+    "their_name": "prologo donne"
+   }
+  ]
+ },
+ {
+  "id": "feglino_ca_bianca",
+  "name": "Ca Bianca",
+  "len_km": 2.03,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.34)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.339,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.44,
+    "end_gap_m": 611,
+    "len_ratio": 0.29,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "bianca-alternative",
+    "their_name": "Bianca Alternative"
+   },
+   {
+    "cov_ours_on_theirs": 0.597,
+    "cov_theirs_on_ours": 0.662,
+    "geo": 0.662,
+    "name_sim": 1.0,
+    "end_gap_m": 468,
+    "len_ratio": 0.69,
+    "shape": "loose",
+    "slug": "ca-bianca",
+    "their_name": "Cà Bianca #405"
+   },
+   {
+    "cov_ours_on_theirs": 0.048,
+    "cov_theirs_on_ours": 0.167,
+    "geo": 0.167,
+    "name_sim": 0.18,
+    "end_gap_m": 942,
+    "len_ratio": 0.28,
+    "shape": "loose",
+    "slug": "sentiero-delle-neviere",
+    "their_name": "Sentiero delle Neviere"
+   }
+  ]
+ },
+ {
+  "id": "feglino_campogrande_san_rocco",
+  "name": "Campogrande - San Rocco",
+  "len_km": 2.99,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.027,
+    "cov_theirs_on_ours": 0.125,
+    "geo": 0.125,
+    "name_sim": 0.39,
+    "end_gap_m": 1100,
+    "len_ratio": 0.26,
+    "shape": "loose",
+    "slug": "pian-marino-top-65307",
+    "their_name": "Pian Marino Top #399"
+   },
+   {
+    "cov_ours_on_theirs": 0.018,
+    "cov_theirs_on_ours": 0.05,
+    "geo": 0.05,
+    "name_sim": 0.29,
+    "end_gap_m": 1690,
+    "len_ratio": 0.12,
+    "shape": "loose",
+    "slug": "carbuta",
+    "their_name": "Carbuta"
+   },
+   {
+    "cov_ours_on_theirs": 0.018,
+    "cov_theirs_on_ours": 0.043,
+    "geo": 0.043,
+    "name_sim": 0.26,
+    "end_gap_m": 1326,
+    "len_ratio": 0.28,
+    "shape": "loose",
+    "slug": "pino-morto-44122",
+    "their_name": "Pino Morto #392"
+   }
+  ]
+ },
+ {
+  "id": "feglino_cromagnon",
+  "name": "Cromagnon",
+  "len_km": 0.93,
+  "verdict": "match",
+  "why": "geometry decides (0.98, lead 0.51)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.923,
+    "cov_theirs_on_ours": 0.977,
+    "geo": 0.977,
+    "name_sim": 1.0,
+    "end_gap_m": 19,
+    "len_ratio": 0.93,
+    "shape": "1:1",
+    "slug": "cromagnon",
+    "their_name": "Cromagnon #398"
+   },
+   {
+    "cov_ours_on_theirs": 0.462,
+    "cov_theirs_on_ours": 0.418,
+    "geo": 0.462,
+    "name_sim": 0.2,
+    "end_gap_m": 44,
+    "len_ratio": 0.83,
+    "shape": "loose",
+    "slug": "neanderthal-45898",
+    "their_name": "Neanderthal #397"
+   },
+   {
+    "cov_ours_on_theirs": 0.019,
+    "cov_theirs_on_ours": 0.061,
+    "geo": 0.061,
+    "name_sim": 0.27,
+    "end_gap_m": 526,
+    "len_ratio": 0.29,
+    "shape": "loose",
+    "slug": "lupin-feglino",
+    "their_name": "Lupin Feglino"
+   }
+  ]
+ },
+ {
+  "id": "feglino_l_estremo",
+  "name": "L'Estremo",
+  "len_km": 0.29,
+  "verdict": "review",
+  "why": "geometry leads but name disagrees (0.15)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.074,
+    "geo": 1.0,
+    "name_sim": 0.15,
+    "end_gap_m": 522,
+    "len_ratio": 0.15,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "otzi-115462",
+    "their_name": "Ötzi #396"
+   },
+   {
+    "cov_ours_on_theirs": 0.25,
+    "cov_theirs_on_ours": 0.025,
+    "geo": 0.25,
+    "name_sim": 0.25,
+    "end_gap_m": 1201,
+    "len_ratio": 0.11,
+    "shape": "loose",
+    "slug": "pian-marino-cia",
+    "their_name": "Pian Marino - Cia #391"
+   },
+   {
+    "cov_ours_on_theirs": 0.125,
+    "cov_theirs_on_ours": 0.025,
+    "geo": 0.125,
+    "name_sim": 0.25,
+    "end_gap_m": 619,
+    "len_ratio": 0.37,
+    "shape": "loose",
+    "slug": "pian-marino-top-65307",
+    "their_name": "Pian Marino Top #399"
+   }
+  ]
+ },
+ {
+  "id": "feglino_little_champery",
+  "name": "Little Champery",
+  "len_km": 1.65,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.80)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.877,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 324,
+    "len_ratio": 0.81,
+    "shape": "1:1",
+    "slug": "little-champery",
+    "their_name": "Little Champery #406"
+   },
+   {
+    "cov_ours_on_theirs": 0.046,
+    "cov_theirs_on_ours": 0.2,
+    "geo": 0.2,
+    "name_sim": 0.48,
+    "end_gap_m": 573,
+    "len_ratio": 0.15,
+    "shape": "loose",
+    "slug": "champery-to-bianca",
+    "their_name": "Champery to Bianca"
+   },
+   {
+    "cov_ours_on_theirs": 0.046,
+    "cov_theirs_on_ours": 0.15,
+    "geo": 0.15,
+    "name_sim": 0.24,
+    "end_gap_m": 605,
+    "len_ratio": 0.36,
+    "shape": "loose",
+    "slug": "bianca-alternative",
+    "their_name": "Bianca Alternative"
+   }
+  ]
+ },
+ {
+  "id": "feglino_margot",
+  "name": "Margot",
+  "len_km": 0.69,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.41)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.872,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 57,
+    "len_ratio": 0.83,
+    "shape": "1:1",
+    "slug": "margot",
+    "their_name": "Margot #401"
+   },
+   {
+    "cov_ours_on_theirs": 0.255,
+    "cov_theirs_on_ours": 0.588,
+    "geo": 0.588,
+    "name_sim": 0.11,
+    "end_gap_m": 290,
+    "len_ratio": 0.29,
+    "shape": "loose",
+    "slug": "pernice-rossa",
+    "their_name": "Pernice Rossa"
+   },
+   {
+    "cov_ours_on_theirs": 0.468,
+    "cov_theirs_on_ours": 0.417,
+    "geo": 0.468,
+    "name_sim": 0.46,
+    "end_gap_m": 10,
+    "len_ratio": 0.81,
+    "shape": "loose",
+    "slug": "oribago",
+    "their_name": "Oribago #393"
+   }
+  ]
+ },
+ {
+  "id": "feglino_neanderthal",
+  "name": "Neanderthal",
+  "len_km": 1.5,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.36)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.913,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 321,
+    "len_ratio": 0.74,
+    "shape": "1:1",
+    "slug": "neanderthal-45898",
+    "their_name": "Neanderthal #397"
+   },
+   {
+    "cov_ours_on_theirs": 0.109,
+    "cov_theirs_on_ours": 0.636,
+    "geo": 0.636,
+    "name_sim": 0.25,
+    "end_gap_m": 891,
+    "len_ratio": 0.18,
+    "shape": "loose",
+    "slug": "lupin-feglino",
+    "their_name": "Lupin Feglino"
+   },
+   {
+    "cov_ours_on_theirs": 0.478,
+    "cov_theirs_on_ours": 0.545,
+    "geo": 0.545,
+    "name_sim": 0.2,
+    "end_gap_m": 383,
+    "len_ratio": 0.57,
+    "shape": "loose",
+    "slug": "cromagnon",
+    "their_name": "Cromagnon #398"
+   }
+  ]
+ },
+ {
+  "id": "feglino_oribago",
+  "name": "Oribago",
+  "len_km": 0.8,
+  "verdict": "review",
+  "why": "two candidates within 0.15 of each other (1.00 vs 0.98)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.519,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.88,
+    "end_gap_m": 127,
+    "len_ratio": 0.54,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "oribago-2",
+    "their_name": "Oribago 2 #394"
+   },
+   {
+    "cov_ours_on_theirs": 0.981,
+    "cov_theirs_on_ours": 0.933,
+    "geo": 0.981,
+    "name_sim": 1.0,
+    "end_gap_m": 38,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "oribago",
+    "their_name": "Oribago #393"
+   },
+   {
+    "cov_ours_on_theirs": 0.296,
+    "cov_theirs_on_ours": 0.294,
+    "geo": 0.296,
+    "name_sim": 0.46,
+    "end_gap_m": 51,
+    "len_ratio": 0.7,
+    "shape": "loose",
+    "slug": "margot",
+    "their_name": "Margot #401"
+   }
+  ]
+ },
+ {
+  "id": "feglino_oribago_2",
+  "name": "Oribago 2",
+  "len_km": 0.48,
+  "verdict": "review",
+  "why": "two candidates within 0.15 of each other (1.00 vs 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.633,
+    "geo": 1.0,
+    "name_sim": 0.88,
+    "end_gap_m": 115,
+    "len_ratio": 0.59,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "oribago",
+    "their_name": "Oribago #393"
+   },
+   {
+    "cov_ours_on_theirs": 0.9,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 20,
+    "len_ratio": 0.89,
+    "shape": "1:1",
+    "slug": "oribago-2",
+    "their_name": "Oribago 2 #394"
+   },
+   {
+    "cov_ours_on_theirs": 0.1,
+    "cov_theirs_on_ours": 0.05,
+    "geo": 0.1,
+    "name_sim": 0.19,
+    "end_gap_m": 401,
+    "len_ratio": 0.5,
+    "shape": "loose",
+    "slug": "passaggio-a-nord-ovest-404077",
+    "their_name": "Passaggio a nord ovest"
+   }
+  ]
+ },
+ {
+  "id": "feglino_otzi",
+  "name": "Ötzi",
+  "len_km": 2.02,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.94)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 12,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "otzi-115462",
+    "their_name": "Ötzi #396"
+   },
+   {
+    "cov_ours_on_theirs": 0.01,
+    "cov_theirs_on_ours": 0.055,
+    "geo": 0.055,
+    "name_sim": 0.13,
+    "end_gap_m": 148,
+    "len_ratio": 0.57,
+    "shape": "loose",
+    "slug": "neanderthal-45898",
+    "their_name": "Neanderthal #397"
+   },
+   {
+    "cov_ours_on_theirs": 0.041,
+    "cov_theirs_on_ours": 0.025,
+    "geo": 0.041,
+    "name_sim": 0.21,
+    "end_gap_m": 1324,
+    "len_ratio": 0.74,
+    "shape": "loose",
+    "slug": "pian-marino-cia",
+    "their_name": "Pian Marino - Cia #391"
+   }
+  ]
+ },
+ {
+  "id": "feglino_pian_marino_cia",
+  "name": "Pian Marino - Cia",
+  "len_km": 2.64,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.87)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 3,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "pian-marino-cia",
+    "their_name": "Pian Marino - Cia #391"
+   },
+   {
+    "cov_ours_on_theirs": 0.051,
+    "cov_theirs_on_ours": 0.13,
+    "geo": 0.13,
+    "name_sim": 0.4,
+    "end_gap_m": 1692,
+    "len_ratio": 0.32,
+    "shape": "loose",
+    "slug": "pino-morto-44122",
+    "their_name": "Pino Morto #392"
+   },
+   {
+    "cov_ours_on_theirs": 0.02,
+    "cov_theirs_on_ours": 0.091,
+    "geo": 0.091,
+    "name_sim": 0.5,
+    "end_gap_m": 1281,
+    "len_ratio": 0.1,
+    "shape": "loose",
+    "slug": "lupin-feglino",
+    "their_name": "Lupin Feglino"
+   }
+  ]
+ },
+ {
+  "id": "feglino_pian_marino_top",
+  "name": "Pian Marino Top",
+  "len_km": 0.75,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.93)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 5,
+    "len_ratio": 0.96,
+    "shape": "1:1",
+    "slug": "pian-marino-top-65307",
+    "their_name": "Pian Marino Top #399"
+   },
+   {
+    "cov_ours_on_theirs": 0.071,
+    "cov_theirs_on_ours": 0.017,
+    "geo": 0.071,
+    "name_sim": 0.8,
+    "end_gap_m": 1192,
+    "len_ratio": 0.28,
+    "shape": "loose",
+    "slug": "pian-marino-cia",
+    "their_name": "Pian Marino - Cia #391"
+   },
+   {
+    "cov_ours_on_theirs": 0.071,
+    "cov_theirs_on_ours": 0.011,
+    "geo": 0.071,
+    "name_sim": 0.11,
+    "end_gap_m": 773,
+    "len_ratio": 0.37,
+    "shape": "loose",
+    "slug": "otzi-115462",
+    "their_name": "Ötzi #396"
+   }
+  ]
+ },
+ {
+  "id": "feglino_pino_morto",
+  "name": "Pino Morte",
+  "len_km": 0.81,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.93)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.9,
+    "end_gap_m": 15,
+    "len_ratio": 0.94,
+    "shape": "1:1",
+    "slug": "pino-morto-44122",
+    "their_name": "Pino Morto #392"
+   },
+   {
+    "cov_ours_on_theirs": 0.075,
+    "cov_theirs_on_ours": 0.05,
+    "geo": 0.075,
+    "name_sim": 0.4,
+    "end_gap_m": 1695,
+    "len_ratio": 0.3,
+    "shape": "loose",
+    "slug": "pian-marino-cia",
+    "their_name": "Pian Marino - Cia #391"
+   },
+   {
+    "cov_ours_on_theirs": 0.05,
+    "cov_theirs_on_ours": 0.05,
+    "geo": 0.05,
+    "name_sim": 0.48,
+    "end_gap_m": 624,
+    "len_ratio": 0.97,
+    "shape": "loose",
+    "slug": "pian-marino-top-65307",
+    "their_name": "Pian Marino Top #399"
+   }
+  ]
+ },
+ {
+  "id": "feglino_strada_della_cava",
+  "name": "Strada della Cava",
+  "len_km": 1.97,
+  "verdict": "review",
+  "why": "geometry in the middle band (0.48) with no confirming signal",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.484,
+    "cov_theirs_on_ours": 0.429,
+    "geo": 0.484,
+    "name_sim": 0.1,
+    "end_gap_m": 508,
+    "len_ratio": 0.99,
+    "shape": "loose",
+    "slug": "otzi-115462",
+    "their_name": "Ötzi #396"
+   },
+   {
+    "cov_ours_on_theirs": 0.156,
+    "cov_theirs_on_ours": 0.25,
+    "geo": 0.25,
+    "name_sim": 0.15,
+    "end_gap_m": 540,
+    "len_ratio": 0.44,
+    "shape": "loose",
+    "slug": "cromagnon",
+    "their_name": "Cromagnon #398"
+   },
+   {
+    "cov_ours_on_theirs": 0.125,
+    "cov_theirs_on_ours": 0.182,
+    "geo": 0.182,
+    "name_sim": 0.29,
+    "end_gap_m": 577,
+    "len_ratio": 0.57,
+    "shape": "loose",
+    "slug": "neanderthal-45898",
+    "their_name": "Neanderthal #397"
+   }
+  ]
+ },
+ {
+  "id": "i_gatti_flow",
+  "name": "I gatti flow",
+  "len_km": 0.801,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "i-gatti-flow",
+    "their_name": "I gatti flow"
+   }
+  ]
+ },
+ {
+  "id": "il_salitone",
+  "name": "il salitone",
+  "len_km": 0.306,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.70)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "il-salitone",
+    "their_name": "il salitone"
+   },
+   {
+    "cov_ours_on_theirs": 0.3,
+    "cov_theirs_on_ours": 0.208,
+    "geo": 0.3,
+    "name_sim": 0.27,
+    "end_gap_m": 279,
+    "len_ratio": 0.5,
+    "shape": "loose",
+    "slug": "la-panoramica-24ore",
+    "their_name": "la panoramica 24ore"
+   },
+   {
+    "cov_ours_on_theirs": 0.2,
+    "cov_theirs_on_ours": 0.067,
+    "geo": 0.2,
+    "name_sim": 0.34,
+    "end_gap_m": 341,
+    "len_ratio": 0.65,
+    "shape": "loose",
+    "slug": "tratto-ganzo-24ore",
+    "their_name": "tratto ganzo 24ore"
+   }
+  ]
+ },
+ {
+  "id": "justanice_trail",
+  "name": "Justanice Trail",
+  "len_km": 2.0,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.97)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "justanice-trail",
+    "their_name": "Justanice Trail #360"
+   },
+   {
+    "cov_ours_on_theirs": 0.027,
+    "cov_theirs_on_ours": 0.009,
+    "geo": 0.027,
+    "name_sim": 0.29,
+    "end_gap_m": 2026,
+    "len_ratio": 0.83,
+    "shape": "loose",
+    "slug": "tampa-103864",
+    "their_name": "Tampa #346"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.26,
+    "end_gap_m": 1412,
+    "len_ratio": 0.51,
+    "shape": "loose",
+    "slug": "salite-di-livello-pt-1",
+    "their_name": "Salite di Livello Pt.1 #369"
+   }
+  ]
+ },
+ {
+  "id": "la_panoramica_24ore",
+  "name": "la panoramica 24ore",
+  "len_km": 0.614,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.79)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "la-panoramica-24ore",
+    "their_name": "la panoramica 24ore"
+   },
+   {
+    "cov_ours_on_theirs": 0.133,
+    "cov_theirs_on_ours": 0.211,
+    "geo": 0.211,
+    "name_sim": 0.27,
+    "end_gap_m": 279,
+    "len_ratio": 0.5,
+    "shape": "loose",
+    "slug": "il-salitone",
+    "their_name": "il salitone"
+   },
+   {
+    "cov_ours_on_theirs": 0.067,
+    "cov_theirs_on_ours": 0.043,
+    "geo": 0.067,
+    "name_sim": 0.58,
+    "end_gap_m": 501,
+    "len_ratio": 0.86,
+    "shape": "loose",
+    "slug": "sprint-radici-24ore",
+    "their_name": "sprint radici 24ore"
+   }
+  ]
+ },
+ {
+  "id": "link_fast_isallo",
+  "name": "Link Fast-Isallo",
+  "len_km": 0.32,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.80)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "link-fastisallo",
+    "their_name": "Link Fast-Isallo"
+   },
+   {
+    "cov_ours_on_theirs": 0.2,
+    "cov_theirs_on_ours": 0.014,
+    "geo": 0.2,
+    "name_sim": 0.41,
+    "end_gap_m": 1843,
+    "len_ratio": 0.08,
+    "shape": "loose",
+    "slug": "isallo-extasy",
+    "their_name": "Isallo Extasy #355"
+   },
+   {
+    "cov_ours_on_theirs": 0.1,
+    "cov_theirs_on_ours": 0.016,
+    "geo": 0.1,
+    "name_sim": 0.44,
+    "end_gap_m": 1780,
+    "len_ratio": 0.1,
+    "shape": "loose",
+    "slug": "fast-and-furious-64648",
+    "their_name": "Fast and Furious #354"
+   }
+  ]
+ },
+ {
+  "id": "ludi_trail",
+  "name": "Ludi Trail",
+  "len_km": 0.403,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "ludi-trail",
+    "their_name": "Ludi Trail"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.11,
+    "end_gap_m": 2370,
+    "len_ratio": 0.15,
+    "shape": "loose",
+    "slug": "pian-marino-cia",
+    "their_name": "Pian Marino - Cia #391"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.24,
+    "end_gap_m": 699,
+    "len_ratio": 0.73,
+    "shape": "loose",
+    "slug": "sentiero-delle-neviere",
+    "their_name": "Sentiero delle Neviere"
+   }
+  ]
+ },
+ {
+  "id": "lupin_feglino",
+  "name": "Lupin Feglino",
+  "len_km": 0.264,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.28)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "lupin-feglino",
+    "their_name": "Lupin Feglino"
+   },
+   {
+    "cov_ours_on_theirs": 0.722,
+    "cov_theirs_on_ours": 0.145,
+    "geo": 0.722,
+    "name_sim": 0.08,
+    "end_gap_m": 570,
+    "len_ratio": 0.23,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "neanderthal-45898",
+    "their_name": "Neanderthal #397"
+   },
+   {
+    "cov_ours_on_theirs": 0.167,
+    "cov_theirs_on_ours": 0.017,
+    "geo": 0.167,
+    "name_sim": 0.5,
+    "end_gap_m": 1280,
+    "len_ratio": 0.1,
+    "shape": "loose",
+    "slug": "pian-marino-cia",
+    "their_name": "Pian Marino - Cia #391"
+   }
+  ]
+ },
+ {
+  "id": "mallare_benevento_beeches",
+  "name": "Benevento Beeches",
+  "len_km": 1.54,
+  "verdict": "match",
+  "why": "geometry decides (0.95, lead 0.95)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.949,
+    "cov_theirs_on_ours": 0.946,
+    "geo": 0.949,
+    "name_sim": 1.0,
+    "end_gap_m": 112,
+    "len_ratio": 0.95,
+    "shape": "1:1",
+    "slug": "benevento-beeches-139867",
+    "their_name": "Benevento Beeches #445"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.15,
+    "end_gap_m": 1281,
+    "len_ratio": 0.93,
+    "shape": "loose",
+    "slug": "little-dog",
+    "their_name": "Little Dog #443"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.21,
+    "end_gap_m": 831,
+    "len_ratio": 0.95,
+    "shape": "loose",
+    "slug": "a-carbonera",
+    "their_name": "A Carbonera #446"
+   }
+  ]
+ },
+ {
+  "id": "mallare_black_mamba",
+  "name": "Black Mamba",
+  "len_km": 2.09,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.97)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 12,
+    "len_ratio": 0.96,
+    "shape": "1:1",
+    "slug": "black-mamba-260469",
+    "their_name": "Black Mamba #447"
+   },
+   {
+    "cov_ours_on_theirs": 0.034,
+    "cov_theirs_on_ours": 0.031,
+    "geo": 0.034,
+    "name_sim": 0.23,
+    "end_gap_m": 1554,
+    "len_ratio": 0.96,
+    "shape": "loose",
+    "slug": "boccion-parte-1",
+    "their_name": "Boccion parte 1"
+   },
+   {
+    "cov_ours_on_theirs": 0.034,
+    "cov_theirs_on_ours": 0.021,
+    "geo": 0.034,
+    "name_sim": 0.2,
+    "end_gap_m": 2025,
+    "len_ratio": 0.62,
+    "shape": "loose",
+    "slug": "trail-del-boccion-parte-2",
+    "their_name": "Trail del Boccion parte 2 #441"
+   }
+  ]
+ },
+ {
+  "id": "mallare_cadotto",
+  "name": "Cadotto",
+  "len_km": 3.12,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.078,
+    "cov_theirs_on_ours": 0.133,
+    "geo": 0.133,
+    "name_sim": 0.24,
+    "end_gap_m": 744,
+    "len_ratio": 0.46,
+    "shape": "loose",
+    "slug": "little-dog",
+    "their_name": "Little Dog #443"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.35,
+    "end_gap_m": 1693,
+    "len_ratio": 0.8,
+    "shape": "loose",
+    "slug": "monte-alto",
+    "their_name": "Monte Alto #138"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.33,
+    "end_gap_m": 860,
+    "len_ratio": 0.52,
+    "shape": "loose",
+    "slug": "a-carbonera",
+    "their_name": "A Carbonera #446"
+   }
+  ]
+ },
+ {
+  "id": "mallare_carbonera",
+  "name": "Carbonera",
+  "len_km": 2.25,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.77)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.857,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.9,
+    "end_gap_m": 560,
+    "len_ratio": 0.73,
+    "shape": "1:1",
+    "slug": "a-carbonera",
+    "their_name": "A Carbonera #446"
+   },
+   {
+    "cov_ours_on_theirs": 0.112,
+    "cov_theirs_on_ours": 0.228,
+    "geo": 0.228,
+    "name_sim": 0.23,
+    "end_gap_m": 942,
+    "len_ratio": 0.74,
+    "shape": "loose",
+    "slug": "benevento-beeches-139867",
+    "their_name": "Benevento Beeches #445"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.33,
+    "end_gap_m": 2232,
+    "len_ratio": 0.72,
+    "shape": "loose",
+    "slug": "ingegnere",
+    "their_name": "Ingegnere #101"
+   }
+  ]
+ },
+ {
+  "id": "mallare_little_dog",
+  "name": "Little Dog",
+  "len_km": 1.65,
+  "verdict": "match",
+  "why": "geometry decides (0.80, lead 0.67)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.635,
+    "cov_theirs_on_ours": 0.795,
+    "geo": 0.795,
+    "name_sim": 1.0,
+    "end_gap_m": 250,
+    "len_ratio": 0.88,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "little-dog",
+    "their_name": "Little Dog #443"
+   },
+   {
+    "cov_ours_on_theirs": 0.122,
+    "cov_theirs_on_ours": 0.082,
+    "geo": 0.122,
+    "name_sim": 0.4,
+    "end_gap_m": 1519,
+    "len_ratio": 0.66,
+    "shape": "loose",
+    "slug": "monte-alto",
+    "their_name": "Monte Alto #138"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.4,
+    "end_gap_m": 1332,
+    "len_ratio": 0.19,
+    "shape": "loose",
+    "slug": "monte-alto-695471",
+    "their_name": "Monte Alto"
+   }
+  ]
+ },
+ {
+  "id": "mallare_neverland",
+  "name": "Neverland",
+  "len_km": 1.41,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.94)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.919,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 58,
+    "len_ratio": 0.93,
+    "shape": "1:1",
+    "slug": "neverland-148423",
+    "their_name": "Neverland #444"
+   },
+   {
+    "cov_ours_on_theirs": 0.058,
+    "cov_theirs_on_ours": 0.026,
+    "geo": 0.058,
+    "name_sim": 0.09,
+    "end_gap_m": 1606,
+    "len_ratio": 0.39,
+    "shape": "loose",
+    "slug": "crestino-pt-1",
+    "their_name": "Crestino Pt. 1 #95"
+   },
+   {
+    "cov_ours_on_theirs": 0.029,
+    "cov_theirs_on_ours": 0.015,
+    "geo": 0.029,
+    "name_sim": 0.17,
+    "end_gap_m": 1462,
+    "len_ratio": 0.7,
+    "shape": "loose",
+    "slug": "boccion-parte-1",
+    "their_name": "Boccion parte 1"
+   }
+  ]
+ },
+ {
+  "id": "mallare_trail_del_boccion",
+  "name": "Trail del Boccion",
+  "len_km": 4.97,
+  "verdict": "review",
+  "why": "two candidates within 0.15 of each other (0.53 vs 0.48)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.286,
+    "cov_theirs_on_ours": 0.525,
+    "geo": 0.525,
+    "name_sim": 0.73,
+    "end_gap_m": 1555,
+    "len_ratio": 0.68,
+    "shape": "loose",
+    "slug": "trail-del-boccion-parte-2",
+    "their_name": "Trail del Boccion parte 2 #441"
+   },
+   {
+    "cov_ours_on_theirs": 0.173,
+    "cov_theirs_on_ours": 0.477,
+    "geo": 0.477,
+    "name_sim": 0.54,
+    "end_gap_m": 2549,
+    "len_ratio": 0.4,
+    "shape": "loose",
+    "slug": "boccion-parte-1",
+    "their_name": "Boccion parte 1"
+   },
+   {
+    "cov_ours_on_theirs": 0.009,
+    "cov_theirs_on_ours": 0.026,
+    "geo": 0.026,
+    "name_sim": 0.17,
+    "end_gap_m": 4019,
+    "len_ratio": 0.72,
+    "shape": "loose",
+    "slug": "crestino-pt-1",
+    "their_name": "Crestino Pt. 1 #95"
+   }
+  ]
+ },
+ {
+  "id": "mallare_trail_del_boccion_parte_2",
+  "name": "Trail del Boccion parte 2",
+  "len_km": 3.3,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.97)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "trail-del-boccion-parte-2",
+    "their_name": "Trail del Boccion parte 2 #441"
+   },
+   {
+    "cov_ours_on_theirs": 0.026,
+    "cov_theirs_on_ours": 0.031,
+    "geo": 0.031,
+    "name_sim": 0.82,
+    "end_gap_m": 2024,
+    "len_ratio": 0.61,
+    "shape": "loose",
+    "slug": "boccion-parte-1",
+    "their_name": "Boccion parte 1"
+   },
+   {
+    "cov_ours_on_theirs": 0.026,
+    "cov_theirs_on_ours": 0.008,
+    "geo": 0.026,
+    "name_sim": 0.27,
+    "end_gap_m": 2022,
+    "len_ratio": 0.61,
+    "shape": "loose",
+    "slug": "black-mamba-260469",
+    "their_name": "Black Mamba #447"
+   }
+  ]
+ },
+ {
+  "id": "manie_24h",
+  "name": "24H",
+  "len_km": 11.72,
+  "verdict": "review",
+  "why": "two candidates within 0.15 of each other (1.00 vs 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.031,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.0,
+    "end_gap_m": 1237,
+    "len_ratio": 0.02,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "collegamento-563761",
+    "their_name": "collegamento"
+   },
+   {
+    "cov_ours_on_theirs": 0.12,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.0,
+    "end_gap_m": 445,
+    "len_ratio": 0.08,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "toboga-458181",
+    "their_name": "toboga"
+   },
+   {
+    "cov_ours_on_theirs": 0.065,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.19,
+    "end_gap_m": 1567,
+    "len_ratio": 0.04,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "tratto-ganzo-24ore",
+    "their_name": "tratto ganzo 24ore"
+   }
+  ]
+ },
+ {
+  "id": "manie_acquaviva",
+  "name": "Acquaviva",
+  "len_km": 1.69,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.019,
+    "cov_theirs_on_ours": 0.091,
+    "geo": 0.091,
+    "name_sim": 0.1,
+    "end_gap_m": 1380,
+    "len_ratio": 0.16,
+    "shape": "loose",
+    "slug": "collegamento-563761",
+    "their_name": "collegamento"
+   },
+   {
+    "cov_ours_on_theirs": 0.019,
+    "cov_theirs_on_ours": 0.067,
+    "geo": 0.067,
+    "name_sim": 0.15,
+    "end_gap_m": 1374,
+    "len_ratio": 0.28,
+    "shape": "loose",
+    "slug": "tratto-ganzo-24ore",
+    "their_name": "tratto ganzo 24ore"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.27,
+    "end_gap_m": 1655,
+    "len_ratio": 0.83,
+    "shape": "loose",
+    "slug": "dh-uomini",
+    "their_name": "DH Uomini #6"
+   }
+  ]
+ },
+ {
+  "id": "manie_andrassa",
+  "name": "Andrassa pt.1",
+  "len_km": 1.49,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.61)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.981,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.76,
+    "end_gap_m": 19,
+    "len_ratio": 0.95,
+    "shape": "1:1",
+    "slug": "andrassa",
+    "their_name": "Andrassa #14"
+   },
+   {
+    "cov_ours_on_theirs": 0.056,
+    "cov_theirs_on_ours": 0.389,
+    "geo": 0.389,
+    "name_sim": 0.44,
+    "end_gap_m": 533,
+    "len_ratio": 0.23,
+    "shape": "loose",
+    "slug": "up-and-down-to-andrassa",
+    "their_name": "up and down to andrassa"
+   },
+   {
+    "cov_ours_on_theirs": 0.037,
+    "cov_theirs_on_ours": 0.25,
+    "geo": 0.25,
+    "name_sim": 0.41,
+    "end_gap_m": 495,
+    "len_ratio": 0.19,
+    "shape": "loose",
+    "slug": "scorciatoia-per-l-andrassa",
+    "their_name": "Scorciatoia per l'Andrassa"
+   }
+  ]
+ },
+ {
+  "id": "manie_anello_dellarma",
+  "name": "Anello dell'Arma",
+  "len_km": 2.42,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.95)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 8,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "anello-dell-arma",
+    "their_name": "Anello dell'Arma #17"
+   },
+   {
+    "cov_ours_on_theirs": 0.049,
+    "cov_theirs_on_ours": 0.031,
+    "geo": 0.049,
+    "name_sim": 0.14,
+    "end_gap_m": 1480,
+    "len_ratio": 0.67,
+    "shape": "loose",
+    "slug": "ponti-romani",
+    "their_name": "Ponti Romani #2"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.09,
+    "end_gap_m": 1128,
+    "len_ratio": 0.38,
+    "shape": "loose",
+    "slug": "toboga-458181",
+    "their_name": "toboga"
+   }
+  ]
+ },
+ {
+  "id": "manie_briga_destra",
+  "name": "Briga Destra",
+  "len_km": 2.96,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.95)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 1,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "briga-destra",
+    "their_name": "Briga Destra #10"
+   },
+   {
+    "cov_ours_on_theirs": 0.027,
+    "cov_theirs_on_ours": 0.045,
+    "geo": 0.045,
+    "name_sim": 0.77,
+    "end_gap_m": 574,
+    "len_ratio": 0.43,
+    "shape": "loose",
+    "slug": "briga-sinistra",
+    "their_name": "Briga Sinistra #11"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.42,
+    "end_gap_m": 1744,
+    "len_ratio": 0.14,
+    "shape": "loose",
+    "slug": "la-scalinata",
+    "their_name": "la scalinata"
+   }
+  ]
+ },
+ {
+  "id": "manie_briga_sinistra",
+  "name": "Briga Sinistra",
+  "len_km": 2.46,
+  "verdict": "review",
+  "why": "two candidates within 0.15 of each other (1.00 vs 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.494,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 574,
+    "len_ratio": 0.51,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "briga-sinistra",
+    "their_name": "Briga Sinistra #11"
+   },
+   {
+    "cov_ours_on_theirs": 0.247,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.25,
+    "end_gap_m": 1469,
+    "len_ratio": 0.18,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "ciottolato",
+    "their_name": "Ciottolato"
+   },
+   {
+    "cov_ours_on_theirs": 0.259,
+    "cov_theirs_on_ours": 0.203,
+    "geo": 0.259,
+    "name_sim": 0.77,
+    "end_gap_m": 77,
+    "len_ratio": 0.83,
+    "shape": "loose",
+    "slug": "briga-destra",
+    "their_name": "Briga Destra #10"
+   }
+  ]
+ },
+ {
+  "id": "manie_brighella",
+  "name": "Brighella",
+  "len_km": 0.83,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 1,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "brighella",
+    "their_name": "Brighella #21"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.19,
+    "end_gap_m": 679,
+    "len_ratio": 0.49,
+    "shape": "loose",
+    "slug": "la-scalinata",
+    "their_name": "la scalinata"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.19,
+    "end_gap_m": 1279,
+    "len_ratio": 0.23,
+    "shape": "loose",
+    "slug": "ponti-romani",
+    "their_name": "Ponti Romani #2"
+   }
+  ]
+ },
+ {
+  "id": "manie_ca_du_puncin",
+  "name": "Cà du Puncin",
+  "len_km": 1.72,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.93)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 4,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "ca-du-puncin",
+    "their_name": "Cà du Puncin #3"
+   },
+   {
+    "cov_ours_on_theirs": 0.025,
+    "cov_theirs_on_ours": 0.067,
+    "geo": 0.067,
+    "name_sim": 0.25,
+    "end_gap_m": 626,
+    "len_ratio": 0.67,
+    "shape": "loose",
+    "slug": "cave-234903",
+    "their_name": "Cave #18"
+   },
+   {
+    "cov_ours_on_theirs": 0.05,
+    "cov_theirs_on_ours": 0.019,
+    "geo": 0.05,
+    "name_sim": 0.25,
+    "end_gap_m": 2312,
+    "len_ratio": 0.48,
+    "shape": "loose",
+    "slug": "ponti-romani",
+    "their_name": "Ponti Romani #2"
+   }
+  ]
+ },
+ {
+  "id": "manie_cave",
+  "name": "Cave",
+  "len_km": 1.16,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.94)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 10,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "cave-234903",
+    "their_name": "Cave #18"
+   },
+   {
+    "cov_ours_on_theirs": 0.057,
+    "cov_theirs_on_ours": 0.032,
+    "geo": 0.057,
+    "name_sim": 0.25,
+    "end_gap_m": 620,
+    "len_ratio": 0.67,
+    "shape": "loose",
+    "slug": "ca-du-puncin",
+    "their_name": "Cà du Puncin #3"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.12,
+    "end_gap_m": 1975,
+    "len_ratio": 0.32,
+    "shape": "loose",
+    "slug": "ponti-romani",
+    "their_name": "Ponti Romani #2"
+   }
+  ]
+ },
+ {
+  "id": "manie_fornaci",
+  "name": "Fornaci",
+  "len_km": 0.95,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.76)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.86,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 184,
+    "len_ratio": 0.79,
+    "shape": "1:1",
+    "slug": "fornaci-423825",
+    "their_name": "Fornaci #20"
+   },
+   {
+    "cov_ours_on_theirs": 0.24,
+    "cov_theirs_on_ours": 0.191,
+    "geo": 0.24,
+    "name_sim": 0.33,
+    "end_gap_m": 777,
+    "len_ratio": 0.84,
+    "shape": "loose",
+    "slug": "dh-donne",
+    "their_name": "DH Donne #5"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.46,
+    "end_gap_m": 894,
+    "len_ratio": 0.68,
+    "shape": "loose",
+    "slug": "dh-uomini",
+    "their_name": "DH Uomini #6"
+   }
+  ]
+ },
+ {
+  "id": "manie_polveriera",
+  "name": "Polveriera",
+  "len_km": 3.7,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.008,
+    "cov_theirs_on_ours": 0.154,
+    "geo": 0.154,
+    "name_sim": 0.17,
+    "end_gap_m": 1062,
+    "len_ratio": 0.09,
+    "shape": "loose",
+    "slug": "andrassa-easy",
+    "their_name": "andrassa easy"
+   },
+   {
+    "cov_ours_on_theirs": 0.032,
+    "cov_theirs_on_ours": 0.1,
+    "geo": 0.1,
+    "name_sim": 0.28,
+    "end_gap_m": 1291,
+    "len_ratio": 0.08,
+    "shape": "loose",
+    "slug": "scorciatoia-per-l-andrassa",
+    "their_name": "Scorciatoia per l'Andrassa"
+   },
+   {
+    "cov_ours_on_theirs": 0.016,
+    "cov_theirs_on_ours": 0.044,
+    "geo": 0.044,
+    "name_sim": 0.31,
+    "end_gap_m": 2097,
+    "len_ratio": 0.66,
+    "shape": "loose",
+    "slug": "anello-dell-arma",
+    "their_name": "Anello dell'Arma #17"
+   }
+  ]
+ },
+ {
+  "id": "manie_ponti_romani",
+  "name": "Ponti Romani",
+  "len_km": 4.41,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.68)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.753,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 536,
+    "len_ratio": 0.82,
+    "shape": "1:1",
+    "slug": "ponti-romani",
+    "their_name": "Ponti Romani #2"
+   },
+   {
+    "cov_ours_on_theirs": 0.041,
+    "cov_theirs_on_ours": 0.316,
+    "geo": 0.316,
+    "name_sim": 0.25,
+    "end_gap_m": 1485,
+    "len_ratio": 0.09,
+    "shape": "loose",
+    "slug": "la-scalinata",
+    "their_name": "la scalinata"
+   },
+   {
+    "cov_ours_on_theirs": 0.007,
+    "cov_theirs_on_ours": 0.053,
+    "geo": 0.053,
+    "name_sim": 0.36,
+    "end_gap_m": 2014,
+    "len_ratio": 0.55,
+    "shape": "loose",
+    "slug": "anello-dell-arma",
+    "their_name": "Anello dell'Arma #17"
+   }
+  ]
+ },
+ {
+  "id": "manie_radici",
+  "name": "Radici",
+  "len_km": 1.36,
+  "verdict": "review",
+  "why": "geometry leads but name disagrees (0.31)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.31,
+    "end_gap_m": 4,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "sentiero-indiano-29108",
+    "their_name": "Sentiero indiano #13"
+   },
+   {
+    "cov_ours_on_theirs": 0.044,
+    "cov_theirs_on_ours": 0.077,
+    "geo": 0.077,
+    "name_sim": 0.21,
+    "end_gap_m": 1022,
+    "len_ratio": 0.4,
+    "shape": "loose",
+    "slug": "prologo-donne",
+    "their_name": "prologo donne"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.33,
+    "end_gap_m": 982,
+    "len_ratio": 0.98,
+    "shape": "loose",
+    "slug": "dh-uomini",
+    "their_name": "DH Uomini #6"
+   }
+  ]
+ },
+ {
+  "id": "manie_san_michele",
+  "name": "San Michele",
+  "len_km": 1.5,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.985,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 44,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "san-michele",
+    "their_name": "San Michele #7"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.24,
+    "end_gap_m": 1643,
+    "len_ratio": 0.93,
+    "shape": "loose",
+    "slug": "dh-uomini",
+    "their_name": "DH Uomini #6"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.26,
+    "end_gap_m": 1381,
+    "len_ratio": 0.18,
+    "shape": "loose",
+    "slug": "collegamento-563761",
+    "their_name": "collegamento"
+   }
+  ]
+ },
+ {
+  "id": "manie_semaforo",
+  "name": "Semaforo",
+  "len_km": 2.81,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.89)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 10,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "semaforo",
+    "their_name": "Semaforo #8"
+   },
+   {
+    "cov_ours_on_theirs": 0.022,
+    "cov_theirs_on_ours": 0.111,
+    "geo": 0.111,
+    "name_sim": 0.31,
+    "end_gap_m": 681,
+    "len_ratio": 0.42,
+    "shape": "loose",
+    "slug": "sentiero-amico",
+    "their_name": "Sentiero Amico #15"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.21,
+    "end_gap_m": 845,
+    "len_ratio": 0.55,
+    "shape": "loose",
+    "slug": "san-michele",
+    "their_name": "San Michele #7"
+   }
+  ]
+ },
+ {
+  "id": "manie_sentiero_amico",
+  "name": "Sentiero Amico",
+  "len_km": 1.17,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.84)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 8,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "sentiero-amico",
+    "their_name": "Sentiero Amico #15"
+   },
+   {
+    "cov_ours_on_theirs": 0.158,
+    "cov_theirs_on_ours": 0.009,
+    "geo": 0.158,
+    "name_sim": 0.31,
+    "end_gap_m": 671,
+    "len_ratio": 0.42,
+    "shape": "loose",
+    "slug": "semaforo",
+    "their_name": "Semaforo #8"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.5,
+    "end_gap_m": 754,
+    "len_ratio": 0.75,
+    "shape": "loose",
+    "slug": "san-michele",
+    "their_name": "San Michele #7"
+   }
+  ]
+ },
+ {
+  "id": "manie_sentiero_dei_ciechi",
+  "name": "Sentiero dei Ciechi",
+  "len_km": 2.29,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.038,
+    "cov_theirs_on_ours": 0.048,
+    "geo": 0.048,
+    "name_sim": 0.36,
+    "end_gap_m": 1224,
+    "len_ratio": 0.76,
+    "shape": "loose",
+    "slug": "ca-du-puncin",
+    "their_name": "Cà du Puncin #3"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.14,
+    "end_gap_m": 1000,
+    "len_ratio": 0.51,
+    "shape": "loose",
+    "slug": "cave-234903",
+    "their_name": "Cave #18"
+   }
+  ]
+ },
+ {
+  "id": "manie_uphill_trail",
+  "name": "Manie Uphill",
+  "len_km": 1.29,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.041,
+    "cov_theirs_on_ours": 0.015,
+    "geo": 0.041,
+    "name_sim": 0.23,
+    "end_gap_m": 674,
+    "len_ratio": 0.67,
+    "shape": "loose",
+    "slug": "genio-genietto",
+    "their_name": "Genio Genietto"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.38,
+    "end_gap_m": 1041,
+    "len_ratio": 0.65,
+    "shape": "loose",
+    "slug": "brighella",
+    "their_name": "Brighella #21"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.23,
+    "end_gap_m": 917,
+    "len_ratio": 0.62,
+    "shape": "loose",
+    "slug": "short-cut-maki",
+    "their_name": "Short Cut MaKi"
+   }
+  ]
+ },
+ {
+  "id": "manie_voltage",
+  "name": "Voltage",
+  "len_km": 1.57,
+  "verdict": "match",
+  "why": "geometry decides (0.96, lead 0.85)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.455,
+    "cov_theirs_on_ours": 0.96,
+    "geo": 0.96,
+    "name_sim": 1.0,
+    "end_gap_m": 442,
+    "len_ratio": 0.51,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "voltage-235236",
+    "their_name": "Voltage #16"
+   },
+   {
+    "cov_ours_on_theirs": 0.114,
+    "cov_theirs_on_ours": 0.083,
+    "geo": 0.114,
+    "name_sim": 0.29,
+    "end_gap_m": 380,
+    "len_ratio": 0.92,
+    "shape": "loose",
+    "slug": "arcieri",
+    "their_name": "Arcieri"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.29,
+    "end_gap_m": 747,
+    "len_ratio": 0.5,
+    "shape": "loose",
+    "slug": "short-cut-maki",
+    "their_name": "Short Cut MaKi"
+   }
+  ]
+ },
+ {
+  "id": "mdg_cacciatore",
+  "name": "Cacciatore",
+  "len_km": 2.34,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.72)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.943,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 137,
+    "len_ratio": 0.9,
+    "shape": "1:1",
+    "slug": "cacciatore",
+    "their_name": "Cacciatore #255"
+   },
+   {
+    "cov_ours_on_theirs": 0.147,
+    "cov_theirs_on_ours": 0.277,
+    "geo": 0.277,
+    "name_sim": 0.1,
+    "end_gap_m": 610,
+    "len_ratio": 0.45,
+    "shape": "loose",
+    "slug": "kill-bill-2",
+    "their_name": "Kill Bill 2 #254"
+   },
+   {
+    "cov_ours_on_theirs": 0.078,
+    "cov_theirs_on_ours": 0.122,
+    "geo": 0.122,
+    "name_sim": 0.42,
+    "end_gap_m": 667,
+    "len_ratio": 0.93,
+    "shape": "loose",
+    "slug": "cavatappi",
+    "their_name": "Cavatappi #252"
+   }
+  ]
+ },
+ {
+  "id": "mdg_cavatappi",
+  "name": "Cavatappi",
+  "len_km": 1.24,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.77)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.615,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 533,
+    "len_ratio": 0.57,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "cavatappi",
+    "their_name": "Cavatappi #252"
+   },
+   {
+    "cov_ours_on_theirs": 0.229,
+    "cov_theirs_on_ours": 0.086,
+    "geo": 0.229,
+    "name_sim": 0.42,
+    "end_gap_m": 1025,
+    "len_ratio": 0.48,
+    "shape": "loose",
+    "slug": "cacciatore",
+    "their_name": "Cacciatore #255"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.1,
+    "end_gap_m": 572,
+    "len_ratio": 0.85,
+    "shape": "loose",
+    "slug": "kill-bill-2",
+    "their_name": "Kill Bill 2 #254"
+   }
+  ]
+ },
+ {
+  "id": "mdg_collarina_originale",
+  "name": "Collarina Originale",
+  "len_km": 4.41,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.019,
+    "cov_theirs_on_ours": 0.045,
+    "geo": 0.045,
+    "name_sim": 0.23,
+    "end_gap_m": 1020,
+    "len_ratio": 0.44,
+    "shape": "loose",
+    "slug": "ale--ale",
+    "their_name": "Ale & Ale"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.028,
+    "geo": 0.028,
+    "name_sim": 0.38,
+    "end_gap_m": 1567,
+    "len_ratio": 0.23,
+    "shape": "loose",
+    "slug": "martina",
+    "their_name": "Martina #257"
+   },
+   {
+    "cov_ours_on_theirs": 0.012,
+    "cov_theirs_on_ours": 0.014,
+    "geo": 0.014,
+    "name_sim": 0.21,
+    "end_gap_m": 1350,
+    "len_ratio": 0.49,
+    "shape": "loose",
+    "slug": "cavatappi",
+    "their_name": "Cavatappi #252"
+   }
+  ]
+ },
+ {
+  "id": "mdg_kill_bill_1",
+  "name": "Kill Bill 1",
+  "len_km": 0.95,
+  "verdict": "match",
+  "why": "geometry decides (0.95, lead 0.65)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.947,
+    "cov_theirs_on_ours": 0.83,
+    "geo": 0.947,
+    "name_sim": 1.0,
+    "end_gap_m": 168,
+    "len_ratio": 0.78,
+    "shape": "1:1",
+    "slug": "kill-bill-1",
+    "their_name": "Kill Bill 1 #253"
+   },
+   {
+    "cov_ours_on_theirs": 0.211,
+    "cov_theirs_on_ours": 0.298,
+    "geo": 0.298,
+    "name_sim": 0.91,
+    "end_gap_m": 257,
+    "len_ratio": 0.9,
+    "shape": "loose",
+    "slug": "kill-bill-2",
+    "their_name": "Kill Bill 2 #254"
+   },
+   {
+    "cov_ours_on_theirs": 0.053,
+    "cov_theirs_on_ours": 0.01,
+    "geo": 0.053,
+    "name_sim": 0.1,
+    "end_gap_m": 826,
+    "len_ratio": 0.37,
+    "shape": "loose",
+    "slug": "cacciatore",
+    "their_name": "Cacciatore #255"
+   }
+  ]
+ },
+ {
+  "id": "mdg_kill_bill_2",
+  "name": "Kill Bill 2",
+  "len_km": 1.03,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.70)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.935,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 72,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "kill-bill-2",
+    "their_name": "Kill Bill 2 #254"
+   },
+   {
+    "cov_ours_on_theirs": 0.304,
+    "cov_theirs_on_ours": 0.124,
+    "geo": 0.304,
+    "name_sim": 0.1,
+    "end_gap_m": 616,
+    "len_ratio": 0.4,
+    "shape": "loose",
+    "slug": "cacciatore",
+    "their_name": "Cacciatore #255"
+   },
+   {
+    "cov_ours_on_theirs": 0.261,
+    "cov_theirs_on_ours": 0.226,
+    "geo": 0.261,
+    "name_sim": 0.91,
+    "end_gap_m": 250,
+    "len_ratio": 0.85,
+    "shape": "loose",
+    "slug": "kill-bill-1",
+    "their_name": "Kill Bill 1 #253"
+   }
+  ]
+ },
+ {
+  "id": "mdg_madonna_della_guardia",
+  "name": "Madonna della Guardia",
+  "len_km": 1.07,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.93)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.844,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 214,
+    "len_ratio": 0.77,
+    "shape": "1:1",
+    "slug": "madonna-della-guardia-45903",
+    "their_name": "Madonna della Guardia #251"
+   },
+   {
+    "cov_ours_on_theirs": 0.067,
+    "cov_theirs_on_ours": 0.043,
+    "geo": 0.067,
+    "name_sim": 0.25,
+    "end_gap_m": 849,
+    "len_ratio": 0.99,
+    "shape": "loose",
+    "slug": "kill-bill-2",
+    "their_name": "Kill Bill 2 #254"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.25,
+    "end_gap_m": 1015,
+    "len_ratio": 0.88,
+    "shape": "loose",
+    "slug": "kill-bill-1",
+    "their_name": "Kill Bill 1 #253"
+   }
+  ]
+ },
+ {
+  "id": "mdg_martina",
+  "name": "Martina",
+  "len_km": 1.02,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.85)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 6,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "martina",
+    "their_name": "Martina #257"
+   },
+   {
+    "cov_ours_on_theirs": 0.154,
+    "cov_theirs_on_ours": 0.04,
+    "geo": 0.154,
+    "name_sim": 0.19,
+    "end_gap_m": 3423,
+    "len_ratio": 0.16,
+    "shape": "loose",
+    "slug": "roller-coaster-54111",
+    "their_name": "Roller Coaster #171"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.29,
+    "end_gap_m": 1475,
+    "len_ratio": 0.52,
+    "shape": "loose",
+    "slug": "ale--ale",
+    "their_name": "Ale & Ale"
+   }
+  ]
+ },
+ {
+  "id": "melogno_appendaun",
+  "name": "Appendaun",
+  "len_km": 2.5,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.923,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 179,
+    "len_ratio": 0.88,
+    "shape": "1:1",
+    "slug": "appendaun",
+    "their_name": "Appendaun"
+   }
+  ]
+ },
+ {
+  "id": "melogno_bormida",
+  "name": "Bormida",
+  "len_km": 3.69,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.96)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.814,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.43,
+    "end_gap_m": 892,
+    "len_ratio": 0.71,
+    "shape": "1:1",
+    "slug": "trincea",
+    "their_name": "Trincea #176"
+   },
+   {
+    "cov_ours_on_theirs": 0.035,
+    "cov_theirs_on_ours": 0.013,
+    "geo": 0.035,
+    "name_sim": 0.13,
+    "end_gap_m": 1424,
+    "len_ratio": 0.48,
+    "shape": "loose",
+    "slug": "melogno-din-sentiero-terre-alte-ta-trincea-dms01",
+    "their_name": "Melogno/DIN Sentiero Terre Alte (TA) Trincea (dms01)"
+   }
+  ]
+ },
+ {
+  "id": "melogno_bric_merizzo",
+  "name": "Bric Merizzo",
+  "len_km": 0.73,
+  "verdict": "review",
+  "why": "geometry leads but name disagrees (0.24)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.844,
+    "cov_theirs_on_ours": 0.17,
+    "geo": 0.844,
+    "name_sim": 0.24,
+    "end_gap_m": 2216,
+    "len_ratio": 0.18,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "isallo-extasy",
+    "their_name": "Isallo Extasy #355"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.22,
+    "end_gap_m": 2255,
+    "len_ratio": 0.18,
+    "shape": "loose",
+    "slug": "issalo",
+    "their_name": "Issalo #371"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.21,
+    "end_gap_m": 1786,
+    "len_ratio": 0.23,
+    "shape": "loose",
+    "slug": "fast-and-furious-64648",
+    "their_name": "Fast and Furious #354"
+   }
+  ]
+ },
+ {
+  "id": "melogno_collarina",
+  "name": "Collarina",
+  "len_km": 7.79,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.049,
+    "cov_theirs_on_ours": 0.389,
+    "geo": 0.389,
+    "name_sim": 0.62,
+    "end_gap_m": 4366,
+    "len_ratio": 0.13,
+    "shape": "loose",
+    "slug": "martina",
+    "their_name": "Martina #257"
+   },
+   {
+    "cov_ours_on_theirs": 0.044,
+    "cov_theirs_on_ours": 0.06,
+    "geo": 0.06,
+    "name_sim": 0.43,
+    "end_gap_m": 1619,
+    "len_ratio": 0.83,
+    "shape": "loose",
+    "slug": "roller-coaster-54111",
+    "their_name": "Roller Coaster #171"
+   },
+   {
+    "cov_ours_on_theirs": 0.011,
+    "cov_theirs_on_ours": 0.038,
+    "geo": 0.038,
+    "name_sim": 0.3,
+    "end_gap_m": 5310,
+    "len_ratio": 0.16,
+    "shape": "loose",
+    "slug": "kill-bill-1",
+    "their_name": "Kill Bill 1 #253"
+   }
+  ]
+ },
+ {
+  "id": "melogno_din",
+  "name": "Din",
+  "len_km": 2.31,
+  "verdict": "review",
+  "why": "geometry leads but name disagrees (0.14)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.886,
+    "cov_theirs_on_ours": 0.913,
+    "geo": 0.913,
+    "name_sim": 0.14,
+    "end_gap_m": 213,
+    "len_ratio": 0.93,
+    "shape": "1:1",
+    "slug": "via-caffaro",
+    "their_name": "Via Caffaro #178"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.14,
+    "end_gap_m": 1843,
+    "len_ratio": 0.8,
+    "shape": "loose",
+    "slug": "melogno-din-sentiero-terre-alte-ta-trincea-dms01",
+    "their_name": "Melogno/DIN Sentiero Terre Alte (TA) Trincea (dms01)"
+   }
+  ]
+ },
+ {
+  "id": "melogno_pianfieno",
+  "name": "Pianfieno",
+  "len_km": 3.33,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.008,
+    "cov_theirs_on_ours": 0.022,
+    "geo": 0.022,
+    "name_sim": 0.33,
+    "end_gap_m": 997,
+    "len_ratio": 0.66,
+    "shape": "loose",
+    "slug": "appendaun",
+    "their_name": "Appendaun"
+   }
+  ]
+ },
+ {
+  "id": "melogno_roller_coaster",
+  "name": "Roller Coaster",
+  "len_km": 6.45,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.72)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 1,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "roller-coaster-54111",
+    "their_name": "Roller Coaster #171"
+   },
+   {
+    "cov_ours_on_theirs": 0.05,
+    "cov_theirs_on_ours": 0.278,
+    "geo": 0.278,
+    "name_sim": 0.19,
+    "end_gap_m": 3428,
+    "len_ratio": 0.16,
+    "shape": "loose",
+    "slug": "martina",
+    "their_name": "Martina #257"
+   },
+   {
+    "cov_ours_on_theirs": 0.015,
+    "cov_theirs_on_ours": 0.015,
+    "geo": 0.015,
+    "name_sim": 0.48,
+    "end_gap_m": 3274,
+    "len_ratio": 0.3,
+    "shape": "loose",
+    "slug": "ale--ale",
+    "their_name": "Ale & Ale"
+   }
+  ]
+ },
+ {
+  "id": "melogno_rollercoaster_san_pantaleo",
+  "name": "Rollercoaster-San Pantaleo",
+  "len_km": 1.21,
+  "verdict": "review",
+  "why": "'Roller Coaster' also claims roller-coaster-54111 and fits it better (len_ratio 1.00 vs 0.19) -- these two may be the same trail in our own data",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.303,
+    "geo": 1.0,
+    "name_sim": 0.65,
+    "end_gap_m": 4474,
+    "len_ratio": 0.19,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "roller-coaster-54111",
+    "their_name": "Roller Coaster #171"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.22,
+    "end_gap_m": 1284,
+    "len_ratio": 0.87,
+    "shape": "loose",
+    "slug": "kill-bill-2",
+    "their_name": "Kill Bill 2 #254"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.11,
+    "end_gap_m": 1844,
+    "len_ratio": 0.47,
+    "shape": "loose",
+    "slug": "cacciatore",
+    "their_name": "Cacciatore #255"
+   }
+  ]
+ },
+ {
+  "id": "melogno_tagliego",
+  "name": "Tagliego (Rialto-Din)",
+  "len_km": 10.43,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.006,
+    "cov_theirs_on_ours": 0.016,
+    "geo": 0.016,
+    "name_sim": 0.2,
+    "end_gap_m": 4181,
+    "len_ratio": 0.21,
+    "shape": "loose",
+    "slug": "via-caffaro",
+    "their_name": "Via Caffaro #178"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.008,
+    "geo": 0.008,
+    "name_sim": 0.31,
+    "end_gap_m": 3165,
+    "len_ratio": 0.26,
+    "shape": "loose",
+    "slug": "trincea",
+    "their_name": "Trincea #176"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.23,
+    "end_gap_m": 4037,
+    "len_ratio": 0.19,
+    "shape": "loose",
+    "slug": "ale--ale",
+    "their_name": "Ale & Ale"
+   }
+  ]
+ },
+ {
+  "id": "melogno_toboga_di_canova_lower",
+  "name": "Toboga di Canova Lower",
+  "len_km": 3.12,
+  "verdict": "match",
+  "why": "geometry decides (0.99, lead 0.99)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.993,
+    "cov_theirs_on_ours": 0.725,
+    "geo": 0.993,
+    "name_sim": 0.84,
+    "end_gap_m": 1136,
+    "len_ratio": 0.71,
+    "shape": "1:1",
+    "slug": "toboga-di-canova",
+    "their_name": "Toboga di Canova #172"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.33,
+    "end_gap_m": 3974,
+    "len_ratio": 0.48,
+    "shape": "loose",
+    "slug": "roller-coaster-54111",
+    "their_name": "Roller Coaster #171"
+   }
+  ]
+ },
+ {
+  "id": "melogno_toboga_di_canova_upper",
+  "name": "Toboga di Canova Upper",
+  "len_km": 2.41,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.36)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.372,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.77,
+    "end_gap_m": 995,
+    "len_ratio": 0.43,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "toboga-canova-new",
+    "their_name": "Toboga Canova New"
+   },
+   {
+    "cov_ours_on_theirs": 0.641,
+    "cov_theirs_on_ours": 0.254,
+    "geo": 0.641,
+    "name_sim": 0.84,
+    "end_gap_m": 1185,
+    "len_ratio": 0.55,
+    "shape": "loose",
+    "slug": "toboga-di-canova",
+    "their_name": "Toboga di Canova #172"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.15,
+    "end_gap_m": 1856,
+    "len_ratio": 0.94,
+    "shape": "loose",
+    "slug": "poste-69298",
+    "their_name": "Poste"
+   }
+  ]
+ },
+ {
+  "id": "metanodotto",
+  "name": "Metanodotto",
+  "len_km": 0.93,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.2,
+    "end_gap_m": 1062,
+    "len_ratio": 0.95,
+    "shape": "loose",
+    "slug": "da-u-millin-olle-to-olle-link",
+    "their_name": "Da U Millin - Olle to Olle link"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.18,
+    "end_gap_m": 938,
+    "len_ratio": 0.88,
+    "shape": "loose",
+    "slug": "sentiero-delle-spine",
+    "their_name": "Sentiero delle Spine"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.21,
+    "end_gap_m": 820,
+    "len_ratio": 0.84,
+    "shape": "loose",
+    "slug": "vaixella",
+    "their_name": "Vaixella #374"
+   }
+  ]
+ },
+ {
+  "id": "monte_grosso_trail_new",
+  "name": "Monte Grosso Trail",
+  "len_km": 0.272,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.75)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "monte-grosso-trail-77635",
+    "their_name": "Monte Grosso Trail"
+   },
+   {
+    "cov_ours_on_theirs": 0.25,
+    "cov_theirs_on_ours": 0.074,
+    "geo": 0.25,
+    "name_sim": 0.37,
+    "end_gap_m": 554,
+    "len_ratio": 0.16,
+    "shape": "loose",
+    "slug": "ruote-di-pietra",
+    "their_name": "Ruote di Pietra #378"
+   },
+   {
+    "cov_ours_on_theirs": 0.125,
+    "cov_theirs_on_ours": 0.094,
+    "geo": 0.125,
+    "name_sim": 0.38,
+    "end_gap_m": 561,
+    "len_ratio": 0.22,
+    "shape": "loose",
+    "slug": "cuore-di-cervo-337352",
+    "their_name": "Cuore di Cervo #379"
+   }
+  ]
+ },
+ {
+  "id": "nb_115",
+  "name": "115",
+  "len_km": 1.4,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.89)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.981,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 37,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "115",
+    "their_name": "115 #97"
+   },
+   {
+    "cov_ours_on_theirs": 0.109,
+    "cov_theirs_on_ours": 0.103,
+    "geo": 0.109,
+    "name_sim": 0.0,
+    "end_gap_m": 685,
+    "len_ratio": 0.7,
+    "shape": "loose",
+    "slug": "madre-natura",
+    "their_name": "Madre Natura #94"
+   },
+   {
+    "cov_ours_on_theirs": 0.065,
+    "cov_theirs_on_ours": 0.037,
+    "geo": 0.065,
+    "name_sim": 0.0,
+    "end_gap_m": 242,
+    "len_ratio": 0.99,
+    "shape": "loose",
+    "slug": "h-trail-123961",
+    "their_name": "H trail #91"
+   }
+  ]
+ },
+ {
+  "id": "nb_base_nato",
+  "name": "Base Nato",
+  "len_km": 2.65,
+  "verdict": "match",
+  "why": "geometry decides (0.98, lead 0.43)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.969,
+    "cov_theirs_on_ours": 0.981,
+    "geo": 0.981,
+    "name_sim": 1.0,
+    "end_gap_m": 79,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "base-nato",
+    "their_name": "Base Nato #92"
+   },
+   {
+    "cov_ours_on_theirs": 0.385,
+    "cov_theirs_on_ours": 0.552,
+    "geo": 0.552,
+    "name_sim": 0.57,
+    "end_gap_m": 382,
+    "len_ratio": 0.75,
+    "shape": "loose",
+    "slug": "madre-natura",
+    "their_name": "Madre Natura #94"
+   },
+   {
+    "cov_ours_on_theirs": 0.021,
+    "cov_theirs_on_ours": 0.006,
+    "geo": 0.021,
+    "name_sim": 0.27,
+    "end_gap_m": 2157,
+    "len_ratio": 0.74,
+    "shape": "loose",
+    "slug": "crestino-pt-1",
+    "their_name": "Crestino Pt. 1 #95"
+   }
+  ]
+ },
+ {
+  "id": "nb_colla_san_giacomo_av",
+  "name": "Colla San Giacomo AV",
+  "len_km": 4.76,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.022,
+    "cov_theirs_on_ours": 0.107,
+    "geo": 0.107,
+    "name_sim": 0.2,
+    "end_gap_m": 1945,
+    "len_ratio": 0.19,
+    "shape": "loose",
+    "slug": "cravarezza",
+    "their_name": "Cravarezza #98"
+   },
+   {
+    "cov_ours_on_theirs": 0.059,
+    "cov_theirs_on_ours": 0.051,
+    "geo": 0.059,
+    "name_sim": 0.14,
+    "end_gap_m": 1827,
+    "len_ratio": 0.65,
+    "shape": "loose",
+    "slug": "ingegnere",
+    "their_name": "Ingegnere #101"
+   },
+   {
+    "cov_ours_on_theirs": 0.044,
+    "cov_theirs_on_ours": 0.042,
+    "geo": 0.044,
+    "name_sim": 0.3,
+    "end_gap_m": 2293,
+    "len_ratio": 0.83,
+    "shape": "loose",
+    "slug": "crestino-pt-2",
+    "their_name": "Crestino Pt. 2 #96"
+   }
+  ]
+ },
+ {
+  "id": "nb_cravarezza",
+  "name": "Cravarezza",
+  "len_km": 0.78,
+  "verdict": "match",
+  "why": "geometry decides (0.91, lead 0.83)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.905,
+    "cov_theirs_on_ours": 0.857,
+    "geo": 0.905,
+    "name_sim": 1.0,
+    "end_gap_m": 126,
+    "len_ratio": 0.85,
+    "shape": "1:1",
+    "slug": "cravarezza",
+    "their_name": "Cravarezza #98"
+   },
+   {
+    "cov_ours_on_theirs": 0.071,
+    "cov_theirs_on_ours": 0.006,
+    "geo": 0.071,
+    "name_sim": 0.21,
+    "end_gap_m": 2151,
+    "len_ratio": 0.25,
+    "shape": "loose",
+    "slug": "ingegnere",
+    "their_name": "Ingegnere #101"
+   },
+   {
+    "cov_ours_on_theirs": 0.048,
+    "cov_theirs_on_ours": 0.019,
+    "geo": 0.048,
+    "name_sim": 0.26,
+    "end_gap_m": 1274,
+    "len_ratio": 0.22,
+    "shape": "loose",
+    "slug": "crestino-pt-1",
+    "their_name": "Crestino Pt. 1 #95"
+   }
+  ]
+ },
+ {
+  "id": "nb_crestino_pt1",
+  "name": "Crestino Pt. 1",
+  "len_km": 3.41,
+  "verdict": "match",
+  "why": "geometry decides (0.92, lead 0.74)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.921,
+    "cov_theirs_on_ours": 0.909,
+    "geo": 0.921,
+    "name_sim": 1.0,
+    "end_gap_m": 58,
+    "len_ratio": 0.96,
+    "shape": "1:1",
+    "slug": "crestino-pt-1",
+    "their_name": "Crestino Pt. 1 #95"
+   },
+   {
+    "cov_ours_on_theirs": 0.044,
+    "cov_theirs_on_ours": 0.179,
+    "geo": 0.179,
+    "name_sim": 0.62,
+    "end_gap_m": 1488,
+    "len_ratio": 0.15,
+    "shape": "loose",
+    "slug": "variante-crestino-pt-1-adms02",
+    "their_name": "Variante Crestino Pt. 1 (adms02)"
+   },
+   {
+    "cov_ours_on_theirs": 0.018,
+    "cov_theirs_on_ours": 0.054,
+    "geo": 0.054,
+    "name_sim": 0.18,
+    "end_gap_m": 1570,
+    "len_ratio": 0.44,
+    "shape": "loose",
+    "slug": "neverland-148423",
+    "their_name": "Neverland #444"
+   }
+  ]
+ },
+ {
+  "id": "nb_crestino_pt2",
+  "name": "Crestino Pt.2",
+  "len_km": 3.32,
+  "verdict": "match",
+  "why": "geometry decides (0.92, lead 0.89)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.92,
+    "cov_theirs_on_ours": 0.807,
+    "geo": 0.92,
+    "name_sim": 1.0,
+    "end_gap_m": 7,
+    "len_ratio": 0.84,
+    "shape": "1:1",
+    "slug": "crestino-pt-2",
+    "their_name": "Crestino Pt. 2 #96"
+   },
+   {
+    "cov_ours_on_theirs": 0.035,
+    "cov_theirs_on_ours": 0.029,
+    "geo": 0.035,
+    "name_sim": 0.18,
+    "end_gap_m": 1279,
+    "len_ratio": 0.93,
+    "shape": "loose",
+    "slug": "ingegnere",
+    "their_name": "Ingegnere #101"
+   },
+   {
+    "cov_ours_on_theirs": 0.009,
+    "cov_theirs_on_ours": 0.006,
+    "geo": 0.009,
+    "name_sim": 0.92,
+    "end_gap_m": 2184,
+    "len_ratio": 0.93,
+    "shape": "loose",
+    "slug": "crestino-pt-1",
+    "their_name": "Crestino Pt. 1 #95"
+   }
+  ]
+ },
+ {
+  "id": "nb_h",
+  "name": "H",
+  "len_km": 1.35,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.90)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 12,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "h-trail-123961",
+    "their_name": "H trail #91"
+   },
+   {
+    "cov_ours_on_theirs": 0.096,
+    "cov_theirs_on_ours": 0.042,
+    "geo": 0.096,
+    "name_sim": 0.0,
+    "end_gap_m": 848,
+    "len_ratio": 0.49,
+    "shape": "loose",
+    "slug": "partigiano",
+    "their_name": "Partigiano #102"
+   },
+   {
+    "cov_ours_on_theirs": 0.038,
+    "cov_theirs_on_ours": 0.038,
+    "geo": 0.038,
+    "name_sim": 0.0,
+    "end_gap_m": 261,
+    "len_ratio": 0.95,
+    "shape": "loose",
+    "slug": "115",
+    "their_name": "115 #97"
+   }
+  ]
+ },
+ {
+  "id": "nb_h_veloce",
+  "name": "H Veloce",
+  "len_km": 2.8,
+  "verdict": "review",
+  "why": "two candidates within 0.15 of each other (0.98 vs 0.94)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.437,
+    "cov_theirs_on_ours": 0.98,
+    "geo": 0.98,
+    "name_sim": 1.0,
+    "end_gap_m": 1666,
+    "len_ratio": 0.37,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "h-veloce",
+    "their_name": "H Veloce #93"
+   },
+   {
+    "cov_ours_on_theirs": 0.197,
+    "cov_theirs_on_ours": 0.944,
+    "geo": 0.944,
+    "name_sim": 0.29,
+    "end_gap_m": 2107,
+    "len_ratio": 0.2,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "sentiero-delle-neviere",
+    "their_name": "Sentiero delle Neviere"
+   },
+   {
+    "cov_ours_on_theirs": 0.268,
+    "cov_theirs_on_ours": 0.771,
+    "geo": 0.771,
+    "name_sim": 0.12,
+    "end_gap_m": 1114,
+    "len_ratio": 0.38,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "sassaiola",
+    "their_name": "Sassaiola"
+   }
+  ]
+ },
+ {
+  "id": "nb_ingegnere",
+  "name": "Ingegnere",
+  "len_km": 3.77,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.72)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.755,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 619,
+    "len_ratio": 0.82,
+    "shape": "1:1",
+    "slug": "ingegnere",
+    "their_name": "Ingegnere #101"
+   },
+   {
+    "cov_ours_on_theirs": 0.259,
+    "cov_theirs_on_ours": 0.276,
+    "geo": 0.276,
+    "name_sim": 0.18,
+    "end_gap_m": 1281,
+    "len_ratio": 0.96,
+    "shape": "loose",
+    "slug": "crestino-pt-2",
+    "their_name": "Crestino Pt. 2 #96"
+   },
+   {
+    "cov_ours_on_theirs": 0.027,
+    "cov_theirs_on_ours": 0.089,
+    "geo": 0.089,
+    "name_sim": 0.21,
+    "end_gap_m": 2637,
+    "len_ratio": 0.24,
+    "shape": "loose",
+    "slug": "cravarezza",
+    "their_name": "Cravarezza #98"
+   }
+  ]
+ },
+ {
+  "id": "nb_madre_natura",
+  "name": "Madre Natura",
+  "len_km": 2.03,
+  "verdict": "match",
+  "why": "geometry decides (0.99, lead 0.43)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.912,
+    "cov_theirs_on_ours": 0.991,
+    "geo": 0.991,
+    "name_sim": 1.0,
+    "end_gap_m": 62,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "madre-natura",
+    "their_name": "Madre Natura #94"
+   },
+   {
+    "cov_ours_on_theirs": 0.562,
+    "cov_theirs_on_ours": 0.423,
+    "geo": 0.562,
+    "name_sim": 0.57,
+    "end_gap_m": 428,
+    "len_ratio": 0.78,
+    "shape": "loose",
+    "slug": "base-nato",
+    "their_name": "Base Nato #92"
+   },
+   {
+    "cov_ours_on_theirs": 0.15,
+    "cov_theirs_on_ours": 0.208,
+    "geo": 0.208,
+    "name_sim": 0.0,
+    "end_gap_m": 694,
+    "len_ratio": 0.7,
+    "shape": "loose",
+    "slug": "115",
+    "their_name": "115 #97"
+   }
+  ]
+ },
+ {
+  "id": "nb_partigiano",
+  "name": "Partigiano",
+  "len_km": 2.44,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.99)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.892,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 59,
+    "len_ratio": 0.88,
+    "shape": "1:1",
+    "slug": "partigiano",
+    "their_name": "Partigiano #102"
+   },
+   {
+    "cov_ours_on_theirs": 0.013,
+    "cov_theirs_on_ours": 0.013,
+    "geo": 0.013,
+    "name_sim": 0.0,
+    "end_gap_m": 844,
+    "len_ratio": 0.57,
+    "shape": "loose",
+    "slug": "h-trail-123961",
+    "their_name": "H trail #91"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.36,
+    "end_gap_m": 1493,
+    "len_ratio": 0.81,
+    "shape": "loose",
+    "slug": "madre-natura",
+    "their_name": "Madre Natura #94"
+   }
+  ]
+ },
+ {
+  "id": "nb_variante_crestino",
+  "name": "Variante Crestino",
+  "len_km": 0.95,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.125,
+    "cov_theirs_on_ours": 0.031,
+    "geo": 0.125,
+    "name_sim": 0.53,
+    "end_gap_m": 1845,
+    "len_ratio": 0.24,
+    "shape": "loose",
+    "slug": "crestino-pt-2",
+    "their_name": "Crestino Pt. 2 #96"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.44,
+    "end_gap_m": 701,
+    "len_ratio": 0.38,
+    "shape": "loose",
+    "slug": "monte-alto",
+    "their_name": "Monte Alto #138"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.21,
+    "end_gap_m": 2461,
+    "len_ratio": 0.15,
+    "shape": "loose",
+    "slug": "supergroppo",
+    "their_name": "Supergroppo #134"
+   }
+  ]
+ },
+ {
+  "id": "ov_ciapin_lodge",
+  "name": "Ciapin Lodge",
+  "len_km": 2.43,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.02,
+    "cov_theirs_on_ours": 0.013,
+    "geo": 0.02,
+    "name_sim": 1.0,
+    "end_gap_m": 1894,
+    "len_ratio": 0.99,
+    "shape": "loose",
+    "slug": "ciapin-lodge-29411",
+    "their_name": "Ciapin Lodge #131"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.17,
+    "end_gap_m": 2794,
+    "len_ratio": 0.39,
+    "shape": "loose",
+    "slug": "supergroppo",
+    "their_name": "Supergroppo #134"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.29,
+    "end_gap_m": 1784,
+    "len_ratio": 0.32,
+    "shape": "loose",
+    "slug": "variante-rocche-gianche",
+    "their_name": "Variante Rocche Gianche #137"
+   }
+  ]
+ },
+ {
+  "id": "ov_monte_alto",
+  "name": "Monte Alto",
+  "len_km": 2.57,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.88)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.989,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 23,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "monte-alto",
+    "their_name": "Monte Alto #138"
+   },
+   {
+    "cov_ours_on_theirs": 0.023,
+    "cov_theirs_on_ours": 0.125,
+    "geo": 0.125,
+    "name_sim": 1.0,
+    "end_gap_m": 589,
+    "len_ratio": 0.12,
+    "shape": "loose",
+    "slug": "monte-alto-695471",
+    "their_name": "Monte Alto"
+   },
+   {
+    "cov_ours_on_theirs": 0.057,
+    "cov_theirs_on_ours": 0.036,
+    "geo": 0.057,
+    "name_sim": 0.4,
+    "end_gap_m": 1535,
+    "len_ratio": 0.56,
+    "shape": "loose",
+    "slug": "little-dog",
+    "their_name": "Little Dog #443"
+   }
+  ]
+ },
+ {
+  "id": "ov_orco_colla_san_giacomo",
+  "name": "Orco-Colla S. Giacomo",
+  "len_km": 6.71,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.016,
+    "cov_theirs_on_ours": 0.087,
+    "geo": 0.087,
+    "name_sim": 0.28,
+    "end_gap_m": 3821,
+    "len_ratio": 0.07,
+    "shape": "loose",
+    "slug": "u-maxin-de-pippe",
+    "their_name": "U maxin de pippe"
+   },
+   {
+    "cov_ours_on_theirs": 0.063,
+    "cov_theirs_on_ours": 0.084,
+    "geo": 0.084,
+    "name_sim": 0.13,
+    "end_gap_m": 2152,
+    "len_ratio": 0.94,
+    "shape": "loose",
+    "slug": "supergroppo",
+    "their_name": "Supergroppo #134"
+   },
+   {
+    "cov_ours_on_theirs": 0.011,
+    "cov_theirs_on_ours": 0.026,
+    "geo": 0.026,
+    "name_sim": 0.25,
+    "end_gap_m": 2379,
+    "len_ratio": 0.37,
+    "shape": "loose",
+    "slug": "ciapin-lodge-29411",
+    "their_name": "Ciapin Lodge #131"
+   }
+  ]
+ },
+ {
+  "id": "ov_rocche_gianche",
+  "name": "Rocche Gianche",
+  "len_km": 2.04,
+  "verdict": "match",
+  "why": "geometry decides (0.98, lead 0.88)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.888,
+    "cov_theirs_on_ours": 0.978,
+    "geo": 0.978,
+    "name_sim": 1.0,
+    "end_gap_m": 184,
+    "len_ratio": 0.89,
+    "shape": "1:1",
+    "slug": "rocche-gianche",
+    "their_name": "Rocche Gianche #133"
+   },
+   {
+    "cov_ours_on_theirs": 0.034,
+    "cov_theirs_on_ours": 0.098,
+    "geo": 0.098,
+    "name_sim": 0.76,
+    "end_gap_m": 616,
+    "len_ratio": 0.38,
+    "shape": "loose",
+    "slug": "variante-rocche-gianche",
+    "their_name": "Variante Rocche Gianche #137"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.16,
+    "end_gap_m": 2552,
+    "len_ratio": 0.32,
+    "shape": "loose",
+    "slug": "supergroppo",
+    "their_name": "Supergroppo #134"
+   }
+  ]
+ },
+ {
+  "id": "ov_supergroppo",
+  "name": "Supergroppo",
+  "len_km": 6.02,
+  "verdict": "match",
+  "why": "geometry decides (0.93, lead 0.80)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.925,
+    "cov_theirs_on_ours": 0.89,
+    "geo": 0.925,
+    "name_sim": 1.0,
+    "end_gap_m": 348,
+    "len_ratio": 0.95,
+    "shape": "1:1",
+    "slug": "supergroppo",
+    "their_name": "Supergroppo #134"
+   },
+   {
+    "cov_ours_on_theirs": 0.008,
+    "cov_theirs_on_ours": 0.125,
+    "geo": 0.125,
+    "name_sim": 0.19,
+    "end_gap_m": 3513,
+    "len_ratio": 0.05,
+    "shape": "loose",
+    "slug": "monte-alto-695471",
+    "their_name": "Monte Alto"
+   },
+   {
+    "cov_ours_on_theirs": 0.004,
+    "cov_theirs_on_ours": 0.018,
+    "geo": 0.018,
+    "name_sim": 0.19,
+    "end_gap_m": 3237,
+    "len_ratio": 0.42,
+    "shape": "loose",
+    "slug": "monte-alto",
+    "their_name": "Monte Alto #138"
+   }
+  ]
+ },
+ {
+  "id": "ov_tagliate",
+  "name": "Tagliate",
+  "len_km": 3.53,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.022,
+    "cov_theirs_on_ours": 0.009,
+    "geo": 0.022,
+    "name_sim": 0.11,
+    "end_gap_m": 2927,
+    "len_ratio": 0.56,
+    "shape": "loose",
+    "slug": "supergroppo",
+    "their_name": "Supergroppo #134"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.22,
+    "end_gap_m": 1165,
+    "len_ratio": 0.71,
+    "shape": "loose",
+    "slug": "monte-alto",
+    "their_name": "Monte Alto #138"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.22,
+    "end_gap_m": 1088,
+    "len_ratio": 0.09,
+    "shape": "loose",
+    "slug": "monte-alto-695471",
+    "their_name": "Monte Alto"
+   }
+  ]
+ },
+ {
+  "id": "ov_val_nava",
+  "name": "Val Nava",
+  "len_km": 2.28,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.83)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.879,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 118,
+    "len_ratio": 0.93,
+    "shape": "1:1",
+    "slug": "val-nava",
+    "their_name": "Val Nava #132"
+   },
+   {
+    "cov_ours_on_theirs": 0.045,
+    "cov_theirs_on_ours": 0.174,
+    "geo": 0.174,
+    "name_sim": 0.33,
+    "end_gap_m": 1000,
+    "len_ratio": 0.12,
+    "shape": "loose",
+    "slug": "ask-gioask-103973",
+    "their_name": "Ask gioask ©"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.1,
+    "end_gap_m": 911,
+    "len_ratio": 0.69,
+    "shape": "loose",
+    "slug": "cornei-climb",
+    "their_name": "Cornei climb #64"
+   }
+  ]
+ },
+ {
+  "id": "ov_variante_rocche_gianche",
+  "name": "Variante Rocche Gianche",
+  "len_km": 0.77,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.91)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 5,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "variante-rocche-gianche",
+    "their_name": "Variante Rocche Gianche #137"
+   },
+   {
+    "cov_ours_on_theirs": 0.094,
+    "cov_theirs_on_ours": 0.072,
+    "geo": 0.094,
+    "name_sim": 0.76,
+    "end_gap_m": 573,
+    "len_ratio": 0.42,
+    "shape": "loose",
+    "slug": "rocche-gianche",
+    "their_name": "Rocche Gianche #133"
+   }
+  ]
+ },
+ {
+  "id": "passaggio_a_nord_ovest",
+  "name": "Passaggio a nord ovest",
+  "len_km": 0.24,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.92)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "passaggio-a-nord-ovest-404077",
+    "their_name": "Passaggio a nord ovest"
+   },
+   {
+    "cov_ours_on_theirs": 0.083,
+    "cov_theirs_on_ours": 0.05,
+    "geo": 0.083,
+    "name_sim": 0.21,
+    "end_gap_m": 515,
+    "len_ratio": 0.29,
+    "shape": "loose",
+    "slug": "oribago",
+    "their_name": "Oribago #393"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.38,
+    "end_gap_m": 2250,
+    "len_ratio": 0.09,
+    "shape": "loose",
+    "slug": "pian-marino-cia",
+    "their_name": "Pian Marino - Cia #391"
+   }
+  ]
+ },
+ {
+  "id": "pernice_rossa",
+  "name": "Pernice Rossa",
+  "len_km": 0.195,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.33)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "pernice-rossa",
+    "their_name": "Pernice Rossa"
+   },
+   {
+    "cov_ours_on_theirs": 0.667,
+    "cov_theirs_on_ours": 0.333,
+    "geo": 0.667,
+    "name_sim": 0.21,
+    "end_gap_m": 309,
+    "len_ratio": 0.35,
+    "shape": "loose",
+    "slug": "margot",
+    "their_name": "Margot #401"
+   },
+   {
+    "cov_ours_on_theirs": 0.167,
+    "cov_theirs_on_ours": 0.083,
+    "geo": 0.167,
+    "name_sim": 0.3,
+    "end_gap_m": 293,
+    "len_ratio": 0.24,
+    "shape": "loose",
+    "slug": "oribago",
+    "their_name": "Oribago #393"
+   }
+  ]
+ },
+ {
+  "id": "pianmarino",
+  "name": "Pianmarino",
+  "len_km": 2.0,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.91)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "pianmarino",
+    "their_name": "Pianmarino"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.087,
+    "geo": 0.087,
+    "name_sim": 0.17,
+    "end_gap_m": 1326,
+    "len_ratio": 0.29,
+    "shape": "loose",
+    "slug": "castel-gavone-second-part",
+    "their_name": "Castel Gavone second part"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.12,
+    "end_gap_m": 1553,
+    "len_ratio": 0.96,
+    "shape": "loose",
+    "slug": "dolmen",
+    "their_name": "Dolmen #51"
+   }
+  ]
+ },
+ {
+  "id": "quiliano_5_ponti",
+  "name": "5 Ponti",
+  "len_km": 6.39,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "sassaiola",
+  "name": "Sassaiola",
+  "len_km": 1.0,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.92)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "sassaiola",
+    "their_name": "Sassaiola"
+   },
+   {
+    "cov_ours_on_theirs": 0.083,
+    "cov_theirs_on_ours": 0.056,
+    "geo": 0.083,
+    "name_sim": 0.09,
+    "end_gap_m": 997,
+    "len_ratio": 0.53,
+    "shape": "loose",
+    "slug": "sentiero-delle-neviere",
+    "their_name": "Sentiero delle Neviere"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.12,
+    "end_gap_m": 1184,
+    "len_ratio": 0.98,
+    "shape": "loose",
+    "slug": "h-veloce",
+    "their_name": "H Veloce #93"
+   }
+  ]
+ },
+ {
+  "id": "sb_ana",
+  "name": "A.N.A.",
+  "len_km": 1.22,
+  "verdict": "match",
+  "why": "geometry decides (0.92, lead 0.92)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.92,
+    "cov_theirs_on_ours": 0.894,
+    "geo": 0.92,
+    "name_sim": 1.0,
+    "end_gap_m": 36,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "a-n-a",
+    "their_name": "A.N.A. #62"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.18,
+    "end_gap_m": 1691,
+    "len_ratio": 0.66,
+    "shape": "loose",
+    "slug": "dolmen",
+    "their_name": "Dolmen #51"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.0,
+    "end_gap_m": 3687,
+    "len_ratio": 0.27,
+    "shape": "loose",
+    "slug": "cucco-79606",
+    "their_name": "Cucco #53"
+   }
+  ]
+ },
+ {
+  "id": "sb_borderline",
+  "name": "Borderline",
+  "len_km": 1.79,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.95)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.988,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 9,
+    "len_ratio": 0.93,
+    "shape": "1:1",
+    "slug": "borderline-149374",
+    "their_name": "Borderline #60"
+   },
+   {
+    "cov_ours_on_theirs": 0.048,
+    "cov_theirs_on_ours": 0.053,
+    "geo": 0.053,
+    "name_sim": 0.45,
+    "end_gap_m": 656,
+    "len_ratio": 0.88,
+    "shape": "loose",
+    "slug": "cornei-climb",
+    "their_name": "Cornei climb #64"
+   },
+   {
+    "cov_ours_on_theirs": 0.048,
+    "cov_theirs_on_ours": 0.047,
+    "geo": 0.048,
+    "name_sim": 0.12,
+    "end_gap_m": 808,
+    "len_ratio": 0.89,
+    "shape": "loose",
+    "slug": "ciappi",
+    "their_name": "Ciappi #52"
+   }
+  ]
+ },
+ {
+  "id": "sb_borgata_costa",
+  "name": "Borgata Costa",
+  "len_km": 0.88,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.85)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 7,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "borgata-costa",
+    "their_name": "Borgata Costa #61"
+   },
+   {
+    "cov_ours_on_theirs": 0.071,
+    "cov_theirs_on_ours": 0.154,
+    "geo": 0.154,
+    "name_sim": 0.1,
+    "end_gap_m": 512,
+    "len_ratio": 0.67,
+    "shape": "loose",
+    "slug": "calvisio",
+    "their_name": "Calvisio"
+   },
+   {
+    "cov_ours_on_theirs": 0.036,
+    "cov_theirs_on_ours": 0.02,
+    "geo": 0.036,
+    "name_sim": 0.38,
+    "end_gap_m": 1533,
+    "len_ratio": 0.44,
+    "shape": "loose",
+    "slug": "ruggetta",
+    "their_name": "Ruggetta #56"
+   }
+  ]
+ },
+ {
+  "id": "sb_ca_del_vacche",
+  "name": "Cà del Vacchè",
+  "len_km": 3.07,
+  "verdict": "match",
+  "why": "geometry decides (0.99, lead 0.29)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.75,
+    "cov_theirs_on_ours": 0.987,
+    "geo": 0.987,
+    "name_sim": 1.0,
+    "end_gap_m": 330,
+    "len_ratio": 0.87,
+    "shape": "1:1",
+    "slug": "ca-del-vacche-87575",
+    "their_name": "Ca del Vacchè #54"
+   },
+   {
+    "cov_ours_on_theirs": 0.26,
+    "cov_theirs_on_ours": 0.697,
+    "geo": 0.697,
+    "name_sim": 0.17,
+    "end_gap_m": 1544,
+    "len_ratio": 0.19,
+    "shape": "loose",
+    "slug": "vico-porri",
+    "their_name": "Vico Porri"
+   },
+   {
+    "cov_ours_on_theirs": 0.02,
+    "cov_theirs_on_ours": 0.167,
+    "geo": 0.167,
+    "name_sim": 0.12,
+    "end_gap_m": 1705,
+    "len_ratio": 0.1,
+    "shape": "loose",
+    "slug": "connector-to-ruggetta",
+    "their_name": "Connector to Ruggetta"
+   }
+  ]
+ },
+ {
+  "id": "sb_ciappi",
+  "name": "Ciappi",
+  "len_km": 2.0,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.97)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 1,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "ciappi",
+    "their_name": "Ciappi #52"
+   },
+   {
+    "cov_ours_on_theirs": 0.016,
+    "cov_theirs_on_ours": 0.033,
+    "geo": 0.033,
+    "name_sim": 0.12,
+    "end_gap_m": 814,
+    "len_ratio": 0.83,
+    "shape": "loose",
+    "slug": "borderline-149374",
+    "their_name": "Borderline #60"
+   },
+   {
+    "cov_ours_on_theirs": 0.016,
+    "cov_theirs_on_ours": 0.024,
+    "geo": 0.024,
+    "name_sim": 0.18,
+    "end_gap_m": 2128,
+    "len_ratio": 0.45,
+    "shape": "loose",
+    "slug": "cucco-79606",
+    "their_name": "Cucco #53"
+   }
+  ]
+ },
+ {
+  "id": "sb_cornei_climb",
+  "name": "Cornei Climb",
+  "len_km": 1.57,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.93)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 2,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "cornei-climb",
+    "their_name": "Cornei climb #64"
+   },
+   {
+    "cov_ours_on_theirs": 0.068,
+    "cov_theirs_on_ours": 0.065,
+    "geo": 0.068,
+    "name_sim": 0.36,
+    "end_gap_m": 646,
+    "len_ratio": 0.95,
+    "shape": "loose",
+    "slug": "borderline-149374",
+    "their_name": "Borderline #60"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.1,
+    "end_gap_m": 794,
+    "len_ratio": 0.74,
+    "shape": "loose",
+    "slug": "val-nava",
+    "their_name": "Val Nava #132"
+   }
+  ]
+ },
+ {
+  "id": "sb_cucco",
+  "name": "Cucco",
+  "len_km": 4.28,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.78)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.967,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 157,
+    "len_ratio": 0.96,
+    "shape": "1:1",
+    "slug": "cucco-79606",
+    "their_name": "Cucco #53"
+   },
+   {
+    "cov_ours_on_theirs": 0.02,
+    "cov_theirs_on_ours": 0.219,
+    "geo": 0.219,
+    "name_sim": 0.43,
+    "end_gap_m": 3035,
+    "len_ratio": 0.09,
+    "shape": "loose",
+    "slug": "traliccio",
+    "their_name": "Traliccio"
+   },
+   {
+    "cov_ours_on_theirs": 0.01,
+    "cov_theirs_on_ours": 0.111,
+    "geo": 0.111,
+    "name_sim": 0.15,
+    "end_gap_m": 1655,
+    "len_ratio": 0.07,
+    "shape": "loose",
+    "slug": "connector-to-ruggetta",
+    "their_name": "Connector to Ruggetta"
+   }
+  ]
+ },
+ {
+  "id": "sb_diamante",
+  "name": "Diamante",
+  "len_km": 0.84,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.04,
+    "cov_theirs_on_ours": 0.024,
+    "geo": 0.04,
+    "name_sim": 0.43,
+    "end_gap_m": 900,
+    "len_ratio": 0.46,
+    "shape": "loose",
+    "slug": "dolmen",
+    "their_name": "Dolmen #51"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.0,
+    "end_gap_m": 2862,
+    "len_ratio": 0.19,
+    "shape": "loose",
+    "slug": "cucco-79606",
+    "their_name": "Cucco #53"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.31,
+    "end_gap_m": 1019,
+    "len_ratio": 0.7,
+    "shape": "loose",
+    "slug": "a-n-a",
+    "their_name": "A.N.A. #62"
+   }
+  ]
+ },
+ {
+  "id": "sb_dolmen",
+  "name": "Dolmen",
+  "len_km": 1.87,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.98)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 19,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "dolmen",
+    "their_name": "Dolmen #51"
+   },
+   {
+    "cov_ours_on_theirs": 0.019,
+    "cov_theirs_on_ours": 0.008,
+    "geo": 0.019,
+    "name_sim": 0.18,
+    "end_gap_m": 2629,
+    "len_ratio": 0.42,
+    "shape": "loose",
+    "slug": "cucco-79606",
+    "their_name": "Cucco #53"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.18,
+    "end_gap_m": 1709,
+    "len_ratio": 0.65,
+    "shape": "loose",
+    "slug": "a-n-a",
+    "their_name": "A.N.A. #62"
+   }
+  ]
+ },
+ {
+  "id": "sb_legnino",
+  "name": "Legnino",
+  "len_km": 0.55,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 4,
+    "len_ratio": 0.91,
+    "shape": "1:1",
+    "slug": "legnino",
+    "their_name": "Legnino #65"
+   }
+  ]
+ },
+ {
+  "id": "sb_megalithic",
+  "name": "Megalithic",
+  "len_km": 1.54,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.90)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 12,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "megalithic",
+    "their_name": "Megalithic #57"
+   },
+   {
+    "cov_ours_on_theirs": 0.096,
+    "cov_theirs_on_ours": 0.082,
+    "geo": 0.096,
+    "name_sim": 0.22,
+    "end_gap_m": 655,
+    "len_ratio": 0.77,
+    "shape": "loose",
+    "slug": "ruggetta",
+    "their_name": "Ruggetta #56"
+   },
+   {
+    "cov_ours_on_theirs": 0.019,
+    "cov_theirs_on_ours": 0.056,
+    "geo": 0.056,
+    "name_sim": 0.19,
+    "end_gap_m": 1027,
+    "len_ratio": 0.19,
+    "shape": "loose",
+    "slug": "connector-to-ruggetta",
+    "their_name": "Connector to Ruggetta"
+   }
+  ]
+ },
+ {
+  "id": "sb_pianarella",
+  "name": "Pianarella",
+  "len_km": 2.06,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.98)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.985,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 32,
+    "len_ratio": 0.9,
+    "shape": "1:1",
+    "slug": "pianarella-87450",
+    "their_name": "Pianarella #55"
+   },
+   {
+    "cov_ours_on_theirs": 0.014,
+    "cov_theirs_on_ours": 0.024,
+    "geo": 0.024,
+    "name_sim": 0.0,
+    "end_gap_m": 1980,
+    "len_ratio": 0.46,
+    "shape": "loose",
+    "slug": "cucco-79606",
+    "their_name": "Cucco #53"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.12,
+    "end_gap_m": 687,
+    "len_ratio": 0.89,
+    "shape": "loose",
+    "slug": "dolmen",
+    "their_name": "Dolmen #51"
+   }
+  ]
+ },
+ {
+  "id": "sb_ruggetta",
+  "name": "Ruggetta",
+  "len_km": 0.89,
+  "verdict": "match",
+  "why": "geometry decides (0.90, lead 0.68)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.9,
+    "cov_theirs_on_ours": 0.469,
+    "geo": 0.9,
+    "name_sim": 1.0,
+    "end_gap_m": 556,
+    "len_ratio": 0.45,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "ruggetta",
+    "their_name": "Ruggetta #56"
+   },
+   {
+    "cov_ours_on_theirs": 0.133,
+    "cov_theirs_on_ours": 0.219,
+    "geo": 0.219,
+    "name_sim": 0.24,
+    "end_gap_m": 661,
+    "len_ratio": 0.44,
+    "shape": "loose",
+    "slug": "traliccio",
+    "their_name": "Traliccio"
+   },
+   {
+    "cov_ours_on_theirs": 0.133,
+    "cov_theirs_on_ours": 0.038,
+    "geo": 0.133,
+    "name_sim": 0.22,
+    "end_gap_m": 556,
+    "len_ratio": 0.57,
+    "shape": "loose",
+    "slug": "megalithic",
+    "their_name": "Megalithic #57"
+   }
+  ]
+ },
+ {
+  "id": "sb_sporting",
+  "name": "Sporting",
+  "len_km": 1.22,
+  "verdict": "review",
+  "why": "two candidates within 0.15 of each other (1.00 vs 0.92)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.59,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.25,
+    "end_gap_m": 446,
+    "len_ratio": 0.48,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "calvisio",
+    "their_name": "Calvisio"
+   },
+   {
+    "cov_ours_on_theirs": 0.462,
+    "cov_theirs_on_ours": 0.915,
+    "geo": 0.915,
+    "name_sim": 1.0,
+    "end_gap_m": 485,
+    "len_ratio": 0.53,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "sporting",
+    "their_name": "Sporting #58"
+   },
+   {
+    "cov_ours_on_theirs": 0.026,
+    "cov_theirs_on_ours": 0.094,
+    "geo": 0.094,
+    "name_sim": 0.12,
+    "end_gap_m": 509,
+    "len_ratio": 0.32,
+    "shape": "loose",
+    "slug": "traliccio",
+    "their_name": "Traliccio"
+   }
+  ]
+ },
+ {
+  "id": "sb_xray",
+  "name": "X-Ray",
+  "len_km": 0.68,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.053,
+    "cov_theirs_on_ours": 0.049,
+    "geo": 0.053,
+    "name_sim": 0.0,
+    "end_gap_m": 842,
+    "len_ratio": 0.37,
+    "shape": "loose",
+    "slug": "dolmen",
+    "their_name": "Dolmen #51"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.0,
+    "end_gap_m": 3235,
+    "len_ratio": 0.15,
+    "shape": "loose",
+    "slug": "cucco-79606",
+    "their_name": "Cucco #53"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.4,
+    "end_gap_m": 988,
+    "len_ratio": 0.56,
+    "shape": "loose",
+    "slug": "a-n-a",
+    "their_name": "A.N.A. #62"
+   }
+  ]
+ },
+ {
+  "id": "scoobydoo_prima_parte",
+  "name": "Scooby-Doo Prima parte",
+  "len_km": 0.181,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.82)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "scoobydoo-prima-parte",
+    "their_name": "Scooby-Doo Prima parte"
+   },
+   {
+    "cov_ours_on_theirs": 0.182,
+    "cov_theirs_on_ours": 0.066,
+    "geo": 0.182,
+    "name_sim": 0.78,
+    "end_gap_m": 371,
+    "len_ratio": 0.24,
+    "shape": "loose",
+    "slug": "scoobydoo-seconda-parte",
+    "their_name": "Scooby-Doo seconda parte"
+   }
+  ]
+ },
+ {
+  "id": "scoobydoo_seconda_parte",
+  "name": "Scooby-Doo seconda parte",
+  "len_km": 0.724,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.64)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "scoobydoo-seconda-parte",
+    "their_name": "Scooby-Doo seconda parte"
+   },
+   {
+    "cov_ours_on_theirs": 0.079,
+    "cov_theirs_on_ours": 0.364,
+    "geo": 0.364,
+    "name_sim": 0.78,
+    "end_gap_m": 371,
+    "len_ratio": 0.26,
+    "shape": "loose",
+    "slug": "scoobydoo-prima-parte",
+    "their_name": "Scooby-Doo Prima parte"
+   }
+  ]
+ },
+ {
+  "id": "sentiero_delle_neviere",
+  "name": "Sentiero delle Neviere",
+  "len_km": 0.309,
+  "verdict": "review",
+  "why": "geometry leads but name disagrees (0.17)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.172,
+    "geo": 1.0,
+    "name_sim": 0.17,
+    "end_gap_m": 1282,
+    "len_ratio": 0.18,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "pianmarino",
+    "their_name": "Pianmarino"
+   },
+   {
+    "cov_ours_on_theirs": 0.222,
+    "cov_theirs_on_ours": 0.087,
+    "geo": 0.222,
+    "name_sim": 0.32,
+    "end_gap_m": 257,
+    "len_ratio": 0.62,
+    "shape": "loose",
+    "slug": "castel-gavone-second-part",
+    "their_name": "Castel Gavone second part"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.09,
+    "end_gap_m": 1064,
+    "len_ratio": 0.24,
+    "shape": "loose",
+    "slug": "caprazoppa",
+    "their_name": "Caprazoppa #213"
+   }
+  ]
+ },
+ {
+  "id": "sentiero_indiano",
+  "name": "Sentiero indiano",
+  "len_km": 1.0,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.92)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "sentiero-indiano-29108",
+    "their_name": "Sentiero indiano #13"
+   },
+   {
+    "cov_ours_on_theirs": 0.051,
+    "cov_theirs_on_ours": 0.077,
+    "geo": 0.077,
+    "name_sim": 0.2,
+    "end_gap_m": 1022,
+    "len_ratio": 0.4,
+    "shape": "loose",
+    "slug": "prologo-donne",
+    "their_name": "prologo donne"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.21,
+    "end_gap_m": 1043,
+    "len_ratio": 0.2,
+    "shape": "loose",
+    "slug": "collegamento-563761",
+    "their_name": "collegamento"
+   }
+  ]
+ },
+ {
+  "id": "sentiero_via_del_purchin",
+  "name": "Sentiero Via del Purchin",
+  "len_km": 2.1,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.3,
+    "end_gap_m": 1806,
+    "len_ratio": 0.24,
+    "shape": "loose",
+    "slug": "castel-gavone-second-part",
+    "their_name": "Castel Gavone second part"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.71,
+    "end_gap_m": 1762,
+    "len_ratio": 0.84,
+    "shape": "loose",
+    "slug": "via-degli-alpini",
+    "their_name": "Via degli Alpini #216"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.4,
+    "end_gap_m": 833,
+    "len_ratio": 0.84,
+    "shape": "loose",
+    "slug": "pianmarino",
+    "their_name": "Pianmarino"
+   }
+  ]
+ },
+ {
+  "id": "spillover",
+  "name": "Spillover",
+  "len_km": 1.9,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.268,
+    "cov_theirs_on_ours": 0.209,
+    "geo": 0.268,
+    "name_sim": 0.38,
+    "end_gap_m": 249,
+    "len_ratio": 0.96,
+    "shape": "loose",
+    "slug": "sugheri",
+    "their_name": "Sugheri #373"
+   },
+   {
+    "cov_ours_on_theirs": 0.122,
+    "cov_theirs_on_ours": 0.111,
+    "geo": 0.122,
+    "name_sim": 0.33,
+    "end_gap_m": 54,
+    "len_ratio": 0.97,
+    "shape": "loose",
+    "slug": "ruote-di-pietra",
+    "their_name": "Ruote di Pietra #378"
+   },
+   {
+    "cov_ours_on_theirs": 0.024,
+    "cov_theirs_on_ours": 0.103,
+    "geo": 0.103,
+    "name_sim": 0.33,
+    "end_gap_m": 805,
+    "len_ratio": 0.15,
+    "shape": "loose",
+    "slug": "muro-nero",
+    "their_name": "Muro Nero #376"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_bric_berba",
+  "name": "Bric Berba",
+  "len_km": 1.62,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.025,
+    "cov_theirs_on_ours": 0.136,
+    "geo": 0.136,
+    "name_sim": 0.31,
+    "end_gap_m": 1186,
+    "len_ratio": 0.11,
+    "shape": "loose",
+    "slug": "scoobydoo-prima-parte",
+    "their_name": "Scooby-Doo Prima parte"
+   },
+   {
+    "cov_ours_on_theirs": 0.013,
+    "cov_theirs_on_ours": 0.081,
+    "geo": 0.081,
+    "name_sim": 0.07,
+    "end_gap_m": 1022,
+    "len_ratio": 0.51,
+    "shape": "loose",
+    "slug": "collegamento-vilmar",
+    "their_name": "Collegamento Vilmar #303"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.18,
+    "end_gap_m": 1273,
+    "len_ratio": 0.45,
+    "shape": "loose",
+    "slug": "scoobydoo-seconda-parte",
+    "their_name": "Scooby-Doo seconda parte"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_cava_green_carpet",
+  "name": "Cava-Green Carpet",
+  "len_km": 2.23,
+  "verdict": "review",
+  "why": "'Cava - Tappeto Verde' also claims cava-tappeto-verde and fits it better (len_ratio 1.00 vs 0.30) -- these two may be the same trail in our own data",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.287,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.51,
+    "end_gap_m": 1011,
+    "len_ratio": 0.3,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "cava-tappeto-verde",
+    "their_name": "Cava - Tappeto Verde #292"
+   },
+   {
+    "cov_ours_on_theirs": 0.562,
+    "cov_theirs_on_ours": 0.492,
+    "geo": 0.562,
+    "name_sim": 0.31,
+    "end_gap_m": 449,
+    "len_ratio": 0.87,
+    "shape": "loose",
+    "slug": "mao-crest-162103",
+    "their_name": "Mao Crest #291"
+   },
+   {
+    "cov_ours_on_theirs": 0.113,
+    "cov_theirs_on_ours": 0.085,
+    "geo": 0.113,
+    "name_sim": 0.29,
+    "end_gap_m": 340,
+    "len_ratio": 0.85,
+    "shape": "loose",
+    "slug": "via-antica-romana",
+    "their_name": "Via Antica Romana #294"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_guidone",
+  "name": "Guidone",
+  "len_km": 1.13,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.19,
+    "end_gap_m": 1019,
+    "len_ratio": 0.75,
+    "shape": "loose",
+    "slug": "monte-sant-elena-decolli",
+    "their_name": "Monte Sant'Elena - Decolli #295"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_guidone_pt2",
+  "name": "Guidone Pt. 2",
+  "len_km": 0.7,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.33,
+    "end_gap_m": 1307,
+    "len_ratio": 0.46,
+    "shape": "loose",
+    "slug": "monte-sant-elena-decolli",
+    "their_name": "Monte Sant'Elena - Decolli #295"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_la_folia",
+  "name": "La Folia",
+  "len_km": 2.82,
+  "verdict": "match",
+  "why": "geometry decides (0.96, lead 0.96)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.7,
+    "cov_theirs_on_ours": 0.96,
+    "geo": 0.96,
+    "name_sim": 1.0,
+    "end_gap_m": 392,
+    "len_ratio": 0.78,
+    "shape": "1:1",
+    "slug": "la-folia",
+    "their_name": "La Folia #300"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.4,
+    "end_gap_m": 1214,
+    "len_ratio": 0.43,
+    "shape": "loose",
+    "slug": "la-rete-210370",
+    "their_name": "La Rete #298"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_la_rete",
+  "name": "La Rete",
+  "len_km": 1.17,
+  "verdict": "match",
+  "why": "geometry decides (0.98, lead 0.98)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.981,
+    "cov_theirs_on_ours": 0.931,
+    "geo": 0.981,
+    "name_sim": 1.0,
+    "end_gap_m": 7,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "la-rete-210370",
+    "their_name": "La Rete #298"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.24,
+    "end_gap_m": 592,
+    "len_ratio": 0.56,
+    "shape": "loose",
+    "slug": "via-laiolo",
+    "their_name": "Via Laiolo #297"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.4,
+    "end_gap_m": 1041,
+    "len_ratio": 0.54,
+    "shape": "loose",
+    "slug": "la-folia",
+    "their_name": "La Folia #300"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_mao_crest",
+  "name": "Mao Crest",
+  "len_km": 2.51,
+  "verdict": "match",
+  "why": "geometry decides (0.95, lead 0.85)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.927,
+    "cov_theirs_on_ours": 0.95,
+    "geo": 0.95,
+    "name_sim": 1.0,
+    "end_gap_m": 145,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "mao-crest-162103",
+    "their_name": "Mao Crest #291"
+   },
+   {
+    "cov_ours_on_theirs": 0.104,
+    "cov_theirs_on_ours": 0.085,
+    "geo": 0.104,
+    "name_sim": 0.15,
+    "end_gap_m": 785,
+    "len_ratio": 0.96,
+    "shape": "loose",
+    "slug": "via-antica-romana",
+    "their_name": "Via Antica Romana #294"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.18,
+    "end_gap_m": 1789,
+    "len_ratio": 0.6,
+    "shape": "loose",
+    "slug": "monte-sant-elena-decolli",
+    "their_name": "Monte Sant'Elena - Decolli #295"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_monte_sant_elena_decolli",
+  "name": "Monte Sant'Elena-Decolli",
+  "len_km": 2.7,
+  "verdict": "review",
+  "why": "geometry leads but lengths disagree (0.56)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.72,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 967,
+    "len_ratio": 0.56,
+    "shape": "1:1",
+    "slug": "monte-sant-elena-decolli",
+    "their_name": "Monte Sant'Elena - Decolli #295"
+   },
+   {
+    "cov_ours_on_theirs": 0.024,
+    "cov_theirs_on_ours": 0.021,
+    "geo": 0.024,
+    "name_sim": 0.34,
+    "end_gap_m": 1718,
+    "len_ratio": 0.97,
+    "shape": "loose",
+    "slug": "via-antica-romana",
+    "their_name": "Via Antica Romana #294"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.18,
+    "end_gap_m": 1626,
+    "len_ratio": 0.95,
+    "shape": "loose",
+    "slug": "mao-crest-162103",
+    "their_name": "Mao Crest #291"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_orto_botanico",
+  "name": "Orto Botanico",
+  "len_km": 2.02,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.89)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.988,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 30,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "orto-botanico-210866",
+    "their_name": "Orto Botanico #296"
+   },
+   {
+    "cov_ours_on_theirs": 0.085,
+    "cov_theirs_on_ours": 0.106,
+    "geo": 0.106,
+    "name_sim": 0.4,
+    "end_gap_m": 1064,
+    "len_ratio": 0.78,
+    "shape": "loose",
+    "slug": "via-antica-romana",
+    "their_name": "Via Antica Romana #294"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.38,
+    "end_gap_m": 985,
+    "len_ratio": 0.74,
+    "shape": "loose",
+    "slug": "monte-sant-elena-decolli",
+    "their_name": "Monte Sant'Elena - Decolli #295"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_rocche_sposate",
+  "name": "Rocche Sposate",
+  "len_km": 1.4,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.067,
+    "cov_theirs_on_ours": 0.013,
+    "geo": 0.067,
+    "name_sim": 0.17,
+    "end_gap_m": 1490,
+    "len_ratio": 0.66,
+    "shape": "loose",
+    "slug": "via-laiolo",
+    "their_name": "Via Laiolo #297"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.38,
+    "end_gap_m": 1523,
+    "len_ratio": 0.87,
+    "shape": "loose",
+    "slug": "la-rete-210370",
+    "their_name": "La Rete #298"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_s_stefano_dh",
+  "name": "S. Stefano DH",
+  "len_km": 1.13,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "spotorno_tecci",
+  "name": "Tecci",
+  "len_km": 0.69,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "spotorno_variante_rian_da_colla",
+  "name": "Variante Rian da Colla",
+  "len_km": 1.5,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "spotorno_via_alla_rocca",
+  "name": "Via alla Rocca",
+  "len_km": 2.53,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.035,
+    "cov_theirs_on_ours": 0.042,
+    "geo": 0.042,
+    "name_sim": 0.38,
+    "end_gap_m": 901,
+    "len_ratio": 0.48,
+    "shape": "loose",
+    "slug": "la-rete-210370",
+    "their_name": "La Rete #298"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.58,
+    "end_gap_m": 1478,
+    "len_ratio": 0.83,
+    "shape": "loose",
+    "slug": "via-laiolo",
+    "their_name": "Via Laiolo #297"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.45,
+    "end_gap_m": 336,
+    "len_ratio": 0.87,
+    "shape": "loose",
+    "slug": "la-folia",
+    "their_name": "La Folia #300"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_via_antica_romana",
+  "name": "Via Antica Romana",
+  "len_km": 2.63,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.89)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.987,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 30,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "via-antica-romana",
+    "their_name": "Via Antica Romana #294"
+   },
+   {
+    "cov_ours_on_theirs": 0.107,
+    "cov_theirs_on_ours": 0.069,
+    "geo": 0.107,
+    "name_sim": 0.4,
+    "end_gap_m": 1068,
+    "len_ratio": 0.76,
+    "shape": "loose",
+    "slug": "orto-botanico-210866",
+    "their_name": "Orto Botanico #296"
+   },
+   {
+    "cov_ours_on_theirs": 0.08,
+    "cov_theirs_on_ours": 0.1,
+    "geo": 0.1,
+    "name_sim": 0.15,
+    "end_gap_m": 785,
+    "len_ratio": 0.97,
+    "shape": "loose",
+    "slug": "mao-crest-162103",
+    "their_name": "Mao Crest #291"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_via_laiolo",
+  "name": "Via Laiolo",
+  "len_km": 2.09,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 1,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "via-laiolo",
+    "their_name": "Via Laiolo #297"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.21,
+    "end_gap_m": 878,
+    "len_ratio": 0.82,
+    "shape": "loose",
+    "slug": "mao-crest-162103",
+    "their_name": "Mao Crest #291"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.52,
+    "end_gap_m": 1567,
+    "len_ratio": 0.8,
+    "shape": "loose",
+    "slug": "via-antica-romana",
+    "their_name": "Via Antica Romana #294"
+   }
+  ]
+ },
+ {
+  "id": "spotorno_vilmar",
+  "name": "Vilmar",
+  "len_km": 1.5,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.091,
+    "cov_theirs_on_ours": 0.136,
+    "geo": 0.136,
+    "name_sim": 0.29,
+    "end_gap_m": 1222,
+    "len_ratio": 0.12,
+    "shape": "loose",
+    "slug": "scoobydoo-prima-parte",
+    "their_name": "Scooby-Doo Prima parte"
+   },
+   {
+    "cov_ours_on_theirs": 0.03,
+    "cov_theirs_on_ours": 0.054,
+    "geo": 0.054,
+    "name_sim": 0.48,
+    "end_gap_m": 1020,
+    "len_ratio": 0.54,
+    "shape": "loose",
+    "slug": "collegamento-vilmar",
+    "their_name": "Collegamento Vilmar #303"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.13,
+    "end_gap_m": 1307,
+    "len_ratio": 0.48,
+    "shape": "loose",
+    "slug": "scoobydoo-seconda-parte",
+    "their_name": "Scooby-Doo seconda parte"
+   }
+  ]
+ },
+ {
+  "id": "sprint_radici_24ore",
+  "name": "sprint radici 24ore",
+  "len_km": 0.529,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.90)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "sprint-radici-24ore",
+    "their_name": "sprint radici 24ore"
+   },
+   {
+    "cov_ours_on_theirs": 0.1,
+    "cov_theirs_on_ours": 0.042,
+    "geo": 0.1,
+    "name_sim": 0.63,
+    "end_gap_m": 501,
+    "len_ratio": 0.86,
+    "shape": "loose",
+    "slug": "la-panoramica-24ore",
+    "their_name": "la panoramica 24ore"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.4,
+    "end_gap_m": 1241,
+    "len_ratio": 0.34,
+    "shape": "loose",
+    "slug": "san-michele",
+    "their_name": "San Michele #7"
+   }
+  ]
+ },
+ {
+  "id": "toboga_458181",
+  "name": "toboga",
+  "len_km": 0.915,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "toboga-458181",
+    "their_name": "toboga"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.32,
+    "end_gap_m": 1007,
+    "len_ratio": 0.62,
+    "shape": "loose",
+    "slug": "prologo-donne",
+    "their_name": "prologo donne"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.15,
+    "end_gap_m": 1083,
+    "len_ratio": 0.61,
+    "shape": "loose",
+    "slug": "arcieri",
+    "their_name": "Arcieri"
+   }
+  ]
+ },
+ {
+  "id": "trail_de_sebastian",
+  "name": "Trail de Sebastian",
+  "len_km": 0.79,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "trail-de-sebastian",
+    "their_name": "Trail de Sebastian"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.4,
+    "end_gap_m": 433,
+    "len_ratio": 0.71,
+    "shape": "loose",
+    "slug": "sentiero-delle-neviere",
+    "their_name": "Sentiero delle Neviere"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.48,
+    "end_gap_m": 852,
+    "len_ratio": 0.74,
+    "shape": "loose",
+    "slug": "sassaiola",
+    "their_name": "Sassaiola"
+   }
+  ]
+ },
+ {
+  "id": "traliccio",
+  "name": "Traliccio",
+  "len_km": 0.389,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.75)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "traliccio",
+    "their_name": "Traliccio"
+   },
+   {
+    "cov_ours_on_theirs": 0.25,
+    "cov_theirs_on_ours": 0.008,
+    "geo": 0.25,
+    "name_sim": 0.43,
+    "end_gap_m": 3190,
+    "len_ratio": 0.09,
+    "shape": "loose",
+    "slug": "cucco-79606",
+    "their_name": "Cucco #53"
+   },
+   {
+    "cov_ours_on_theirs": 0.25,
+    "cov_theirs_on_ours": 0.061,
+    "geo": 0.25,
+    "name_sim": 0.24,
+    "end_gap_m": 1217,
+    "len_ratio": 0.19,
+    "shape": "loose",
+    "slug": "ruggetta",
+    "their_name": "Ruggetta #56"
+   }
+  ]
+ },
+ {
+  "id": "tratto_ganzo_24ore",
+  "name": "tratto ganzo 24ore",
+  "len_km": 0.466,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.82)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "tratto-ganzo-24ore",
+    "their_name": "tratto ganzo 24ore"
+   },
+   {
+    "cov_ours_on_theirs": 0.062,
+    "cov_theirs_on_ours": 0.182,
+    "geo": 0.182,
+    "name_sim": 0.2,
+    "end_gap_m": 362,
+    "len_ratio": 0.59,
+    "shape": "loose",
+    "slug": "collegamento-563761",
+    "their_name": "collegamento"
+   },
+   {
+    "cov_ours_on_theirs": 0.062,
+    "cov_theirs_on_ours": 0.158,
+    "geo": 0.158,
+    "name_sim": 0.34,
+    "end_gap_m": 341,
+    "len_ratio": 0.66,
+    "shape": "loose",
+    "slug": "il-salitone",
+    "their_name": "il salitone"
+   }
+  ]
+ },
+ {
+  "id": "u_maxin_de_pippe",
+  "name": "U maxin de pippe",
+  "len_km": 0.45,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "u-maxin-de-pippe",
+    "their_name": "U maxin de pippe"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.3,
+    "end_gap_m": 2641,
+    "len_ratio": 0.07,
+    "shape": "loose",
+    "slug": "supergroppo",
+    "their_name": "Supergroppo #134"
+   }
+  ]
+ },
+ {
+  "id": "verezzi_bondi",
+  "name": "Bondi",
+  "len_km": 3.61,
+  "verdict": "review",
+  "why": "'Bondi Traverse' also claims bondi-traverse and fits it better (len_ratio 0.96 vs 0.62) -- these two may be the same trail in our own data",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.653,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.53,
+    "end_gap_m": 1059,
+    "len_ratio": 0.62,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "bondi-traverse",
+    "their_name": "Bondi Traverse #211"
+   },
+   {
+    "cov_ours_on_theirs": 0.008,
+    "cov_theirs_on_ours": 0.049,
+    "geo": 0.049,
+    "name_sim": 0.13,
+    "end_gap_m": 1471,
+    "len_ratio": 0.36,
+    "shape": "loose",
+    "slug": "caprazoppa",
+    "their_name": "Caprazoppa #213"
+   },
+   {
+    "cov_ours_on_theirs": 0.025,
+    "cov_theirs_on_ours": 0.037,
+    "geo": 0.037,
+    "name_sim": 0.21,
+    "end_gap_m": 1141,
+    "len_ratio": 0.32,
+    "shape": "loose",
+    "slug": "terra-di-mezzo-82636",
+    "their_name": "Terra di Mezzo #218"
+   }
+  ]
+ },
+ {
+  "id": "verezzi_caprazoppa",
+  "name": "Caprazoppa",
+  "len_km": 11.75,
+  "verdict": "match",
+  "why": "geometry decides (0.96, lead 0.53)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.143,
+    "cov_theirs_on_ours": 0.963,
+    "geo": 0.963,
+    "name_sim": 1.0,
+    "end_gap_m": 883,
+    "len_ratio": 0.11,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "caprazoppa",
+    "their_name": "Caprazoppa #213"
+   },
+   {
+    "cov_ours_on_theirs": 0.091,
+    "cov_theirs_on_ours": 0.43,
+    "geo": 0.43,
+    "name_sim": 0.0,
+    "end_gap_m": 929,
+    "len_ratio": 0.17,
+    "shape": "loose",
+    "slug": "xmen-82618",
+    "their_name": "X-Men #214"
+   },
+   {
+    "cov_ours_on_theirs": 0.029,
+    "cov_theirs_on_ours": 0.338,
+    "geo": 0.338,
+    "name_sim": 0.33,
+    "end_gap_m": 1335,
+    "len_ratio": 0.1,
+    "shape": "loose",
+    "slug": "terra-di-mezzo-82636",
+    "their_name": "Terra di Mezzo #218"
+   }
+  ]
+ },
+ {
+  "id": "verezzi_geologico",
+  "name": "Geologico",
+  "len_km": 0.98,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.17,
+    "end_gap_m": 1176,
+    "len_ratio": 0.85,
+    "shape": "loose",
+    "slug": "terra-di-mezzo-82636",
+    "their_name": "Terra di Mezzo #218"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.09,
+    "end_gap_m": 1196,
+    "len_ratio": 0.43,
+    "shape": "loose",
+    "slug": "bondi-traverse",
+    "their_name": "Bondi Traverse #211"
+   }
+  ]
+ },
+ {
+  "id": "verezzi_gorra_uphill",
+  "name": "Gorra Uphill",
+  "len_km": 0.83,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.976,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.59,
+    "end_gap_m": 31,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "gorra",
+    "their_name": "Gorra #219"
+   }
+  ]
+ },
+ {
+  "id": "verezzi_parsifal",
+  "name": "Parsifal",
+  "len_km": 1.35,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 5,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "parsifal",
+    "their_name": "Parsifal #217"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.15,
+    "end_gap_m": 689,
+    "len_ratio": 0.47,
+    "shape": "loose",
+    "slug": "orera",
+    "their_name": "Orera"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.27,
+    "end_gap_m": 1450,
+    "len_ratio": 0.6,
+    "shape": "loose",
+    "slug": "bondi-traverse",
+    "their_name": "Bondi Traverse #211"
+   }
+  ]
+ },
+ {
+  "id": "verezzi_strada_della_cappelletta",
+  "name": "Strada della Cappelletta",
+  "len_km": 2.16,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.292,
+    "cov_theirs_on_ours": 0.246,
+    "geo": 0.292,
+    "name_sim": 0.14,
+    "end_gap_m": 619,
+    "len_ratio": 0.94,
+    "shape": "loose",
+    "slug": "xmen-82618",
+    "their_name": "X-Men #214"
+   },
+   {
+    "cov_ours_on_theirs": 0.031,
+    "cov_theirs_on_ours": 0.074,
+    "geo": 0.074,
+    "name_sim": 0.29,
+    "end_gap_m": 898,
+    "len_ratio": 0.6,
+    "shape": "loose",
+    "slug": "caprazoppa",
+    "their_name": "Caprazoppa #213"
+   },
+   {
+    "cov_ours_on_theirs": 0.031,
+    "cov_theirs_on_ours": 0.027,
+    "geo": 0.031,
+    "name_sim": 0.19,
+    "end_gap_m": 806,
+    "len_ratio": 0.62,
+    "shape": "loose",
+    "slug": "parsifal",
+    "their_name": "Parsifal #217"
+   }
+  ]
+ },
+ {
+  "id": "verezzi_strinate",
+  "name": "Strinate",
+  "len_km": 0.68,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.17,
+    "end_gap_m": 1396,
+    "len_ratio": 0.39,
+    "shape": "loose",
+    "slug": "via-degli-alpini",
+    "their_name": "Via degli Alpini #216"
+   }
+  ]
+ },
+ {
+  "id": "verezzi_terra_di_mezzo",
+  "name": "Terra di Mezzo",
+  "len_km": 1.1,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.93)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.982,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 36,
+    "len_ratio": 0.96,
+    "shape": "1:1",
+    "slug": "terra-di-mezzo-82636",
+    "their_name": "Terra di Mezzo #218"
+   },
+   {
+    "cov_ours_on_theirs": 0.071,
+    "cov_theirs_on_ours": 0.054,
+    "geo": 0.071,
+    "name_sim": 0.29,
+    "end_gap_m": 447,
+    "len_ratio": 0.49,
+    "shape": "loose",
+    "slug": "bondi-traverse",
+    "their_name": "Bondi Traverse #211"
+   },
+   {
+    "cov_ours_on_theirs": 0.036,
+    "cov_theirs_on_ours": 0.049,
+    "geo": 0.049,
+    "name_sim": 0.33,
+    "end_gap_m": 890,
+    "len_ratio": 0.84,
+    "shape": "loose",
+    "slug": "caprazoppa",
+    "their_name": "Caprazoppa #213"
+   }
+  ]
+ },
+ {
+  "id": "verezzi_via_degli_alpini",
+  "name": "Via Degli Alpini",
+  "len_km": 1.91,
+  "verdict": "match",
+  "why": "geometry decides (0.92, lead 0.92)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.86,
+    "cov_theirs_on_ours": 0.923,
+    "geo": 0.923,
+    "name_sim": 1.0,
+    "end_gap_m": 173,
+    "len_ratio": 0.91,
+    "shape": "1:1",
+    "slug": "via-degli-alpini",
+    "their_name": "Via degli Alpini #216"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.38,
+    "end_gap_m": 1850,
+    "len_ratio": 0.92,
+    "shape": "loose",
+    "slug": "pianmarino",
+    "their_name": "Pianmarino"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.27,
+    "end_gap_m": 959,
+    "len_ratio": 0.85,
+    "shape": "loose",
+    "slug": "bondi-traverse",
+    "their_name": "Bondi Traverse #211"
+   }
+  ]
+ },
+ {
+  "id": "verezzi_x_men",
+  "name": "X-Men",
+  "len_km": 2.25,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.71)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.947,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 19,
+    "len_ratio": 0.91,
+    "shape": "1:1",
+    "slug": "xmen-82618",
+    "their_name": "X-Men #214"
+   },
+   {
+    "cov_ours_on_theirs": 0.061,
+    "cov_theirs_on_ours": 0.286,
+    "geo": 0.286,
+    "name_sim": 0.2,
+    "end_gap_m": 583,
+    "len_ratio": 0.28,
+    "shape": "loose",
+    "slug": "orera",
+    "their_name": "Orera"
+   },
+   {
+    "cov_ours_on_theirs": 0.018,
+    "cov_theirs_on_ours": 0.061,
+    "geo": 0.061,
+    "name_sim": 0.19,
+    "end_gap_m": 798,
+    "len_ratio": 0.3,
+    "shape": "loose",
+    "slug": "rocca-dell-orera",
+    "their_name": "Rocca dell'Orera"
+   }
+  ]
+ },
+ {
+  "id": "via_caffaro",
+  "name": "Via Caffaro",
+  "len_km": 2.0,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "via-caffaro",
+    "their_name": "Via Caffaro #178"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.2,
+    "end_gap_m": 1752,
+    "len_ratio": 0.88,
+    "shape": "loose",
+    "slug": "melogno-din-sentiero-terre-alte-ta-trincea-dms01",
+    "their_name": "Melogno/DIN Sentiero Terre Alte (TA) Trincea (dms01)"
+   }
+  ]
+ },
+ {
+  "id": "vico_porri",
+  "name": "Vico Porri",
+  "len_km": 0.591,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.89)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "vico-porri",
+    "their_name": "Vico Porri"
+   },
+   {
+    "cov_ours_on_theirs": 0.115,
+    "cov_theirs_on_ours": 0.026,
+    "geo": 0.115,
+    "name_sim": 0.17,
+    "end_gap_m": 1545,
+    "len_ratio": 0.22,
+    "shape": "loose",
+    "slug": "ca-del-vacche-87575",
+    "their_name": "Ca del Vacchè #54"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.36,
+    "end_gap_m": 1006,
+    "len_ratio": 0.49,
+    "shape": "loose",
+    "slug": "camporotondo",
+    "their_name": "Camporotondo"
+   }
+  ]
+ },
+ {
+  "id": "vm_acquedotto",
+  "name": "Acquedotto",
+  "len_km": 0.71,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 1,
+    "len_ratio": 0.92,
+    "shape": "1:1",
+    "slug": "acquedotto-240374",
+    "their_name": "Acquedotto #375"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.42,
+    "end_gap_m": 374,
+    "len_ratio": 0.57,
+    "shape": "loose",
+    "slug": "cuore-di-cervo-337352",
+    "their_name": "Cuore di Cervo #379"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.27,
+    "end_gap_m": 464,
+    "len_ratio": 0.39,
+    "shape": "loose",
+    "slug": "monte-grosso-trail-77635",
+    "their_name": "Monte Grosso Trail"
+   }
+  ]
+ },
+ {
+  "id": "vm_aleluya",
+  "name": "Aleluya",
+  "len_km": 0.9,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.80)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.86,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "aleluia",
+    "their_name": "Aleluia #352"
+   },
+   {
+    "cov_ours_on_theirs": 0.146,
+    "cov_theirs_on_ours": 0.2,
+    "geo": 0.2,
+    "name_sim": 0.11,
+    "end_gap_m": 482,
+    "len_ratio": 0.61,
+    "shape": "loose",
+    "slug": "rock-n-rolla-135977",
+    "their_name": "Rock'n'Rolla #343"
+   },
+   {
+    "cov_ours_on_theirs": 0.104,
+    "cov_theirs_on_ours": 0.066,
+    "geo": 0.104,
+    "name_sim": 0.33,
+    "end_gap_m": 931,
+    "len_ratio": 0.64,
+    "shape": "loose",
+    "slug": "route-bella",
+    "their_name": "Route Bella #367"
+   }
+  ]
+ },
+ {
+  "id": "vm_armuin",
+  "name": "Armuin",
+  "len_km": 1.51,
+  "verdict": "match",
+  "why": "geometry decides (0.88, lead 0.76)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.605,
+    "cov_theirs_on_ours": 0.875,
+    "geo": 0.875,
+    "name_sim": 1.0,
+    "end_gap_m": 168,
+    "len_ratio": 0.75,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "armuin",
+    "their_name": "Armuin #364"
+   },
+   {
+    "cov_ours_on_theirs": 0.053,
+    "cov_theirs_on_ours": 0.115,
+    "geo": 0.115,
+    "name_sim": 0.36,
+    "end_gap_m": 694,
+    "len_ratio": 0.36,
+    "shape": "loose",
+    "slug": "gabry",
+    "their_name": "Gabry #347"
+   },
+   {
+    "cov_ours_on_theirs": 0.013,
+    "cov_theirs_on_ours": 0.062,
+    "geo": 0.062,
+    "name_sim": 0.22,
+    "end_gap_m": 1055,
+    "len_ratio": 0.46,
+    "shape": "loose",
+    "slug": "cnc",
+    "their_name": "CNC #365"
+   }
+  ]
+ },
+ {
+  "id": "vm_asinolla_uphill",
+  "name": "Asinolla Uphill",
+  "len_km": 0.76,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 7,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "asinolla-uphill",
+    "their_name": "Asinolla Uphill #366"
+   }
+  ]
+ },
+ {
+  "id": "vm_avioai",
+  "name": "Avioai",
+  "len_km": 1.61,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "vm_blu_pervinca",
+  "name": "Blu Pervinca",
+  "len_km": 1.25,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.26,
+    "end_gap_m": 877,
+    "len_ratio": 0.81,
+    "shape": "loose",
+    "slug": "dog-eat-dog-144771",
+    "their_name": "Dog Eat Dog #344"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.24,
+    "end_gap_m": 3519,
+    "len_ratio": 0.19,
+    "shape": "loose",
+    "slug": "karma-trail",
+    "their_name": "Karma Trail #345"
+   }
+  ]
+ },
+ {
+  "id": "vm_carmo_per_sempre",
+  "name": "Carmo per Sempre",
+  "len_km": 7.51,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.004,
+    "cov_theirs_on_ours": 0.004,
+    "geo": 0.004,
+    "name_sim": 0.29,
+    "end_gap_m": 2582,
+    "len_ratio": 0.86,
+    "shape": "loose",
+    "slug": "karma-trail",
+    "their_name": "Karma Trail #345"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.22,
+    "end_gap_m": 4048,
+    "len_ratio": 0.51,
+    "shape": "loose",
+    "slug": "oltrefinale",
+    "their_name": "Oltrefinale #341"
+   }
+  ]
+ },
+ {
+  "id": "vm_cnc",
+  "name": "CNC",
+  "len_km": 0.85,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.57)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.818,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 141,
+    "len_ratio": 0.82,
+    "shape": "1:1",
+    "slug": "cnc",
+    "their_name": "CNC #365"
+   },
+   {
+    "cov_ours_on_theirs": 0.273,
+    "cov_theirs_on_ours": 0.429,
+    "geo": 0.429,
+    "name_sim": 0.17,
+    "end_gap_m": 401,
+    "len_ratio": 0.49,
+    "shape": "loose",
+    "slug": "madonnina-429396",
+    "their_name": "Madonnina #363"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.17,
+    "end_gap_m": 965,
+    "len_ratio": 0.67,
+    "shape": "loose",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   }
+  ]
+ },
+ {
+  "id": "vm_cormore",
+  "name": "Cormore",
+  "len_km": 3.32,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "vm_cuore_di_cervo",
+  "name": "Cuore di Cervo",
+  "len_km": 1.08,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.68)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.906,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 67,
+    "len_ratio": 0.88,
+    "shape": "1:1",
+    "slug": "cuore-di-cervo-337352",
+    "their_name": "Cuore di Cervo #379"
+   },
+   {
+    "cov_ours_on_theirs": 0.32,
+    "cov_theirs_on_ours": 0.134,
+    "geo": 0.32,
+    "name_sim": 0.29,
+    "end_gap_m": 242,
+    "len_ratio": 0.64,
+    "shape": "loose",
+    "slug": "sugheri",
+    "their_name": "Sugheri #373"
+   },
+   {
+    "cov_ours_on_theirs": 0.12,
+    "cov_theirs_on_ours": 0.077,
+    "geo": 0.12,
+    "name_sim": 0.38,
+    "end_gap_m": 511,
+    "len_ratio": 0.25,
+    "shape": "loose",
+    "slug": "monte-grosso-trail-77635",
+    "their_name": "Monte Grosso Trail"
+   }
+  ]
+ },
+ {
+  "id": "vm_dog_eat_dog",
+  "name": "Dog Eat Dog",
+  "len_km": 1.0,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 4,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "dog-eat-dog-144771",
+    "their_name": "Dog Eat Dog #344"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.26,
+    "end_gap_m": 819,
+    "len_ratio": 0.56,
+    "shape": "loose",
+    "slug": "rock-n-rolla-135977",
+    "their_name": "Rock'n'Rolla #343"
+   }
+  ]
+ },
+ {
+  "id": "vm_dolcenera",
+  "name": "Dolcenera",
+  "len_km": 1.05,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.44,
+    "end_gap_m": 403,
+    "len_ratio": 0.84,
+    "shape": "loose",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.13,
+    "end_gap_m": 689,
+    "len_ratio": 0.93,
+    "shape": "loose",
+    "slug": "armuin",
+    "their_name": "Armuin #364"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.14,
+    "end_gap_m": 872,
+    "len_ratio": 0.52,
+    "shape": "loose",
+    "slug": "gabry",
+    "their_name": "Gabry #347"
+   }
+  ]
+ },
+ {
+  "id": "vm_dondella",
+  "name": "Dondella",
+  "len_km": 2.44,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "vm_fast_and_furious",
+  "name": "Fast and Furious",
+  "len_km": 3.88,
+  "verdict": "match",
+  "why": "geometry decides (0.98, lead 0.77)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.712,
+    "cov_theirs_on_ours": 0.978,
+    "geo": 0.978,
+    "name_sim": 1.0,
+    "end_gap_m": 450,
+    "len_ratio": 0.79,
+    "shape": "1:1",
+    "slug": "fast-and-furious-64648",
+    "their_name": "Fast and Furious #354"
+   },
+   {
+    "cov_ours_on_theirs": 0.022,
+    "cov_theirs_on_ours": 0.208,
+    "geo": 0.208,
+    "name_sim": 0.44,
+    "end_gap_m": 1780,
+    "len_ratio": 0.08,
+    "shape": "loose",
+    "slug": "link-fastisallo",
+    "their_name": "Link Fast-Isallo"
+   },
+   {
+    "cov_ours_on_theirs": 0.022,
+    "cov_theirs_on_ours": 0.034,
+    "geo": 0.034,
+    "name_sim": 0.14,
+    "end_gap_m": 653,
+    "len_ratio": 0.99,
+    "shape": "loose",
+    "slug": "isallo-extasy",
+    "their_name": "Isallo Extasy #355"
+   }
+  ]
+ },
+ {
+  "id": "vm_finale_oltre",
+  "name": "Finale Oltre",
+  "len_km": 0.63,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.79)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.579,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 316,
+    "len_ratio": 0.37,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "finale-oltre-190974",
+    "their_name": "Finale Oltre #368"
+   },
+   {
+    "cov_ours_on_theirs": 0.211,
+    "cov_theirs_on_ours": 0.058,
+    "geo": 0.211,
+    "name_sim": 0.3,
+    "end_gap_m": 938,
+    "len_ratio": 0.36,
+    "shape": "loose",
+    "slug": "titalana-145004",
+    "their_name": "Titalana #342"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.26,
+    "end_gap_m": 1224,
+    "len_ratio": 0.43,
+    "shape": "loose",
+    "slug": "route-bella",
+    "their_name": "Route Bella #367"
+   }
+  ]
+ },
+ {
+  "id": "vm_foresto",
+  "name": "Foresto",
+  "len_km": 1.81,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.95)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.405,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 373,
+    "len_ratio": 0.36,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "foresto-113896",
+    "their_name": "Foresto #351"
+   },
+   {
+    "cov_ours_on_theirs": 0.024,
+    "cov_theirs_on_ours": 0.05,
+    "geo": 0.05,
+    "name_sim": 0.15,
+    "end_gap_m": 786,
+    "len_ratio": 0.63,
+    "shape": "loose",
+    "slug": "armuin",
+    "their_name": "Armuin #364"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.25,
+    "end_gap_m": 1246,
+    "len_ratio": 0.69,
+    "shape": "loose",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   }
+  ]
+ },
+ {
+  "id": "vm_gabry",
+  "name": "Gabry",
+  "len_km": 0.56,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.947,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 24,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "gabry",
+    "their_name": "Gabry #347"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.0,
+    "end_gap_m": 844,
+    "len_ratio": 0.45,
+    "shape": "loose",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.36,
+    "end_gap_m": 514,
+    "len_ratio": 0.49,
+    "shape": "loose",
+    "slug": "armuin",
+    "their_name": "Armuin #364"
+   }
+  ]
+ },
+ {
+  "id": "vm_green_river",
+  "name": "Green River",
+  "len_km": 2.69,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "vm_grollon",
+  "name": "Grollon",
+  "len_km": 2.05,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.93)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.419,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.78,
+    "end_gap_m": 587,
+    "len_ratio": 0.39,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "grollon-2-pt",
+    "their_name": "Grollon 2°pt"
+   },
+   {
+    "cov_ours_on_theirs": 0.009,
+    "cov_theirs_on_ours": 0.071,
+    "geo": 0.071,
+    "name_sim": 0.22,
+    "end_gap_m": 1180,
+    "len_ratio": 0.37,
+    "shape": "loose",
+    "slug": "baltera-dh-new",
+    "their_name": "Baltera Dh new"
+   }
+  ]
+ },
+ {
+  "id": "vm_gump",
+  "name": "Gump",
+  "len_km": 0.43,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.048,
+    "cov_theirs_on_ours": 0.032,
+    "geo": 0.048,
+    "name_sim": 0.0,
+    "end_gap_m": 502,
+    "len_ratio": 0.64,
+    "shape": "loose",
+    "slug": "foresto-113896",
+    "their_name": "Foresto #351"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.22,
+    "end_gap_m": 649,
+    "len_ratio": 0.78,
+    "shape": "loose",
+    "slug": "gabry",
+    "their_name": "Gabry #347"
+   }
+  ]
+ },
+ {
+  "id": "vm_hay_trail",
+  "name": "Hay Trail (Sentiero del Fieno)",
+  "len_km": 1.15,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.93)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.82,
+    "end_gap_m": 15,
+    "len_ratio": 0.92,
+    "shape": "1:1",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   },
+   {
+    "cov_ours_on_theirs": 0.037,
+    "cov_theirs_on_ours": 0.075,
+    "geo": 0.075,
+    "name_sim": 0.32,
+    "end_gap_m": 550,
+    "len_ratio": 0.98,
+    "shape": "loose",
+    "slug": "armuin",
+    "their_name": "Armuin #364"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.12,
+    "end_gap_m": 1035,
+    "len_ratio": 0.6,
+    "shape": "loose",
+    "slug": "cnc",
+    "their_name": "CNC #365"
+   }
+  ]
+ },
+ {
+  "id": "vm_hell_boy_1",
+  "name": "Hell Boy part 1",
+  "len_km": 1.97,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.69)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.548,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 540,
+    "len_ratio": 0.63,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "hell-boy-part-1",
+    "their_name": "Hell Boy part 1 #361"
+   },
+   {
+    "cov_ours_on_theirs": 0.315,
+    "cov_theirs_on_ours": 0.191,
+    "geo": 0.315,
+    "name_sim": 0.35,
+    "end_gap_m": 1270,
+    "len_ratio": 0.77,
+    "shape": "loose",
+    "slug": "hiroshima-mon-amour-145150",
+    "their_name": "Hiroshima Mon Amour #358"
+   },
+   {
+    "cov_ours_on_theirs": 0.192,
+    "cov_theirs_on_ours": 0.296,
+    "geo": 0.296,
+    "name_sim": 0.49,
+    "end_gap_m": 1007,
+    "len_ratio": 0.59,
+    "shape": "loose",
+    "slug": "salite-di-livello-pt-1",
+    "their_name": "Salite di Livello Pt.1 #369"
+   }
+  ]
+ },
+ {
+  "id": "vm_hell_boy_2",
+  "name": "Hell Boy part 2",
+  "len_km": 1.5,
+  "verdict": "match",
+  "why": "geometry decides (0.92, lead 0.92)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.92,
+    "cov_theirs_on_ours": 0.924,
+    "geo": 0.924,
+    "name_sim": 1.0,
+    "end_gap_m": 40,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "hell-boy-part-2",
+    "their_name": "Hell Boy part 2 #362"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.31,
+    "end_gap_m": 1378,
+    "len_ratio": 0.97,
+    "shape": "loose",
+    "slug": "route-bella",
+    "their_name": "Route Bella #367"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.93,
+    "end_gap_m": 1013,
+    "len_ratio": 0.82,
+    "shape": "loose",
+    "slug": "hell-boy-part-1",
+    "their_name": "Hell Boy part 1 #361"
+   }
+  ]
+ },
+ {
+  "id": "vm_hiroshima_mon_amour",
+  "name": "Hiroshima Mon Amour",
+  "len_km": 2.17,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.87)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.887,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 114,
+    "len_ratio": 0.85,
+    "shape": "1:1",
+    "slug": "hiroshima-mon-amour-145150",
+    "their_name": "Hiroshima Mon Amour #358"
+   },
+   {
+    "cov_ours_on_theirs": 0.069,
+    "cov_theirs_on_ours": 0.127,
+    "geo": 0.127,
+    "name_sim": 0.2,
+    "end_gap_m": 1185,
+    "len_ratio": 0.53,
+    "shape": "loose",
+    "slug": "salite-di-livello-pt-1",
+    "their_name": "Salite di Livello Pt.1 #369"
+   },
+   {
+    "cov_ours_on_theirs": 0.014,
+    "cov_theirs_on_ours": 0.02,
+    "geo": 0.02,
+    "name_sim": 0.18,
+    "end_gap_m": 1621,
+    "len_ratio": 0.57,
+    "shape": "loose",
+    "slug": "hell-boy-part-1",
+    "their_name": "Hell Boy part 1 #361"
+   }
+  ]
+ },
+ {
+  "id": "vm_isallo_extasi",
+  "name": "Isallo Extasi",
+  "len_km": 5.0,
+  "verdict": "review",
+  "why": "two candidates within 0.15 of each other (0.67 vs 0.59)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.576,
+    "cov_theirs_on_ours": 0.673,
+    "geo": 0.673,
+    "name_sim": 0.92,
+    "end_gap_m": 1245,
+    "len_ratio": 0.78,
+    "shape": "loose",
+    "slug": "isallo-extasy",
+    "their_name": "Isallo Extasy #355"
+   },
+   {
+    "cov_ours_on_theirs": 0.2,
+    "cov_theirs_on_ours": 0.588,
+    "geo": 0.588,
+    "name_sim": 0.19,
+    "end_gap_m": 2285,
+    "len_ratio": 0.33,
+    "shape": "loose",
+    "slug": "revenant",
+    "their_name": "Revenant #356"
+   },
+   {
+    "cov_ours_on_theirs": 0.158,
+    "cov_theirs_on_ours": 0.571,
+    "geo": 0.571,
+    "name_sim": 0.1,
+    "end_gap_m": 2644,
+    "len_ratio": 0.31,
+    "shape": "loose",
+    "slug": "mugugno",
+    "their_name": "Mugugno #357"
+   }
+  ]
+ },
+ {
+  "id": "vm_karma_trail",
+  "name": "Karma Trail",
+  "len_km": 6.51,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 1,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "karma-trail",
+    "their_name": "Karma Trail #345"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.12,
+    "end_gap_m": 1704,
+    "len_ratio": 0.6,
+    "shape": "loose",
+    "slug": "oltrefinale",
+    "their_name": "Oltrefinale #341"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.25,
+    "end_gap_m": 2650,
+    "len_ratio": 0.4,
+    "shape": "loose",
+    "slug": "hiroshima-mon-amour-145150",
+    "their_name": "Hiroshima Mon Amour #358"
+   }
+  ]
+ },
+ {
+  "id": "vm_link",
+  "name": "Link",
+  "len_km": 1.38,
+  "verdict": "review",
+  "why": "geometry leads but name disagrees (0.27)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.492,
+    "cov_theirs_on_ours": 0.714,
+    "geo": 0.714,
+    "name_sim": 0.27,
+    "end_gap_m": 711,
+    "len_ratio": 0.56,
+    "shape": "theirs_is_part_of_ours",
+    "slug": "baltera-dh-new",
+    "their_name": "Baltera Dh new"
+   }
+  ]
+ },
+ {
+  "id": "vm_madonnina",
+  "name": "Madonnina",
+  "len_km": 0.42,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.92)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 1,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "madonnina-429396",
+    "their_name": "Madonnina #363"
+   },
+   {
+    "cov_ours_on_theirs": 0.077,
+    "cov_theirs_on_ours": 0.062,
+    "geo": 0.077,
+    "name_sim": 0.17,
+    "end_gap_m": 404,
+    "len_ratio": 0.6,
+    "shape": "loose",
+    "slug": "cnc",
+    "their_name": "CNC #365"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.22,
+    "end_gap_m": 1043,
+    "len_ratio": 0.33,
+    "shape": "loose",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   }
+  ]
+ },
+ {
+  "id": "vm_monte_grosso_uphill",
+  "name": "Monte Grosso Uphill",
+  "len_km": 0.43,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.90)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 7,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "monte-grosso-uphill",
+    "their_name": "Monte Grosso Uphill #380"
+   },
+   {
+    "cov_ours_on_theirs": 0.059,
+    "cov_theirs_on_ours": 0.103,
+    "geo": 0.103,
+    "name_sim": 0.29,
+    "end_gap_m": 362,
+    "len_ratio": 0.63,
+    "shape": "loose",
+    "slug": "muro-nero",
+    "their_name": "Muro Nero #376"
+   },
+   {
+    "cov_ours_on_theirs": 0.059,
+    "cov_theirs_on_ours": 0.031,
+    "geo": 0.059,
+    "name_sim": 0.3,
+    "end_gap_m": 913,
+    "len_ratio": 0.35,
+    "shape": "loose",
+    "slug": "cuore-di-cervo-337352",
+    "their_name": "Cuore di Cervo #379"
+   }
+  ]
+ },
+ {
+  "id": "vm_mugugno",
+  "name": "Mugugno",
+  "len_km": 1.01,
+  "verdict": "match",
+  "why": "geometry decides (0.97, lead 0.88)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.975,
+    "cov_theirs_on_ours": 0.571,
+    "geo": 0.975,
+    "name_sim": 1.0,
+    "end_gap_m": 223,
+    "len_ratio": 0.65,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "mugugno",
+    "their_name": "Mugugno #357"
+   },
+   {
+    "cov_ours_on_theirs": 0.1,
+    "cov_theirs_on_ours": 0.061,
+    "geo": 0.1,
+    "name_sim": 0.13,
+    "end_gap_m": 763,
+    "len_ratio": 0.61,
+    "shape": "loose",
+    "slug": "revenant",
+    "their_name": "Revenant #356"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.15,
+    "end_gap_m": 2703,
+    "len_ratio": 0.26,
+    "shape": "loose",
+    "slug": "issalo",
+    "their_name": "Issalo #371"
+   }
+  ]
+ },
+ {
+  "id": "vm_mulino",
+  "name": "Mulino",
+  "len_km": 1.33,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "vm_muro_nero",
+  "name": "Muro Nero",
+  "len_km": 0.27,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.84)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 5,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "muro-nero",
+    "their_name": "Muro Nero #376"
+   },
+   {
+    "cov_ours_on_theirs": 0.158,
+    "cov_theirs_on_ours": 0.037,
+    "geo": 0.158,
+    "name_sim": 0.17,
+    "end_gap_m": 791,
+    "len_ratio": 0.16,
+    "shape": "loose",
+    "slug": "ruote-di-pietra",
+    "their_name": "Ruote di Pietra #378"
+   },
+   {
+    "cov_ours_on_theirs": 0.105,
+    "cov_theirs_on_ours": 0.031,
+    "geo": 0.105,
+    "name_sim": 0.52,
+    "end_gap_m": 911,
+    "len_ratio": 0.22,
+    "shape": "loose",
+    "slug": "cuore-di-cervo-337352",
+    "their_name": "Cuore di Cervo #379"
+   }
+  ]
+ },
+ {
+  "id": "vm_north_shore",
+  "name": "North Shore",
+  "len_km": 1.96,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.18,
+    "end_gap_m": 874,
+    "len_ratio": 0.4,
+    "shape": "loose",
+    "slug": "grollon-2-pt",
+    "their_name": "Grollon 2°pt"
+   }
+  ]
+ },
+ {
+  "id": "vm_oltre_finale",
+  "name": "Oltre Finale",
+  "len_km": 4.1,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.77)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.958,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.96,
+    "end_gap_m": 234,
+    "len_ratio": 0.94,
+    "shape": "1:1",
+    "slug": "oltrefinale",
+    "their_name": "Oltrefinale #341"
+   },
+   {
+    "cov_ours_on_theirs": 0.137,
+    "cov_theirs_on_ours": 0.231,
+    "geo": 0.231,
+    "name_sim": 0.3,
+    "end_gap_m": 1931,
+    "len_ratio": 0.42,
+    "shape": "loose",
+    "slug": "titalana-145004",
+    "their_name": "Titalana #342"
+   },
+   {
+    "cov_ours_on_theirs": 0.019,
+    "cov_theirs_on_ours": 0.158,
+    "geo": 0.158,
+    "name_sim": 0.41,
+    "end_gap_m": 1350,
+    "len_ratio": 0.08,
+    "shape": "loose",
+    "slug": "salite-di-livello-pt-2",
+    "their_name": "Salite di Livello Pt.2 #370"
+   }
+  ]
+ },
+ {
+  "id": "vm_one_shot",
+  "name": "One Shot",
+  "len_km": 0.66,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.53,
+    "end_gap_m": 584,
+    "len_ratio": 0.99,
+    "shape": "loose",
+    "slug": "foresto-113896",
+    "their_name": "Foresto #351"
+   }
+  ]
+ },
+ {
+  "id": "vm_pagliarina",
+  "name": "Pagliarina",
+  "len_km": 2.25,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "vm_pollaio_felice",
+  "name": "Pollaio Felice",
+  "len_km": 2.92,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.35,
+    "end_gap_m": 946,
+    "len_ratio": 0.43,
+    "shape": "loose",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   }
+  ]
+ },
+ {
+  "id": "vm_ranzi_uphill",
+  "name": "Ranzi Uphill",
+  "len_km": 6.9,
+  "verdict": "review",
+  "why": "geometry in the middle band (0.43) with no confirming signal",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.019,
+    "cov_theirs_on_ours": 0.429,
+    "geo": 0.429,
+    "name_sim": 0.29,
+    "end_gap_m": 1562,
+    "len_ratio": 0.06,
+    "shape": "loose",
+    "slug": "madonnina-429396",
+    "their_name": "Madonnina #363"
+   },
+   {
+    "cov_ours_on_theirs": 0.029,
+    "cov_theirs_on_ours": 0.2,
+    "geo": 0.2,
+    "name_sim": 0.22,
+    "end_gap_m": 1950,
+    "len_ratio": 0.16,
+    "shape": "loose",
+    "slug": "armuin",
+    "their_name": "Armuin #364"
+   },
+   {
+    "cov_ours_on_theirs": 0.024,
+    "cov_theirs_on_ours": 0.063,
+    "geo": 0.063,
+    "name_sim": 0.1,
+    "end_gap_m": 1925,
+    "len_ratio": 0.18,
+    "shape": "loose",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   }
+  ]
+ },
+ {
+  "id": "vm_revenant",
+  "name": "Revenant",
+  "len_km": 0.92,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.83)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.474,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 450,
+    "len_ratio": 0.55,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "revenant",
+    "their_name": "Revenant #356"
+   },
+   {
+    "cov_ours_on_theirs": 0.167,
+    "cov_theirs_on_ours": 0.078,
+    "geo": 0.167,
+    "name_sim": 0.13,
+    "end_gap_m": 718,
+    "len_ratio": 0.59,
+    "shape": "loose",
+    "slug": "mugugno",
+    "their_name": "Mugugno #357"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.14,
+    "end_gap_m": 2700,
+    "len_ratio": 0.23,
+    "shape": "loose",
+    "slug": "issalo",
+    "their_name": "Issalo #371"
+   }
+  ]
+ },
+ {
+  "id": "vm_river",
+  "name": "River",
+  "len_km": 1.9,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ },
+ {
+  "id": "vm_rocknrolla",
+  "name": "RocknRolla",
+  "len_km": 0.56,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.76)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 0.91,
+    "end_gap_m": 5,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "rock-n-rolla-135977",
+    "their_name": "Rock'n'Rolla #343"
+   },
+   {
+    "cov_ours_on_theirs": 0.242,
+    "cov_theirs_on_ours": 0.134,
+    "geo": 0.242,
+    "name_sim": 0.35,
+    "end_gap_m": 480,
+    "len_ratio": 0.6,
+    "shape": "loose",
+    "slug": "aleluia",
+    "their_name": "Aleluia #352"
+   },
+   {
+    "cov_ours_on_theirs": 0.061,
+    "cov_theirs_on_ours": 0.039,
+    "geo": 0.061,
+    "name_sim": 0.48,
+    "end_gap_m": 1115,
+    "len_ratio": 0.38,
+    "shape": "loose",
+    "slug": "route-bella",
+    "their_name": "Route Bella #367"
+   }
+  ]
+ },
+ {
+  "id": "vm_roll_up",
+  "name": "Roll Up",
+  "len_km": 4.92,
+  "verdict": "review",
+  "why": "geometry in the middle band (0.47) with no confirming signal",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.129,
+    "cov_theirs_on_ours": 0.472,
+    "geo": 0.472,
+    "name_sim": 0.14,
+    "end_gap_m": 3167,
+    "len_ratio": 0.21,
+    "shape": "loose",
+    "slug": "martina",
+    "their_name": "Martina #257"
+   },
+   {
+    "cov_ours_on_theirs": 0.275,
+    "cov_theirs_on_ours": 0.157,
+    "geo": 0.275,
+    "name_sim": 0.48,
+    "end_gap_m": 987,
+    "len_ratio": 0.76,
+    "shape": "loose",
+    "slug": "roller-coaster-54111",
+    "their_name": "Roller Coaster #171"
+   },
+   {
+    "cov_ours_on_theirs": 0.022,
+    "cov_theirs_on_ours": 0.1,
+    "geo": 0.1,
+    "name_sim": 0.17,
+    "end_gap_m": 3790,
+    "len_ratio": 0.21,
+    "shape": "loose",
+    "slug": "toboga-canova-new",
+    "their_name": "Toboga Canova New"
+   }
+  ]
+ },
+ {
+  "id": "vm_rose_di_pietra",
+  "name": "Rose di Pietra",
+  "len_km": 1.29,
+  "verdict": "review",
+  "why": "two candidates within 0.15 of each other (0.53 vs 0.39)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.405,
+    "cov_theirs_on_ours": 0.531,
+    "geo": 0.531,
+    "name_sim": 0.57,
+    "end_gap_m": 169,
+    "len_ratio": 0.96,
+    "shape": "loose",
+    "slug": "cuore-di-cervo-337352",
+    "their_name": "Cuore di Cervo #379"
+   },
+   {
+    "cov_ours_on_theirs": 0.119,
+    "cov_theirs_on_ours": 0.385,
+    "geo": 0.385,
+    "name_sim": 0.23,
+    "end_gap_m": 565,
+    "len_ratio": 0.21,
+    "shape": "loose",
+    "slug": "monte-grosso-trail-77635",
+    "their_name": "Monte Grosso Trail"
+   },
+   {
+    "cov_ours_on_theirs": 0.381,
+    "cov_theirs_on_ours": 0.284,
+    "geo": 0.381,
+    "name_sim": 0.19,
+    "end_gap_m": 410,
+    "len_ratio": 0.76,
+    "shape": "loose",
+    "slug": "sugheri",
+    "their_name": "Sugheri #373"
+   }
+  ]
+ },
+ {
+  "id": "vm_route_bella",
+  "name": "Route Bella",
+  "len_km": 1.49,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.94)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 10,
+    "len_ratio": 0.98,
+    "shape": "1:1",
+    "slug": "route-bella",
+    "their_name": "Route Bella #367"
+   },
+   {
+    "cov_ours_on_theirs": 0.053,
+    "cov_theirs_on_ours": 0.06,
+    "geo": 0.06,
+    "name_sim": 0.33,
+    "end_gap_m": 925,
+    "len_ratio": 0.63,
+    "shape": "loose",
+    "slug": "aleluia",
+    "their_name": "Aleluia #352"
+   },
+   {
+    "cov_ours_on_theirs": 0.053,
+    "cov_theirs_on_ours": 0.056,
+    "geo": 0.056,
+    "name_sim": 0.36,
+    "end_gap_m": 1111,
+    "len_ratio": 0.77,
+    "shape": "loose",
+    "slug": "salite-di-livello-pt-1",
+    "their_name": "Salite di Livello Pt.1 #369"
+   }
+  ]
+ },
+ {
+  "id": "vm_salite_pt1",
+  "name": "Salite di Livello Pt.1",
+  "len_km": 1.15,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.90)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 0.99,
+    "shape": "1:1",
+    "slug": "salite-di-livello-pt-1",
+    "their_name": "Salite di Livello Pt.1 #369"
+   },
+   {
+    "cov_ours_on_theirs": 0.102,
+    "cov_theirs_on_ours": 0.08,
+    "geo": 0.102,
+    "name_sim": 0.49,
+    "end_gap_m": 1011,
+    "len_ratio": 0.93,
+    "shape": "loose",
+    "slug": "hell-boy-part-1",
+    "their_name": "Hell Boy part 1 #361"
+   },
+   {
+    "cov_ours_on_theirs": 0.102,
+    "cov_theirs_on_ours": 0.057,
+    "geo": 0.102,
+    "name_sim": 0.24,
+    "end_gap_m": 1299,
+    "len_ratio": 0.45,
+    "shape": "loose",
+    "slug": "hiroshima-mon-amour-145150",
+    "their_name": "Hiroshima Mon Amour #358"
+   }
+  ]
+ },
+ {
+  "id": "vm_salite_pt2",
+  "name": "Salite di Livello Pt.2",
+  "len_km": 0.29,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.77)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 16,
+    "len_ratio": 0.91,
+    "shape": "1:1",
+    "slug": "salite-di-livello-pt-2",
+    "their_name": "Salite di Livello Pt.2 #370"
+   },
+   {
+    "cov_ours_on_theirs": 0.231,
+    "cov_theirs_on_ours": 0.019,
+    "geo": 0.231,
+    "name_sim": 0.18,
+    "end_gap_m": 1281,
+    "len_ratio": 0.08,
+    "shape": "loose",
+    "slug": "oltrefinale",
+    "their_name": "Oltrefinale #341"
+   },
+   {
+    "cov_ours_on_theirs": 0.154,
+    "cov_theirs_on_ours": 0.03,
+    "geo": 0.154,
+    "name_sim": 0.31,
+    "end_gap_m": 545,
+    "len_ratio": 0.23,
+    "shape": "loose",
+    "slug": "fedele-alla-linea-157293",
+    "their_name": "Fedele alla Linea #359"
+   }
+  ]
+ },
+ {
+  "id": "vm_scala_santa",
+  "name": "Scala Santa",
+  "len_km": 0.66,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.3,
+    "end_gap_m": 1163,
+    "len_ratio": 0.53,
+    "shape": "loose",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   }
+  ]
+ },
+ {
+  "id": "vm_scoglio_di_venso",
+  "name": "Scoglio di Venso",
+  "len_km": 0.4,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.111,
+    "cov_theirs_on_ours": 0.077,
+    "geo": 0.111,
+    "name_sim": 0.1,
+    "end_gap_m": 429,
+    "len_ratio": 0.73,
+    "shape": "loose",
+    "slug": "gabry",
+    "their_name": "Gabry #347"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.4,
+    "end_gap_m": 826,
+    "len_ratio": 0.32,
+    "shape": "loose",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.18,
+    "end_gap_m": 808,
+    "len_ratio": 0.35,
+    "shape": "loose",
+    "slug": "armuin",
+    "their_name": "Armuin #364"
+   }
+  ]
+ },
+ {
+  "id": "vm_simona",
+  "name": "Simona",
+  "len_km": 2.37,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.24,
+    "end_gap_m": 1293,
+    "len_ratio": 0.33,
+    "shape": "loose",
+    "slug": "grollon-2-pt",
+    "their_name": "Grollon 2°pt"
+   }
+  ]
+ },
+ {
+  "id": "vm_stai_carmo",
+  "name": "Stai Carmo",
+  "len_km": 0.48,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.85)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 0,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "stai-carmo",
+    "their_name": "Stai Carmo #372"
+   },
+   {
+    "cov_ours_on_theirs": 0.15,
+    "cov_theirs_on_ours": 0.011,
+    "geo": 0.15,
+    "name_sim": 0.19,
+    "end_gap_m": 1478,
+    "len_ratio": 0.12,
+    "shape": "loose",
+    "slug": "oltrefinale",
+    "their_name": "Oltrefinale #341"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.31,
+    "end_gap_m": 639,
+    "len_ratio": 0.42,
+    "shape": "loose",
+    "slug": "salite-di-livello-pt-1",
+    "their_name": "Salite di Livello Pt.1 #369"
+   }
+  ]
+ },
+ {
+  "id": "vm_strada_della_gatella",
+  "name": "Strada della Gatella",
+  "len_km": 2.4,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.027,
+    "cov_theirs_on_ours": 0.05,
+    "geo": 0.05,
+    "name_sim": 0.31,
+    "end_gap_m": 819,
+    "len_ratio": 0.24,
+    "shape": "loose",
+    "slug": "rock-n-rolla-135977",
+    "their_name": "Rock'n'Rolla #343"
+   },
+   {
+    "cov_ours_on_theirs": 0.04,
+    "cov_theirs_on_ours": 0.047,
+    "geo": 0.047,
+    "name_sim": 0.26,
+    "end_gap_m": 873,
+    "len_ratio": 0.42,
+    "shape": "loose",
+    "slug": "dog-eat-dog-144771",
+    "their_name": "Dog Eat Dog #344"
+   },
+   {
+    "cov_ours_on_theirs": 0.013,
+    "cov_theirs_on_ours": 0.045,
+    "geo": 0.045,
+    "name_sim": 0.3,
+    "end_gap_m": 783,
+    "len_ratio": 0.39,
+    "shape": "loose",
+    "slug": "aleluia",
+    "their_name": "Aleluia #352"
+   }
+  ]
+ },
+ {
+  "id": "vm_sugheri",
+  "name": "Sugheri",
+  "len_km": 1.69,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 0.59)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 2,
+    "len_ratio": 1.0,
+    "shape": "1:1",
+    "slug": "sugheri",
+    "their_name": "Sugheri #373"
+   },
+   {
+    "cov_ours_on_theirs": 0.2,
+    "cov_theirs_on_ours": 0.406,
+    "geo": 0.406,
+    "name_sim": 0.29,
+    "end_gap_m": 242,
+    "len_ratio": 0.73,
+    "shape": "loose",
+    "slug": "cuore-di-cervo-337352",
+    "their_name": "Cuore di Cervo #379"
+   },
+   {
+    "cov_ours_on_theirs": 0.185,
+    "cov_theirs_on_ours": 0.148,
+    "geo": 0.185,
+    "name_sim": 0.27,
+    "end_gap_m": 252,
+    "len_ratio": 0.99,
+    "shape": "loose",
+    "slug": "ruote-di-pietra",
+    "their_name": "Ruote di Pietra #378"
+   }
+  ]
+ },
+ {
+  "id": "vm_tino",
+  "name": "Tino",
+  "len_km": 0.64,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.29,
+    "end_gap_m": 654,
+    "len_ratio": 0.93,
+    "shape": "loose",
+    "slug": "cnc",
+    "their_name": "CNC #365"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.31,
+    "end_gap_m": 680,
+    "len_ratio": 0.64,
+    "shape": "loose",
+    "slug": "madonnina-429396",
+    "their_name": "Madonnina #363"
+   }
+  ]
+ },
+ {
+  "id": "vm_titalana",
+  "name": "Titalana",
+  "len_km": 1.69,
+  "verdict": "match",
+  "why": "geometry decides (0.97, lead 0.80)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.931,
+    "cov_theirs_on_ours": 0.971,
+    "geo": 0.971,
+    "name_sim": 1.0,
+    "end_gap_m": 6,
+    "len_ratio": 0.96,
+    "shape": "1:1",
+    "slug": "titalana-145004",
+    "their_name": "Titalana #342"
+   },
+   {
+    "cov_ours_on_theirs": 0.172,
+    "cov_theirs_on_ours": 0.084,
+    "geo": 0.172,
+    "name_sim": 0.42,
+    "end_gap_m": 1927,
+    "len_ratio": 0.44,
+    "shape": "loose",
+    "slug": "oltrefinale",
+    "their_name": "Oltrefinale #341"
+   },
+   {
+    "cov_ours_on_theirs": 0.034,
+    "cov_theirs_on_ours": 0.125,
+    "geo": 0.125,
+    "name_sim": 0.3,
+    "end_gap_m": 930,
+    "len_ratio": 0.14,
+    "shape": "loose",
+    "slug": "finale-oltre-190974",
+    "their_name": "Finale Oltre #368"
+   }
+  ]
+ },
+ {
+  "id": "vm_trincea",
+  "name": "Trincea",
+  "len_km": 0.53,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.25,
+    "end_gap_m": 836,
+    "len_ratio": 0.42,
+    "shape": "loose",
+    "slug": "sentiero-del-fieno",
+    "their_name": "Sentiero del Fieno #348"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.46,
+    "end_gap_m": 994,
+    "len_ratio": 0.47,
+    "shape": "loose",
+    "slug": "armuin",
+    "their_name": "Armuin #364"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.17,
+    "end_gap_m": 614,
+    "len_ratio": 0.97,
+    "shape": "loose",
+    "slug": "gabry",
+    "their_name": "Gabry #347"
+   }
+  ]
+ },
+ {
+  "id": "vm_true_to_the_line",
+  "name": "True to the Line",
+  "len_km": 0.53,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 0.606,
+    "geo": 1.0,
+    "name_sim": 0.42,
+    "end_gap_m": 730,
+    "len_ratio": 0.41,
+    "shape": "ours_is_part_of_theirs",
+    "slug": "fedele-alla-linea-157293",
+    "their_name": "Fedele alla Linea #359"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.37,
+    "end_gap_m": 634,
+    "len_ratio": 0.46,
+    "shape": "loose",
+    "slug": "salite-di-livello-pt-1",
+    "their_name": "Salite di Livello Pt.1 #369"
+   },
+   {
+    "cov_ours_on_theirs": 0.0,
+    "cov_theirs_on_ours": 0.0,
+    "geo": 0.0,
+    "name_sim": 0.44,
+    "end_gap_m": 1354,
+    "len_ratio": 0.14,
+    "shape": "loose",
+    "slug": "oltrefinale",
+    "their_name": "Oltrefinale #341"
+   }
+  ]
+ },
+ {
+  "id": "vm_vaixella",
+  "name": "Vaixella",
+  "len_km": 0.77,
+  "verdict": "match",
+  "why": "geometry decides (1.00, lead 1.00)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 1.0,
+    "cov_theirs_on_ours": 1.0,
+    "geo": 1.0,
+    "name_sim": 1.0,
+    "end_gap_m": 6,
+    "len_ratio": 0.97,
+    "shape": "1:1",
+    "slug": "vaixella",
+    "their_name": "Vaixella #374"
+   }
+  ]
+ },
+ {
+  "id": "vm_wheels_of_pietra",
+  "name": "Wheels of Pietra",
+  "len_km": 1.93,
+  "verdict": "match",
+  "why": "geometry decides (0.96, lead 0.72)",
+  "candidates": [
+   {
+    "cov_ours_on_theirs": 0.897,
+    "cov_theirs_on_ours": 0.963,
+    "geo": 0.963,
+    "name_sim": 0.58,
+    "end_gap_m": 227,
+    "len_ratio": 0.89,
+    "shape": "1:1",
+    "slug": "ruote-di-pietra",
+    "their_name": "Ruote di Pietra #378"
+   },
+   {
+    "cov_ours_on_theirs": 0.241,
+    "cov_theirs_on_ours": 0.209,
+    "geo": 0.241,
+    "name_sim": 0.26,
+    "end_gap_m": 261,
+    "len_ratio": 0.88,
+    "shape": "loose",
+    "slug": "sugheri",
+    "their_name": "Sugheri #373"
+   },
+   {
+    "cov_ours_on_theirs": 0.069,
+    "cov_theirs_on_ours": 0.231,
+    "geo": 0.231,
+    "name_sim": 0.21,
+    "end_gap_m": 513,
+    "len_ratio": 0.14,
+    "shape": "loose",
+    "slug": "monte-grosso-trail-77635",
+    "their_name": "Monte Grosso Trail"
+   }
+  ]
+ },
+ {
+  "id": "vm_xc_giustenice",
+  "name": "XC Giustenice",
+  "len_km": 2.13,
+  "verdict": "none",
+  "why": "no candidate reaches the weak coverage floor",
+  "candidates": []
+ }
+]

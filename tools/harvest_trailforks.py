@@ -87,8 +87,13 @@ def parse_table(html):
         dm = re.search(r'class="dicon_small[^"]*"\s+title="([^"]*)"', rm.group(1))
         gm = re.search(r'trailforks\.com/region/([A-Za-z0-9_-]+)/">(.*?)</a>', rm.group(1))
         nums = re.findall(r'data-v="(-?[\d.]+)"', rm.group(1))
+        # `nid` is Trailforks' own numeric trail id. Needed because a trail PAGE embeds several rating
+        # blobs -- its own plus the neighbours its map draws -- so the rating parse has to anchor on this
+        # id rather than on the first blob in the file.
+        nm = re.search(r"data-nid=['\"](\d+)['\"]", rm.group(1))
         out.append({
             "slug": am.group(1),
+            "nid": int(nm.group(1)) if nm else None,
             "name": re.sub(r"<[^>]+>", "", am.group(3)).strip(),
             "diff": dm.group(1) if dm else None,
             "area": re.sub(r"<[^>]+>", "", gm.group(2)).strip() if gm else None,
@@ -152,6 +157,41 @@ def decode_polyline(p):
     return pts
 
 
+#: The community numbers, read off the same trail page the geometry comes from -- so they cost no extra
+#: request. Verified anonymously 2026-08-21: `rating_bayesian` is the vote-count-shrunk 0-5 star value,
+#: `popularity_score` a 0-100 figure Trailforks derives from a year of check-ins.
+#:
+#: **The region TABLE does not carry the rating** -- it serves `data-rating="0"` for every trail while its
+#: own tooltip says "0 / 5 with 4 votes". Anyone who parses only the table concludes Trailforks does not
+#: expose ratings anonymously, which is wrong. Take them from the trail page.
+RATING_FIELDS = ("rating_bayesian", "votes", "popularity_score", "total_checkins", "ridden", "views")
+
+
+def parse_rating(html, trail_id=None):
+    """{rating_bayesian, votes, popularity_score, ...} for ONE trail, or {} if the blob is absent.
+
+    A trail page embeds several of these blobs -- its own plus the neighbours its map shows -- so the
+    window has to be anchored on the page's OWN trailid, not on the first match anywhere in the file.
+    """
+    if trail_id:
+        i = html.find('"trailid":"%s"' % trail_id)
+    else:
+        m = re.search(r'"trailid"\s*:\s*"(\d+)"', html)
+        i = m.start() if m else -1
+    if i < 0:
+        return {}
+    blob = html[max(0, i - 400):i + 3000]
+    out = {}
+    for f in RATING_FIELDS:
+        m = re.search(r'"%s"\s*:\s*"?([\d.]+)' % f, blob)
+        if m:
+            try:
+                out[f] = float(m.group(1)) if "." in m.group(1) else int(m.group(1))
+            except ValueError:
+                pass
+    return out
+
+
 def parse_trail(html):
     """(polyline, profile) from one trail page; either may be None."""
     coords = None
@@ -186,18 +226,35 @@ def harvest_geo(table_path, geo_path, limit=None, sleep=0.7, skip_areas=()):
         todo = todo[:limit]
     print("%d in the table, %d already harvested, %d to fetch" % (len(table), len(geo), len(todo)))
     sys.stdout.flush()
+    dirty = False
     for n, slug in enumerate(todo, 1):
-        coords, prof = parse_trail(fetch("https://www.trailforks.com/trails/%s/" % slug))
+        html = fetch("https://www.trailforks.com/trails/%s/" % slug)
+        coords, prof = parse_trail(html)
         # An explicit miss, so a rerun does not keep retrying a page that has no line; the build
         # reports these rather than inventing geometry for them.
         geo[slug] = {"c": coords, "p": prof}
+        # The community numbers ride along in the SAME fetch, so they cost nothing extra, and they go
+        # into the table next to the row they describe -- which is where the build already looks for a
+        # trail's metadata.
+        rating = parse_rating(html, str(table[slug].get("nid") or "") or None)
+        if rating:
+            table[slug].update(rating)
+            dirty = True
         if n % 20 == 0:
             json.dump(geo, io.open(geo_path, "w", encoding="utf-8"), separators=(",", ":"))
+            if dirty:
+                json.dump(table, io.open(table_path, "w", encoding="utf-8"),
+                          ensure_ascii=False, separators=(",", ":"))
             print("  %d/%d fetched, %d with a line"
                   % (n, len(todo), sum(1 for v in geo.values() if v.get("c"))))
             sys.stdout.flush()
         time.sleep(sleep)
     json.dump(geo, io.open(geo_path, "w", encoding="utf-8"), separators=(",", ":"))
+    if dirty:
+        json.dump(table, io.open(table_path, "w", encoding="utf-8"),
+                  ensure_ascii=False, separators=(",", ":"))
+        print("ratings: %d of %d rows carry one now"
+              % (sum(1 for r in table.values() if r.get("rating_bayesian")), len(table)))
     both = [s for s in todo if geo[s].get("c") and geo[s].get("p")]
     missing = [s for s in todo if not geo[s].get("c") and not geo[s].get("p")]
     print("done: %d fetched, %d have both sources, %d have no geometry at all"

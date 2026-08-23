@@ -47,7 +47,7 @@ PAGE = """<!doctype html><meta charset="utf-8"><title>OA Harvest</title>
 <body style="font-family:system-ui;padding:20px;max-width:52em">
 <h2>Outdooractive-Ernte</h2><pre id="log">bereit</pre>
 <script>
-const IDS = %IDS%, PROJ = "%PROJ%", KEY = "%KEY%";
+const IDS = %IDS%, PROJ = "%PROJ%", KEY = "%KEY%", PROBE = %PROBE%;
 const log = document.getElementById("log");
 const say = (s) => { log.textContent = s + "\\n" + log.textContent.split("\\n").slice(0,14).join("\\n"); };
 (async () => {
@@ -67,7 +67,17 @@ const say = (s) => { log.textContent = s + "\\n" + log.textContent.split("\\n").
           descent: t.elevation ? t.elevation.descent : null,
           difficulty: t.rating ? t.rating.difficulty : null,
           geometry: t.geometry || null,
+          // --probe writes the whole `rating` object plus any top-level key that looks like a rating,
+          // a vote count or a view count, WITHOUT the geometry. That is how "does Outdooractive expose a
+          // community rating like Trailforks does" gets answered from the API itself rather than guessed:
+          // its `rating.difficulty`/`stamina`/`experience` are EDITORIAL scales, and whether there is a
+          // separate crowd rating next to them is exactly what a reduced extraction hides.
+          _probe: PROBE ? Object.assign({ rating: t.rating || null },
+              Object.fromEntries(Object.entries(t).filter(([k, v]) =>
+                  /rat|vote|star|review|popular|view|count|fav|like/i.test(k) &&
+                  (typeof v !== "object" || v === null)))) : undefined,
         };
+        if (PROBE) { delete out[t.id].geometry; }
       }
       say(`${Object.keys(out).length}/${IDS.length} geholt`);
     } catch (e) { say("FEHLER bei " + batch[0] + ": " + e.message); }
@@ -101,11 +111,13 @@ class Handler(BaseHTTPRequestHandler):
     proj = PROJ
     key = KEY
     out = OUT
+    probe = False
 
     def do_GET(self):
         if self.path.startswith("/harvest"):
             body = (PAGE.replace("%IDS%", json.dumps(self.ids))
-                        .replace("%PROJ%", self.proj).replace("%KEY%", self.key)).encode("utf-8")
+                        .replace("%PROJ%", self.proj).replace("%KEY%", self.key)
+                        .replace("%PROBE%", "true" if self.probe else "false")).encode("utf-8")
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
@@ -154,6 +166,7 @@ if __name__ == "__main__":
     Handler.key = _cli(argv, "--key", KEY)
     out = _cli(argv, "--out", OUT)
     Handler.out = out if os.path.isabs(out) else os.path.join(ROOT, out)
+    Handler.probe = "--probe" in argv
     Handler.ids = wanted_ids(argv)
     print("%d ids, project %s -> %s" % (len(Handler.ids), Handler.proj, Handler.out))
     # --port, because a stale server from an earlier run keeps listening on the default and silently
