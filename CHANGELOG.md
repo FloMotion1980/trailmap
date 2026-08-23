@@ -22,6 +22,24 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-21
+- **`docs/backlog.md` rebuilt to the user's own priorities (645 -> 324 lines).** Out, because finished
+  rather than forgotten: all Touren rework, the remaining region items for Gardasee/Schwarzwald/Sauerland/
+  Vogesen, and rebuilding the Saalbach loops. Moved to a new **Zurückgestellt** part, kept in full: the RIDE
+  memory/crash work ("wir haben eine einfache Möglichkeit, es zu beheben und im Moment tritt es nicht auf")
+  and the undecided RIDE feature ideas. Newly at the top: the **cloud/accounts/App-Store roadmap**, which had
+  been living only in the assistant's local memory — the exact failure that file exists to prevent — and
+  **Trailforks rating/popularity**. The per-region build history is no longer duplicated there (each region
+  has its own doc); a status table replaces it.
+- **`docs/trail-rating-konzept.md`**: concept for pulling Trailforks' per-trail rating and popularity in,
+  requested for large regions where a difficulty colour alone does not say which twenty trails are worth the
+  day. Written on measured data, not assumptions: all of `rating_bayesian`/`votes`/`popularity_score` are
+  anonymously readable **on the trail page the harvester already fetches**, so it costs no extra request —
+  while the region TABLE serves `data-rating="0"` for every trail and would have led straight to the wrong
+  conclusion. The design turns on one measurement: across Madeira's 184 trails, **59 % have two votes or
+  fewer** (median 2, max 17), so a raw star average is noise and the Bayesian value plus a visible vote count
+  is the only honest presentation. Also fixed in the same pass: nothing colour-codes rating on the map (the
+  line colour stays difficulty), and unrated trails get their own group instead of sorting last as if they
+  were bad.
 - **The Garda Touren's 21 segment gaps are closed.** `close_loop_gaps.py` routed all of them against OSM:
   20 Tier 1 (the bridge is built from the way the trail itself lies on), 1 Tier 3, route factors 1.00-1.73,
   none flagged suspicious. Every joint over 30 m is gone; what remains is at most 25 m, which is the

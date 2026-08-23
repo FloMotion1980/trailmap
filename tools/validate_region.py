@@ -207,8 +207,11 @@ def check(key, cat):
         # the line) -- those were built by older scripts that took the ranges from the recording rather than
         # from the concatenated segment line. Real, but purely cosmetic: the FIELDS are present, so the
         # chart still colours per segment and only its last tint stops early. Failing four shipped regions
-        # on it would block every commit for a defect nobody has reported, so it is recorded in
-        # docs/backlog.md instead of enforced here.
+        # on it would block every commit for a defect nobody has reported. The user reviewed the seven on
+        # 2026-08-21 and closed them ("Touren Nacharbeiten gibt es keine. Die sind jetzt alle gut soweit"),
+        # so this comment is the whole record -- do not re-open it as a backlog item. If one is ever
+        # rebuilt anyway, the ranges belong to the concatenated segment line: distStart = cum[offset],
+        # distEnd = cum[offset+n-1], 3 decimals, the way tools/build_gardasee_tours.py computes them.
 
     # A region with no place labels is unreadable zoomed out -- and it is a silent failure, because nothing
     # else complains. It happened on 2026-07-30: a rebuild of Bike Kingdom's trail geometry rewrote the region
