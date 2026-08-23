@@ -22,16 +22,31 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-24
+- **Schalter, Regler und Trefferzahl stehen in EINER Zeile, und der Regler ist grau, solange der Schalter
+  aus ist** (Nutzer). Damit ist auch das Ziehen-schaltet-selbst-ein von heute Morgen wieder weg: es gab zwei
+  Wege in denselben Zustand, jetzt gibt es den Schalter. Gemessen in beiden Breiten — eine Zeile, 26px hoch
+  (normale Schalterzeile 20px plus eigenes Padding), Label 119px + Regler 105px + Zahl 89px von 331px, die
+  Zahl schließt genau am rechten Rand ab; auch in der 375px-Schublade, weshalb „Nur Highlights"
+  ausgeschrieben bleiben kann. Der Regler darf dabei **nicht** im `<label>` liegen — sonst schaltet jeder
+  Zug am Regler den Schalter um; die Zeile ist ein `div`, das Label nur ihr erstes Kind.
 - **Der Highlights-Regler steht da, sobald etwas Angezeigtes bewertet ist** — vorher erschien er erst, wenn
   der Schalter „Nur Highlights" an war, und die erste Rückmeldung des Nutzers war „ich sehe den Regler
   nicht". Ein Bedienelement, das man erst findet, nachdem man ein anderes gefunden hat, findet niemand.
   **Ziehen schaltet Highlights jetzt selbst ein**, der Schalter bleibt das Aus — sonst tut der erste Zug
   nichts Sichtbares. Und der Regler sagt im Tooltip, was ein Highlight überhaupt ist: Bewertung ab dem
-  eingestellten Wert, mindestens 5 Stimmen, voreingestellt auf das beste Fünftel der bewerteten Trails der
+  eingestellten Wert, voreingestellt auf das beste Fünftel der bewerteten Trails der
   angezeigten Regionen. `tests/browser/rating.js` prüft beides (sichtbar bei ausgeschaltetem Schalter, ein
-  Zug schaltet ein und dimmt die Karte). **Doppelklick auf den Regler setzt auf die Vorgabe zurück** —
+  Zug schaltet ein und dimmt die Karte — inzwischen ersetzt, siehe oben). **Doppelklick auf den Regler setzt auf die Vorgabe zurück** —
   zurück heißt dabei der aus den Daten gerechnete Wert, nicht der, mit dem der Regler zuletzt gestartet ist,
   sonst wäre „zurück" davon abhängig, wann man das letzte Mal geschoben hat.
+- **Keine Mindest-Stimmenzahl mehr für ein Highlight.** Die Regel war ein Netz gegen „zwei begeisterte
+  Stimmen, 4,9 Sterne" — einen Fall, den `rate` nicht erzeugen kann, weil es der bayessche Wert ist:
+  Finales bestbewerteter Trail mit unter fünf Stimmen kommt auf 4,11, die Vorgabe lag bei 4,49. Sie hat in
+  131 bewerteten Trails nichts abgefangen, aber 21 davon aus der Spanne des Reglers herausgehalten. Jetzt
+  zählen 131 statt 110, die Vorgabe wandert von 4,47 auf 4,45 und hält 26 statt 22 Trails; die Spanne
+  (2,99–4,77) bleibt gleich. `votes` bleibt in den Daten für ein späteres Update, wird aber nirgends gelesen.
+  Nebenbei aufgefallen: `PRELOAD_CACHE_NAME` war bei v193 stehengeblieben, während `sw.js` schon auf v195
+  war — `appshell` hätte das sofort gesagt, ich hatte es zwei Commits lang nicht mitlaufen lassen.
 - **Kein Dichte-Gate mehr für die Bewertungs-Oberfläche.** Sie erscheint, sobald *irgendetwas* Angezeigtes
   bewertet ist (`ratedTrailCount() > 0`) statt ab 35 % Abdeckung — auf Wunsch des Nutzers („Ist doch
   trotzdem gut zu sehen"), und die alte Regel war ohnehin falsch gebaut: sie poolte die aktiven Regionen,

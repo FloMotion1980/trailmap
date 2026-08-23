@@ -243,7 +243,7 @@ Bikeparks stehen bewusst hinten an ("Für Bikeparks sehe ich da wenig Mehrwert")
 
 **Die Highlight-Schwelle ist relativ, nicht absolut.** Ein festes "ab 4,4 Sterne" wäre genau die
 regionsübergreifende Aussage, gegen die dieses Dokument argumentiert. Gebaut ist stattdessen das obere
-Fünftel der bewerteten Trails **je Region** (`HIGHLIGHT_QUANTILE`), mindestens 5 Stimmen, und nur wenn die
+Fünftel der bewerteten Trails **je Region** (`HIGHLIGHT_QUANTILE`), und nur wenn die
 Region überhaupt 10 bewertete Trails hat. In Finale ergibt das 22 Trails von 219 — ein langes Wochenende.
 
 **Der Schalter erfindet keine Mechanik.** Er ruft dieselbe `baselineLineOpacity()`, die jedes Hover-Ende
@@ -288,8 +288,11 @@ Fünf Änderungen an Stufe 1, jede eine Korrektur an einer Annahme aus diesem Do
    der Schalter an ist. Die erste Rückmeldung des Nutzers zum fertigen Feature war „ich sehe den Regler
    nicht" — ein Bedienelement hinter einem anderen zu verstecken ist keine Aufgabenteilung, sondern
    Unsichtbarkeit. Ziehen schaltet Highlights selbst ein (sonst tut der erste Zug nichts Sichtbares), der
-   Schalter ist das Aus. Und was ein Highlight *ist*, sagt der Regler jetzt selbst, im Tooltip: Bewertung ab
-   dem eingestellten Wert, mindestens 5 Stimmen, voreingestellt auf das beste Fünftel der bewerteten Trails
+   Schalter ist das Aus. **Noch am selben Tag ersetzt:** Schalter, Regler und Trefferzahl stehen jetzt in
+   einer Zeile, und der Regler ist deaktiviert, solange der Schalter aus ist — womit das Ziehen-schaltet-ein
+   wieder weg ist. Es war ein zweiter Weg in denselben Zustand; sichtbar-aber-grau löst dasselbe Problem
+   (der Regler ist findbar und nennt seinen Wert) mit einem Weg. Und was ein Highlight *ist*, sagt der Regler jetzt selbst, im Tooltip: Bewertung ab
+   dem eingestellten Wert, voreingestellt auf das beste Fünftel der bewerteten Trails
    der angezeigten Regionen — genau die Frage, die der Nutzer im selben Atemzug gestellt hat.
    **Der Preis, offen benannt:** ein einzelner absoluter Schwellenwert über mehrere Regionen IST der
    regionsübergreifende Vergleich, vor dem Abschnitt 3.2 warnt. Vertretbar hier, weil die Zahl sichtbar ist
@@ -318,3 +321,14 @@ Und ein Fehler, der beim Bauen auffiel und nichts mit dem Rating zu tun hatte: *
 schon der Schwierigkeitspunkt geschlossen hat.
 
 Suite: `tests/browser/rating.js`, **12 Fälle / 57 Checks**, vier geprüfte Mutationen.
+
+6. **Die Mindest-Stimmenzahl ist weg** (2026-08-24, Anweisung des Nutzers). Abschnitt 3.1 hatte sie als Netz
+   gegen „zwei begeisterte Stimmen, 4,9 Sterne" gefordert — einen Fall, den `rate` gar nicht erzeugen kann,
+   weil es der bayessche Wert ist: Finales bestbewerteter Trail mit unter fünf Stimmen kommt auf **4,11**,
+   die Vorgabe lag bei 4,49. Die Regel hat also in 131 bewerteten Trails nichts abgefangen, aber 21 davon
+   aus der Spanne des Reglers herausgehalten. Ohne sie zählen 131 statt 110 Trails, die Vorgabe wandert von
+   4,47 auf 4,45 und hält 26 statt 22 Trails; die Spanne selbst (2,99–4,77) bleibt gleich. `votes` bleibt in
+   den Daten für ein späteres Update, wird von der App aber nirgends mehr gelesen.
+   **Und zur Vorgabe selbst, weil die Frage kam:** es ist das beste **Fünftel**, nicht 10 % — die
+   Bewertungen absteigend sortiert, Schwellenwert ist die des letzten Trails im obersten Fünftel. Ein festes
+   Sternmaß wäre in jeder Region etwas anderes; ein Anteil ist überall gleich streng.

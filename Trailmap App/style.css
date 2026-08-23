@@ -1717,13 +1717,18 @@ header{ position:relative; z-index:1; }
 .rating-chip, .rating-chrome { display: none; }
 .rating-chip.rating-available { display: inline-block; }
 .rating-chrome.rating-available { display: flex; }
-/* Der Regler braucht ZWEI Bedingungen: die Region muss Bewertungen haben (rating-available) UND der
-   Schalter muss an sein (open). Ohne die zweite stand er auch bei ausgeschalteten Highlights da und
-   suggerierte eine Wirkung, die er nicht hatte. */
-#highlightSliderRow.rating-available { display: none; }
-#highlightSliderRow.rating-available.open { display: flex; align-items: center; gap: 8px; padding: 2px 0 4px; }
+/* Schalter, Regler und Zahl in EINER Zeile. Die Zeile ist die Flexbox, der Regler-Teil darf schrumpfen
+   (flex:1 min-width:0), Label und Zahl nicht -- sonst frisst der Regler in der 340px-Schublade die Zahl,
+   die ihn erst lesbar macht. `cursor:default` auf der Zeile, weil .toggle-row von einem <label> ausging:
+   hier ist nur das Label selbst klickbar. */
+#highlightsRow.rating-available { gap: 8px; cursor: default; padding: 2px 0 4px; }
+.highlight-switch { display: flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; }
+.highlight-slider-row { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
 #highlightSlider { flex: 1; min-width: 0; }
-.highlight-slider-value { font-size: 11.5px; color: #4c574d; white-space: nowrap; }
+/* Aus heisst aus: ein Regler, der bedienbar aussieht, aber nichts bewirkt, ist schlimmer als ein grauer. */
+#highlightSlider:disabled { opacity: .45; cursor: not-allowed; }
+.highlight-slider-value { font-size: 11.5px; color: #4c574d; white-space: nowrap; flex-shrink: 0; }
+#highlightSlider:disabled ~ .highlight-slider-value { opacity: .5; }
 /* Das ★ im Kartenlabel: dieselbe Rolle wie der Schwierigkeitspunkt davor, nur fuer "lohnt sich".
    Bernstein, weil es die einzige Farbe in diesem Label ist, die mit keiner Schwierigkeitsfarbe
    kollidiert -- gruen/blau/rot/schwarz sind alle belegt. */

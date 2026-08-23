@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=195" />
+<link rel="stylesheet" href="style.css?v=197" />
 </head>
 <body>
 <div id="fatalError">
@@ -173,20 +173,20 @@
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showNamesToggle"><span class="slider"></span></span>Namen</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showPlacesToggle"><span class="slider"></span></span>Orte</label>
             <label class="toggle-row"><span class="ios-switch"><input type="checkbox" id="showDirectionArrowsToggle" checked><span class="slider"></span></span>Richtungspfeile</label>
-            <!-- Hidden unless the active regions actually carry ratings (syncRatingChrome) -- a switch that
-                 dims nothing is worse than no switch. Dims everything outside the region's own top fifth,
-                 reusing the solo dim value rather than inventing a second one. -->
-            <label class="toggle-row rating-chrome" id="highlightsRow"><span class="ios-switch"><input type="checkbox" id="showHighlightsToggle"><span class="slider"></span></span>Nur Highlights</label>
-            <!-- Der Regler steht da, sobald etwas Angezeigtes bewertet ist -- nicht erst wenn der Schalter
-                 an ist (so war es einen Tag lang, und die erste Rueckmeldung war "ich sehe den Regler
-                 nicht"). Ziehen schaltet Highlights selbst ein, der Schalter ist das Aus. Seine Spanne ist
-                 das echte min..max der Bewertungen der angezeigten Regionen, nicht 0..5, und die Zahl
-                 daneben nennt die Treffer, weil "4,35" allein nichts sagt. -->
-            <div class="highlight-slider-row rating-chrome" id="highlightSliderRow"
-                 title="Highlight = Bewertung ab dem eingestellten Wert, bei mindestens 5 Stimmen. Voreingestellt auf das beste Fünftel der bewerteten Trails der angezeigten Regionen. Doppelklick auf den Regler setzt auf diese Vorgabe zurück.">
-              <input type="range" id="highlightSlider" min="0" max="5" step="0.05" value="0"
-                     aria-label="Mindestbewertung für Highlights">
-              <span class="highlight-slider-value" id="highlightSliderValue"></span>
+            <!-- Schalter, Regler und Zahl stehen in EINER Zeile (Nutzer, 2026-08-24). Der Regler ist
+                 deaktiviert, solange der Schalter aus ist -- vorher war er bedienbar und schaltete beim
+                 Ziehen selbst ein, was zwei Wege zu einem Zustand waren. Jetzt gibt es einen: den Schalter.
+                 Die ganze Zeile erscheint nur, wenn etwas Angezeigtes bewertet ist (syncRatingChrome).
+                 Wichtig: der Regler darf NICHT im <label> liegen, sonst schaltet jeder Zug am Regler den
+                 Schalter um. Deshalb ist die Zeile ein div und das Label nur ihr erstes Kind. -->
+            <div class="toggle-row highlight-row rating-chrome" id="highlightsRow"
+                 title="Highlight = Bewertung ab dem eingestellten Wert. Voreingestellt auf das beste Fünftel der bewerteten Trails der angezeigten Regionen. Doppelklick auf den Regler setzt auf diese Vorgabe zurück.">
+              <label class="highlight-switch"><span class="ios-switch"><input type="checkbox" id="showHighlightsToggle"><span class="slider"></span></span>Nur Highlights</label>
+              <span class="highlight-slider-row" id="highlightSliderRow">
+                <input type="range" id="highlightSlider" min="0" max="5" step="0.05" value="0"
+                       aria-label="Mindestbewertung für Highlights">
+                <span class="highlight-slider-value" id="highlightSliderValue"></span>
+              </span>
             </div>
           </div>
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
@@ -1849,14 +1849,6 @@ document.getElementById("showLiftsToggle").addEventListener("change", (e) => {
 
 document.getElementById("highlightSlider").addEventListener("input", (e) => {
   highlightMin = parseFloat(e.target.value);
-  // Moving the threshold IS asking for the dimming -- otherwise the first drag does nothing visible and the
-  // slider reads as broken. The switch stays as the way back off.
-  if (!showHighlightsOnly) {
-    showHighlightsOnly = true;
-    const box = document.getElementById("showHighlightsToggle");
-    if (box) box.checked = true;
-    persistActiveState();
-  }
   syncHighlightSlider();
   applyHighlightDimming();
   // The ★ follows the same threshold, and a trail label is bound once at build time -- so moving the slider
@@ -1865,17 +1857,11 @@ document.getElementById("highlightSlider").addEventListener("input", (e) => {
 });
 // Doppelklick zurück auf die Vorgabe (Nutzer, 2026-08-24). Der Wert dafür ist highlightRange.def, also die
 // aus den Daten gerechnete Zahl -- nicht der Wert, mit dem der Regler zuletzt gestartet ist, sonst wäre
-// "zurück" davon abhängig, wann man das letzte Mal geschoben hat. Behandelt wie ein Zug, also schaltet es
-// Highlights ebenfalls ein: wer den Regler anfasst, will das Ergebnis sehen.
+// "zurück" davon abhängig, wann man das letzte Mal geschoben hat. Bei ausgeschaltetem Schalter tut es
+// nichts: ein deaktivierter Regler ist deaktiviert, auch für diese Abkürzung.
 document.getElementById("highlightSlider").addEventListener("dblclick", () => {
-  if (!highlightRange) return;
+  if (!highlightRange || !showHighlightsOnly) return;
   highlightMin = highlightRange.def;
-  if (!showHighlightsOnly) {
-    showHighlightsOnly = true;
-    const box = document.getElementById("showHighlightsToggle");
-    if (box) box.checked = true;
-    persistActiveState();
-  }
   syncHighlightSlider();
   applyHighlightDimming();
   rebuildTrailLabels();
@@ -4131,8 +4117,8 @@ function ratingRowHtml(t){
 // The concept argued the count was needed to keep the number honest, and that argument is weaker than it
 // looked: `rate` is the BAYESIAN value, already shrunk toward the regional mean by the vote count, so a
 // three-vote trail cannot show a spurious 4,9 in the first place. The shrinking does the work the visible
-// count was meant to do. `votes` stays in the DATA -- HIGHLIGHT_MIN_VOTES reads it, and a later refresh
-// needs it -- it is simply never rendered.
+// count was meant to do -- which is also why the minimum-vote rule for a highlight is gone (see
+// HIGHLIGHT_QUANTILE). `votes` stays in the DATA because a later refresh needs it; the app reads it nowhere.
 // The tooltips said "(Trailforks)" and no longer do. The provenance stays in the DATA -- each trail's `tf`
 // slug and the region's `ratings.source` -- because a rating has to remain auditable, but nothing in the
 // app's own surface names where a number came from. Check any new user-visible string against this.
@@ -5615,10 +5601,12 @@ function syncHighlightSlider(){
   const input = document.getElementById("highlightSlider");
   const out = document.getElementById("highlightSliderValue");
   if (!row || !input || !out) return;
-  // Visible whenever there IS a range, not only while the switch is on. It was gated on the switch for a
-  // day and the user's first report was "ich sehe den Regler nicht" -- a control you have to switch
-  // something else on to discover is a control nobody finds. Dragging it turns Highlights on itself (see
-  // the input listener), so the slider alone is now the whole gesture and the switch is the off.
+  // Sichtbar, sobald es eine Spanne gibt -- aber DEAKTIVIERT, solange der Schalter aus ist (Nutzer,
+  // 2026-08-24). Erst war er hinter dem Schalter versteckt ("ich sehe den Regler nicht"), dann schaltete
+  // Ziehen selbst ein; beides ist jetzt ersetzt durch: er steht da, sagt seinen Wert, und der Schalter
+  // entscheidet, ob er greift. Ein deaktiviertes input feuert von sich aus keine Events, also gibt es
+  // genau einen Weg in den Zustand.
+  input.disabled = !showHighlightsOnly || highlightRange === null;
   row.classList.toggle("open", highlightRange !== null);
   if (highlightRange) {
     input.min = highlightRange.min.toFixed(2);
@@ -6594,7 +6582,7 @@ const lineLayers = {};
 // statement: different communities, and sample sizes that differ by a factor of thirty (Finale's median
 // trail has 8 votes, the Pfälzerwald's has 0). A fixed threshold would silently mean "good" in one region
 // and "everything" or "nothing" in another. `highlightCut` holds each group's own cut-off, recomputed when a
-// region loads; MIN_VOTES keeps a single enthusiastic vote from promoting a trail.
+// region loads.
 // The Highlights threshold is ONE absolute rating, adjustable, and the slider's range is the actual
 // min..max of the ratings across the regions currently displayed -- the user's own design (2026-08-23), and
 // it fixes a real problem with the 0..5 range I had proposed: Finale's Bayesian values run 2.99 to 4.77, so
@@ -6610,18 +6598,25 @@ const lineLayers = {};
 // Adding or removing a region RESETS this and switches it off, because the range it was set against no
 // longer exists. Silently re-clamping the old number into a new range would leave the map dimmed by a
 // threshold the rider never chose for these regions.
+// Es gibt KEINE Mindest-Stimmenzahl (raus am 2026-08-24, auf Anweisung des Nutzers). Sie war ein Netz gegen
+// "zwei begeisterte Stimmen, 4,9 Sterne" -- ein Fall, den `rate` gar nicht erzeugen kann, weil es der
+// bayessche Wert ist und schon zum Regionsmittel hin geschrumpft: Finales bestbewerteter Trail mit unter
+// fünf Stimmen kommt auf 4,11, die Vorgabe lag bei 4,49. Gemessen, nicht geschätzt -- die Regel hat in 131
+// bewerteten Trails nichts abgefangen, aber 21 davon aus der Spanne des Reglers herausgehalten. `votes`
+// bleibt in den Daten (ein späteres Update braucht es), wird aber von der App nicht mehr gelesen.
 const HIGHLIGHT_QUANTILE = 0.2;
-const HIGHLIGHT_MIN_VOTES = 5;
 const HIGHLIGHT_STEP = 0.05;      // 0.01 is finer than a thumb, and the range is only ~1.8 wide
 let showHighlightsOnly = false;
 let highlightMin = 0;             // the live threshold; 0 until a region with ratings is loaded
 let highlightRange = null;        // {min, max, def} over the displayed regions, or null when there is none
 function recomputeHighlightRange(){
   const rated = lineTrails
-      .filter(t => activeRegions.has(t.region) && typeof t.rate === "number" &&
-                   (t.votes || 0) >= HIGHLIGHT_MIN_VOTES)
+      .filter(t => activeRegions.has(t.region) && typeof t.rate === "number")
       .map(t => t.rate).sort((a, b) => b - a);
   if (rated.length < 10) { highlightRange = null; highlightMin = 0; return; }
+  // Die Vorgabe ist das beste FÜNFTEL, nicht ein fester Sternwert: die Bewertungen absteigend sortiert, und
+  // der Schwellenwert ist der des letzten Trails im obersten Fünftel -- bei 131 bewerteten also der 26.
+  // beste. Dadurch bleibt die Vorgabe in jeder Region gleich streng, egal wie hoch dort gewertet wird.
   const def = rated[Math.max(0, Math.floor(rated.length * HIGHLIGHT_QUANTILE) - 1)];
   highlightRange = { min: rated[rated.length - 1], max: rated[0], def };
   highlightMin = def;
@@ -6631,7 +6626,7 @@ function groupOfSubRegion(sub){
                                                REGION_CATALOG[gk].subRegions[sub]);
 }
 function isHighlight(t){
-  if (!t || typeof t.rate !== "number" || (t.votes || 0) < HIGHLIGHT_MIN_VOTES) return false;
+  if (!t || typeof t.rate !== "number") return false;
   return highlightRange !== null && t.rate >= highlightMin;
 }
 //: How many trails the current threshold keeps. Shown beside the slider, and it is what makes an absolute
@@ -8469,7 +8464,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v193"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v197"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

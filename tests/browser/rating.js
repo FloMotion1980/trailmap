@@ -1,7 +1,7 @@
 // @suite   rating
 // @area    Trail rating and popularity: the two sort axes, the Highlights switch, the ★, the panel row
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches ratingOf, popOf, ratingRowHtml, isHighlight, highlightCut, recomputeHighlightCuts, groupOfSubRegion, ratingDensity, syncRatingChrome, showHighlightsOnly, applyHighlightDimming, baselineLineOpacity, clearSolo, HIGHLIGHT_QUANTILE, HIGHLIGHT_MIN_VOTES, RATING_DENSITY_MIN, REGION_RATING_META, rating-chip, rating-chrome, rating-available, tl-star, ip-rating, rating-unrated-title, trailLabelHtml, appendTrailGroup, TRAIL_SORT_COMPARE
+// @touches ratingOf, popOf, ratingRowHtml, isHighlight, highlightCut, recomputeHighlightCuts, groupOfSubRegion, syncRatingChrome, showHighlightsOnly, applyHighlightDimming, baselineLineOpacity, clearSolo, HIGHLIGHT_QUANTILE, HIGHLIGHT_MIN_VOTES, RATING_DENSITY_MIN, REGION_RATING_META, rating-chip, rating-chrome, rating-available, tl-star, ip-rating, rating-unrated-title, trailLabelHtml, appendTrailGroup, TRAIL_SORT_COMPARE
 // @needs   region=finale, builder=off
 //
 // **Needs FINALE, not Bike Kingdom like most suites.** Finale is the only region carrying ratings so far,
@@ -80,24 +80,29 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   await TM.ui.setSwitch("showHighlightsToggle", false);
   await TM.wait(400);
   const sl = TM.$("#highlightSlider");
-  const defaultThreshold = sl.value;      // captured before the drag below; put back before leaving
+  const defaultThreshold = sl.value;      // the computed default; put back before leaving the case
   // Visible while the switch is still OFF: it was gated on the switch for a day and the user's first report
   // was that they could not find it. A control that only appears once you have found another control is a
   // control nobody finds.
   T.ok("the slider is there before the switch is touched",
        getComputedStyle(TM.$("#highlightSliderRow")).display !== "none",
        getComputedStyle(TM.$("#highlightSliderRow")).display, "not none");
-  sl.value = (parseFloat(sl.max) - 0.2).toFixed(2);
-  sl.dispatchEvent(new Event("input", { bubbles: true }));
-  await TM.wait(400);
-  T.ok("dragging it switches Highlights on by itself", TM.$("#showHighlightsToggle").checked,
-       TM.$("#showHighlightsToggle").checked, true);
-  T.ok("and the map is actually dimmed by that one gesture", TM.map.dimmedTrails() > 0,
-       TM.map.dimmedTrails(), "> 0");
-  sl.value = defaultThreshold;
-  sl.dispatchEvent(new Event("input", { bubbles: true }));
+  T.ok("but it is DISABLED while the switch is off", sl.disabled, sl.disabled, true);
+  // Switch, slider and count are ONE row (the user's own layout). Checked by geometry rather than by
+  // reading the CSS: the three tops have to sit inside one line box, and the row must be as tall as a
+  // normal toggle row plus its own padding -- not twice that. Measured in the 375px drawer as well, which
+  // is where "Nur Highlights" + a slider + "4,44 ★ · 26 Trails" is tight (119 + 105 + 89 of 331px).
+  const hlRow = TM.$("#highlightsRow").getBoundingClientRect();
+  const tops = [".highlight-switch", "#highlightSlider", "#highlightSliderValue"]
+      .map(sel => TM.$(sel).getBoundingClientRect().top);
+  T.ok("switch, slider and count share one line", Math.max(...tops) - Math.min(...tops) < 8,
+       tops.map(Math.round), "within 8px");
+  T.ok("so the row stays one line tall", hlRow.height < 34, Math.round(hlRow.height), "< 34");
+  T.ok("and the count is not cut off", TM.$("#highlightSliderValue").getBoundingClientRect().right <= hlRow.right + 1,
+       [Math.round(TM.$("#highlightSliderValue").getBoundingClientRect().right), Math.round(hlRow.right)], "inside");
   await TM.ui.setSwitch("showHighlightsToggle", true);
   await TM.wait(600);
+  T.ok("the switch enables it", !sl.disabled, sl.disabled, false);
   T.ok("its minimum is a real rating, not 0", parseFloat(sl.min) > 2.5, sl.min, "> 2.5");
   T.ok("its maximum is a real rating, not 5", parseFloat(sl.max) < 5, sl.max, "< 5");
   T.ok("and the range is narrow, as the data is", parseFloat(sl.max) - parseFloat(sl.min) < 2.5,
@@ -124,21 +129,18 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   await TM.wait(500);
   T.eq("a double-click puts the default back", sl.value, defaultThreshold);
   T.ok("and the map follows it", TM.map.dimmedTrails() === wide.dim, [TM.map.dimmedTrails(), wide.dim], "same");
-  sl.value = (parseFloat(sl.max) - 0.1).toFixed(2);
+  // Put the threshold back BEFORE switching off, while the slider is still live -- a disabled input fires
+  // no events of its own, so a restore after the switch would only work because a test can dispatch what a
+  // finger cannot. Toggling the switch deliberately does NOT reset the value (a rider who dialled in 4,6
+  // and flicked the switch to glance at the whole map wants 4,6 back), so a strict value left here leaks
+  // into every later case. It did: the next case saw 3 bright trails instead of ~22.
+  sl.value = defaultThreshold;
   sl.dispatchEvent(new Event("input", { bubbles: true }));
   await TM.wait(400);
   await TM.ui.setSwitch("showHighlightsToggle", false);
   await TM.wait(500);
   T.eq("switching off restores everything", TM.map.dimmedTrails(), 0);
-  // Put the threshold back. Toggling the switch deliberately does NOT reset it -- a rider who dialled in
-  // 4,6 and flicked the switch to glance at the whole map wants 4,6 back -- so a strict value left here
-  // leaks into every later case. It did: the next case saw 3 bright trails instead of ~22.
-  // And the switch has to go off AFTER the restore, not before: a drag turns Highlights on by design, so
-  // restoring the value re-enables it. That leaked once too -- 359 trails dimmed into the next case.
-  sl.value = defaultThreshold;
-  sl.dispatchEvent(new Event("input", { bubbles: true }));
-  await TM.ui.setSwitch("showHighlightsToggle", false);
-  await TM.wait(400);
+  T.ok("and the slider is greyed out again", sl.disabled, sl.disabled, true);
 
   T.test("the Highlights switch dims everything outside the region's own top fifth");
   chip("sort", "rate").click();
@@ -235,7 +237,7 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   const txt = (row || {}).textContent || "";
   T.ok("the value, German style and out of 5", /⭐ 4,\d\d von 5/.test(txt), txt.slice(0, 40), "⭐ 4,xx von 5");
   // Neither the vote count nor the source appears -- both on the user's instruction, both pinned as an
-  // ABSENCE because that is the whole point. `votes` stays in the data (HIGHLIGHT_MIN_VOTES reads it).
+  // ABSENCE because that is the whole point. `votes` stays in the data; the app itself no longer reads it at all.
   T.ok("no vote count in the panel", !/Stimme/.test(txt), txt, "no Stimmen");
   T.ok("popularity as its own number, never merged into the stars", /🔥 \d+ von 100/.test(txt), txt,
        "🔥 n von 100");
