@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=197" />
+<link rel="stylesheet" href="style.css?v=201" />
 </head>
 <body>
 <div id="fatalError">
@@ -5619,7 +5619,25 @@ function syncHighlightSlider(){
     // later. The control is the source of truth once it exists.
     highlightMin = parseFloat(input.value);
     const n = highlightCount();
-    out.textContent = `${highlightMin.toFixed(2).replace(".", ",")} ★ · ${n} ${n === 1 ? "Trail" : "Trails"}`;
+    // BEIDE Zahlen stehen in der Bahn -- der Nutzer hat diese Fassung der Aufteilung "Wert daneben,
+    // Trailzahl drin" vorgezogen, nachdem er beide live gesehen hat. Sie weichen dem Griff aus: der Text
+    // sitzt immer auf der Seite, auf der der Griff nicht ist.
+    const stars = `${highlightMin.toFixed(2).replace(".", ",")} ★`;
+    const span = highlightRange.max - highlightRange.min;
+    const frac = span > 0 ? (highlightMin - highlightRange.min) / span : 1;
+    row.classList.toggle("thumb-left", frac <= 0.5);
+    // Und wenn die Seite zu eng wird, kürzt der Text sich selbst statt unter dem Griff zu verschwinden.
+    // Das ist der Grund, warum hier überhaupt gemessen wird: in der 375px-Schublade ist die Bahn 170px, in
+    // der Mitte des Wegs bietet eine Seite also 78px, und "3,89 ★ · 89 Trails" braucht dort 83. Eine feste
+    // Schriftgröße, die das löst, wäre am Schreibtisch unnötig klein -- die gekürzte Form tritt nur in dem
+    // schmalen Fenster auf, in dem sie muss, und nennt weiter beide Zahlen.
+    out.textContent = `${stars} · ${n} ${n === 1 ? "Trail" : "Trails"}`;
+    const w = input.getBoundingClientRect().width;
+    if (w > 0) {
+      const thumbX = SLIDER_THUMB_R + frac * (w - 2 * SLIDER_THUMB_R);
+      const room = (frac <= 0.5 ? w - (thumbX + SLIDER_THUMB_R) : thumbX - SLIDER_THUMB_R) - SLIDER_TEXT_INSET;
+      if (out.getBoundingClientRect().width > room) out.textContent = `${stars} · ${n}`;
+    }
   } else {
     out.textContent = "";
   }
@@ -6605,6 +6623,11 @@ const lineLayers = {};
 // bewerteten Trails nichts abgefangen, aber 21 davon aus der Spanne des Reglers herausgehalten. `votes`
 // bleibt in den Daten (ein späteres Update braucht es), wird aber von der App nicht mehr gelesen.
 const HIGHLIGHT_QUANTILE = 0.2;
+// Griffradius und Textabstand des Reglers, beide auch in style.css -- sie stehen hier, weil
+// syncHighlightSlider rechnen muss, wie viel Platz neben dem Griff bleibt. Wer eines in der CSS aendert,
+// aendert es hier mit.
+const SLIDER_THUMB_R = 7;
+const SLIDER_TEXT_INSET = 6;
 const HIGHLIGHT_STEP = 0.05;      // 0.01 is finer than a thumb, and the range is only ~1.8 wide
 let showHighlightsOnly = false;
 let highlightMin = 0;             // the live threshold; 0 until a region with ratings is loaded
@@ -8464,7 +8487,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v197"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v201"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

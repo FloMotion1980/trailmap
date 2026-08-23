@@ -22,6 +22,20 @@ logged-in Chrome"); the full sourcing method, caveats and edge cases belong in t
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
 ## 2026-08-24
+- **Die Zeile ragte 14px in den rechten Rand der Seitenleiste** — ein echter Layoutfehler, kein reines
+  Textproblem: als gewöhnliches Flex-Item in `.toggle-row-group` nahm sie ihre **Inhaltsbreite** (331px) in
+  einem 317px-Container an, ohne `min-width:0` also keine Möglichkeit zu schrumpfen. Behoben mit
+  `flex-basis:100%; min-width:0`.
+- **Beide Zahlen stehen IN der Bahn** — der Regler gewinnt damit ~65px (170px statt 105px in der
+  375px-Schublade, 190px am Schreibtisch). Der Text weicht dem Griff aus, steht also immer auf der Seite,
+  auf der der Griff nicht ist, und **kürzt sich selbst, wenn seine Seite zu eng wird**: in der Schublade
+  bietet eine Seite einer 170px-Bahn in der Mitte des Wegs 78px, „3,89 ★ · 89 Trails" braucht dort 83 — in
+  diesem schmalen Fenster fällt das Wort weg und es liest sich „3,89 ★ · 89". Gemessen an sieben Positionen
+  inklusive der Mitte, wo beide Seiten am engsten sind; Luft überall ≥ 5px. Eine feste Schriftgröße, die
+  das auch löst, wäre am Schreibtisch unnötig klein gewesen. Die Bahn ist dafür 18px hoch statt der 4px,
+  die ein Browser von sich aus zeichnet.
+  Zwischenstand, den der Nutzer nach direktem Vergleich verworfen hat: Wert **neben** dem Regler, nur die
+  Trailzahl in der Bahn. Rechnerisch bequemer (29px Luft), aber die Zeile las sich schlechter.
 - **Schalter, Regler und Trefferzahl stehen in EINER Zeile, und der Regler ist grau, solange der Schalter
   aus ist** (Nutzer). Damit ist auch das Ziehen-schaltet-selbst-ein von heute Morgen wieder weg: es gab zwei
   Wege in denselben Zustand, jetzt gibt es den Schalter. Gemessen in beiden Breiten — eine Zeile, 26px hoch

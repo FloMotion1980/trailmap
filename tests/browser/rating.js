@@ -98,8 +98,12 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   T.ok("switch, slider and count share one line", Math.max(...tops) - Math.min(...tops) < 8,
        tops.map(Math.round), "within 8px");
   T.ok("so the row stays one line tall", hlRow.height < 34, Math.round(hlRow.height), "< 34");
-  T.ok("and the count is not cut off", TM.$("#highlightSliderValue").getBoundingClientRect().right <= hlRow.right + 1,
-       [Math.round(TM.$("#highlightSliderValue").getBoundingClientRect().right), Math.round(hlRow.right)], "inside");
+  // The row must stay inside .toggle-row-group. It did not: as an ordinary flex item it took its CONTENT
+  // width (331px) in a 317px container and hung 14px into the sidebar's own right margin, where by design
+  // nothing may sit. min-width:0 is what lets it shrink.
+  const grp = TM.$("#secMapOptions .toggle-row-group").getBoundingClientRect();
+  T.ok("the row does not hang over its container", hlRow.right <= grp.right + 1,
+       [Math.round(hlRow.right), Math.round(grp.right)], "inside");
   await TM.ui.setSwitch("showHighlightsToggle", true);
   await TM.wait(600);
   T.ok("the switch enables it", !sl.disabled, sl.disabled, false);
@@ -141,6 +145,36 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   await TM.wait(500);
   T.eq("switching off restores everything", TM.map.dimmedTrails(), 0);
   T.ok("and the slider is greyed out again", sl.disabled, sl.disabled, true);
+
+  T.test("the readout rides INSIDE the track and never hides under the thumb");
+  // Both numbers sit in the slide area -- the user compared this against "value beside the slider, count
+  // inside the track" and preferred it. It only works because the text SHORTENS itself when its own side
+  // gets tight: in the 375px drawer one side of a 170px track offers 78px at half travel while
+  // "3,89 ★ · 89 Trails" needs 83, so in that window it drops the word and reads "3,89 ★ · 89".
+  // Sampled around the crossover, because that is where both sides are tightest.
+  await TM.ui.setSwitch("showHighlightsToggle", true);
+  await TM.wait(400);
+  const cnt = TM.$("#highlightSliderValue");
+  T.ok("the readout sits in the track, not after it",
+       cnt.getBoundingClientRect().right <= sl.getBoundingClientRect().right + 1,
+       [Math.round(cnt.getBoundingClientRect().right), Math.round(sl.getBoundingClientRect().right)], "inside");
+  const lo = parseFloat(sl.min), hi = parseFloat(sl.max);
+  let worst = 999, worstAt = null;
+  for (const f of [0, 0.25, 0.45, 0.5, 0.55, 0.75, 1]) {
+    sl.value = (lo + f * (hi - lo)).toFixed(2);
+    sl.dispatchEvent(new Event("input", { bubbles: true }));
+    await TM.wait(120);
+    const s = sl.getBoundingClientRect(), c = cnt.getBoundingClientRect();
+    const frac = (parseFloat(sl.value) - lo) / (hi - lo);
+    const thumb = s.left + 7 + frac * (s.width - 14);      // 14px thumb, so its centre travels width-14
+    const gap = Math.max(thumb - 7 - c.right, c.left - (thumb + 7));
+    if (gap < worst) { worst = gap; worstAt = f; }
+  }
+  T.ok("clear of the thumb at every position, shortening itself where it must", worst > 0, [Math.round(worst), worstAt], "> 0");
+  sl.value = defaultThreshold;
+  sl.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.ui.setSwitch("showHighlightsToggle", false);
+  await TM.wait(400);
 
   T.test("the Highlights switch dims everything outside the region's own top fifth");
   chip("sort", "rate").click();

@@ -1721,14 +1721,42 @@ header{ position:relative; z-index:1; }
    (flex:1 min-width:0), Label und Zahl nicht -- sonst frisst der Regler in der 340px-Schublade die Zahl,
    die ihn erst lesbar macht. `cursor:default` auf der Zeile, weil .toggle-row von einem <label> ausging:
    hier ist nur das Label selbst klickbar. */
-#highlightsRow.rating-available { gap: 8px; cursor: default; padding: 2px 0 4px; }
+/* flex-basis:100% + min-width:0, und beides ist noetig. Die Zeile liegt in .toggle-row-group, einem
+   umbrechenden Flex-Container: als gewoehnliches Item nahm sie ihre INHALTSBREITE an (331px) und ragte
+   damit 14px ueber den 317px-Container hinaus, also in den 16px-Rand von .filters, in dem nach dem
+   Design der Seitenleiste nichts stehen darf. min-width:0 erlaubt das Schrumpfen, flex-basis:100% gibt
+   ihr die ganze Zeile -- sie teilt sich ohnehin mit niemandem eine. */
+#highlightsRow.rating-available { gap: 8px; cursor: default; padding: 2px 0 4px; flex-basis: 100%; min-width: 0; }
 .highlight-switch { display: flex; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; }
-.highlight-slider-row { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
-#highlightSlider { flex: 1; min-width: 0; }
+/* Der Zahlentext steht IM Schiebebereich, nicht dahinter (Nutzer, 2026-08-24): dadurch bekommt der Regler
+   die ~90px zurueck, die der Text vorher neben ihm belegt hat, und die Zeile bleibt innerhalb des Randes.
+   Die Bahn ist deshalb 18px hoch statt der 4px, die ein Browser von sich aus zeichnet -- sonst gaebe es
+   keinen Platz, in dem Text stehen KANN. */
+.highlight-slider-row { position: relative; display: flex; align-items: center; flex: 1; min-width: 0; }
+#highlightSlider { flex: 1; min-width: 0; height: 18px; margin: 0; background: transparent;
+  -webkit-appearance: none; appearance: none; }
+#highlightSlider::-webkit-slider-runnable-track { height: 18px; border-radius: 9px; background: #e7ece4;
+  border: 1px solid #d3d8cd; }
+#highlightSlider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: 1px;
+  border-radius: 50%; background: var(--forest); box-shadow: 0 1px 3px rgba(0,0,0,0.35); cursor: pointer; }
+#highlightSlider::-moz-range-track { height: 18px; border-radius: 9px; background: #e7ece4;
+  border: 1px solid #d3d8cd; }
+#highlightSlider::-moz-range-thumb { width: 14px; height: 14px; border: none; border-radius: 50%;
+  background: var(--forest); box-shadow: 0 1px 3px rgba(0,0,0,0.35); cursor: pointer; }
 /* Aus heisst aus: ein Regler, der bedienbar aussieht, aber nichts bewirkt, ist schlimmer als ein grauer. */
 #highlightSlider:disabled { opacity: .45; cursor: not-allowed; }
-.highlight-slider-value { font-size: 11.5px; color: #4c574d; white-space: nowrap; flex-shrink: 0; }
-#highlightSlider:disabled ~ .highlight-slider-value { opacity: .5; }
+#highlightSlider:disabled::-webkit-slider-thumb { background: #8a958b; cursor: not-allowed; }
+/* Der Text weicht dem Griff aus, statt sich mit ihm zu ueberlappen: er steht immer auf der Seite, auf der
+   der Griff NICHT ist (.thumb-right -> Text links). pointer-events:none, damit er nie einen Zug abfaengt. */
+/* Beide Zahlen stehen IN der Bahn -- die Fassung, die der Nutzer nach dem Vergleich vorgezogen hat -- und
+   weichen dem Griff aus: .thumb-left -> Text rechts. pointer-events:none, damit der Text keinen Zug
+   abfaengt. Die 6px Abstand sind derselbe Wert wie SLIDER_TEXT_INSET in index.html, wo damit gerechnet
+   wird, ob der Text auf seiner Seite noch passt; beide zusammen aendern. */
+.highlight-slider-value { position: absolute; top: 0; height: 18px; line-height: 18px; left: 6px;
+  font-size: 10px; color: #4c574d; white-space: nowrap; pointer-events: none;
+  font-variant-numeric: tabular-nums; }
+.highlight-slider-row.thumb-left .highlight-slider-value { left: auto; right: 6px; }
+#highlightSlider:disabled ~ .highlight-slider-value { opacity: .55; }
 /* Das ★ im Kartenlabel: dieselbe Rolle wie der Schwierigkeitspunkt davor, nur fuer "lohnt sich".
    Bernstein, weil es die einzige Farbe in diesem Label ist, die mit keiner Schwierigkeitsfarbe
    kollidiert -- gruen/blau/rot/schwarz sind alle belegt. */
