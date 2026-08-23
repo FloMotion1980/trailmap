@@ -1,0 +1,199 @@
+{
+ "mapping": {
+  "wb_poppenberg_peak": "poppenberg-peak",
+  "wb_weltcup_flow": "weltcup-flow",
+  "wb_endless_trees": "endless-trees",
+  "wb_popp_top_track": "popp-top-track",
+  "wb_suerenberg_sause": "surenberg-sause",
+  "wb_butzhols_bests": "butzhols-bests",
+  "wb_little_fluff": "little-fluff-184532",
+  "wb_shake_the_lake": "snake-the-lake",
+  "wb_poppies_track": "poppies-track",
+  "wb_landal": "landal-enduro-stage",
+  "wb_bremberg_flow": "bremberg-flow",
+  "wb_lolo_wahle_schanze": "lolo-wahle-schanze",
+  "wb_lebe_wild_trail": "lebe-wild-trail",
+  "wb_cross_over": "cross-over-313109",
+  "wb_bremberg_blues": "bremberg-blues",
+  "wb_biathlon_sprinter": "biathlon-sprinter",
+  "wb_snowwhite_red_trail": "snowwhite-and-the-red-trail",
+  "tm_north_shore": "north-shore-210663",
+  "tm_sram_flow_country": "sram-flow-country",
+  "tm_forrest_stump": "forrest-stump",
+  "tm_rocky_waldboa": "rocky-waldboa",
+  "tm_black_line_2": "black-line-2-0",
+  "tm_jump_line": "jump-line-239345",
+  "tm_ixs_downhill": "ixs-downhill",
+  "tm_schwalbe_loose_lee": "schwalbe-loose-lee-pinball"
+ },
+ "ambiguous": [
+  [
+   "wb_uphill_trail",
+   "bester Abstand 12 m (uphilltrail-925038), naechster 58 m"
+  ],
+  [
+   "wb_moeppis_mover",
+   "bester Abstand 49 m (till-s-thrill), naechster 65 m"
+  ],
+  [
+   "tm_kyrhill",
+   "bester Abstand 13 m (kyrhill-continental-track), naechster 33 m"
+  ],
+  [
+   "tm_jolli_jumper",
+   "bester Abstand 344 m (rocky-waldboa), naechster 364 m"
+  ],
+  [
+   "tm_freeride",
+   "bester Abstand 57 m (north-shore-210663), naechster 63 m"
+  ],
+  [
+   "tm_blackline_1",
+   "bester Abstand 23 m (north-shore-210663), naechster 29 m"
+  ],
+  [
+   "tm_schneewittchen_trail",
+   "bester Abstand 405 m (schneewittchen-upper-section), naechster 473 m"
+  ],
+  [
+   "tm_fairy_trail",
+   "bester Abstand 323 m (schneewittchen-upper-section), naechster 380 m"
+  ],
+  [
+   "tm_shreddy_moerphy",
+   "bester Abstand 16 m (shreddy-morphy), naechster 39 m"
+  ],
+  [
+   "tm_fly_by",
+   "bester Abstand 133 m (fairy-trail-lower-section), naechster 134 m"
+  ],
+  [
+   "wiz_freeride",
+   "bester Abstand 7891 m (biggesteigdownhill), naechster 10882 m"
+  ],
+  [
+   "wiz_old_freeride",
+   "bester Abstand 7676 m (biggesteigdownhill), naechster 10612 m"
+  ],
+  [
+   "wiz_flowtrail",
+   "bester Abstand 7889 m (biggesteigdownhill), naechster 10881 m"
+  ],
+  [
+   "wiz_flow_country",
+   "bester Abstand 8277 m (biggesteigdownhill), naechster 11276 m"
+  ],
+  [
+   "wiz_enduro_line",
+   "bester Abstand 7851 m (biggesteigdownhill), naechster 10847 m"
+  ],
+  [
+   "wiz_downhill",
+   "bester Abstand 9339 m (biggesteigdownhill), naechster 12284 m"
+  ],
+  [
+   "wiz_pump_track",
+   "bester Abstand 9257 m (biggesteigdownhill), naechster 12120 m"
+  ],
+  [
+   "wiz_freeride_lower",
+   "bester Abstand 8878 m (biggesteigdownhill), naechster 11689 m"
+  ],
+  [
+   "wiz_enduro_line_lower",
+   "bester Abstand 8679 m (biggesteigdownhill), naechster 11488 m"
+  ],
+  [
+   "wiz_fourcross",
+   "bester Abstand 10060 m (biggesteigdownhill), naechster 12972 m"
+  ],
+  [
+   "wi_langenberg_dh",
+   "bester Abstand 3583 m (biggesteigdownhill), naechster 6392 m"
+  ],
+  [
+   "wi_ritzhagen_dh",
+   "bester Abstand 10307 m (biggesteigdownhill), naechster 13047 m"
+  ],
+  [
+   "wi_dreiskopf_downhill",
+   "bester Abstand 11686 m (hangberg-trail), naechster 12137 m"
+  ],
+  [
+   "wi_muehlenkopf_dh",
+   "bester Abstand 9890 m (biggesteigdownhill), naechster 12771 m"
+  ],
+  [
+   "gh_beer_connector",
+   "bester Abstand 12764 m (x25hardt), naechster 17445 m"
+  ],
+  [
+   "gh_happy_end",
+   "bester Abstand 12309 m (x25hardt), naechster 16980 m"
+  ],
+  [
+   "gh_canadian_tuxedo",
+   "bester Abstand 13151 m (x25hardt), naechster 17749 m"
+  ],
+  [
+   "gh_thin_air",
+   "bester Abstand 12807 m (x25hardt), naechster 17392 m"
+  ],
+  [
+   "gh_time_shift",
+   "bester Abstand 13153 m (x25hardt), naechster 17847 m"
+  ],
+  [
+   "gh_i_love_fidlock",
+   "bester Abstand 12513 m (x25hardt), naechster 17218 m"
+  ],
+  [
+   "gh_bounce_blow",
+   "bester Abstand 12510 m (x25hardt), naechster 17210 m"
+  ],
+  [
+   "gh_moose_cruise",
+   "bester Abstand 13059 m (x25hardt), naechster 17692 m"
+  ],
+  [
+   "gh_groomer",
+   "bester Abstand 13060 m (x25hardt), naechster 17693 m"
+  ],
+  [
+   "gh_save_wimmons",
+   "bester Abstand 13386 m (x25hardt), naechster 17995 m"
+  ],
+  [
+   "gh_jonas_pablo",
+   "bester Abstand 12940 m (x25hardt), naechster 17610 m"
+  ],
+  [
+   "gh_mamut_upper_section",
+   "bester Abstand 13295 m (x25hardt), naechster 17901 m"
+  ],
+  [
+   "gh_mamut_lower_section",
+   "bester Abstand 13046 m (x25hardt), naechster 17630 m"
+  ],
+  [
+   "gh_bike_republic_soelden_line",
+   "bester Abstand 12955 m (x25hardt), naechster 17653 m"
+  ],
+  [
+   "gh_insta_360_think_bold",
+   "bester Abstand 12541 m (x25hardt), naechster 17256 m"
+  ],
+  [
+   "gh_bynd_whip_off_line",
+   "bester Abstand 12713 m (x25hardt), naechster 17391 m"
+  ],
+  [
+   "gh_mile_high_club",
+   "bester Abstand 12351 m (x25hardt), naechster 17090 m"
+  ],
+  [
+   "gh_warm_up",
+   "bester Abstand 13629 m (x25hardt), naechster 18268 m"
+  ]
+ ]
+}

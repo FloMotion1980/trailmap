@@ -332,3 +332,59 @@ Suite: `tests/browser/rating.js`, **12 Fälle / 57 Checks**, vier geprüfte Muta
    **Und zur Vorgabe selbst, weil die Frage kam:** es ist das beste **Fünftel**, nicht 10 % — die
    Bewertungen absteigend sortiert, Schwellenwert ist die des letzten Trails im obersten Fünftel. Ein festes
    Sternmaß wäre in jeder Region etwas anderes; ein Anteil ist überall gleich streng.
+
+## Wie die Bewertungen in die übrigen Regionen kamen (2026-08-24)
+
+Finale war der Sonderfall, nicht die Regel: dort mussten unsere Linien und die von Trailforks über vier
+unscharfe Signale und eine Margin-Regel zusammengebracht werden, weil es zwei unabhängige Aufzeichnungen
+derselben Trails sind (`tools/match_trailforks.py`, 22 Fälle zur Nachprüfung durch einen Menschen). Für den
+Rest der Regionen gibt es zwei billigere und stärkere Wege, und welcher gilt, hängt daran, woher die
+Geometrie der Region kommt.
+
+**Weg 1 — die Region wurde AUS Trailforks gebaut** (Gardasee, Madeira, Schwarzwald zur Hälfte, beide
+Vogesen, Pfälzerwald zu zwei Dritteln). Dann ist unsere `trailGeo` deren dekodierte Polyline, und die
+Zuordnung ist ein Nachschlagen statt einer Schätzung — `tools/map_tf_slugs.py` mit drei Regeln in dieser
+Reihenfolge, jede gegen die Endpunkte geprüft:
+
+1. **die id**, weil unser Build sie aus dem Slug gebaut hat (`md_babylon_84563` ← `babylon-84563`);
+2. **der Name**, weil ein Trailforks-Slug der geslugte Name ist, optional mit angehängter Nummer — das ist
+   der Weg für den Harz und den Pfälzerwald, deren ids den Slug nicht tragen;
+3. **die nächstliegende Linie**, akzeptiert nur innerhalb von 60 m und nur wenn sie deutlich besser ist als
+   die zweitbeste. Zwei Trails am selben Trailhead sind in einem Hub die Regel, nicht die Ausnahme.
+
+Was übrig bleibt, wird gemeldet, nicht geraten. **Bit-identisch ist es nämlich nicht** — und diese Annahme
+hat die erste Fassung 78 von Madeiras 158 Trails gekostet: die Pipeline entfernt Punkte unter 0,5 m Abstand
+und fährt Douglas-Peucker darüber, was die Endpunkte behält, aber neu rundet (32.68785 gegen 32.68784), und
+kürzt gelegentlich einen Ausläufer (Avalanche Raposeira endet 25 m früher). Mit Toleranzen statt Gleichheit:
+Madeira 158/158, Gardasee 911/911, Vogesen 954/957, Schwarzwald 538/618, Pfälzerwald 481/763 — die
+Fehlbeträge sind genau die Trails, die diese beiden Regionen aus anderen Quellen haben.
+Geprüft, nicht gehofft: über 1 606 Zuordnungen **kein einziger abweichender Name**, und die sieben
+Zuordnungen mit über 60 m Endpunktabstand tragen alle denselben Namen auf beiden Seiten.
+
+**Weg 2 — die Region kam von einem Betreiber, aus OSM oder von Trailguide.** Dann muss zuerst überhaupt
+gefunden werden, welche Trailforks-Region ihre Trails hält, und dafür gibt es keine Suche: `/search/?q=`
+liefert serverseitig nichts, `/ajax/autocomplete/` antwortet „Bad OP", die Region-API will einen Schlüssel.
+Was funktioniert, ist Probieren — ein Slug ist fast immer ein Ortsname:
+
+* `tools/find_tf_regions.py` bildet Kandidaten aus den Namen, die wir schon haben (Katalog-Label,
+  Unterregionen, `places`), jeweils in beiden Umlaut-Schreibweisen, weil Trailforks `soelden` oder `solden`
+  schreibt und welches, nicht vorhersagbar ist;
+* `tools/probe_tf_slugs.py` nimmt eine handgeschriebene Liste für die Gebiete, die unsere Daten nie
+  benennen. Beides ist nötig und keines enthält das andere: Laax liegt unter `graubunden` (nur in der
+  Handliste), die Odenwald-Gebiete `amorbach` und `momlingen` fand nur der automatische Lauf.
+  **Und eine Region muss nicht unter ihrem eigenen Namen liegen** — Paznaun hat bei Trailforks keine eigene
+  Region, seine Trails hängen unter `ischgl`; Bike Kingdom liegt unter `chur`, nicht unter `lenzerheide`.
+
+Danach ist es dieselbe Kette wie oben, nur mit einer frischen Ernte davor: Tabelle (Seiten von 100 Zeilen),
+dann eine Seite je Trail — und da die Bewertung auf derselben Seite steht wie die Polyline, kostet sie
+keinen zusätzlichen Abruf. `tools/phase_b_run.py` fährt das Region für Region durch.
+
+**Zwei Dinge, die wichtiger sind, als sie aussehen.** `tools/harvest_tf_ratings.py` verankert die Bewertung
+an der **eigenen** Trail-id der Seite (aus der Tabelle, aus den Ziffern am Slug-Ende, oder der am
+häufigsten als `trailid=` vorkommenden Nummer — die eigene steht in jedem Link der Seite, ein Nachbar
+einmal, also ist der Modus richtig, wo „erster Treffer" ein Münzwurf ist). Und ein **fehlgeschlagener Abruf
+wird nie als „keine Bewertung" verbucht**: ohne das würde eine einzige Drosselung eine ganze Region als
+unbewertet markieren, und der spätere Lauf, der genau diese Zeilen überspringt, käme nie zurück.
+
+Die Abdeckung je Region steht in **`docs/trail-rating-abdeckung.md`**, erzeugt von
+`tools/rating_report.py` aus den Regionsdateien selbst.

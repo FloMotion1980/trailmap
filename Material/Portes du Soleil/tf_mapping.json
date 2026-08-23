@@ -1,0 +1,199 @@
+{
+ "mapping": {
+  "pds_air_voltage": "air-voltage",
+  "pds_bike_patrol": "bike-patrol",
+  "pds_black_shore": "black-shore",
+  "pds_bleue_des_brochaux": "bleue-des-brochaux",
+  "pds_cabane_aux_gardes": "cabane-aux-gardes",
+  "pds_cap_canaveral": "cap-canaveral",
+  "pds_cha_nada": "chanada",
+  "pds_chesery": "chesery-30469",
+  "pds_chill_con_carne": "chill-con-carne",
+  "pds_coup_d_fouet": "coup-d-fouet-7730",
+  "pds_coupe_de_france": "coupe-de-france-30472",
+  "pds_crosets": "crosets",
+  "pds_da_trail": "da-trail",
+  "pds_dans_la_for_t": "dans-la-foret",
+  "pds_dr_dans_l_pentu": "dre-dans-l-pentu-7731",
+  "pds_eterlou": "eterlou-851654",
+  "pds_flash": "flash-677518",
+  "pds_fluid": "fluid-7732",
+  "pds_fourmiz": "fourmiz",
+  "pds_goupil": "goupil-552431",
+  "pds_gueps": "gueps",
+  "pds_hattock": "hattock",
+  "pds_haute_tension": "haute-tension",
+  "pds_komatrautrail": "komatrautrail",
+  "pds_l_alpage": "alpage-30377",
+  "pds_la_madze": "la-madze-154511",
+  "pds_loquet": "loquet",
+  "pds_paroramic": "panoramic",
+  "pds_people": "people",
+  "pds_racine_carr_e": "racines-carree",
+  "pds_ric_et_rac": "ric-et-rac",
+  "pds_serpentine": "serpentine-7741",
+  "pds_soylent_green": "soylent-green-64660",
+  "pds_sundance": "sundance-561785",
+  "pds_the_goat": "the-goat",
+  "pds_tutti_frutti": "tutti-frutti",
+  "pds_vink_line_lower": "vinkline-lower-7727",
+  "pds_vink_line_middle": "vink-line-middle",
+  "pds_vink_line_upper": "vinkline-upper",
+  "pds_vorachatak": "vorachatak",
+  "pds_zougouloukata": "zougouloukata"
+ },
+ "ambiguous": [
+  [
+   "pds_4x",
+   "bester Abstand 11832 m (tutti-frutti-red-alternative), naechster 11966 m"
+  ],
+  [
+   "pds_airlines",
+   "bester Abstand 12931 m (tutti-frutti-red-alternative), naechster 13080 m"
+  ],
+  [
+   "pds_atray",
+   "bester Abstand 6856 m (tutti-frutti-red-alternative), naechster 6944 m"
+  ],
+  [
+   "pds_chevreuil",
+   "bester Abstand 8813 m (tutti-frutti-red-alternative), naechster 8971 m"
+  ],
+  [
+   "pds_chevreuil_champery",
+   "bester Abstand 3363 m (crosets), naechster 4435 m"
+  ],
+  [
+   "pds_coaching_track",
+   "bester Abstand 12841 m (tutti-frutti-red-alternative), naechster 13001 m"
+  ],
+  [
+   "pds_coupe_du_monde_s1",
+   "bester Abstand 1809 m (crosets), naechster 2672 m"
+  ],
+  [
+   "pds_coupe_du_monde_s2",
+   "bester Abstand 2959 m (crosets), naechster 3860 m"
+  ],
+  [
+   "pds_coupe_du_monde_s3",
+   "bester Abstand 3834 m (crosets), naechster 4465 m"
+  ],
+  [
+   "pds_dans_l_gaz",
+   "bester Abstand 11039 m (traverse-du-lac), naechster 11078 m"
+  ],
+  [
+   "pds_family",
+   "bester Abstand 5956 m (tutti-frutti-red-alternative), naechster 6096 m"
+  ],
+  [
+   "pds_free_ride_du_canyon",
+   "bester Abstand 11568 m (tutti-frutti-red-alternative), naechster 11696 m"
+  ],
+  [
+   "pds_grand_conche",
+   "bester Abstand 251 m (grandconche), naechster 987 m"
+  ],
+  [
+   "pds_l_arpette",
+   "bester Abstand 12786 m (tutti-frutti-red-alternative), naechster 12921 m"
+  ],
+  [
+   "pds_l_ellipse_line",
+   "bester Abstand 11858 m (traverse-du-lac), naechster 11911 m"
+  ],
+  [
+   "pds_l_encape",
+   "bester Abstand 13448 m (tutti-frutti-red-alternative), naechster 13585 m"
+  ],
+  [
+   "pds_la_carigole",
+   "bester Abstand 695 m (la-carigole), naechster 696 m"
+  ],
+  [
+   "pds_la_crete_des_nauchets",
+   "bester Abstand 12305 m (tutti-frutti-red-alternative), naechster 12455 m"
+  ],
+  [
+   "pds_la_d_jant_e",
+   "bester Abstand 13937 m (tutti-frutti-red-alternative), naechster 14093 m"
+  ],
+  [
+   "pds_la_noire",
+   "bester Abstand 6280 m (tutti-frutti-red-alternative), naechster 6367 m"
+  ],
+  [
+   "pds_la_quatreans",
+   "bester Abstand 93 m (la-tobogane), naechster 605 m"
+  ],
+  [
+   "pds_la_roue_libre",
+   "bester Abstand 11826 m (tutti-frutti-red-alternative), naechster 11899 m"
+  ],
+  [
+   "pds_la_tobogane",
+   "bester Abstand 875 m (la-noire-upper), naechster 1240 m"
+  ],
+  [
+   "pds_le_vion_net",
+   "bester Abstand 13885 m (tutti-frutti-red-alternative), naechster 14035 m"
+  ],
+  [
+   "pds_les_gets_village_liaison",
+   "bester Abstand 9390 m (tutti-frutti-red-alternative), naechster 9510 m"
+  ],
+  [
+   "pds_liaison_les_gets_morzine",
+   "bester Abstand 8267 m (tutti-frutti-red-alternative), naechster 8314 m"
+  ],
+  [
+   "pds_mainline",
+   "bester Abstand 6215 m (tutti-frutti-red-alternative), naechster 6310 m"
+  ],
+  [
+   "pds_piste_des_biquettes",
+   "bester Abstand 11194 m (traverse-du-lac), naechster 11310 m"
+  ],
+  [
+   "pds_piste_des_cureuils",
+   "bester Abstand 12670 m (tutti-frutti-red-alternative), naechster 12806 m"
+  ],
+  [
+   "pds_retour_morzine",
+   "bester Abstand 8272 m (tutti-frutti-red-alternative), naechster 8320 m"
+  ],
+  [
+   "pds_stand_high_patrol",
+   "bester Abstand 482 m (soylent-green-64660), naechster 499 m"
+  ],
+  [
+   "pds_super_8",
+   "bester Abstand 6227 m (tutti-frutti-red-alternative), naechster 6379 m"
+  ],
+  [
+   "pds_the_shore",
+   "bester Abstand 13349 m (tutti-frutti-red-alternative), naechster 13472 m"
+  ],
+  [
+   "pds_tomawak",
+   "bester Abstand 11795 m (tutti-frutti-red-alternative), naechster 11927 m"
+  ],
+  [
+   "pds_triple_8",
+   "bester Abstand 13341 m (tutti-frutti-red-alternative), naechster 13472 m"
+  ],
+  [
+   "pds_twisty",
+   "bester Abstand 5968 m (tutti-frutti-red-alternative), naechster 6102 m"
+  ],
+  [
+   "pds_walibi",
+   "bester Abstand 0 m (wallibi), naechster 24 m"
+  ],
+  [
+   "pds_woodride",
+   "bester Abstand 6889 m (tutti-frutti-red-alternative), naechster 7007 m"
+  ]
+ ]
+}

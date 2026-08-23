@@ -1,0 +1,462 @@
+{
+ "mapping": {
+  "bk_antennatrail": "antennatrail-brambruesch-88437",
+  "bk_701_brambi_flow": "brambi-flow",
+  "bk_707_chur_flow": "chur-flow-135726",
+  "bk_nasstobel_trail": "nasstobel"
+ },
+ "ambiguous": [
+  [
+   "bk_access_fanuellatobel",
+   "bester Abstand 10947 m (malixer-alp-antennatrail), naechster 11257 m"
+  ],
+  [
+   "bk_access_fuerhoernli",
+   "bester Abstand 1106 m (furhornli), naechster 2661 m"
+  ],
+  [
+   "bk_access_joch",
+   "bester Abstand 12371 m (malixer-alp-antennatrail), naechster 12754 m"
+  ],
+  [
+   "bk_access_langwies",
+   "bester Abstand 23116 m (furhornli), naechster 24321 m"
+  ],
+  [
+   "bk_access_mittenberg",
+   "bester Abstand 1881 m (rackelhahn), naechster 1973 m"
+  ],
+  [
+   "bk_access_motta",
+   "bester Abstand 19054 m (malixer-alp-antennatrail), naechster 19244 m"
+  ],
+  [
+   "bk_access_praetschalp",
+   "bester Abstand 20474 m (furhornli), naechster 21511 m"
+  ],
+  [
+   "bk_access_schoenegg",
+   "bester Abstand 813 m (traverse-s1), naechster 825 m"
+  ],
+  [
+   "bk_access_spundis_lady_patricia",
+   "bester Abstand 934 m (spundiskopf-sud-399276), naechster 966 m"
+  ],
+  [
+   "bk_access_weisshorn_speed",
+   "bester Abstand 19292 m (malixer-alp-antennatrail), naechster 19448 m"
+  ],
+  [
+   "bk_702_alpenride",
+   "bester Abstand 160 m (brambi-flow), naechster 422 m"
+  ],
+  [
+   "bk_aelplisee_trail",
+   "bester Abstand 21140 m (maladerser), naechster 21314 m"
+  ],
+  [
+   "bk_alp_nova_trail",
+   "bester Abstand 18484 m (spundiskopf-sud-399276), naechster 18503 m"
+  ],
+  [
+   "bk_alp_staetz",
+   "bester Abstand 14715 m (malixer-alp-antennatrail), naechster 14773 m"
+  ],
+  [
+   "bk_alp_staetz_lenzerheide",
+   "bester Abstand 16111 m (malixer-alp-antennatrail), naechster 16117 m"
+  ],
+  [
+   "bk_aufstieg_mittelstation_weisshorn",
+   "bester Abstand 20748 m (furhornli), naechster 21336 m"
+  ],
+  [
+   "bk_aufstieg_praetschli",
+   "bester Abstand 21758 m (furhornli), naechster 22492 m"
+  ],
+  [
+   "bk_back_home",
+   "bester Abstand 22125 m (furhornli), naechster 22693 m"
+  ],
+  [
+   "bk_back_to_town",
+   "bester Abstand 2700 m (zig-zag-trail-252092), naechster 2701 m"
+  ],
+  [
+   "bk_bike_attack_traverse",
+   "bester Abstand 19691 m (malixer-alp-antennatrail), naechster 19892 m"
+  ],
+  [
+   "bk_brambrueesch_churwalden_trail",
+   "bester Abstand 4269 m (malixer-alp-antennatrail), naechster 4685 m"
+  ],
+  [
+   "bk_brambrueesch_pradaschier_trail",
+   "bester Abstand 5170 m (spundiskopf-sud-399276), naechster 5213 m"
+  ],
+  [
+   "bk_bual_trail",
+   "bester Abstand 32095 m (spundiskopf-sud-399276), naechster 32104 m"
+  ],
+  [
+   "bk_connection_lavoz",
+   "bester Abstand 17945 m (spundiskopf-sud-399276), naechster 18027 m"
+  ],
+  [
+   "bk_connection_lavoz_trail_dunkler_wald_trail",
+   "bester Abstand 18738 m (spundiskopf-sud-399276), naechster 18776 m"
+  ],
+  [
+   "bk_connection_pedra_grossa_lavoz",
+   "bester Abstand 18831 m (spundiskopf-sud-399276), naechster 18904 m"
+  ],
+  [
+   "bk_connection_pedra_grossa_tgantieni",
+   "bester Abstand 20835 m (spundiskopf-sud-399276), naechster 20905 m"
+  ],
+  [
+   "bk_crap_la_tretscha",
+   "bester Abstand 29360 m (spundiskopf-sud-399276), naechster 29398 m"
+  ],
+  [
+   "bk_dark_side_of_the_moon",
+   "bester Abstand 21622 m (malixer-alp-antennatrail), naechster 21885 m"
+  ],
+  [
+   "bk_down_to_town",
+   "bester Abstand 22170 m (spundiskopf-sud-399276), naechster 22218 m"
+  ],
+  [
+   "bk_dreibuendenstein_trail",
+   "bester Abstand 10497 m (spundis-juchs-l), naechster 10876 m"
+  ],
+  [
+   "bk_dunkler_wald_trail",
+   "bester Abstand 19020 m (spundiskopf-sud-399276), naechster 19047 m"
+  ],
+  [
+   "bk_fanuellatobel",
+   "bester Abstand 5545 m (zig-zag-trail-252092), naechster 5723 m"
+  ],
+  [
+   "bk_flow_city_trail",
+   "bester Abstand 1939 m (traverse-s2), naechster 1988 m"
+  ],
+  [
+   "bk_flowline",
+   "bester Abstand 19860 m (malixer-alp-antennatrail), naechster 19979 m"
+  ],
+  [
+   "bk_flowline_lower",
+   "bester Abstand 19736 m (malixer-alp-antennatrail), naechster 19816 m"
+  ],
+  [
+   "bk_furcletta_connection",
+   "bester Abstand 24686 m (malixer-alp-antennatrail), naechster 24934 m"
+  ],
+  [
+   "bk_furcletta_trail",
+   "bester Abstand 26405 m (maladerser), naechster 26579 m"
+  ],
+  [
+   "bk_fuerhoernli_trail",
+   "bester Abstand 415 m (furhornli), naechster 2004 m"
+  ],
+  [
+   "bk_got_da_lai",
+   "bester Abstand 20421 m (malixer-alp-antennatrail), naechster 20471 m"
+  ],
+  [
+   "bk_handicap",
+   "bester Abstand 18038 m (spundiskopf-sud-399276), naechster 18039 m"
+  ],
+  [
+   "bk_hauptji_trail",
+   "bester Abstand 19726 m (furhornli), naechster 20403 m"
+  ],
+  [
+   "bk_heimfahrtspiste",
+   "bester Abstand 22367 m (furhornli), naechster 23131 m"
+  ],
+  [
+   "bk_hexenwald",
+   "bester Abstand 37609 m (malixer-alp-antennatrail), naechster 37651 m"
+  ],
+  [
+   "bk_hoehenweg_alp_scharmoin",
+   "bester Abstand 15139 m (malixer-alp-antennatrail), naechster 15414 m"
+  ],
+  [
+   "bk_hoehenweg_alp_staetz",
+   "bester Abstand 15379 m (spundiskopf-sud-399276), naechster 15458 m"
+  ],
+  [
+   "bk_homerun",
+   "bester Abstand 13013 m (malixer-alp-antennatrail), naechster 13152 m"
+  ],
+  [
+   "bk_hoernli_trail",
+   "bester Abstand 20728 m (maladerser), naechster 20982 m"
+  ],
+  [
+   "bk_isla_trail",
+   "bester Abstand 24274 m (furhornli), naechster 24370 m"
+  ],
+  [
+   "bk_joch",
+   "bester Abstand 6770 m (zig-zag-trail-252092), naechster 6895 m"
+  ],
+  [
+   "bk_juchs_trail",
+   "bester Abstand 1367 m (traverse-s1), naechster 1471 m"
+  ],
+  [
+   "bk_jumpline",
+   "bester Abstand 19714 m (malixer-alp-antennatrail), naechster 19783 m"
+  ],
+  [
+   "bk_kaenzeli_malix_trail",
+   "bester Abstand 1597 m (kanzeli-773869), naechster 1838 m"
+  ],
+  [
+   "bk_kirchli_trail",
+   "bester Abstand 22060 m (furhornli), naechster 22254 m"
+  ],
+  [
+   "bk_lady_patricia_trail",
+   "bester Abstand 2637 m (spundis-juchs-l), naechster 3507 m"
+  ],
+  [
+   "bk_lavoz_trail",
+   "bester Abstand 18312 m (spundiskopf-sud-399276), naechster 18374 m"
+  ],
+  [
+   "bk_loamer_boner",
+   "bester Abstand 23659 m (malixer-alp-antennatrail), naechster 23735 m"
+  ],
+  [
+   "bk_lord_steepness",
+   "bester Abstand 22456 m (malixer-alp-antennatrail), naechster 22685 m"
+  ],
+  [
+   "bk_loeser_trail",
+   "bester Abstand 12809 m (maladerser), naechster 12905 m"
+  ],
+  [
+   "bk_malix_flow_trail",
+   "bester Abstand 3451 m (zig-zag-trail-252092), naechster 3471 m"
+  ],
+  [
+   "bk_medergen_trail",
+   "bester Abstand 26168 m (furhornli), naechster 27365 m"
+  ],
+  [
+   "bk_mittenberg_freeride",
+   "bester Abstand 546 m (rackelhahn), naechster 628 m"
+  ],
+  [
+   "bk_mittenberg_maladers_trail",
+   "bester Abstand 279 m (maladerser), naechster 1418 m"
+  ],
+  [
+   "bk_mittenberg_st_luzi_trail",
+   "bester Abstand 644 m (bletsch-platta), naechster 853 m"
+  ],
+  [
+   "bk_mon_trail",
+   "bester Abstand 37912 m (spundiskopf-sud-399276), naechster 37935 m"
+  ],
+  [
+   "bk_motta_express",
+   "bester Abstand 18841 m (malixer-alp-antennatrail), naechster 19106 m"
+  ],
+  [
+   "bk_ninos_gold_trail",
+   "bester Abstand 19684 m (malixer-alp-antennatrail), naechster 19748 m"
+  ],
+  [
+   "bk_no_turning_back",
+   "bester Abstand 18981 m (spundiskopf-sud-399276), naechster 19016 m"
+  ],
+  [
+   "bk_ochsenalp_loeser",
+   "bester Abstand 15101 m (furhornli), naechster 15493 m"
+  ],
+  [
+   "bk_ochsenalp_trail",
+   "bester Abstand 17557 m (furhornli), naechster 18371 m"
+  ],
+  [
+   "bk_ochsenberg_trail",
+   "bester Abstand 346 m (ochsenberg-178283), naechster 890 m"
+  ],
+  [
+   "bk_ochsenberg_uphill",
+   "bester Abstand 975 m (maladerser), naechster 1751 m"
+  ],
+  [
+   "bk_parpan_one_way",
+   "bester Abstand 17663 m (malixer-alp-antennatrail), naechster 17848 m"
+  ],
+  [
+   "bk_plessur_trail",
+   "bester Abstand 22752 m (furhornli), naechster 23932 m"
+  ],
+  [
+   "bk_praetschalp_trail",
+   "bester Abstand 20649 m (furhornli), naechster 21683 m"
+  ],
+  [
+   "bk_primeline",
+   "bester Abstand 19881 m (malixer-alp-antennatrail), naechster 19998 m"
+  ],
+  [
+   "bk_primeline_lower",
+   "bester Abstand 19888 m (malixer-alp-antennatrail), naechster 19965 m"
+  ],
+  [
+   "bk_ried_trail",
+   "bester Abstand 21139 m (furhornli), naechster 21360 m"
+  ],
+  [
+   "bk_703_rock_n_roll",
+   "bester Abstand 61 m (brambi-flow), naechster 314 m"
+  ],
+  [
+   "bk_rocks_and_boulders",
+   "bester Abstand 24096 m (malixer-alp-antennatrail), naechster 24189 m"
+  ],
+  [
+   "bk_roll_the_dice",
+   "bester Abstand 16064 m (malixer-alp-antennatrail), naechster 16188 m"
+  ],
+  [
+   "bk_rongg_trail",
+   "bester Abstand 23668 m (furhornli), naechster 24877 m"
+  ],
+  [
+   "bk_sand_trail",
+   "bester Abstand 165 m (sand-178325), naechster 569 m"
+  ],
+  [
+   "bk_sapuen_trail",
+   "bester Abstand 29208 m (furhornli), naechster 30462 m"
+  ],
+  [
+   "bk_scalaeratrail",
+   "bester Abstand 1201 m (diretissima-furstenwald), naechster 1309 m"
+  ],
+  [
+   "bk_scalottas_june_huette",
+   "bester Abstand 21587 m (spundis-juchs-l), naechster 21677 m"
+  ],
+  [
+   "bk_scalottas_nord",
+   "bester Abstand 20286 m (spundis-juchs-l), naechster 20331 m"
+  ],
+  [
+   "bk_scheidegg_trail",
+   "bester Abstand 19541 m (furhornli), naechster 20474 m"
+  ],
+  [
+   "bk_schoenegg_trail",
+   "bester Abstand 714 m (traverse-s1), naechster 732 m"
+  ],
+  [
+   "bk_shoreline_styleline",
+   "bester Abstand 19794 m (malixer-alp-antennatrail), naechster 19911 m"
+  ],
+  [
+   "bk_sonnenrueti_trail",
+   "bester Abstand 23369 m (furhornli), naechster 24578 m"
+  ],
+  [
+   "bk_spundis_juchs_trail",
+   "bester Abstand 95 m (spundis-juchs-l), naechster 1387 m"
+  ],
+  [
+   "bk_spundiskoepfe",
+   "bester Abstand 793 m (spundiskopf-sud-399276), naechster 821 m"
+  ],
+  [
+   "bk_st_cassian",
+   "bester Abstand 25956 m (malixer-alp-antennatrail), naechster 25960 m"
+  ],
+  [
+   "bk_straightline",
+   "bester Abstand 19678 m (malixer-alp-antennatrail), naechster 19787 m"
+  ],
+  [
+   "bk_switchbacks_overkill",
+   "bester Abstand 7776 m (maladerser), naechster 7901 m"
+  ],
+  [
+   "bk_tgantieni",
+   "bester Abstand 22810 m (spundiskopf-sud-399276), naechster 22833 m"
+  ],
+  [
+   "bk_the_great_white",
+   "bester Abstand 19610 m (malixer-alp-antennatrail), naechster 19878 m"
+  ],
+  [
+   "bk_the_pipe",
+   "bester Abstand 19969 m (malixer-alp-antennatrail), naechster 20131 m"
+  ],
+  [
+   "bk_top_fops",
+   "bester Abstand 22717 m (spundis-juchs-l), naechster 22763 m"
+  ],
+  [
+   "bk_tschiertschen_praden",
+   "bester Abstand 7339 m (maladerser), naechster 7503 m"
+  ],
+  [
+   "bk_uphill_hoehenweg",
+   "bester Abstand 17291 m (spundiskopf-sud-399276), naechster 17342 m"
+  ],
+  [
+   "bk_uphill_hoernli",
+   "bester Abstand 20212 m (maladerser), naechster 20288 m"
+  ],
+  [
+   "bk_uphill_medergen",
+   "bester Abstand 25716 m (furhornli), naechster 26875 m"
+  ],
+  [
+   "bk_urdenfuerggli_connection",
+   "bester Abstand 19598 m (malixer-alp-antennatrail), naechster 19854 m"
+  ],
+  [
+   "bk_urdenfuerggli_twister",
+   "bester Abstand 18231 m (malixer-alp-antennatrail), naechster 18507 m"
+  ],
+  [
+   "bk_urdensee_trail",
+   "bester Abstand 16847 m (maladerser), naechster 17089 m"
+  ],
+  [
+   "bk_urdental_trail",
+   "bester Abstand 18934 m (maladerser), naechster 19007 m"
+  ],
+  [
+   "bk_val_malera_trail",
+   "bester Abstand 34189 m (malixer-alp-antennatrail), naechster 34205 m"
+  ],
+  [
+   "bk_708_vertigo",
+   "bester Abstand 176 m (vertigo-129276), naechster 189 m"
+  ],
+  [
+   "bk_wasserfall_lenzerheide",
+   "bester Abstand 21213 m (malixer-alp-antennatrail), naechster 21311 m"
+  ],
+  [
+   "bk_weisshorn_trail",
+   "bester Abstand 18256 m (furhornli), naechster 18781 m"
+  ],
+  [
+   "bk_zig_zag_trail",
+   "bester Abstand 403 m (kalberweid), naechster 476 m"
+  ]
+ ]
+}

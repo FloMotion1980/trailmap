@@ -1,0 +1,420 @@
+{
+ "mapping": {
+  "var_620_var": "620-var",
+  "var_626": "626",
+  "var_antica_megalitica": "anticamegalitica",
+  "var_arancione": "arancione",
+  "var_avbeigua_to_veirera": "avbeigua-to-veirera",
+  "var_beato_jacopo": "beato-jacopo",
+  "var_boavista_express": "boavista-express",
+  "var_capre": "capre",
+  "var_ceresa_rocca_sant_anna": "ceresarocca-sant-anna",
+  "var_chiuso_tuo_madonnina": "chiuso-tuo-madonnina",
+  "var_cueza": "cueza",
+  "var_damaste": "damaste-442543",
+  "var_dh_cani_mtb_uphill": "dh-cani-mtb-uphill",
+  "var_dh_castagnabuona": "dh-castagnabuona",
+  "var_dh_gatti": "dh-gatti-111386",
+  "var_foreplay": "foreplay-81138",
+  "var_frasquito": "frasquito",
+  "var_fs": "fs",
+  "var_ghiglia": "ghiglia",
+  "var_goats": "goats",
+  "var_grifone": "grifone",
+  "var_guarda_mini_trail": "guarda-mini-trail",
+  "var_hard_rock": "hard-rock-55892",
+  "var_j_line": "j-line",
+  "var_joda": "joda",
+  "var_local": "local",
+  "var_lustrascarpe": "lustrascarpe",
+  "var_mortal_kombat": "mortal-kombat",
+  "var_motocross_sanda_variante_bric_delle_forche": "motocross-sanda-variante-bric-delle-forche",
+  "var_muggiainna": "muggiainna",
+  "var_mulino": "mulino-711977",
+  "var_neviera": "neviera-104134",
+  "var_new_generation": "new-generation",
+  "var_prova_del_9": "prova-del-9",
+  "var_raccordo_frasquito_woodstock": "raccordo-frasquitowoodstock",
+  "var_ramognina_singletrack": "ramognina-singletrack",
+  "var_rosso": "rosso",
+  "var_sentiero_da_ramognina_a_boavista_express": "sentiero-da-ramognina-a-boavista-express",
+  "var_sentiero_fino_alla_626": "sentiero--fino-alla-626",
+  "var_spaccadario": "spaccadario-540806",
+  "var_strada_megalitica": "strada-megalitica",
+  "var_t1": "t1-101345",
+  "var_t1_to_madonnina": "t1-to-madonnina",
+  "var_taglio_variante_via_tessarole": "taglio-variante-via-tessarole",
+  "var_tarozzi": "tarozzi",
+  "var_teiro_express": "teiro-express",
+  "var_varazze_ps2": "varazze-ps2",
+  "var_variante_per_castagnabuona_solo_discesa": "variante-per-castagnabuona-solo-discesa",
+  "var_variante_t": "variante-t",
+  "var_variante_via_tessarole": "variante-via-tessarole",
+  "var_vecchia_alpicella": "vecchia-alpicella",
+  "var_woodstock": "woodstock-119571",
+  "var_zeta": "zeta",
+  "cel_2_quadrati": "2-quadrati",
+  "cel_armageddon": "armageddon-via-dei-tubi",
+  "cel_bikelift": "bikelift",
+  "cel_bric_croi_uphill": "bric-croi-uphill",
+  "cel_crestello": "crestello-111178",
+  "cel_dh_3_palle": "dh-3-palle",
+  "cel_dh_leone_easy_line": "dh-leone-easy-line",
+  "cel_dh_leone": "dhleone",
+  "cel_gianni_cassi_dh": "gianni-cassi-dh",
+  "cel_gianni_cassi_uphill": "gianni-cassi-uphill",
+  "cel_heart_drop": "heart-drop",
+  "cel_jumanji": "jumanji-844802",
+  "cel_lep": "l-e-p-596913",
+  "cel_motocross_brasi": "motocross-brasi",
+  "cel_not_a_race_extension": "not-a-race-extension-813160",
+  "cel_owl_rush": "owl-rush-845727",
+  "cel_rock_crow": "rock-crow-830835",
+  "cel_seven_churc": "seven-churc",
+  "cel_short_dh_to_ferrari": "short-dh-to-ferrari",
+  "cel_taglio_postetta_natta": "taglio-postetta-natta",
+  "cel_teglia_dh": "teglia-dh",
+  "cel_terrabianca_dh": "terrabianca-dh",
+  "cel_terrabianca_brasi": "terrabiancabrasi",
+  "cel_toboga_di_gameragna": "toboga-di-gameragna",
+  "cel_ulivi": "ulivi-831466",
+  "cel_variante_motocross_brasi": "variante-motocross-brasi",
+  "cel_windmill": "windmill-201637",
+  "stl_arpetto": "arpetto",
+  "stl_av_pian_biscia_tortone": "avpian-bisciatortone",
+  "stl_beigua_av_giovo": "beiguaavgiovo",
+  "stl_ghingarok": "ghingarok",
+  "stl_groppo": "groppo-109140",
+  "stl_intermedio": "intermedio",
+  "stl_agrifoglio_1": "l--agrifoglio--1",
+  "stl_agrifoglio_2": "l--agrifoglio--2",
+  "stl_la_cava": "la-cava-109141",
+  "stl_lodrino_superiore": "lodrino-superiore",
+  "stl_luca": "luca",
+  "stl_new_luca_trail": "new-luca-trail",
+  "stl_nigin": "nigin",
+  "stl_ortensie_bandita_sassello": "ortensie-bandita-sassello",
+  "stl_prati_alternativi": "prati-alternativi",
+  "stl_san_martino_teglia": "san-martinoteglia",
+  "stl_uphill_to_luca_trail": "uphill-to-luca-trail",
+  "alb_av_da_tortone_a_forte_bruciato": "av-da-tortone-a-forte-bruciato",
+  "alb_av_to_casermette": "av-to-casermette",
+  "alb_beia": "beia",
+  "alb_bric_eiraldo_variante_pedalabile": "bric-eiraldo-variante-pedalabile",
+  "alb_busin": "busin",
+  "alb_caeffo": "caeffo-672188",
+  "alb_campacucco_trail": "campacucco-trail",
+  "alb_campanello_grana": "campanello-grana",
+  "alb_campanello_trail": "campanello-trail",
+  "alb_cresta_del_gallo": "cresta-del-gallo",
+  "alb_crovaro_dh": "crovaro-dh",
+  "alb_crovaro_express": "crovaro-express",
+  "alb_dh_camilla": "dh-camilla",
+  "alb_dh_della_pace": "dh-della-pace",
+  "alb_ellera_extreme": "ellera-extreme",
+  "alb_ghingherina_via_riva": "ghingherinavia-riva",
+  "alb_le_cercie_ellera": "le-cercie-ellera",
+  "alb_monte_ciri_gancia": "monte-cirigancia",
+  "alb_pineta_panificio_4p": "pinetapanificio-4p",
+  "alb_poggio_del_sole": "poggio-del-sole",
+  "alb_raccordo_rio_buraxe_cresta_del_gallo": "raccordo-rio-buraxe-cresta-del-gallo",
+  "alb_rio_buraxe": "rio-buraxe",
+  "alb_rio_buraxe_to_luceto": "rio-buraxe-to-luceto",
+  "alb_scarsellun": "scarsellun",
+  "alb_seia": "seia"
+ },
+ "ambiguous": [
+  [
+   "arz_alta_tensione",
+   "bester Abstand 10367 m (muggiainna), naechster 11363 m"
+  ],
+  [
+   "arz_ca_freghee",
+   "bester Abstand 9485 m (muggiainna), naechster 10408 m"
+  ],
+  [
+   "arz_castagno_dh",
+   "bester Abstand 11304 m (muggiainna), naechster 12510 m"
+  ],
+  [
+   "arz_condotte",
+   "bester Abstand 9367 m (muggiainna), naechster 10023 m"
+  ],
+  [
+   "arz_gondone",
+   "bester Abstand 11041 m (muggiainna), naechster 11988 m"
+  ],
+  [
+   "arz_guretto_trail",
+   "bester Abstand 14158 m (muggiainna), naechster 15064 m"
+  ],
+  [
+   "arz_hard_bird_2_0",
+   "bester Abstand 11026 m (muggiainna), naechster 11870 m"
+  ],
+  [
+   "arz_il_contadino",
+   "bester Abstand 10026 m (muggiainna), naechster 10834 m"
+  ],
+  [
+   "arz_ituango",
+   "bester Abstand 8845 m (muggiainna), naechster 9120 m"
+  ],
+  [
+   "arz_rifugio_case_vacca",
+   "bester Abstand 12115 m (muggiainna), naechster 12845 m"
+  ],
+  [
+   "arz_scarpeggin",
+   "bester Abstand 13203 m (muggiainna), naechster 13835 m"
+  ],
+  [
+   "arz_sentiero_a",
+   "bester Abstand 13025 m (muggiainna), naechster 14137 m"
+  ],
+  [
+   "arz_sentiero_degli_inglesi",
+   "bester Abstand 12134 m (fatality), naechster 12139 m"
+  ],
+  [
+   "arz_torrente_lerone_dh",
+   "bester Abstand 9288 m (muggiainna), naechster 10411 m"
+  ],
+  [
+   "alb_casa_bandita_to_av",
+   "bester Abstand 2427 m (av-to-casermette), naechster 2777 m"
+  ],
+  [
+   "kon_accesso_angeli_fontanassa",
+   "bester Abstand 5741 m (poggio-del-sole), naechster 6982 m"
+  ],
+  [
+   "kon_alias_trail",
+   "bester Abstand 10389 m (poggio-del-sole), naechster 10996 m"
+  ],
+  [
+   "kon_angeli_variante_xc",
+   "bester Abstand 5194 m (poggio-del-sole), naechster 6788 m"
+  ],
+  [
+   "kon_bandito_trail",
+   "bester Abstand 5168 m (poggio-del-sole), naechster 6210 m"
+  ],
+  [
+   "kon_bric_maggiolo",
+   "bester Abstand 11804 m (poggio-del-sole), naechster 13237 m"
+  ],
+  [
+   "kon_ciuto_express_trail",
+   "bester Abstand 10165 m (poggio-del-sole), naechster 11067 m"
+  ],
+  [
+   "kon_ciuto_express_trail_nuova_uscita",
+   "bester Abstand 8882 m (poggio-del-sole), naechster 10047 m"
+  ],
+  [
+   "kon_collegamento_rapido_ciuto",
+   "bester Abstand 11124 m (poggio-del-sole), naechster 11861 m"
+  ],
+  [
+   "kon_collegamento_via_alla_stra",
+   "bester Abstand 5926 m (poggio-del-sole), naechster 7667 m"
+  ],
+  [
+   "kon_collegamento_xc_koncaverde",
+   "bester Abstand 7581 m (poggio-del-sole), naechster 8186 m"
+  ],
+  [
+   "kon_collette_trail",
+   "bester Abstand 9974 m (poggio-del-sole), naechster 10450 m"
+  ],
+  [
+   "kon_crestino_trail",
+   "bester Abstand 4492 m (poggio-del-sole), naechster 5747 m"
+  ],
+  [
+   "kon_curlo_trail",
+   "bester Abstand 6901 m (poggio-del-sole), naechster 7650 m"
+  ],
+  [
+   "kon_direttissima",
+   "bester Abstand 6171 m (poggio-del-sole), naechster 7024 m"
+  ],
+  [
+   "kon_fly",
+   "bester Abstand 5095 m (poggio-del-sole), naechster 6481 m"
+  ],
+  [
+   "kon_fontanassa_trail",
+   "bester Abstand 5528 m (poggio-del-sole), naechster 7173 m"
+  ],
+  [
+   "kon_fontanassa_uscita_xc",
+   "bester Abstand 5598 m (poggio-del-sole), naechster 7377 m"
+  ],
+  [
+   "kon_forte_angeli_trail",
+   "bester Abstand 4808 m (poggio-del-sole), naechster 6567 m"
+  ],
+  [
+   "kon_forte_ciuto",
+   "bester Abstand 11237 m (poggio-del-sole), naechster 11692 m"
+  ],
+  [
+   "kon_gustin",
+   "bester Abstand 8100 m (poggio-del-sole), naechster 8920 m"
+  ],
+  [
+   "kon_ingresso_ciuto_express",
+   "bester Abstand 11352 m (poggio-del-sole), naechster 11779 m"
+  ],
+  [
+   "kon_ingresso_kazzu_trail_2",
+   "bester Abstand 10147 m (poggio-del-sole), naechster 10731 m"
+  ],
+  [
+   "kon_interceptor",
+   "bester Abstand 10786 m (poggio-del-sole), naechster 12203 m"
+  ],
+  [
+   "kon_passione_d_agosto",
+   "bester Abstand 5404 m (poggio-del-sole), naechster 6513 m"
+  ],
+  [
+   "kon_passo_del_priocco",
+   "bester Abstand 11296 m (poggio-del-sole), naechster 12641 m"
+  ],
+  [
+   "kon_pietragrossa",
+   "bester Abstand 9310 m (poggio-del-sole), naechster 10948 m"
+  ],
+  [
+   "kon_sentiero_degli_elfi",
+   "bester Abstand 11715 m (poggio-del-sole), naechster 13261 m"
+  ],
+  [
+   "kon_shortcut_ciuto_express",
+   "bester Abstand 10108 m (poggio-del-sole), naechster 11266 m"
+  ],
+  [
+   "kon_traliccio_bivio_rosso_passione",
+   "bester Abstand 5746 m (poggio-del-sole), naechster 6828 m"
+  ],
+  [
+   "kon_zingari_trail",
+   "bester Abstand 5696 m (poggio-del-sole), naechster 7565 m"
+  ],
+  [
+   "cog_beuca",
+   "bester Abstand 3577 m (fatality), naechster 3797 m"
+  ],
+  [
+   "cog_ciapin",
+   "bester Abstand 7130 m (fatality), naechster 7248 m"
+  ],
+  [
+   "cog_ciappe",
+   "bester Abstand 3924 m (muggiainna), naechster 5416 m"
+  ],
+  [
+   "cog_ciazze",
+   "bester Abstand 8103 m (fatality), naechster 8318 m"
+  ],
+  [
+   "cog_cuniasso",
+   "bester Abstand 5258 m (muggiainna), naechster 6805 m"
+  ],
+  [
+   "cog_cuniasso_alto",
+   "bester Abstand 5437 m (muggiainna), naechster 6914 m"
+  ],
+  [
+   "cog_curletti",
+   "bester Abstand 6715 m (muggiainna), naechster 8141 m"
+  ],
+  [
+   "cog_garescio",
+   "bester Abstand 5671 m (muggiainna), naechster 7124 m"
+  ],
+  [
+   "cog_grettini",
+   "bester Abstand 1432 m (muggiainna), naechster 2933 m"
+  ],
+  [
+   "cog_infermieri",
+   "bester Abstand 3528 m (muggiainna), naechster 4123 m"
+  ],
+  [
+   "cog_loaga",
+   "bester Abstand 8374 m (fatality), naechster 8579 m"
+  ],
+  [
+   "cog_maioa",
+   "bester Abstand 2873 m (muggiainna), naechster 4540 m"
+  ],
+  [
+   "cog_maluea",
+   "bester Abstand 3134 m (muggiainna), naechster 4850 m"
+  ],
+  [
+   "cog_nascio_alto",
+   "bester Abstand 3430 m (muggiainna), naechster 4570 m"
+  ],
+  [
+   "cog_nascio_basso",
+   "bester Abstand 3106 m (muggiainna), naechster 4302 m"
+  ],
+  [
+   "cog_pigo",
+   "bester Abstand 3646 m (neviera-104134), naechster 4785 m"
+  ],
+  [
+   "cog_pissarotta",
+   "bester Abstand 8054 m (fatality), naechster 8259 m"
+  ],
+  [
+   "cog_ponte_delle_ratte",
+   "bester Abstand 7977 m (muggiainna), naechster 8750 m"
+  ],
+  [
+   "cog_ratti_dritti",
+   "bester Abstand 7978 m (muggiainna), naechster 8726 m"
+  ],
+  [
+   "cog_s_anna",
+   "bester Abstand 6772 m (muggiainna), naechster 7967 m"
+  ],
+  [
+   "cog_scalinata_area_picnic_casa_contadina",
+   "bester Abstand 3162 m (muggiainna), naechster 4732 m"
+  ],
+  [
+   "cog_scoglio_a",
+   "bester Abstand 7808 m (fatality), naechster 8007 m"
+  ],
+  [
+   "cog_scoglio_b",
+   "bester Abstand 7782 m (fatality), naechster 7981 m"
+  ],
+  [
+   "cog_tratto_pallino_rosso",
+   "bester Abstand 1108 m (prova-del-9), naechster 1461 m"
+  ],
+  [
+   "cog_uguale_rosso",
+   "bester Abstand 6648 m (muggiainna), naechster 8120 m"
+  ],
+  [
+   "cog_vasca_cagna",
+   "bester Abstand 4479 m (muggiainna), naechster 5927 m"
+  ],
+  [
+   "cog_vasca_cagna_destra",
+   "bester Abstand 4973 m (muggiainna), naechster 6394 m"
+  ],
+  [
+   "cog_zizzi_line",
+   "bester Abstand 7992 m (muggiainna), naechster 8785 m"
+  ]
+ ]
+}
