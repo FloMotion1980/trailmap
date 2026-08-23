@@ -109,14 +109,24 @@ Region die Daten nicht hat. 131 der 219 Finale-Trails tragen eine Bewertung. Sui
   Erstbesucher) und *"Versteckte Perlen"* (hoch bewertet, wenig gefahren — für den, der die Region kennt).
   Der zweite Fall existiert nur, weil Bewertung und Beliebtheit zwei getrennte Zahlen sind; genau deshalb
   dürfen sie nie zu einem Score verrechnet werden.
-- **Stern-Endpunkte auf der Karte** (Idee des Nutzers, 2026-08-23): bei Highlight-Trails statt weißem,
-  grünem und rotem Kreis ein Sternchen als Start-/Endpunkt. **Vor dem Bauen lesen:** die drei
-  Endpunkt-Marker sind die am stärksten verdrahteten Objekte der Karte — `syncStartDot` (vier Aufrufstellen),
-  `showEndpoints`/`hideEndpoints`, `applyEndpointSize` (RIDE vergrößert sie), `endpointsCollide` (verschmilzt
-  Start und Ziel zu einem zweifarbigen Marker), `applyReversedEndpoints` und die Solo-/Highlight-Deckkraft.
-  Ein Wechsel des Layer-Typs (`L.circleMarker` → divIcon-Marker) bricht `setStyle`/`setRadius` an allen
-  diesen Stellen. Risikoarme Bauform: den Kreis als tragendes Objekt behalten und unsichtbar schalten, den
-  Stern als dekorative Schicht darüber legen — wie der RIDE-Fokus-Halo es macht.
+- **Stern-Endpunkte auf der Karte**, Idee des Nutzers (2026-08-23) und von ihm gleich in die richtige Form
+  gebracht: bei Highlight-Trails den Start-/Endpunkt-Kreis **mit einem Sternmuster umranden** — den Kreis
+  also NICHT ersetzen. Das ist der Unterschied zwischen billig und riskant. Der erste Vorschlag (Layer-Typ
+  tauschen) hätte die am stärksten verdrahteten Objekte der Karte angefasst: `syncStartDot` (vier
+  Aufrufstellen), `showEndpoints`/`hideEndpoints`, `applyEndpointSize`, `endpointsCollide` (verschmilzt Start
+  und Ziel zu einem zweifarbigen Marker, sobald sie sich auf dem Schirm überlappen), `applyReversedEndpoints`
+  und die Solo-/Highlight-Deckkraft — `L.circleMarker` → divIcon-Marker bricht `setStyle`/`setRadius` an
+  jeder einzelnen davon. Als Umrandung fällt das komplett weg: der Kreis bleibt das tragende Objekt und
+  behält Farbe, Radius, Verschmelzung und Deckkraft, der Stern ist eine dekorative Schicht darüber, so wie
+  der RIDE-Fokus-Halo eine ist.
+  **Im RIDE-Modus ausdrücklich KEIN Stern** (auch seine Vorgabe) — dort vergrößert `applyEndpointSize` die
+  Marker ohnehin auf r=9 und der Fokus-Halo liegt schon um die Linie, ein Stern wäre nur Unruhe. Praktischer
+  Nebeneffekt: die Umrandung muss die RIDE-Größenänderung damit gar nicht mitmachen, was die letzte
+  Verzahnung mit bestehendem Code wegnimmt.
+  Offene Frage fürs Bauen: Zacken als echte Geometrie (`L.polygon`, in Bildschirm-Pixeln nachskaliert wie
+  die Richtungspfeile) oder als `dashArray` auf einem etwas größeren Kreis — Letzteres wäre eine Zeile und
+  rotiert korrekt mit, sieht aber eher nach Strichelung als nach Stern aus. Erst mit dem `visualize`-Werkzeug
+  ansehen, bevor Code entsteht.
 - **"In der Nähe"** — bestbewertete Trails im Radius um die eigene Position, nur sichtbar mit Position.
 - **"Abfahrten von dieser Bergstation"** im Lift-Info-Panel, nach Bewertung sortiert. Trägt die
   Liftregionen (Bike Kingdom, Paganella, Sölden), nicht Finale.
