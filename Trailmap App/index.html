@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=186" />
+<link rel="stylesheet" href="style.css?v=194" />
 </head>
 <body>
 <div id="fatalError">
@@ -177,6 +177,17 @@
                  dims nothing is worse than no switch. Dims everything outside the region's own top fifth,
                  reusing the solo dim value rather than inventing a second one. -->
             <label class="toggle-row rating-chrome" id="highlightsRow"><span class="ios-switch"><input type="checkbox" id="showHighlightsToggle"><span class="slider"></span></span>Nur Highlights</label>
+            <!-- Der Regler steht da, sobald etwas Angezeigtes bewertet ist -- nicht erst wenn der Schalter
+                 an ist (so war es einen Tag lang, und die erste Rueckmeldung war "ich sehe den Regler
+                 nicht"). Ziehen schaltet Highlights selbst ein, der Schalter ist das Aus. Seine Spanne ist
+                 das echte min..max der Bewertungen der angezeigten Regionen, nicht 0..5, und die Zahl
+                 daneben nennt die Treffer, weil "4,35" allein nichts sagt. -->
+            <div class="highlight-slider-row rating-chrome" id="highlightSliderRow"
+                 title="Highlight = Bewertung ab dem eingestellten Wert, bei mindestens 5 Stimmen. Voreingestellt auf das beste Fünftel der bewerteten Trails der angezeigten Regionen.">
+              <input type="range" id="highlightSlider" min="0" max="5" step="0.05" value="0"
+                     aria-label="Mindestbewertung für Highlights">
+              <span class="highlight-slider-value" id="highlightSliderValue"></span>
+            </div>
           </div>
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
           <!-- Which build is actually running. Added 2026-07-29 after several rounds of "is this fixed or am I
@@ -1836,9 +1847,30 @@ document.getElementById("showLiftsToggle").addEventListener("change", (e) => {
   render();
 });
 
+document.getElementById("highlightSlider").addEventListener("input", (e) => {
+  highlightMin = parseFloat(e.target.value);
+  // Moving the threshold IS asking for the dimming -- otherwise the first drag does nothing visible and the
+  // slider reads as broken. The switch stays as the way back off.
+  if (!showHighlightsOnly) {
+    showHighlightsOnly = true;
+    const box = document.getElementById("showHighlightsToggle");
+    if (box) box.checked = true;
+    persistActiveState();
+  }
+  syncHighlightSlider();
+  applyHighlightDimming();
+  // The ★ follows the same threshold, and a trail label is bound once at build time -- so moving the slider
+  // has to rebuild the labels, unlike the on/off switch, which does not change what counts as a highlight.
+  rebuildTrailLabels();
+});
 document.getElementById("showHighlightsToggle").addEventListener("change", (e) => {
   showHighlightsOnly = e.target.checked;
+  syncHighlightSlider();
   applyHighlightDimming();
+  // NOT persisted, deliberately -- same reasoning as "Blickrichtung oben" (see setHeadingUp): the threshold
+  // only means anything against the region set that is loaded, which is not known until after boot's
+  // activation, and coming up with a dimmed map nobody just asked for is the wrong default. A region change
+  // switches it off for the same reason, so persisting it would be overridden at boot anyway.
   // No label rebuild here on purpose: the ★ marks a highlight whether or not the dimming is on, so it is
   // bound once with the label and does not depend on this switch.
   persistActiveState();
@@ -4056,17 +4088,19 @@ function ratingRowHtml(t){
   if (typeof t.rate !== "number") {
     return '<div class="ip-rating ip-rating-none">noch nicht bewertet</div>';
   }
+  // SAME two glyphs and the same order as the card's own meta row, so the panel reads as more detail about
+  // the numbers already seen rather than as a second, differently-worded statement. The vote count is the
+  // detail the card cannot afford; the highlight badge is the other.
   const stars = t.rate.toFixed(2).replace(".", ",");
-  const votes = t.votes === 1 ? "1 Stimme" : `${t.votes} Stimmen`;
-  const pop = typeof t.pop === "number" ? `<span class="ip-gap"></span>Beliebtheit ${t.pop}` : "";
-  // ONE star glyph, amber only when this trail is a highlight -- the first version printed the marker AND
-  // a plain "★" after the number, which read as "★4,77 ★".
-  const cls = isHighlight(t) ? "tl-star" : "ip-rating-star";
-  const asOf = meta && meta.asOf ? ` · Stand ${meta.asOf}` : "";
-  return `<div class="ip-rating">${stars} <span class="${cls}">★</span> ` +
-         `<span class="ip-rating-votes">(${votes}${asOf})</span>${pop}</div>`;
-}
-// Both numbers, always, whenever the trail has them -- ⭐ the rating, 🔥 the popularity. Independent of
+  const pop = typeof t.pop === "number"
+      ? `<span class="ip-gap"></span>🔥 ${t.pop}<span class="ip-rating-votes"> von 100</span>` : "";
+  // The harvest date is deliberately NOT shown (user, 2026-08-23: "Nicht den Stand mit dem Datum, aber
+  // intern merken macht Sinn"). It stays in the region file's own `ratings` block, so a later run can tell
+  // how old a figure is without the panel carrying a date nobody reads.
+  const badge = isHighlight(t) ? '<span class="ip-rating-badge">Highlight</span>' : "";
+  return `<div class="ip-rating">⭐ ${stars}<span class="ip-rating-votes"> von 5</span>` +
+         `${pop}${badge}</div>`;
+}// Both numbers, always, whenever the trail has them -- ⭐ the rating, 🔥 the popularity. Independent of
 // which axis the list is sorted by, at the user's own call ("Zeig das doch einfach immer an. Das wäre viel
 // besser"), and they were right on the facts too: an earlier version showed only the active axis because a
 // SCALED ESTIMATE said both together would leave ~8px on a phone. Measured properly they leave far more --
@@ -4074,13 +4108,26 @@ function ratingRowHtml(t){
 // scale a desktop number down.
 // A trail with no rating shows nothing rather than a dash: the "ohne Bewertung" heading already says why
 // when it matters, and a per-card placeholder would be noise on 88 of Finale's 219 cards.
+// TWO THINGS NEVER APPEAR IN THE UI, both on the user's own instruction (2026-08-24):
+//   * the SOURCE -- "Auf keinen Fall Trailforks irgendwo erwähnen". The tooltips said "(Trailforks)".
+//   * the VOTE COUNT -- "Ich würde auch nicht unbedingt die Anzahl der Stimmen erwähnen".
+// The concept argued the count was needed to keep the number honest, and that argument is weaker than it
+// looked: `rate` is the BAYESIAN value, already shrunk toward the regional mean by the vote count, so a
+// three-vote trail cannot show a spurious 4,9 in the first place. The shrinking does the work the visible
+// count was meant to do. `votes` stays in the DATA -- HIGHLIGHT_MIN_VOTES reads it, and a later refresh
+// needs it -- it is simply never rendered.
+// The tooltips said "(Trailforks)" and no longer do. The provenance stays in the DATA -- each trail's `tf`
+// slug and the region's `ratings.source` -- because a rating has to remain auditable, but nothing in the
+// app's own surface names where a number came from. Check any new user-visible string against this.
 function ratingMetaHtml(t){
   let out = "";
   if (typeof t.rate === "number") {
-    out += `<span class="trail-meta-rating">⭐ ${t.rate.toFixed(2).replace(".", ",")}</span>`;
+    out += `<span class="trail-meta-rating" title="Bewertung ${t.rate.toFixed(2).replace(".", ",")} ` +
+           `von 5">⭐ ${t.rate.toFixed(2).replace(".", ",")}</span>`;
   }
   if (typeof t.pop === "number") {
-    out += `<span class="trail-meta-rating">🔥 ${t.pop}</span>`;
+    out += `<span class="trail-meta-rating" title="Beliebtheit ${t.pop} von 100 — wie viel der Trail ` +
+           `gefahren wird, nicht wie gut er ist">🔥 ${t.pop}</span>`;
   }
   return out;
 }
@@ -4090,7 +4137,12 @@ function trailLabelHtml(t){
   // good" is the second question a label could answer and did not. Only on a highlight, so it stays a
   // signal rather than decoration -- and it needs no palette entry, because it is text, not geometry.
   const star = isHighlight(t) ? '<span class="tl-star">★</span>' : "";
-  return `<span class="tl-diff" style="background:${diffColor[t.diff]}"></span>${star}${t.name}`;
+  // The ⬆️ belongs here for exactly the reason the difficulty dot does (2026-07-28): the label is the one
+  // place the map NAMES a trail, and without the badge an uphill trail's label reads like any descent's --
+  // while the sidebar card and the info panel heading have carried it all along. Reported by the user
+  // 2026-08-24. categoryBadge() brings its own leading non-breaking space.
+  return `<span class="tl-diff" style="background:${diffColor[t.diff]}"></span>${star}${t.name}` +
+         `${categoryBadge(t)}`;
 }
 // A full round trip back to the original neutral mid-grey (#5a5a5a), the SAME hex it started at on
 // 2026-07-24 -- deliberately far from every diffColor tone (especially schwarz #1c1c1c, which the old
@@ -5502,30 +5554,78 @@ function clearSolo(){
 // says, which is the same call every hover-off and every solo-exit already goes through. A solo is left
 // alone on purpose -- it is the more specific request of the two, and overruling it would make the switch
 // feel like it broke the map.
-// The data-density gate. The rating UI (two sort chips, the Highlights switch) is only offered where the
-// active regions actually carry the data -- measured coverage: Finale 60 %, Madeira 34 %, the Pfälzerwald's
-// own brackets 0-3 %. Below RATING_DENSITY_MIN a "sort by rating" chip would bucket nearly every trail as
-// unrated, which is not a feature but a disappointment, and a Highlights switch would dim the entire map.
-// The info panel is deliberately NOT gated: if a single trail happens to carry a rating, showing it there
-// costs nothing and hides nothing.
+// Shows or hides the rating UI (the two sort chips and the Highlights row). The only condition is that
+// SOMETHING on screen is rated -- see ratedTrailCount() for why there is no coverage threshold any more.
+// With nothing rated at all there is genuinely nothing to sort or dim, so the controls would be dead.
 function syncRatingChrome(){
-  const on = ratingDensity() >= RATING_DENSITY_MIN;
+  const on = ratedTrailCount() > 0;
   document.querySelectorAll(".rating-chip, .rating-chrome").forEach((el) => {
     el.classList.toggle("rating-available", on);
   });
   if (!on && showHighlightsOnly) {
-    // A saved "Highlights only" must not survive into a region that cannot honour it -- the switch would be
-    // gone from the UI while the map stayed dimmed, with nothing to turn it off.
+    // Highlights must not stay on in a region set that cannot honour it -- the switch would be gone from
+    // the UI while the map stayed dimmed, with nothing left to turn it off.
     showHighlightsOnly = false;
     const box = document.getElementById("showHighlightsToggle");
     if (box) box.checked = false;
     applyHighlightDimming();
   }
+  syncHighlightSlider();
   if (!on && (trailSortMode === "rate" || trailSortMode === "pop")) {
     trailSortMode = TRAIL_VIEW_DEFAULTS.sortMode;
     trailSortDir = TRAIL_SORT_DEFAULT_DIR[trailSortMode];
     syncTrailViewChips();
   }
+}
+// Puts the slider's own min/max/value/label in step with the current range and threshold. Called after a
+// region change, after a drag, and when the switch flips -- one function so the four paths cannot drift.
+// A region coming or going invalidates the threshold: the range it was chosen against is gone. So the
+// switch goes OFF and the slider back to the freshly computed default, on the user's own instruction
+// ("Region hinzufügen / löschen müsste den slider dann deaktivieren"). Quietly re-clamping the old number
+// into the new range would leave the map dimmed by a threshold nobody picked for these regions.
+function resetHighlightsForRegionChange(){
+  recomputeHighlightRange();
+  if (showHighlightsOnly) {
+    showHighlightsOnly = false;
+    const box = document.getElementById("showHighlightsToggle");
+    if (box) box.checked = false;
+    applyHighlightDimming();
+  }
+  syncHighlightSlider();
+}
+function syncHighlightSlider(){
+  const row = document.getElementById("highlightSliderRow");
+  const input = document.getElementById("highlightSlider");
+  const out = document.getElementById("highlightSliderValue");
+  if (!row || !input || !out) return;
+  // Visible whenever there IS a range, not only while the switch is on. It was gated on the switch for a
+  // day and the user's first report was "ich sehe den Regler nicht" -- a control you have to switch
+  // something else on to discover is a control nobody finds. Dragging it turns Highlights on itself (see
+  // the input listener), so the slider alone is now the whole gesture and the switch is the off.
+  row.classList.toggle("open", highlightRange !== null);
+  if (highlightRange) {
+    input.min = highlightRange.min.toFixed(2);
+    input.max = highlightRange.max.toFixed(2);
+    input.step = HIGHLIGHT_STEP;
+    input.value = highlightMin.toFixed(2);
+    // Read it BACK: a range input snaps to min + n*step, so a computed default of 4.47 on a 2.99..4.77/0.05
+    // grid becomes 4.49 in the control. Leaving highlightMin at the unsnapped value made the slider show one
+    // number while the map was dimmed by another -- small, but it is exactly the kind of drift nobody finds
+    // later. The control is the source of truth once it exists.
+    highlightMin = parseFloat(input.value);
+    const n = highlightCount();
+    out.textContent = `${highlightMin.toFixed(2).replace(".", ",")} ★ · ${n} ${n === 1 ? "Trail" : "Trails"}`;
+  } else {
+    out.textContent = "";
+  }
+}
+// A trail's permanent name label is bound ONCE at build time, so anything that changes what the label says
+// has to re-bind it. Moving the Highlights slider changes which trails are starred, which is exactly that.
+function rebuildTrailLabels(){
+  Object.entries(lineLayers).forEach(([lid, layer]) => {
+    const t = lineTrails.find(x => x.id === lid);
+    if (t && layer.hitLine && layer.hitLine.getTooltip()) layer.hitLine.setTooltipContent(trailLabelHtml(t));
+  });
 }
 function applyHighlightDimming(){
   if (soloId) return;
@@ -6478,21 +6578,36 @@ const lineLayers = {};
 // trail has 8 votes, the Pfälzerwald's has 0). A fixed threshold would silently mean "good" in one region
 // and "everything" or "nothing" in another. `highlightCut` holds each group's own cut-off, recomputed when a
 // region loads; MIN_VOTES keeps a single enthusiastic vote from promoting a trail.
+// The Highlights threshold is ONE absolute rating, adjustable, and the slider's range is the actual
+// min..max of the ratings across the regions currently displayed -- the user's own design (2026-08-23), and
+// it fixes a real problem with the 0..5 range I had proposed: Finale's Bayesian values run 2.99 to 4.77, so
+// three fifths of a 0..5 slider would do nothing at all.
+//
+// Naming the trade-off, because it reverses one of this feature's own rules: a single absolute threshold
+// across several regions IS the cross-region comparison the concept warns about (a 4.3 in Finale and a 4.3
+// in the Pfälzerwald are different communities). It is acceptable HERE and nowhere else, for two reasons the
+// automatic version did not have: the number is visible and the rider sets it themselves, and the DEFAULT is
+// still computed from the data (the pooled top quintile) rather than picked. The ★ in the map label follows
+// the same threshold, so the map and the slider always agree about what a highlight is.
+//
+// Adding or removing a region RESETS this and switches it off, because the range it was set against no
+// longer exists. Silently re-clamping the old number into a new range would leave the map dimmed by a
+// threshold the rider never chose for these regions.
 const HIGHLIGHT_QUANTILE = 0.2;
 const HIGHLIGHT_MIN_VOTES = 5;
+const HIGHLIGHT_STEP = 0.05;      // 0.01 is finer than a thumb, and the range is only ~1.8 wide
 let showHighlightsOnly = false;
-const highlightCut = {};          // groupKey -> rating a trail must reach in THAT region
-function recomputeHighlightCuts(){
-  Object.keys(highlightCut).forEach(k => { delete highlightCut[k]; });
-  Object.keys(REGION_GROUPS).forEach((gk) => {
-    const subs = Object.keys(REGION_CATALOG[gk] ? REGION_CATALOG[gk].subRegions : {});
-    const rated = lineTrails.filter(t => subs.indexOf(t.region) >= 0 &&
-                                         typeof t.rate === "number" && (t.votes || 0) >= HIGHLIGHT_MIN_VOTES)
-                            .map(t => t.rate).sort((a, b) => b - a);
-    if (rated.length >= 10) {
-      highlightCut[gk] = rated[Math.max(0, Math.floor(rated.length * HIGHLIGHT_QUANTILE) - 1)];
-    }
-  });
+let highlightMin = 0;             // the live threshold; 0 until a region with ratings is loaded
+let highlightRange = null;        // {min, max, def} over the displayed regions, or null when there is none
+function recomputeHighlightRange(){
+  const rated = lineTrails
+      .filter(t => activeRegions.has(t.region) && typeof t.rate === "number" &&
+                   (t.votes || 0) >= HIGHLIGHT_MIN_VOTES)
+      .map(t => t.rate).sort((a, b) => b - a);
+  if (rated.length < 10) { highlightRange = null; highlightMin = 0; return; }
+  const def = rated[Math.max(0, Math.floor(rated.length * HIGHLIGHT_QUANTILE) - 1)];
+  highlightRange = { min: rated[rated.length - 1], max: rated[0], def };
+  highlightMin = def;
 }
 function groupOfSubRegion(sub){
   return Object.keys(REGION_CATALOG).find(gk => REGION_CATALOG[gk].subRegions &&
@@ -6500,17 +6615,25 @@ function groupOfSubRegion(sub){
 }
 function isHighlight(t){
   if (!t || typeof t.rate !== "number" || (t.votes || 0) < HIGHLIGHT_MIN_VOTES) return false;
-  const cut = highlightCut[groupOfSubRegion(t.region)];
-  return cut !== undefined && t.rate >= cut;
+  return highlightRange !== null && t.rate >= highlightMin;
 }
-//: The share of a region's trails that carry a rating at all. Below this the rating UI stays hidden rather
-//: than offering a sort axis that buckets nearly everything as "unrated" -- measured: Finale 60 %, Madeira
-//: 34 %, the Pfälzerwald's own brackets 0-3 %.
-const RATING_DENSITY_MIN = 0.35;
-function ratingDensity(){
-  const shown = lineTrails.filter(t => activeRegions.has(t.region));
-  if (!shown.length) return 0;
-  return shown.filter(t => typeof t.rate === "number").length / shown.length;
+//: How many trails the current threshold keeps. Shown beside the slider, and it is what makes an absolute
+//: number usable at all: "4,35" means nothing on its own, "4,35 · 27 Trails" does.
+function highlightCount(){
+  return lineTrails.filter(t => activeRegions.has(t.region) && isHighlight(t)).length;
+}
+//: How many of the trails on screen carry a rating. The rating UI is offered as soon as there is ONE --
+//: no density threshold (user, 2026-08-24: "Ich würde übrigens auch erstmal darauf verzichten, das Rating
+//: Feature abzuschalten, wenn es wenige bewertete Trails gibt. Ist doch trotzdem gut zu sehen").
+//:
+//: A gate on 35 % coverage was built first and removed. Two things were wrong with it: it hid useful
+//: information in a region that had some, and its first version pooled the active regions, so switching on
+//: Madeira (158 trails, none rated) next to Finale (131 of 219) gave 34.7 % and made the whole feature
+//: disappear for FINALE. What stays is not a policy but a data requirement: the SLIDER needs a min..max, so
+//: recomputeHighlightRange() gives up below 10 rated trails and syncHighlightSlider() then has nothing to
+//: show. Sorting and the card values work from the first rated trail onwards.
+function ratedTrailCount(){
+  return lineTrails.filter(t => activeRegions.has(t.region) && typeof t.rate === "number").length;
 }
 function baselineLineOpacity(lid){
   if (!soloId) {
@@ -6867,7 +6990,6 @@ function persistActiveState(){
       showDownhill,
       showLifts,
       showPlaces,
-      showHighlightsOnly,
       showDirectionArrows,
       liveStatusOpen,
       strasseContrast,
@@ -6899,7 +7021,6 @@ function restoreActiveState(){
     if (typeof saved.showDownhill !== "boolean") saved.showDownhill = true;
     if (typeof saved.showLifts !== "boolean") saved.showLifts = true;
     if (typeof saved.showPlaces !== "boolean") saved.showPlaces = false;
-    if (typeof saved.showHighlightsOnly !== "boolean") saved.showHighlightsOnly = false;
     if (typeof saved.liveStatusOpen !== "boolean") saved.liveStatusOpen = true;
     if (typeof saved.showDirectionArrows !== "boolean") saved.showDirectionArrows = true;
     if (!STRASSE_CONTRAST_FILTERS.hasOwnProperty(saved.strasseContrast)) saved.strasseContrast = "a";
@@ -6975,7 +7096,7 @@ async function activateRegionGroup(groupKey){
     // worked while the stars silently did not, which is exactly the kind of half-working state a
     // build-time-bound tooltip produces. Called again at the end of activation too, since the LAST group
     // to load must not leave an earlier group's cut stale.
-    recomputeHighlightCuts();
+    recomputeHighlightRange();
     data.lineTrails.forEach(buildTrailLayer);
     if (data.lifts) data.lifts.forEach(buildLiftLayer);
     buildPlaceMarkers(groupKey, data.places);
@@ -6985,9 +7106,9 @@ async function activateRegionGroup(groupKey){
     persistActiveState();
     rebuildRegionChips();
     // Both of these depend on WHICH regions are loaded, so they belong here rather than at boot: the
-    // highlight cut-off is per region's own rating distribution, and the rating UI hides itself when the
+    // Highlights range is the min..max over the DISPLAYED regions, and the rating UI hides itself when the
     // active regions do not carry enough of the data to be worth offering.
-    recomputeHighlightCuts();
+    resetHighlightsForRegionChange();
     syncRatingChrome();
     render();
     return "activated";
@@ -7033,7 +7154,7 @@ function deactivateRegionGroup(groupKey){
 
   persistActiveState();
   rebuildRegionChips();
-  recomputeHighlightCuts();
+  resetHighlightsForRegionChange();
   syncRatingChrome();
   render();
 }
@@ -8143,7 +8264,6 @@ async function boot(){
     showDownhill = saved.showDownhill;
     showLifts = saved.showLifts;
     showPlaces = saved.showPlaces;
-    showHighlightsOnly = saved.showHighlightsOnly;
     liveStatusOpen = saved.liveStatusOpen;
     showDirectionArrows = saved.showDirectionArrows;
     strasseContrast = saved.strasseContrast;
@@ -8176,7 +8296,6 @@ async function boot(){
     document.getElementById("showDownhillToggle").checked = showDownhill;
     document.getElementById("showLiftsToggle").checked = showLifts;
     document.getElementById("showPlacesToggle").checked = showPlaces;
-    document.getElementById("showHighlightsToggle").checked = showHighlightsOnly;
     applyLiveStatusOpen();
     document.getElementById("showDirectionArrowsToggle").checked = showDirectionArrows;
     // "Blickrichtung oben" always starts OFF, whatever the last session did (user, 2026-08-04). The mode needs
@@ -8333,7 +8452,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v186"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v193"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

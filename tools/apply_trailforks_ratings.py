@@ -10,6 +10,13 @@ the matched trails' `lineTrails` entries:
     "rate": 4.64      # rating_bayesian, 0-5, vote-count-shrunk -- NEVER the raw average
     "votes": 108      # so the app can show how thin the basis is
     "pop": 95         # popularity_score 0-100, a year of check-ins, NOT a quality statement
+    "tf": "base-nato" # the Trailforks slug this came from
+
+**`tf` is the field that makes this repeatable** (the user's own point, 2026-08-23: "Merk dir die Trailforks
+ID der Trails für künftige Updates der Werte"). Matching Finale's 219 trails onto Trailforks cost a full
+geometric run and 22 cases that still need a human; with the slug stored, refreshing the NUMBERS later is a
+harvest plus a dictionary lookup. It is also what makes a single rating auditable: without it, nobody can
+check where a 4,64 came from.
 
 Only `verdict == "match"` rows are used. A review or unmatched trail gets nothing, which is a third state
 the app has to render honestly ("noch nicht bewertet"), never a zero.
@@ -73,7 +80,7 @@ def main(argv):
     data = json.load(io.open(path, encoding="utf-8"))
     applied = 0
     for t in data["lineTrails"]:
-        for k in ("rate", "votes", "pop"):
+        for k in ("rate", "votes", "pop", "tf"):
             t.pop(k, None)
         v = by_id.get(t["id"])
         if not v or not v["votes"]:
@@ -82,6 +89,7 @@ def main(argv):
         t["votes"] = v["votes"]
         if v["pop"] is not None:
             t["pop"] = v["pop"]
+        t["tf"] = v["slug"]
         applied += 1
 
     rated = [t for t in data["lineTrails"] if t.get("rate")]

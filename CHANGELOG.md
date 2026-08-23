@@ -21,6 +21,29 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-24
+- **Der Highlights-Regler steht da, sobald etwas Angezeigtes bewertet ist** — vorher erschien er erst, wenn
+  der Schalter „Nur Highlights" an war, und die erste Rückmeldung des Nutzers war „ich sehe den Regler
+  nicht". Ein Bedienelement, das man erst findet, nachdem man ein anderes gefunden hat, findet niemand.
+  **Ziehen schaltet Highlights jetzt selbst ein**, der Schalter bleibt das Aus — sonst tut der erste Zug
+  nichts Sichtbares. Und der Regler sagt im Tooltip, was ein Highlight überhaupt ist: Bewertung ab dem
+  eingestellten Wert, mindestens 5 Stimmen, voreingestellt auf das beste Fünftel der bewerteten Trails der
+  angezeigten Regionen. `tests/browser/rating.js` prüft beides (sichtbar bei ausgeschaltetem Schalter, ein
+  Zug schaltet ein und dimmt die Karte).
+- **Kein Dichte-Gate mehr für die Bewertungs-Oberfläche.** Sie erscheint, sobald *irgendetwas* Angezeigtes
+  bewertet ist (`ratedTrailCount() > 0`) statt ab 35 % Abdeckung — auf Wunsch des Nutzers („Ist doch
+  trotzdem gut zu sehen"), und die alte Regel war ohnehin falsch gebaut: sie poolte die aktiven Regionen,
+  also machte das Zuschalten von Madeira (158 Trails, keine Bewertungen) aus Finales 60 % ein 34,7 % und
+  ließ das Feature **für Finale** verschwinden. Geblieben ist eine Datenbedingung statt einer Regel: der
+  Regler braucht ≥10 bewertete Trails, weil er sonst keine Spanne hat.
+- **Weder Quelle noch Stimmenzahl stehen in der Oberfläche.** Die Herkunft bleibt in den Daten (`tf`-Slug je
+  Trail plus ein `ratings`-Block je Region), damit eine Bewertung nachprüfbar und später aktualisierbar ist —
+  sichtbar ist sie nirgends, auch nicht in `title`-Attributen, wo sie hineingerutscht war. Die Stimmenzahl
+  fällt weg, weil `rate` der bayessche Wert ist: er ist schon stimmengewichtet, ein Trail mit drei Stimmen
+  kann keine 4,9 zeigen. Beides auf Anweisung des Nutzers, beides durch je einen Testfall festgenagelt.
+- **Dem Kartenlabel fehlte das ⬆️ für Uphill-Trails** — Kachel und Info-Panel trugen es immer, das Label
+  nicht. Dieselbe Lücke, die 2026-07-28 schon der Schwierigkeitspunkt im Label geschlossen hat.
+
 ## 2026-08-21
 - **A trail card shows both numbers, always** — `⭐ 4,71 🔥 100`, independent of which axis the list is
   sorted by. It first shipped showing only the active axis, on a SCALED ESTIMATE that both together would

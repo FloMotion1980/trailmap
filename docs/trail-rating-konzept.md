@@ -274,3 +274,47 @@ Im Backlog unter diesem Themenkomplex: die zwei Presets ("Muss man fahren" / "Ve
 "In der Nähe", die Abfahrten je Bergstation, das Ranken der Tourenbuilder-Kandidaten, Touren, die die
 Bewertung ihrer Komponenten erben — und die 22 Vorlage-Fälle plus 39 Trailforks-Linien ohne Gegenstück aus
 dem Zuordnungslauf.
+
+## Nachjustiert am 2026-08-24, alles auf Anweisung des Nutzers
+
+Fünf Änderungen an Stufe 1, jede eine Korrektur an einer Annahme aus diesem Dokument:
+
+1. **Der Schalter wurde ein Regler.** Statt an/aus jetzt ein Schieber über die *echte* Spanne der
+   Bewertungen der angezeigten Regionen (Finale: 2,99–4,77), voreingestellt auf das obere Fünftel, mit
+   Live-Trefferzahl daneben („4,49 ★ · 18 Trails"). Die 0–5-Skala, die dieses Dokument vorschlug, wäre zu
+   drei Fünfteln Leerlauf gewesen. Ein Regionswechsel setzt ihn zurück und schaltet ihn aus — die Spanne,
+   gegen die er gewählt wurde, existiert dann nicht mehr.
+   **Nachgezogen am 2026-08-24:** er ist sichtbar, sobald etwas Angezeigtes bewertet ist, nicht erst wenn
+   der Schalter an ist. Die erste Rückmeldung des Nutzers zum fertigen Feature war „ich sehe den Regler
+   nicht" — ein Bedienelement hinter einem anderen zu verstecken ist keine Aufgabenteilung, sondern
+   Unsichtbarkeit. Ziehen schaltet Highlights selbst ein (sonst tut der erste Zug nichts Sichtbares), der
+   Schalter ist das Aus. Und was ein Highlight *ist*, sagt der Regler jetzt selbst, im Tooltip: Bewertung ab
+   dem eingestellten Wert, mindestens 5 Stimmen, voreingestellt auf das beste Fünftel der bewerteten Trails
+   der angezeigten Regionen — genau die Frage, die der Nutzer im selben Atemzug gestellt hat.
+   **Der Preis, offen benannt:** ein einzelner absoluter Schwellenwert über mehrere Regionen IST der
+   regionsübergreifende Vergleich, vor dem Abschnitt 3.2 warnt. Vertretbar hier, weil die Zahl sichtbar ist
+   und der Fahrer sie selbst setzt — und weil die Voreinstellung weiter aus den Daten kommt.
+2. **Beide Zahlen stehen immer in der Kachel** (`⭐ 4,71 🔥 100`), nicht nur die der aktiven Sortierachse.
+   Meine Begründung fürs Weglassen war eine hochgerechnete Schätzung; gemessen hat die engste Kachel am
+   Handy **39px Luft**, und alle 219 bleiben 52px hoch.
+3. **Keine Stimmenzahl in der Oberfläche.** Abschnitt 3.1 fordert sie „nicht verhandelbar" — das war zu
+   stark: `rate` ist der **Bayes-Wert**, also schon stimmengewichtet, ein Trail mit 3 Stimmen kann keine 4,9
+   zeigen. Die Schrumpfung leistet, was die sichtbare Zahl leisten sollte. `votes` bleibt in den Daten.
+4. **Keine Quellenangabe in der Oberfläche**, nirgends. Die Herkunft bleibt in den Daten (`tf`-Slug je
+   Trail, `ratings.source`), damit eine Bewertung nachprüfbar bleibt. Ein Testfall prüft die Abwesenheit in
+   Seitenleiste, Info-Panel und Regionsdialog, inklusive `title`-Attributen — dort war sie hineingerutscht.
+5. **Kein Dichte-Gate mehr.** Abschnitt 3.3 verlangte, die UI unter 35 % Abdeckung auszublenden. Der Nutzer
+   hat das verworfen („Ist doch trotzdem gut zu sehen"), und die erste Fassung war ohnehin fehlerhaft: sie
+   poolte die aktiven Regionen, also machte das Zuschalten von Madeira (158 Trails, keine Bewertungen) aus
+   Finales 60 % ein 34,7 % — und ließ das Feature **für Finale** verschwinden. Übrig bleibt eine
+   Datenbedingung statt einer Regel: der Regler braucht ≥10 bewertete Trails für eine Spanne.
+
+**Neu gemerkt:** jeder bewertete Trail trägt seinen Quell-Slug (`tf`). Die Zuordnung von Finales 219 Trails
+kostete einen vollen geometrischen Lauf und 22 Fälle, die noch ein Mensch ansehen muss — mit dem Slug ist
+ein Aktualisieren der *Werte* künftig eine Ernte plus ein Wörterbuch-Zugriff.
+
+Und ein Fehler, der beim Bauen auffiel und nichts mit dem Rating zu tun hatte: **dem Kartenlabel fehlte das
+⬆️ für Uphill-Trails.** Karte und Info-Panel trugen es immer, das Label nicht — dieselbe Lücke, die 2026-07-28
+schon der Schwierigkeitspunkt geschlossen hat.
+
+Suite: `tests/browser/rating.js`, **12 Fälle / 57 Checks**, vier geprüfte Mutationen.

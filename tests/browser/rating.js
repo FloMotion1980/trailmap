@@ -36,12 +36,10 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   chip("group", "none").click();
   await TM.wait(300);
 
-  T.test("the rating UI only appears where the region actually carries the data");
-  // 0.35 spelled out, not read from the app: RATING_DENSITY_MIN is a `const` inside the app's own
-  // top-level try{} and genuinely unreachable here (only plain function declarations leak -- same reason
-  // the palette suite reads SVG attributes instead of diffColor). Stating the number here is also the
-  // stronger test: it is an independent claim about what the threshold should be, not an echo of it.
-  T.ok("Finale is dense enough", ratingDensity() >= 0.35, ratingDensity().toFixed(2), ">= 0.35");
+  T.test("the rating UI appears as soon as anything is rated -- no coverage threshold");
+  // A 35 % coverage gate was built and then removed on the user's call ("Ist doch trotzdem gut zu sehen").
+  // What remains is a data requirement, not a policy: with nothing rated there is nothing to sort or dim.
+  T.ok("something on screen is rated", ratedTrailCount() > 0, ratedTrailCount(), "> 0");
   T.ok("the Bewertung chip is offered", visible(chip("sort", "rate")), visible(chip("sort", "rate")), true);
   T.ok("the Beliebtheit chip is offered", visible(chip("sort", "pop")), visible(chip("sort", "pop")), true);
   T.ok("and the Highlights switch is offered", visible(TM.$("#highlightsRow")),
@@ -74,6 +72,63 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   T.ok("its unrated bucket is named for popularity, not rating",
        /ohne Beliebtheitswert/.test((TM.$("#trailList .rating-unrated-title") || {}).textContent || ""),
        (TM.$("#trailList .rating-unrated-title") || {}).textContent, "ohne Beliebtheitswert");
+
+  T.test("the slider spans the REAL rating range, not 0..5, and says how many trails it keeps");
+  // Finale's Bayesian values run 2.99..4.77, so a 0..5 slider would spend three fifths of its travel doing
+  // nothing. The range is the min..max over the displayed regions (the user's design), the default is the
+  // pooled top quintile, and the label carries the count because "4,49" alone says nothing.
+  await TM.ui.setSwitch("showHighlightsToggle", false);
+  await TM.wait(400);
+  const sl = TM.$("#highlightSlider");
+  const defaultThreshold = sl.value;      // captured before the drag below; put back before leaving
+  // Visible while the switch is still OFF: it was gated on the switch for a day and the user's first report
+  // was that they could not find it. A control that only appears once you have found another control is a
+  // control nobody finds.
+  T.ok("the slider is there before the switch is touched",
+       getComputedStyle(TM.$("#highlightSliderRow")).display !== "none",
+       getComputedStyle(TM.$("#highlightSliderRow")).display, "not none");
+  sl.value = (parseFloat(sl.max) - 0.2).toFixed(2);
+  sl.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.wait(400);
+  T.ok("dragging it switches Highlights on by itself", TM.$("#showHighlightsToggle").checked,
+       TM.$("#showHighlightsToggle").checked, true);
+  T.ok("and the map is actually dimmed by that one gesture", TM.map.dimmedTrails() > 0,
+       TM.map.dimmedTrails(), "> 0");
+  sl.value = defaultThreshold;
+  sl.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.ui.setSwitch("showHighlightsToggle", true);
+  await TM.wait(600);
+  T.ok("its minimum is a real rating, not 0", parseFloat(sl.min) > 2.5, sl.min, "> 2.5");
+  T.ok("its maximum is a real rating, not 5", parseFloat(sl.max) < 5, sl.max, "< 5");
+  T.ok("and the range is narrow, as the data is", parseFloat(sl.max) - parseFloat(sl.min) < 2.5,
+       (parseFloat(sl.max) - parseFloat(sl.min)).toFixed(2), "< 2.5");
+  const label = () => TM.$("#highlightSliderValue").textContent;
+  T.ok("the label states the threshold and the count", /\d,\d\d ★ · \d+ Trails?/.test(label()), label(),
+       "x,xx ★ · n Trails");
+  T.ok("the value shown is the value applied", Math.abs(parseFloat(sl.value) - parseFloat(label().replace(",", "."))) < 0.001,
+       [sl.value, label()], "same number");
+
+  T.test("raising the threshold keeps fewer trails, and the map follows");
+  const countOf = (s) => TM.ui.num(s.split("·")[1] || "");
+  const wide = { n: countOf(label()), dim: TM.map.dimmedTrails() };
+  sl.value = (parseFloat(sl.max) - 0.1).toFixed(2);
+  sl.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.wait(600);
+  const strict = { n: countOf(label()), dim: TM.map.dimmedTrails() };
+  T.ok("the count drops", strict.n < wide.n, [wide.n, strict.n], "fewer");
+  T.ok("and more of the map is dimmed", strict.dim > wide.dim, [wide.dim, strict.dim], "more");
+  await TM.ui.setSwitch("showHighlightsToggle", false);
+  await TM.wait(500);
+  T.eq("switching off restores everything", TM.map.dimmedTrails(), 0);
+  // Put the threshold back. Toggling the switch deliberately does NOT reset it -- a rider who dialled in
+  // 4,6 and flicked the switch to glance at the whole map wants 4,6 back -- so a strict value left here
+  // leaks into every later case. It did: the next case saw 3 bright trails instead of ~22.
+  // And the switch has to go off AFTER the restore, not before: a drag turns Highlights on by design, so
+  // restoring the value re-enables it. That leaked once too -- 359 trails dimmed into the next case.
+  sl.value = defaultThreshold;
+  sl.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.ui.setSwitch("showHighlightsToggle", false);
+  await TM.wait(400);
 
   T.test("the Highlights switch dims everything outside the region's own top fifth");
   chip("sort", "rate").click();
@@ -125,21 +180,61 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   const starNames = starred.map((s) => s.parentElement.textContent.replace("★", "").trim());
   T.ok("and the region's best-rated trail is among them", starNames.includes("Madonna della Guardia"),
        starNames.slice(0, 5), "includes Madonna della Guardia");
+  // The ⬆️ belongs in the map label too, and did not use to be there (user, 2026-08-24) -- the card and the
+  // info panel heading always had it, so an uphill trail's LABEL was the one place that read like a descent.
+  // The uphill trail is found through the DOM, not through `lineTrails` -- that is a const inside the app's
+  // own try{} and unreachable from here, the same trap RATING_DENSITY_MIN set earlier in this file. The
+  // sidebar card already marks uphill trails with .badge-uphill, so it is the honest index.
+  const upCard = TM.ui.trailCards().find((c) => c.querySelector(".badge-uphill"));
+  if (!upCard) {
+    T.skip("no uphill trail in the active regions -- nothing to check");
+  } else {
+    const upName = upCard.querySelector(".trail-name").textContent.replace(/[👁⬆️]/g, "").trim();
+    const upLabel = TM.map.trailLabels().find((e) => e.textContent.indexOf(upName) >= 0);
+    T.ok("an uphill trail's label is on the map", !!upLabel, upName, "a label for " + upName);
+    T.ok("and it carries the ⬆️ badge", /⬆️/.test((upLabel || {}).textContent || ""),
+         (upLabel || {}).textContent, "contains ⬆️");
+  }
   await TM.ui.setSwitch("showNamesToggle", false);
   await TM.wait(250);
 
-  T.test("the info panel states the value, how thin the basis is, and when it was harvested");
+  T.test("no user-visible text names the data source");
+  // The user's own rule (2026-08-24): "Auf keinen Fall Trailforks irgendwo erwähnen". The card tooltips
+  // said "(Trailforks)" until then. Checked as an ABSENCE across everything the sidebar and the panel
+  // actually render, including title attributes, since that is where it had crept in.
+  const visibleText = () => {
+    const parts = [];
+    ["aside", "#infoPanel", "#regionDialog"].forEach((sel) => {
+      const root = TM.$(sel);
+      if (!root) return;
+      parts.push(root.textContent || "");
+      root.querySelectorAll("[title]").forEach((e) => parts.push(e.getAttribute("title") || ""));
+    });
+    return parts.join(" ");
+  };
+  T.ok("no source named anywhere in the sidebar, panel or region dialog",
+       !/trailforks/i.test(visibleText()), (/trailforks/i.exec(visibleText()) || ["none"])[0], "not present");
+  T.ok("and no vote count either", !/Stimmen?/.test(visibleText()),
+       (/.{0,18}Stimmen?/.exec(visibleText()) || ["none"])[0], "not present");
+
+  T.test("the info panel states the value, the vote count and the popularity -- and NO date");
   TM.ui.cardNamed("trailCards", /Madonna della Guardia/).click();
   await TM.wait(600);
   const row = TM.$("#ipContent .ip-rating");
   T.ok("a rating row is present", !!row, !!row, true);
   const txt = (row || {}).textContent || "";
-  T.ok("it shows the value with a comma, German style", /4,\d\d/.test(txt), txt.slice(0, 40), "4,xx");
-  T.ok("exactly ONE star glyph, not two", (txt.match(/★/g) || []).length, 1);
-  T.ok("it names the vote count", /\d+ Stimmen/.test(txt), txt, "n Stimmen");
-  T.ok("and dates the figure", /Stand \d{4}-\d{2}-\d{2}/.test(txt), txt, "Stand YYYY-MM-DD");
-  T.ok("popularity is stated separately, not merged into the stars", /Beliebtheit \d+/.test(txt), txt,
-       "Beliebtheit n");
+  T.ok("the value, German style and out of 5", /⭐ 4,\d\d von 5/.test(txt), txt.slice(0, 40), "⭐ 4,xx von 5");
+  // Neither the vote count nor the source appears -- both on the user's instruction, both pinned as an
+  // ABSENCE because that is the whole point. `votes` stays in the data (HIGHLIGHT_MIN_VOTES reads it).
+  T.ok("no vote count in the panel", !/Stimme/.test(txt), txt, "no Stimmen");
+  T.ok("popularity as its own number, never merged into the stars", /🔥 \d+ von 100/.test(txt), txt,
+       "🔥 n von 100");
+  T.eq("one star glyph and one flame, no doubles",
+       [(txt.match(/⭐/g) || []).length, (txt.match(/🔥/g) || []).length], [1, 1]);
+  // The harvest date is deliberately absent from the UI (user, 2026-08-23) while staying in the region
+  // file's own `ratings` block. Pinned as an ABSENCE, since that is the whole instruction.
+  T.ok("and no harvest date in the panel", !/Stand|\d{4}-\d{2}-\d{2}/.test(txt), txt, "no date");
+  T.ok("a top-rated trail is marked as a highlight", /Highlight/.test(txt), txt, "Highlight badge");
 
   T.test("an unrated trail says so, and is never shown as a zero");
   chip("sort", "rate").click();
