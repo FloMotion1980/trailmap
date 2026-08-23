@@ -51,19 +51,31 @@ def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("region")
     ap.add_argument("--material", required=True)
+    ap.add_argument("--table", default="trailforks_table.json",
+                    help="where the numbers live under --material; the regions harvested before this "
+                         "pipeline keep theirs in tf_ratings.json, since their harvest kept no table")
     ap.add_argument("--report", help="reuse an existing match report instead of recomputing")
+    ap.add_argument("--mapping", help="a {trailId: slug} map from tools/map_tf_slugs.py -- used INSTEAD of "
+                                      "the fuzzy matcher, for a region built from Trailforks")
     ap.add_argument("--as-of", required=True, help="harvest date, YYYY-MM-DD -- see the module docstring")
     ap.add_argument("--dry-run", action="store_true")
     a = ap.parse_args(argv)
 
-    if a.report and os.path.exists(a.report):
+    if a.mapping:
+        # A region built FROM Trailforks needs no inference: map_tf_slugs.py resolves our id back to the
+        # slug it was built from and checks the endpoints, so every row here is a "match" by construction.
+        mp = json.load(io.open(a.mapping, encoding="utf-8"))
+        mp = mp.get("mapping", mp)
+        rows = [{"id": tid, "verdict": "match", "candidates": [{"slug": slug}]} for tid, slug in mp.items()]
+        print("Zuordnung uebernommen: %s (%d Trails)" % (a.mapping, len(rows)))
+    elif a.report and os.path.exists(a.report):
         rows = json.load(io.open(a.report, encoding="utf-8"))
         print("Bericht wiederverwendet: %s" % a.report)
     else:
         rows, _ = run_match(a.region, a.material)
 
     mat = a.material if os.path.isabs(a.material) else os.path.join(ROOT, "Material", a.material)
-    table = json.load(io.open(os.path.join(mat, "trailforks_table.json"), encoding="utf-8"))
+    table = json.load(io.open(os.path.join(mat, a.table), encoding="utf-8"))
     by_id = {}
     for r in rows:
         if r["verdict"] != "match" or not r["candidates"]:
