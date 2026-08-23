@@ -117,6 +117,16 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   const strict = { n: countOf(label()), dim: TM.map.dimmedTrails() };
   T.ok("the count drops", strict.n < wide.n, [wide.n, strict.n], "fewer");
   T.ok("and more of the map is dimmed", strict.dim > wide.dim, [wide.dim, strict.dim], "more");
+  // Double-click is the way back to the computed default (the user's own request). The value it restores is
+  // highlightRange.def, not "whatever the slider held when the case started" -- otherwise "back" would
+  // depend on when you last dragged.
+  sl.dispatchEvent(new MouseEvent("dblclick", { bubbles: true }));
+  await TM.wait(500);
+  T.eq("a double-click puts the default back", sl.value, defaultThreshold);
+  T.ok("and the map follows it", TM.map.dimmedTrails() === wide.dim, [TM.map.dimmedTrails(), wide.dim], "same");
+  sl.value = (parseFloat(sl.max) - 0.1).toFixed(2);
+  sl.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.wait(400);
   await TM.ui.setSwitch("showHighlightsToggle", false);
   await TM.wait(500);
   T.eq("switching off restores everything", TM.map.dimmedTrails(), 0);

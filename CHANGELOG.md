@@ -29,7 +29,9 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   nichts Sichtbares. Und der Regler sagt im Tooltip, was ein Highlight überhaupt ist: Bewertung ab dem
   eingestellten Wert, mindestens 5 Stimmen, voreingestellt auf das beste Fünftel der bewerteten Trails der
   angezeigten Regionen. `tests/browser/rating.js` prüft beides (sichtbar bei ausgeschaltetem Schalter, ein
-  Zug schaltet ein und dimmt die Karte).
+  Zug schaltet ein und dimmt die Karte). **Doppelklick auf den Regler setzt auf die Vorgabe zurück** —
+  zurück heißt dabei der aus den Daten gerechnete Wert, nicht der, mit dem der Regler zuletzt gestartet ist,
+  sonst wäre „zurück" davon abhängig, wann man das letzte Mal geschoben hat.
 - **Kein Dichte-Gate mehr für die Bewertungs-Oberfläche.** Sie erscheint, sobald *irgendetwas* Angezeigtes
   bewertet ist (`ratedTrailCount() > 0`) statt ab 35 % Abdeckung — auf Wunsch des Nutzers („Ist doch
   trotzdem gut zu sehen"), und die alte Regel war ohnehin falsch gebaut: sie poolte die aktiven Regionen,

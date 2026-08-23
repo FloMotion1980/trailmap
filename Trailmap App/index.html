@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=194" />
+<link rel="stylesheet" href="style.css?v=195" />
 </head>
 <body>
 <div id="fatalError">
@@ -183,7 +183,7 @@
                  das echte min..max der Bewertungen der angezeigten Regionen, nicht 0..5, und die Zahl
                  daneben nennt die Treffer, weil "4,35" allein nichts sagt. -->
             <div class="highlight-slider-row rating-chrome" id="highlightSliderRow"
-                 title="Highlight = Bewertung ab dem eingestellten Wert, bei mindestens 5 Stimmen. Voreingestellt auf das beste Fünftel der bewerteten Trails der angezeigten Regionen.">
+                 title="Highlight = Bewertung ab dem eingestellten Wert, bei mindestens 5 Stimmen. Voreingestellt auf das beste Fünftel der bewerteten Trails der angezeigten Regionen. Doppelklick auf den Regler setzt auf diese Vorgabe zurück.">
               <input type="range" id="highlightSlider" min="0" max="5" step="0.05" value="0"
                      aria-label="Mindestbewertung für Highlights">
               <span class="highlight-slider-value" id="highlightSliderValue"></span>
@@ -1861,6 +1861,23 @@ document.getElementById("highlightSlider").addEventListener("input", (e) => {
   applyHighlightDimming();
   // The ★ follows the same threshold, and a trail label is bound once at build time -- so moving the slider
   // has to rebuild the labels, unlike the on/off switch, which does not change what counts as a highlight.
+  rebuildTrailLabels();
+});
+// Doppelklick zurück auf die Vorgabe (Nutzer, 2026-08-24). Der Wert dafür ist highlightRange.def, also die
+// aus den Daten gerechnete Zahl -- nicht der Wert, mit dem der Regler zuletzt gestartet ist, sonst wäre
+// "zurück" davon abhängig, wann man das letzte Mal geschoben hat. Behandelt wie ein Zug, also schaltet es
+// Highlights ebenfalls ein: wer den Regler anfasst, will das Ergebnis sehen.
+document.getElementById("highlightSlider").addEventListener("dblclick", () => {
+  if (!highlightRange) return;
+  highlightMin = highlightRange.def;
+  if (!showHighlightsOnly) {
+    showHighlightsOnly = true;
+    const box = document.getElementById("showHighlightsToggle");
+    if (box) box.checked = true;
+    persistActiveState();
+  }
+  syncHighlightSlider();
+  applyHighlightDimming();
   rebuildTrailLabels();
 });
 document.getElementById("showHighlightsToggle").addEventListener("change", (e) => {
