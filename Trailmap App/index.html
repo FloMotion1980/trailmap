@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=207" />
+<link rel="stylesheet" href="style.css?v=208" />
 </head>
 <body>
 <div id="fatalError">
@@ -1854,6 +1854,7 @@ document.getElementById("highlightSlider").addEventListener("input", (e) => {
   // The ★ follows the same threshold, and a trail label is bound once at build time -- so moving the slider
   // has to rebuild the labels, unlike the on/off switch, which does not change what counts as a highlight.
   rebuildTrailLabels();
+  syncCrownRings();
 });
 // Doppelklick zurück auf die Vorgabe (Nutzer, 2026-08-24). Der Wert dafür ist highlightRange.def, also die
 // aus den Daten gerechnete Zahl -- nicht der Wert, mit dem der Regler zuletzt gestartet ist, sonst wäre
@@ -1865,6 +1866,7 @@ document.getElementById("highlightSlider").addEventListener("dblclick", () => {
   syncHighlightSlider();
   applyHighlightDimming();
   rebuildTrailLabels();
+  syncCrownRings();
 });
 document.getElementById("showHighlightsToggle").addEventListener("change", (e) => {
   showHighlightsOnly = e.target.checked;
@@ -3922,6 +3924,7 @@ function enterRideMode(){
   updateRideInfoPanel(); // also applies the map offset, now that the trail row's height (if any) is set
   if (orientationHandler === null) requestOrientationPermission();
   syncEndpointSizes();
+  syncCrownRings();      // im RIDE-Modus keine goldenen Ringe -- wie beim frueheren Stern entschieden
   setHeadingUp(true);
   if (!followMode) startFollowing();
 }
@@ -3932,6 +3935,7 @@ function exitRideMode(){
   document.documentElement.classList.remove("ride-mode");
   syncRideModeChrome();
   syncEndpointSizes();   // rideMode is already false, so this puts them back to the normal radius
+  syncCrownRings();      // ...und dasselbe gilt fuer die goldenen Ringe
   clearRideMapOffset();
   clearRideFocusHalo();
   setHeadingUp(false);
@@ -4137,12 +4141,24 @@ function ratingMetaHtml(t){
   }
   return out;
 }
+//: Das Zeichen fuer ein Highlight, an EINER Stelle (2026-08-24, Nutzer: statt des ausgeschriebenen Worts
+//: "Highlight" eine Metapher -- seine Wahl war die Krone). Sie erscheint an vier Orten: auf dem
+//: Schwierigkeitsbalken der Kachel, auf dem im Info-Panel, im Kartenlabel und auf dem Griff des
+//: Highlights-Reglers, weil der die Grenze IST. Auf der Karte selbst tragen Start- und Zielpunkt statt
+//: einer Krone einen goldenen Ring -- ein zweiter Kreis um denselben Mittelpunkt macht Verschmelzen,
+//: Zoom und die RIDE-Vergroesserung ohne Zutun mit, waehrend eine Krone eine eigene, nachzufuehrende
+//: Ebene waere und bei weiter Zoomstufe groesser als der Punkt.
+const CROWN_HTML = '<span class="tm-crown" title="Highlight">👑</span>';
+//: Der goldene Ring: nur die STRICHFARBE der vorhandenen Marker, kein zusaetzlicher Layer.
+const CROWN_RING_COLOR = "#e0a326";
+const CROWN_RING_WEIGHT = 2.5;
+
 function trailLabelHtml(t){
   // The ★ is the same argument the coloured dot won on 2026-07-28: the label is the one place that names a
   // trail, and it often covers the very line whose colour would have told you the difficulty. "Is it any
   // good" is the second question a label could answer and did not. Only on a highlight, so it stays a
   // signal rather than decoration -- and it needs no palette entry, because it is text, not geometry.
-  const star = isHighlight(t) ? '<span class="tl-star">★</span>' : "";
+  const star = isHighlight(t) ? CROWN_HTML : "";
   // The ⬆️ belongs here for exactly the reason the difficulty dot does (2026-07-28): the label is the one
   // place the map NAMES a trail, and without the badge an uphill trail's label reads like any descent's --
   // while the sidebar card and the info panel heading have carried it all along. Reported by the user
@@ -5621,6 +5637,15 @@ function syncHighlightSlider(){
     // number while the map was dimmed by another -- small, but it is exactly the kind of drift nobody finds
     // later. The control is the source of truth once it exists.
     highlightMin = parseFloat(input.value);
+    // ...und was an der ALTEN Schwelle haengt, muss mit. Das Einrasten passiert schon beim ersten Aufbau
+    // (die aus den Daten gerechnete Vorgabe 4,32 wird auf dem 0,05-Raster zu 4,33), waehrend Kartenlabel und
+    // die goldenen Ringe der Endpunkte zu diesem Zeitpunkt bereits gebaut sind -- gemessen trug der
+    // Fuerhoernli Trail mit 4,32 goldene Ringe, obwohl seine Kachel korrekt keine Krone hatte.
+    if (highlightMin !== lastAppliedHighlightMin) {
+      lastAppliedHighlightMin = highlightMin;
+      rebuildTrailLabels();
+      syncCrownRings();
+    }
     const n = highlightCount();
     // BEIDE Zahlen stehen in der Bahn -- der Nutzer hat diese Fassung der Aufteilung "Wert daneben,
     // Trailzahl drin" vorgezogen, nachdem er beide live gesehen hat. Sie weichen dem Griff aus: der Text
@@ -5647,6 +5672,33 @@ function syncHighlightSlider(){
 }
 // A trail's permanent name label is bound ONCE at build time, so anything that changes what the label says
 // has to re-bind it. Moving the Highlights slider changes which trails are starred, which is exactly that.
+//: Der goldene Ring an Start-, Ziel- und weissem Startpunkt eines Highlights. Kein eigener Layer: die drei
+//: Marker haben ohnehin eine Strichfarbe, und die zu aendern folgt Radius, Verschmelzung und der
+//: RIDE-Vergroesserung von selbst. Im RIDE-Modus bleibt er aus -- dieselbe Entscheidung wie beim frueheren
+//: Stern: dort sind die Punkte schon groesser und der Fokus-Halo markiert den Trail.
+const ENDPOINT_STROKE = { startDot: "#22301f", startMarker: "#0d3d1a", endMarker: "#5c0f0a" };
+function applyCrownRing(layer, t){
+  if (!layer) return;
+  const on = !rideMode && isHighlight(t);
+  // `crowned` ist der Merker, den applyEndpointSize fuer die Strichstaerke liest -- die Farbe setzen wir
+  // hier, die Breite dort, weil jene Funktion sie ohnehin bei jedem Anzeigen neu vergibt.
+  layer.crowned = on;
+  ["startDot", "startMarker", "endMarker"].forEach((k) => {
+    const m = layer[k];
+    if (!m || !m.setStyle) return;
+    m.setStyle(on ? { color: CROWN_RING_COLOR, weight: CROWN_RING_WEIGHT }
+                  : { color: ENDPOINT_STROKE[k], weight: ENDPOINT_WEIGHT });
+  });
+  if (layer.startMarker && map.hasLayer(layer.startMarker)) applyEndpointSize(layer);
+}
+//: Die Schwelle bewegt sich mit dem Regler, also muessen die Ringe genauso nachgezogen werden wie die
+//: Kartenlabel -- beides haengt an isHighlight(), nicht an den Trail-Daten.
+function syncCrownRings(){
+  Object.entries(lineLayers).forEach(([lid, layer]) => {
+    const t = lineTrails.find(x => x.id === lid);
+    if (t) applyCrownRing(layer, t);
+  });
+}
 function rebuildTrailLabels(){
   Object.entries(lineLayers).forEach(([lid, layer]) => {
     const t = lineTrails.find(x => x.id === lid);
@@ -6439,7 +6491,7 @@ function buildInfoPanelHtml(t){
   // `.badge` behaelt seine Klassen und sein title-Attribut und wird nur zum Balken umgestylt: die
   // Schwierigkeit im Panel-Kopf ist eine eigene Entscheidung von 2026-08-13, die hier nicht mitkippen soll.
   return `
-    <h3><span class="badge ${t.diff} ip-diff-bar" title="${DIFF_LABEL[t.diff]}"></span><span class="ip-name">${t.name}</span>${uphillBadge}${loopBadge}</h3>
+    <h3${isHighlight(t) ? ' class="has-crown"' : ""}><span class="badge ${t.diff} ip-diff-bar" title="${DIFF_LABEL[t.diff]}">${isHighlight(t) ? CROWN_HTML : ""}</span><span class="ip-name">${t.name}</span>${uphillBadge}${loopBadge}</h3>
     <div class="ip-trail">
       <div class="ip-meta"><span class="ip-len">${t.len} km</span><span class="ip-updown">${upShown} m ⬆️</span><span class="ip-updown">${downShown} m ⬇️</span>${ratingRowHtml(t)}</div>
       ${profile ? buildElevationSvg(profile, highlight, diffColor[t.diff], t.id, isReversed, chartSegments) : ""}
@@ -6450,7 +6502,6 @@ function buildInfoPanelHtml(t){
       <button class="solo-btn${isSolo ? " active" : ""}" data-id="${t.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button>
       <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">⏪</button>
       <button class="gpx-download-btn" data-id="${t.id}" title="GPX herunterladen">GPX</button>
-      ${isHighlight(t) ? '<span class="ip-rating-badge">Highlight</span>' : ""}
     </span>
     <button class="ride-btn ip-ride-bar${rideMode ? " active" : ""}" data-id="${t.id}" title="${rideMode ? "RIDE-Modus beenden" : "RIDE-Modus für diesen Trail starten"}">🚴‍♂️ ${rideMode ? "RIDE beenden" : "RIDE starten"}</button>`;
 }
@@ -6589,7 +6640,11 @@ function endpointsCollide(layer, r){
 function applyEndpointSize(layer){
   if (!layer || !layer.startMarker) return;
   const r = rideMode ? RIDE_ENDPOINT_RADIUS : ENDPOINT_RADIUS;
-  const w = rideMode ? RIDE_ENDPOINT_WEIGHT : ENDPOINT_WEIGHT;
+  // Die Strichstaerke gehoert dieser Funktion -- sie setzt sie bei JEDEM Anzeigen neu, also muss der goldene
+  // Ring eines Highlights hier entstehen und nicht in applyCrownRing, sonst ueberschreibt der naechste Aufruf
+  // ihn wieder auf 1,5 (gemessen: Farbe kam an, Breite nicht).
+  const crowned = !rideMode && !!layer.crowned;
+  const w = rideMode ? RIDE_ENDPOINT_WEIGHT : (crowned ? CROWN_RING_WEIGHT : ENDPOINT_WEIGHT);
   const merged = endpointsCollide(layer, r);
   layer.endMarker.setStyle({ radius: r, weight: w });
   layer.startMarker.setStyle({
@@ -6686,6 +6741,9 @@ const SLIDER_TEXT_INSET = 6;
 const HIGHLIGHT_STEP = 0.05;      // 0.01 is finer than a thumb, and the range is only ~1.8 wide
 let showHighlightsOnly = false;
 let highlightMin = 0;             // the live threshold; 0 until a region with ratings is loaded
+//: Die zuletzt AUSGESPIELTE Schwelle -- Labels und Endpunkt-Ringe haengen an ihr und werden nachgezogen,
+//: sobald sie sich aendert (siehe syncHighlightSlider).
+let lastAppliedHighlightMin = null;
 let highlightRange = null;        // {min, max, def} over the displayed regions, or null when there is none
 function recomputeHighlightRange(){
   const rated = lineTrails
@@ -7052,6 +7110,7 @@ function buildTrailLayer(t){
   endMarker.on("mouseout", () => setHover(false));
 
   lineLayers[t.id] = { line, styleTarget, hitLine, segmentHitLines, segmentNameLabels, liftSegments: liftSegmentLayers, segmentCasings, casing, casingKind, startDot, startMarker, endMarker, directionArrowLayer, bounds, setHover, midIdx, coords, card:null };
+  applyCrownRing(lineLayers[t.id], t);   // gleich beim Bauen, nicht erst beim naechsten Reglerzug
 }
 
 // Undoes buildTrailLayer: removes every layer this trail owns from the map and forgets it.
@@ -8011,7 +8070,8 @@ function makeTrailCard(t, regionKey){
   // No 🔁 badge any more: a Tour is only ever listed in the Touren section, so the badge would be on every
   // card there and on none anywhere else. It stays in the info panel, where a Tour and a trail do meet.
   card.innerHTML = `
-    <div class="trail-name"><span class="badge ${t.diff}"></span>${t.name}${categoryBadge(t)}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
+    <span class="badge ${t.diff} card-diff-bar" title="${DIFF_LABEL[t.diff]}">${isHighlight(t) ? CROWN_HTML : ""}</span>
+    <div class="trail-name">${t.name}${categoryBadge(t)}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
     <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span>${ratingMetaHtml(t)}</div>`;
   card.addEventListener("click", (e) => {
     const soloBtn = e.target.closest(".card-solo-btn");
@@ -8548,7 +8608,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v207"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v208"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

@@ -127,7 +127,19 @@ current; a stale count is worse than none, because it looks like evidence.
 | `rating` | put the slider back in its own row (`#highlightsRow` without `display:flex`, the slider block-level under it) | "switch, slider and count share one line" fails on tops 34px apart and "so the row stays one line tall" on **got 48, want < 34**. Checked by geometry rather than by reading the CSS, and measured at 375px too, because the drawer is where the three parts (119 + 105 + 89 of 331px) actually compete |
 | `rating` | remove the slider's `dblclick` listener | "a double-click puts the default back" fails **got 4.69, want 4.49** -- nothing else in the app listens for a double-click on that control, so the value simply stays where the last drag left it. Verified live as well as by mutation: 4,69 ★ · 3 Trails went back to 4,49 ★ · 18 Trails, and the dimming with it |
 | `rating` | let `highlightCount()` ask `activeRegions.has(t.region)` again instead of `trailPassesFilters(t)` | "switching difficulties off lowers the count" fails -- the number stays put while the list empties. Measured in the app: with only schwarz on, the label said 48 while 13 were visible. The companion check ("the scale does not move") is what stops the opposite over-correction, where the range follows the filters too and the slider jumps under the finger |
-| `rating` | move `recomputeHighlightCuts()` back to after `data.lineTrails.forEach(buildTrailLayer)` | "a highlight carries a ★ in its own map label" fails with **0 stars, want > 5**. This was a real half-working state found while building: a trail's permanent label is bound ONCE at build time, so with the cut-offs computed afterwards the dimming worked and the stars silently did not. Nothing else in the suite notices — the dimming case passes either way |
+| `rating` | move `recomputeHighlightCuts()` back to after `data.lineTrails.forEach(buildTrailLayer)` | "a highlight carries the CROWN in its map label" fails with **0 crowns, want > 5** (bis zum 2026-08-24 war es ein ★ an derselben Stelle). This was a real half-working state found while building: a trail's permanent label is bound ONCE at build time, so with the cut-offs computed afterwards the dimming worked and the stars silently did not. Nothing else in the suite notices — the dimming case passes either way |
+| `rating` | replace the `.tm-crown` in `trailLabelHtml()` with the old `★` | "the old ★ is gone from the labels" fails **got 28, want 0** and "some labels carry a crown" with it. Cheap, but it is the check that keeps the metaphor in ONE place: the crown sits on the difficulty bar in the card, in the panel heading and in the label, and a half-migrated state reads as two different marks meaning the same thing |
+| `rating` | drop the `.card-diff-bar .tm-crown` from `makeTrailCard` | "cards carry it on their difficulty bar" fails **got 0, want > 3**, and "map and list crown the same trails" with it |
+
+**Nicht mutationsgeprüft, und zwar aus einem nennbaren Grund:** „map and list crown the same trails" ist die
+Eigenschaft, die der Rastungs-Fehler vom 2026-08-24 verletzt hat (Kartenlabel und goldene Ringe mit der
+*ungerasteten* Schwelle gebaut, Kacheln mit der gerasteten). Die Nachführung (`lastAppliedHighlightMin`)
+auszuhängen ändert in der Finale-Vorlage **nichts** — dort liegt die gerechnete Vorgabe 4,44 zufällig genau
+auf dem 0,05-Raster, gemessen: 28 gekrönte Labels gegen 28 gekrönte Kacheln, mit und ohne Fix. Beobachtet
+wurde der Fehler live in Bike Kingdom („Fürhörnli", 4,32 gegen die gerastete Schwelle 4,33: goldene Ringe an
+den Endpunkten, keine Krone auf der Kachel). Die Zusicherung steht trotzdem, weil sie in jeder Region greift,
+in der er auftreten *kann*; als Beweis zählt sie hier nicht.
+
 
 ## Not yet mutation-checked
 

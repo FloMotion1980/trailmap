@@ -574,7 +574,10 @@ html.landscape-compact .search-overlay-summary{
 .hub-group{ }
 .hub-title{ padding: 10px 0 4px; font-family: Arial, sans-serif; font-size: 11px; text-transform: uppercase;
   letter-spacing: .6px; color: var(--rust); font-weight: 700; cursor:pointer; }
-.trail-card{ position: relative; margin: 4px 0 8px; padding: 8px 10px; border-radius: 6px; border: 1px solid #e3e6da;
+/* padding-left 10 -> 14: links liegt jetzt der Schwierigkeitsbalken ueber die volle Kachelhoehe (2026-08-24,
+   Nutzer: "Machen wir doch einfach auch einen Strich ueber die Hoehe der Kachel. Das passt gut zur Infobox").
+   Er ersetzt den runden Punkt, der bis dahin vor dem Namen stand. */
+.trail-card{ position: relative; margin: 4px 0 8px; padding: 8px 10px 8px 14px; border-radius: 6px; border: 1px solid #e3e6da;
   cursor: pointer; transition: background .12s ease, border-color .12s ease;
   background: var(--card-tint, transparent); }
 .trail-card:hover, .trail-card.hovered{ background: #fbf1de; border-color: var(--highlight); }
@@ -594,6 +597,15 @@ html.landscape-compact .search-overlay-summary{
    own wrapping never changes either; it has 121.9px of slack on its tightest card, measured. */
 .trail-meta{ font-family: Arial, sans-serif; font-size: 11.5px; color: #4c574d; display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding-right: 26px; }
 .badge{ display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:4px; vertical-align:middle; }
+/* Derselbe Balken wie im Info-Panel, nur ueber die ganze Kachel. Er behaelt die .badge-Klassen (und damit
+   seine Farbe und sein title), wird hier aber vom Punkt zum Strich. */
+.trail-card .badge.card-diff-bar{ position:absolute; left:0; top:0; bottom:0; width:4px; height:auto;
+  border-radius:6px 0 0 6px; margin:0; }
+/* Die Krone sitzt AUF dem Strich (Nutzerentscheidung). In der Kachel bleibt sie innerhalb der Kante --
+   ueber den Rand hinaus wuerde sie die Kachel darueber ueberdecken. */
+.tm-crown{ position:absolute; left:50%; transform:translateX(-50%); font-size:11px; line-height:1;
+  pointer-events:none; }
+.trail-card .card-diff-bar .tm-crown{ top:2px; }
 .badge.gruen{ background:var(--gruen); }
 .badge.blau{ background:var(--blau); }
 .badge.rot{ background:var(--rot); }
@@ -671,8 +683,12 @@ html.landscape-compact .search-overlay-summary{
 /* align-self:stretch statt fester Hoehe: bei einem zweizeiligen Namen blieb der Balken sonst 19px hoch,
    waehrend die Zeile darunter weiterlief (Nutzer, 2026-08-24). min-height haelt ihn bei einem sehr kurzen
    Namen trotzdem sichtbar. */
-#infoPanel h3 .badge.ip-diff-bar{ width:4px; height:auto; align-self:stretch; min-height:19px;
-  border-radius:2px; margin-right:0; flex:none; }
+#infoPanel h3 .badge.ip-diff-bar{ position:relative; width:4px; height:auto; align-self:stretch;
+  min-height:19px; border-radius:2px; margin-right:0; flex:none; }
+/* Im Panel darf die Krone ueber die Zeile hinausragen -- dafuer bekommt NUR eine gekroente Ueberschrift die
+   noetige Kopfhoehe, damit sich bei allen anderen Trails nichts verschiebt. */
+#infoPanel h3 .ip-diff-bar .tm-crown{ top:-12px; font-size:12px; }
+#infoPanel h3.has-crown{ margin-top:9px; }
 /* The whole action group, and the reason it is inline-flex rather than flex: an inline-flex box is an atomic
    inline, so inline layout itself decides where it goes -- behind the name when the name's last line leaves
    room, on its own line under it when it does not (user, 2026-08-02: "alle Buttons in gleicher Größe als Extra
@@ -1813,12 +1829,17 @@ header{ position:relative; z-index:1; }
   -webkit-appearance: none; appearance: none; }
 #highlightSlider::-webkit-slider-runnable-track { height: 18px; border-radius: 9px; background: #e7ece4;
   border: 1px solid #d3d8cd; }
-#highlightSlider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: 1px;
-  border-radius: 50%; background: var(--forest); box-shadow: 0 1px 3px rgba(0,0,0,0.35); cursor: pointer; }
+/* Der Griff traegt die Krone, weil er die Grenze IST (Nutzer, 2026-08-24: "Vielleicht der Knopf selbst den
+   man bewegt. Denn der ist doch die Grenze fuer Highlight, oder?"). Als Hintergrundbild statt als Text, weil
+   ein Pseudo-Element am Slider-Thumb nicht geht -- dieselbe Silhouette, in --highlight. */
+#highlightSlider::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -1px;
+  border-radius: 50%; background: var(--highlight) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 8l4 4 5-7 5 7 4-4v10H3z' fill='%23fff'/></svg>") center/12px 12px no-repeat;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.35); cursor: pointer; }
 #highlightSlider::-moz-range-track { height: 18px; border-radius: 9px; background: #e7ece4;
   border: 1px solid #d3d8cd; }
-#highlightSlider::-moz-range-thumb { width: 14px; height: 14px; border: none; border-radius: 50%;
-  background: var(--forest); box-shadow: 0 1px 3px rgba(0,0,0,0.35); cursor: pointer; }
+#highlightSlider::-moz-range-thumb { width: 18px; height: 18px; border: none; border-radius: 50%;
+  background: var(--highlight) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M3 8l4 4 5-7 5 7 4-4v10H3z' fill='%23fff'/></svg>") center/12px 12px no-repeat;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.35); cursor: pointer; }
 /* Aus heisst aus: ein Regler, der bedienbar aussieht, aber nichts bewirkt, ist schlimmer als ein grauer. */
 #highlightSlider:disabled { opacity: .45; cursor: not-allowed; }
 #highlightSlider:disabled::-webkit-slider-thumb { background: #8a958b; cursor: not-allowed; }
@@ -1843,7 +1864,9 @@ header{ position:relative; z-index:1; }
    Kachel, die ihre Groesse aendert, ist genau das, was die `lists`-Suite an anderer Stelle verbietet
    ("selecting a card does not resize it"). 12px ist die natuerliche Hoehe der Zeile ohne Emoji. */
 .trail-meta-rating { white-space: nowrap; line-height: 12px; }
-.tl-star { color: #e0a300; margin-right: 2px; font-size: 11px; }
+/* Das Kartenlabel trug bis 2026-08-24 ein ★; die Krone ersetzt es, damit ein Highlight ueberall dasselbe
+   Zeichen hat. Hier ist sie normaler Textfluss, keine Ueberlagerung -- deshalb position:static. */
+.leaflet-tooltip .tm-crown{ position:static; transform:none; margin-right:3px; font-size:11px; }
 /* Die Bewertungszeile im Info-Panel. Die Stimmenzahl ist absichtlich kleiner und grauer als der Wert:
    sie qualifiziert ihn, sie konkurriert nicht mit ihm. */
 .ip-rating { font-size: 12px; color: #2f4a3a; white-space: nowrap; }

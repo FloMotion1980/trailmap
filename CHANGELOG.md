@@ -21,6 +21,29 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-24 (Die Krone)
+- **Aus dem Wort „Highlight" wurde eine Krone** — der Nutzer wollte statt eines ausgeschriebenen Etiketts an
+  einer Stelle eine Metapher an allen Stellen zugleich, und die Krone gewann gegen Flamme, Diamant und
+  Lorbeer, weil sie nichts bedeutet, was die App schon sagt (die Flamme ist die Beliebtheit, der Stern die
+  Bewertung). Sie sitzt jetzt **auf dem Schwierigkeitsbalken** — in der Kachel wie im Info-Panel, denn dort
+  ist der Balken seit der Info-Box 2.0 ohnehin das linke, senkrechte Element. Die Kachel bekam dafür
+  denselben Balken über die volle Kachelhöhe wie das Panel (`padding-left:14px`, 4px breit, 50 von 52px),
+  und der farbige Punkt im Namen ist weg: zwei Anzeigen derselben Sache, von denen eine mitwuchs.
+- **Auf der Karte, an den Endpunkten und am Regler dieselbe Krone.** Das Label trägt sie statt des ★; Start-,
+  Ziel- und der weiße Startpunkt eines Highlights bekommen einen **goldenen Ring** (`#e0a326`, 2,5px statt
+  1,5px) statt einer zweiten Krone, weil ein Emoji auf einem 5px-Punkt nicht lesbar wäre; und der
+  **Schieberegler-Knopf ist selbst eine Krone** (Inline-SVG auf `var(--highlight)`) — er IST die Grenze,
+  ab der etwas eines ist. **Im RIDE-Modus nichts davon**: dort zählt die Linie, nicht die Auszeichnung.
+- **Ein echter Fehler dabei gefunden und behoben**: die Schwelle rastet auf das 0,05-Raster des Reglers ein,
+  die Karten-Ebenen und Labels wurden aber mit dem *ungerasteten* Wert gebaut — ein Trail mit 4,32 bei einer
+  gerasteten Schwelle von 4,33 trug goldene Ringe, während seine Kachel keine Krone hatte (live an
+  „Fürhörnli" gesehen). `lastAppliedHighlightMin` vergleicht jetzt den tatsächlich angewandten Wert und
+  zieht Labels und Ringe nach. Die neue Prüfung in `tests/browser/rating.js` vergleicht Kachelwert gegen
+  Reglerwert für jede Kachel, statt nur zu zählen.
+- **Höhenprofil rückwärts**: die farbige Markierung eines Tourenabschnitts blieb beim Umdrehen stehen, während
+  sich das Profil spiegelte. Sie wird jetzt mitgespiegelt (`totalForFlip - distEnd`), und der Hover-Cache
+  bekam die Richtung in seinen Schlüssel — sonst antwortete er nach dem Umdrehen mit den alten Distanzen.
+
 ## 2026-08-24 (Info-Box 2.0)
 - **Der Info-Panel ist umgebaut**, nach vier Beobachtungen des Nutzers und drei Entwürfen (Variante A):
   der **Trailname ist 17px in gemischter Schreibweise** statt 14px Versalien — er war das unauffälligste

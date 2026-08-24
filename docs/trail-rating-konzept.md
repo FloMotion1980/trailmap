@@ -320,7 +320,7 @@ Und ein Fehler, der beim Bauen auffiel und nichts mit dem Rating zu tun hatte: *
 ⬆️ für Uphill-Trails.** Karte und Info-Panel trugen es immer, das Label nicht — dieselbe Lücke, die 2026-07-28
 schon der Schwierigkeitspunkt geschlossen hat.
 
-Suite: `tests/browser/rating.js`, **12 Fälle / 57 Checks**, vier geprüfte Mutationen.
+Suite: `tests/browser/rating.js`, **14 Fälle / 65 Checks**, sechs geprüfte Mutationen (Stand 2026-08-24, nach der Krone).
 
 6. **Die Mindest-Stimmenzahl ist weg** (2026-08-24, Anweisung des Nutzers). Abschnitt 3.1 hatte sie als Netz
    gegen „zwei begeisterte Stimmen, 4,9 Sterne" gefordert — einen Fall, den `rate` gar nicht erzeugen kann,
@@ -332,6 +332,42 @@ Suite: `tests/browser/rating.js`, **12 Fälle / 57 Checks**, vier geprüfte Muta
    **Und zur Vorgabe selbst, weil die Frage kam:** es ist das beste **Fünftel**, nicht 10 % — die
    Bewertungen absteigend sortiert, Schwellenwert ist die des letzten Trails im obersten Fünftel. Ein festes
    Sternmaß wäre in jeder Region etwas anderes; ein Anteil ist überall gleich streng.
+
+## Die Krone (2026-08-24)
+
+Das Wort „Highlight" stand am Ende an genau einer Stelle in der Oberfläche — als goldenes Etikett im
+Info-Panel — und hat dort auf dem Handy zu viel Platz gekostet. Der Nutzer hat daraus nicht „weg damit"
+gemacht, sondern die bessere Frage gestellt: *„Wenn wir für Highlights eine Metapher einführen würden,
+könnten wir es vielleicht anders handhaben."* Eine Metapher an allen Stellen kostet weniger Platz als ein
+Wort an einer.
+
+**Warum die Krone und nicht Flamme, Diamant oder Lorbeer:** Flamme und Stern sind hier schon vergeben
+(Beliebtheit und Bewertung), und ein zweites Feuer hätte genau die Verwechslung erzeugt, die das Trennen
+der beiden Achsen vermeiden soll. Der Lorbeer liest sich wie eine Auszeichnung durch jemanden, der Diamant
+wie Seltenheit — die Krone sagt „das Beste hier", was die Schwelle tatsächlich behauptet.
+
+**Sie sitzt auf dem Schwierigkeitsbalken**, nicht vor dem Namen (Entscheidung des Nutzers, nachdem beides
+vorlag). Der Balken ist seit der Info-Box 2.0 ohnehin das senkrechte Element links, und die Kachel hat
+denselben Balken über die volle Kachelhöhe bekommen, damit Liste und Panel dieselbe Form zeigen — der
+farbige Punkt im Namen ist dafür entfallen, zwei Anzeigen derselben Sache waren eine zu viel.
+
+| Ort | Form |
+|---|---|
+| Kachel | Krone auf dem Schwierigkeitsbalken (4px, volle Kachelhöhe) |
+| Info-Panel | dieselbe Krone auf demselben Balken in der Überschrift |
+| Kartenlabel | Krone statt des ★ vor dem Namen |
+| Start-/Ziel-/weißer Startpunkt | **goldener Ring** (`#e0a326`, 2,5px statt 1,5px) statt einer Krone — ein Emoji auf einem 5px-Punkt wäre nicht lesbar |
+| Highlights-Regler | der Griff **ist** eine Krone (Inline-SVG), denn er ist die Grenze, ab der etwas eines ist |
+| RIDE-Modus | nichts davon — dort zählt die Linie, nicht die Auszeichnung |
+
+**Ein echter Fehler kam dabei heraus, und er ist der Grund, warum die Ringe zu einer Prüfung geführt haben:**
+die Schwelle rastet auf das 0,05-Raster des Reglers ein (`input.value` gelesen, nachdem es gesetzt wurde),
+Kartenlabel und Ringe waren zu diesem Zeitpunkt aber schon mit dem *ungerasteten* Wert gebaut. In Bike
+Kingdom trug „Fürhörnli" mit 4,32 goldene Ringe, während seine Kachel bei gerasteter Schwelle 4,33 korrekt
+keine Krone hatte. `lastAppliedHighlightMin` vergleicht jetzt den tatsächlich angewandten Wert und zieht
+Labels und Ringe nach. Die Zusicherung dazu („Karte und Liste krönen dieselben Trails") steht in der Suite,
+ist dort aber **nicht** mutationsgeprüft — in Finale liegt die gerechnete Vorgabe zufällig auf dem Raster,
+der Fehler kann in dieser Vorlage also gar nicht auftreten; siehe `tests/MUTATIONS.md`.
 
 ## Wie die Bewertungen in die übrigen Regionen kamen (2026-08-24)
 

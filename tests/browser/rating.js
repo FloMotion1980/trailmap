@@ -1,7 +1,7 @@
 // @suite   rating
-// @area    Trail rating and popularity: the two sort axes, the Highlights switch, the ★, the panel row
+// @area    Trail rating and popularity: the two sort axes, the Highlights slider, the crown, the panel row
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches ratingOf, popOf, ratingRowHtml, isHighlight, highlightCut, recomputeHighlightCuts, groupOfSubRegion, syncRatingChrome, showHighlightsOnly, applyHighlightDimming, baselineLineOpacity, clearSolo, HIGHLIGHT_QUANTILE, HIGHLIGHT_MIN_VOTES, RATING_DENSITY_MIN, REGION_RATING_META, rating-chip, rating-chrome, rating-available, tl-star, ip-rating, rating-unrated-title, trailLabelHtml, appendTrailGroup, TRAIL_SORT_COMPARE
+// @touches ratingOf, popOf, ratingRowHtml, isHighlight, highlightCut, recomputeHighlightCuts, groupOfSubRegion, syncRatingChrome, showHighlightsOnly, applyHighlightDimming, baselineLineOpacity, clearSolo, HIGHLIGHT_QUANTILE, HIGHLIGHT_MIN_VOTES, RATING_DENSITY_MIN, REGION_RATING_META, rating-chip, rating-chrome, rating-available, tm-crown, card-diff-bar, applyCrownRing, syncCrownRings, ip-rating, rating-unrated-title, trailLabelHtml, appendTrailGroup, TRAIL_SORT_COMPARE
 // @needs   region=finale, builder=off
 //
 // **Needs FINALE, not Bike Kingdom like most suites.** Finale is the only region carrying ratings so far,
@@ -246,18 +246,42 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   await TM.wait(400);
   T.eq("finally nothing is dimmed", TM.map.dimmedTrails(), 0);
 
-  T.test("a highlight carries a ★ in its own map label, an ordinary trail does not");
-  // The label is bound ONCE at build time, so this also pins the ordering bug it exposed: with the cut-offs
-  // computed after buildTrailLayer, every label came out starless while the dimming worked.
+  T.test("a highlight carries the CROWN in its map label, its card and its panel");
+  // Aus dem ★ wurde am 2026-08-24 eine Krone -- der Nutzer wollte statt des ausgeschriebenen Worts
+  // "Highlight" eine Metapher, und sie gilt jetzt an allen Orten zugleich. Das Label ist weiterhin der
+  // strengste Fall, weil es EINMAL beim Bauen gebunden wird: mit den Schwellen nach buildTrailLayer
+  // gerechnet kamen alle Labels ungekroent heraus, waehrend das Dimmen laengst funktionierte.
   await TM.ui.setSwitch("showNamesToggle", true);
   await TM.until(() => TM.map.trailLabels().length > 50, 4000);
-  const starred = TM.$$(".trail-label-tooltip .tl-star");
-  T.ok("some labels carry a star", starred.length > 5, starred.length, "> 5");
-  T.ok("but far from all of them", starred.length < TM.map.trailLabels().length / 3,
-       starred.length + " of " + TM.map.trailLabels().length, "a small share");
-  const starNames = starred.map((s) => s.parentElement.textContent.replace("★", "").trim());
-  T.ok("and the region's best-rated trail is among them", starNames.includes("Madonna della Guardia"),
-       starNames.slice(0, 5), "includes Madonna della Guardia");
+  const crowned = TM.$$(".trail-label-tooltip .tm-crown");
+  T.ok("some labels carry a crown", crowned.length > 5, crowned.length, "> 5");
+  T.ok("but far from all of them", crowned.length < TM.map.trailLabels().length / 3,
+       crowned.length + " of " + TM.map.trailLabels().length, "a small share");
+  const crownNames = crowned.map((s) => s.parentElement.textContent.replace("👑", "").trim());
+  T.ok("and the region's best-rated trail is among them", crownNames.includes("Madonna della Guardia"),
+       crownNames.slice(0, 5), "includes Madonna della Guardia");
+  T.eq("the old ★ is gone from the labels", TM.$$(".trail-label-tooltip .tl-star").length, 0);
+  // Dieselbe Krone in der Liste, auf dem Schwierigkeitsbalken der Kachel -- und nur dort, wo sie hingehoert:
+  // die Schwelle rastet auf das 0,05-Raster des Reglers ein, und genau daran hing ein Fehler, siehe unten.
+  const cardCrowns = TM.ui.trailCards().filter((c) => c.querySelector(".card-diff-bar .tm-crown"));
+  T.ok("cards carry it on their difficulty bar", cardCrowns.length > 3, cardCrowns.length, "> 3");
+  const thr = parseFloat(TM.$("#highlightSlider").value);
+  const value = (c) => { const m = /⭐\s*([\d,]+)/.exec(c.textContent); return m ? +m[1].replace(",", ".") : null; };
+  const wrongCrown = TM.ui.trailCards().filter((c) => {
+    const v = value(c), has = !!c.querySelector(".tm-crown");
+    return v != null && has !== (v >= thr - 0.001);
+  });
+  T.eq("and exactly the trails at or above the threshold have it", wrongCrown.length, 0);
+  // Karte und Liste muessen DIESELBEN Trails kroenen. Genau das war der Fehler vom 2026-08-24: die Schwelle
+  // rastet auf das 0,05-Raster des Reglers ein, Label und Ringe waren aber mit dem ungerasteten Wert gebaut
+  // (Bike Kingdom, "Fuerhoernli" 4,32 gegen die gerastete Schwelle 4,33 -- goldene Ringe ohne Krone auf der
+  // Kachel). In DIESER Region kann er nicht auftreten, weil die Vorgabe hier zufaellig auf dem Raster liegt;
+  // die Zusicherung steht trotzdem hier, weil sie die verletzte Eigenschaft benennt. Siehe MUTATIONS.md.
+  const clean = (s) => s.replace(/[👑⬆️🔁👁]/g, "").trim();
+  const cardCrownNames = cardCrowns.map((c) => clean(c.querySelector(".trail-name").textContent)).sort();
+  const labelCrownNames = crownNames.slice().sort();
+  T.eq("map and list crown the same trails",
+       labelCrownNames.filter((n) => !cardCrownNames.includes(n)).length, 0);
   // The ⬆️ belongs in the map label too, and did not use to be there (user, 2026-08-24) -- the card and the
   // info panel heading always had it, so an uphill trail's LABEL was the one place that read like a descent.
   // The uphill trail is found through the DOM, not through `lineTrails` -- that is a const inside the app's
@@ -315,7 +339,11 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   // The harvest date is deliberately absent from the UI (user, 2026-08-23) while staying in the region
   // file's own `ratings` block. Pinned as an ABSENCE, since that is the whole instruction.
   T.ok("and no harvest date in the panel", !/Stand|\d{4}-\d{2}-\d{2}/.test(txt), txt, "no date");
-  T.ok("a top-rated trail is marked as a highlight", /Highlight/.test(txt), txt, "Highlight badge");
+  // Das Highlight steht seit dem 2026-08-24 NICHT mehr als Wort in dieser Zeile, sondern als Krone auf dem
+  // Schwierigkeitsbalken der Ueberschrift -- eine Metapher an allen Orten statt eines Worts an einem.
+  T.ok("no 'Highlight' wording left in the row", !/Highlight/.test(txt), txt, "kein Wort");
+  T.ok("the crown sits on the heading's difficulty bar instead",
+       !!TM.$("#ipContent h3 .ip-diff-bar .tm-crown"), !!TM.$("#ipContent h3 .tm-crown"), true);
 
   T.test("an unrated trail says so, and is never shown as a zero");
   chip("sort", "rate").click();
@@ -329,7 +357,7 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   T.ok("its panel carries the row", !!noneRow, !!noneRow, true);
   const noneTxt = (noneRow || {}).textContent || "";
   T.ok("and it reads 'noch nicht bewertet'", /noch nicht bewertet/.test(noneTxt), noneTxt, "noch nicht bewertet");
-  T.ok("with no 0 and no stray star", !/0,00|★/.test(noneTxt), noneTxt, "no zero, no star");
+  T.ok("with no 0 and no stray mark", !/0,00|★|👑/.test(noneTxt), noneTxt, "no zero, no mark");
 
   T.test("a card shows BOTH numbers whenever it has them, on one line, without resizing");
   // Both, always, independent of the sort axis (the user's call). Two things are pinned here because both
