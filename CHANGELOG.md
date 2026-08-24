@@ -21,6 +21,18 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-24 (zuletzt)
+- **Finale Fall für Fall durchgegangen**: 19 Zuordnungen entschieden, 0 offene Fälle, 134 → 142 bewertete
+  Trails (65 %), 154 IDs. Damit hat **keine Region mehr einen Prüfstapel**; gesamt 1 777 bewertete Trails.
+- Der lehrreichste Fall ist eine ABLEHNUNG: `Rose di Pietra` gegen `cuore-di-cervo` hat Längenverhältnis
+  0,96 und 169 m Endpunktabstand — sieht aus wie 1:1 — aber nur 0,53 Deckung. Genau das Muster zweier
+  PARALLELER Trails, vor dem `match_trailforks.py` seit Base Nato / Madre Natura warnt. Länge und Nähe
+  ersetzen die Deckung nicht.
+- Zwei Fälle, die nur ein Mensch entscheiden konnte: unser `Cava-Green Carpet` ist Trailforks'
+  „Cava - Tappeto Verde" (wörtliche Übersetzung, Deckung 1,00, aber unbewertet — ID gemerkt), und
+  `Rollercoaster-San Pantaleo` bekommt die 4,52 aus **271 Stimmen** des Rollercoaster, obwohl der nur ein
+  Fünftel unseres kombinierten Eintrags ausmacht.
+
 ## 2026-08-24 (Nacht darauf)
 - **Harz Fall für Fall durchgegangen**: 18 Zuordnungen entschieden, 0 offene Fälle, **21 → 36 bewertete
   Trails (86 %)** und für **alle 42** eine gespeicherte ID. Der Harz ist der reine Bikepark-Fall: Trailforks

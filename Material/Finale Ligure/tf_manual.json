@@ -1,0 +1,81 @@
+{
+ "feglino_oribago": {
+  "slug": "oribago",
+  "why": "Nutzerentscheidung 2026-08-24: jeweils der gleichnamige. 'Oribago #393' (4,28 aus 38) gehoert zu unserem Oribago; der Abgleich wollte fuer beide unsere Trails die Nummer 2 nehmen, weil die Linien dicht beieinander liegen."
+ },
+ "feglino_oribago_2": {
+  "slug": "oribago-2",
+  "why": "Nutzerentscheidung 2026-08-24: 'Oribago 2 #394' (3,70 aus 14), Name und Katalognummer passen eins zu eins."
+ },
+ "manie_radici": {
+  "slug": "sentiero-indiano-29108",
+  "why": "Nutzerentscheidung 2026-08-24: 'sie IST die Linie'. Laengenverhaeltnis 1,00, Endpunkte 4 m auseinander, Deckung 0,98 -- dieselbe Linie unter anderem Namen (3,46 aus 14)."
+ },
+ "sb_sporting": {
+  "slug": "sporting",
+  "why": "Nutzerentscheidung 2026-08-24: Name und Katalognummer (#58) schlagen die Geometrie. 3,90 aus 7; 'Calvisio' (3,24 aus 11) deckt zwar 1,00, ist aber ein eigener Trail, den unsere Linie mitbenutzt."
+ },
+ "spotorno_monte_sant_elena_decolli": {
+  "slug": "monte-sant-elena-decolli",
+  "why": "Nutzerentscheidung 2026-08-24. Identischer Name, Deckung 1,00, ihre Linie ist gut die Haelfte unserer -- der bekannte Abschnitts-Fall. 3,98 aus 3."
+ },
+ "verezzi_bondi": {
+  "slug": "bondi-traverse",
+  "why": "Nutzerentscheidung 2026-08-24. Gleicher Trailname (#211), Deckung 0,95, 3,48 aus 75 Stimmen -- eine der belastbarsten Aussagen im Finale-Stapel. Unser Bondi ist der laengere Weg."
+ },
+ "melogno_din": {
+  "slug": "via-caffaro",
+  "why": "Nutzerentscheidung 2026-08-24: 'sie IST die Linie'. Laengenverhaeltnis 0,93, Endpunkte 213 m, Deckung 0,87, 4,03 aus 28 -- trotz voellig anderem Namen."
+ },
+ "vm_rose_di_pietra": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'Cuore di Cervo' hat zwar gleiche Laenge (0,96) und 169 m Endpunktabstand, aber nur 0,53 Deckung -- das Muster zweier PARALLELER Trails, vor dem der Abgleich ausdruecklich warnt (Base Nato / Madre Natura)."
+ },
+ "melogno_rollercoaster_san_pantaleo": {
+  "slug": "roller-coaster-54111",
+  "why": "Nutzerentscheidung 2026-08-24. 4,52 aus 271 Stimmen, der bestbelegte Wert in Finale; er beschreibt den namensgebenden Teil unseres kombinierten Eintrags (Laengenverhaeltnis 0,19)."
+ },
+ "mallare_trail_del_boccion": {
+  "slugs": [
+   "boccion-parte-1",
+   "trail-del-boccion-parte-2"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide Teile gewichtet (3,97 aus 36 fuer parte-2). Gleicher Name, in zwei Teile zerlegt -- die halbe Deckung je Teil erklaert sich damit, dass jedes nur die Haelfte unseres Wegs ist."
+ },
+ "spotorno_cava_green_carpet": {
+  "slug": "cava-tappeto-verde",
+  "why": "Nutzerentscheidung 2026-08-24: nur die ID merken. 'Tappeto Verde' ist woertlich 'Green Carpet' und die Deckung ist 1,00, aber die Zeile ist unbewertet."
+ },
+ "vm_link": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. Unser Eintrag ist selbst eine Verbindung; 'baltera-dh-new' (3,98/8) deckt 0,71 bei Laengenverhaeltnis 0,56 und der Name bestaetigt nichts. Wie bei den Zufahrten."
+ },
+ "feglino_l_estremo": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'otzi' hat Laengenverhaeltnis 0,15."
+ },
+ "feglino_strada_della_cava": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'otzi' deckt nur 0,48."
+ },
+ "manie_24h": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. Acht fremd benannte Rennabschnitte liegen auf unserer Linie (toboga, tratto ganzo, sprint radici, prologo donne, ...) -- ein Mittel darueber beschreibt den Rundkurs, nicht unseren Trail."
+ },
+ "melogno_bric_merizzo": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'isallo-extasy' (4,51/76) hat Endpunkte 2,2 km auseinander und Laengenverhaeltnis 0,18."
+ },
+ "sentiero_delle_neviere": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'pianmarino' ist unbewertet, Laengenverhaeltnis 0,18."
+ },
+ "vm_ranzi_uphill": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. Zufahrt; 'madonnina' ist unbewertet und deckt 0,43."
+ },
+ "vm_roll_up": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'martina' (4,13/33) deckt nur 0,47 bei Laengenverhaeltnis 0,21."
+ }
+}
