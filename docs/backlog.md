@@ -99,49 +99,61 @@ Pfälzerwald 805, and a difficulty colour alone does not tell a visitor which tw
 
 Concept: **`docs/trail-rating-konzept.md`**. Read it before building.
 
-**Stufe 1 ist gebaut (2026-08-23), Testregion Finale** — zwei Sortierachsen, der "Nur Highlights"-Schalter,
-das ★ im Kartenlabel, die Info-Panel-Zeile und ein Datendichte-Gate, das die ganze UI ausblendet, wo die
-Region die Daten nicht hat. 131 der 219 Finale-Trails tragen eine Bewertung. Suite: `tests/browser/rating.js`
-(8 Fälle / 32 Checks, drei Mutationen geprüft).
+**Stufe 1 ist gebaut und in 24 Regionen ausgerollt (2026-08-23/24).** Zwei Sortierachsen, der
+Highlights-Regler, das ★ im Kartenlabel, die Info-Panel-Zeile. **1 777 von 4 555 Trails tragen eine
+Bewertung, 3 800 eine gespeicherte Trailforks-ID** (auch die noch unbewerteten — die Zuordnung ist die teure
+Hälfte und verfällt nicht). Abdeckung je Region: `docs/trail-rating-abdeckung.md`, erzeugt von
+`tools/rating_report.py`. Verfahren und Regeln: `docs/trail-rating-konzept.md`. Suite:
+`tests/browser/rating.js` (13 Fälle / 67 Checks).
+
+Erledigt gegenüber der ursprünglichen Liste: das Datendichte-Gate ist auf Wunsch des Nutzers **entfernt**
+(es poolte die aktiven Regionen und ließ das Feature ausgerechnet für Finale verschwinden); der
+An-/Aus-Schalter wurde ein **Regler** über die echte Spanne der angezeigten Regionen; **alle vier
+Prüfstapel sind auf null** (101 Fälle einzeln mit dem Nutzer entschieden, Begründungen in
+`Material/<Region>/tf_manual.json`); die weiteren **Regionen sind ausgerollt**.
 
 **Offen, in der Reihenfolge, in der es der Nutzer priorisiert hat:**
 - **Die zwei Presets statt Zahlenschieber:** *"Muss man fahren"* (hoch bewertet UND viel gefahren — für den
   Erstbesucher) und *"Versteckte Perlen"* (hoch bewertet, wenig gefahren — für den, der die Region kennt).
   Der zweite Fall existiert nur, weil Bewertung und Beliebtheit zwei getrennte Zahlen sind; genau deshalb
-  dürfen sie nie zu einem Score verrechnet werden.
-- **Stern-Endpunkte auf der Karte**, Idee des Nutzers (2026-08-23) und von ihm gleich in die richtige Form
-  gebracht: bei Highlight-Trails den Start-/Endpunkt-Kreis **mit einem Sternmuster umranden** — den Kreis
-  also NICHT ersetzen. Das ist der Unterschied zwischen billig und riskant. Der erste Vorschlag (Layer-Typ
-  tauschen) hätte die am stärksten verdrahteten Objekte der Karte angefasst: `syncStartDot` (vier
-  Aufrufstellen), `showEndpoints`/`hideEndpoints`, `applyEndpointSize`, `endpointsCollide` (verschmilzt Start
-  und Ziel zu einem zweifarbigen Marker, sobald sie sich auf dem Schirm überlappen), `applyReversedEndpoints`
-  und die Solo-/Highlight-Deckkraft — `L.circleMarker` → divIcon-Marker bricht `setStyle`/`setRadius` an
-  jeder einzelnen davon. Als Umrandung fällt das komplett weg: der Kreis bleibt das tragende Objekt und
-  behält Farbe, Radius, Verschmelzung und Deckkraft, der Stern ist eine dekorative Schicht darüber, so wie
-  der RIDE-Fokus-Halo eine ist.
-  **Im RIDE-Modus ausdrücklich KEIN Stern** (auch seine Vorgabe) — dort vergrößert `applyEndpointSize` die
-  Marker ohnehin auf r=9 und der Fokus-Halo liegt schon um die Linie, ein Stern wäre nur Unruhe. Praktischer
-  Nebeneffekt: die Umrandung muss die RIDE-Größenänderung damit gar nicht mitmachen, was die letzte
-  Verzahnung mit bestehendem Code wegnimmt.
+  dürfen sie nie zu einem Score verrechnet werden. **Der Regler ersetzt das nicht** — er filtert auf einer
+  Achse, die Presets kombinieren zwei.
+- **Stern-Endpunkte auf der Karte**, Idee des Nutzers und von ihm gleich in die richtige Form gebracht: bei
+  Highlight-Trails den Start-/Endpunkt-Kreis **mit einem Sternmuster umranden** — den Kreis also NICHT
+  ersetzen. Das ist der Unterschied zwischen billig und riskant. Der erste Vorschlag (Layer-Typ tauschen)
+  hätte die am stärksten verdrahteten Objekte der Karte angefasst: `syncStartDot` (vier Aufrufstellen),
+  `showEndpoints`/`hideEndpoints`, `applyEndpointSize`, `endpointsCollide`, `applyReversedEndpoints` und die
+  Solo-/Highlight-Deckkraft — `L.circleMarker` → divIcon bricht `setStyle`/`setRadius` an jeder davon. Als
+  Umrandung fällt das weg: der Kreis bleibt das tragende Objekt, der Stern ist eine Schicht darüber, so wie
+  der RIDE-Fokus-Halo eine ist. **Im RIDE-Modus ausdrücklich KEIN Stern.**
   Offene Frage fürs Bauen: Zacken als echte Geometrie (`L.polygon`, in Bildschirm-Pixeln nachskaliert wie
-  die Richtungspfeile) oder als `dashArray` auf einem etwas größeren Kreis — Letzteres wäre eine Zeile und
-  rotiert korrekt mit, sieht aber eher nach Strichelung als nach Stern aus. Erst mit dem `visualize`-Werkzeug
-  ansehen, bevor Code entsteht.
+  die Richtungspfeile) oder als `dashArray` auf einem etwas größeren Kreis — Letzteres wäre eine Zeile,
+  sieht aber eher nach Strichelung als nach Stern aus. Erst mit `visualize` ansehen, bevor Code entsteht.
 - **"In der Nähe"** — bestbewertete Trails im Radius um die eigene Position, nur sichtbar mit Position.
-- **"Abfahrten von dieser Bergstation"** im Lift-Info-Panel, nach Bewertung sortiert. Trägt die
-  Liftregionen (Bike Kingdom, Paganella, Sölden), nicht Finale.
+- **"Abfahrten von dieser Bergstation"** im Lift-Info-Panel, nach Bewertung sortiert. Trägt jetzt Bike
+  Kingdom (71 bewertete Trails, 12 Lifte), Harz (36/6), Livigno (28/7), Sölden, Paganella — zum Zeitpunkt
+  der Idee gab es dafür noch keine Datenbasis, jetzt schon.
 - **Tourenbuilder-Kandidaten ranken** — `junctionCandidates` liefert die Anschlüsse schon, sie nach
   Bewertung zu ordnen ist ein Zweizeiler mit echtem Effekt.
 - **Touren erben die Bewertung ihrer Komponenten** (längengewichtet aus `trailSegments`), damit der
-  Touren-Abschnitt überhaupt sortierbar wird.
-- **Weitere Regionen**: Gardasee und Madeira sind aus Trailforks gebaut, dort joint die Bewertung gratis
-  über den Slug — nur der Feld-Harvest fehlt. Bei gemischten Regionen (Schwarzwald, Pfälzerwald, Harz)
-  bekommen nur die Trailforks-Trails Werte.
-- **Aus dem Zuordnungslauf offen**: 22 Vorlage-Fälle (darunter `Radici` ↔ *Sentiero indiano* und `Din` ↔
-  *Via Caffaro*, beide sehen nach demselben Trail unter zwei Namen aus) und **39 Trailforks-Linien ohne
-  Gegenstück** bei uns — die Kandidatenliste für fehlende Finale-Trails. Dazu drei Duplikat-Kandidaten in
-  unseren eigenen Daten, die der Mehrfachanspruch aufgedeckt hat (`Cava - Tappeto Verde` ↔ `Cava-Green
-  Carpet`, `Bondi Traverse` ↔ `Bondi`, `Roller Coaster` ↔ `Rollercoaster-San Pantaleo`).
+  Touren-Abschnitt überhaupt sortierbar wird. **`merge_sections()` rechnet den verwandten Fall schon** —
+  mehrere Trailforks-Abschnitte auf einen unserer Trails, stimmen-gewichtet; für Touren wäre es dieselbe
+  Rechnung eine Ebene höher, nur längen- statt stimmen-gewichtet.
+
+**Neu aufgekommen beim Durchgehen der Fälle (2026-08-24):**
+- **Werte auffrischen**: die Zahlen sind auf `asOf` datiert und altern. Mit dem gespeicherten `tf`-Slug ist
+  ein Update ein Ernte-Lauf plus ein Wörterbuch-Zugriff — `tools/harvest_tf_ratings.py` kann das schon,
+  gebraucht wird nur ein Auslöser (z. B. halbjährlich) und ein Blick darauf, was sich verschoben hat.
+- **Trailforks-Linien ohne Gegenstück bei uns** sind die Kandidatenliste für fehlende Trails — in Finale 55,
+  und in jeder anderen Region gibt es dieselbe Liste. `review_cases.py` zeigt sie noch nicht; die Zahl steht
+  im Lauf von `match_trailforks.py` als "none".
+- **Zwei mögliche Duplikate in unseren EIGENEN Daten**, aufgedeckt durch Mehrfachansprüche: `Cava-Green
+  Carpet` ↔ `Cava - Tappeto Verde` (wörtlich derselbe Name in zwei Sprachen) und `Bondi` ↔ `Bondi Traverse`.
+  Beide sind als Zuordnung entschieden, aber die Frage, ob wir denselben Trail zweimal führen, ist offen.
+- **Sehr wenige Stimmen sagen fast nichts**: `tiejer-wald` und `medregen-langwies` tragen beide exakt 4,23
+  bei je 3 Stimmen, weil der bayessche Wert dort fast auf dem Regionsmittel liegt. Der Nutzer hat
+  entschieden, das vorerst so zu lassen — eine sichtbare Unterscheidung (ausgegrauter Stern o. ä.) wäre die
+  Ausbaustufe, falls es je stört.
 
 ## 3. Regionen, die noch offen sind
 
