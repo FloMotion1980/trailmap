@@ -21,6 +21,18 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-24 (Abend)
+- **Paznaun und Bike Kingdom Fall für Fall durchgegangen**, 39 offene Zuordnungen entschieden: Paznaun
+  4 → 7 bewertete Trails, Bike Kingdom 56 → 71 (und 77 gespeicherte IDs). Beide Regionen haben jetzt
+  **0 offene Fälle**, jede Entscheidung mit Begründung in `Material/<Region>/tf_manual.json`.
+- **Drei Regeln, die der Nutzer dabei vorgegeben hat** (siehe `docs/trail-rating-konzept.md`): zwei
+  Trailforks-Abschnitte eines unserer Trails werden stimmen-gewichtet zusammengefasst (Stimmen addiert,
+  Beliebtheit als Maximum, weil eine Summe denselben Fahrer doppelt zählt); ein anders benannter Trail wird
+  angehängt, wenn er DIE Linie ist, nicht wenn er eines von mehreren Teilstücken ist; eine Zufahrt bekommt
+  nichts. `merge_sections()` rechnet den gewichteten Fall.
+- **Eine Nummer im Trailforks-Namen kann auch die falsche sein**: „Bike & Hike Berglisee" trägt #7170, nicht
+  unser 7190 — die Nummer wurde geprüft, nicht angenommen.
+
 ## 2026-08-24 (Nachmittag)
 - **Die Trailforks-ID steht jetzt an jedem zugeordneten Trail**, nicht nur an den bewerteten: 3 730 von
   4 555 statt 1 717. Der Schreibschritt hatte eine Zeile ohne Stimmen komplett übersprungen, ID inklusive —

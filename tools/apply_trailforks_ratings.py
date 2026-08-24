@@ -47,6 +47,32 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 REGIONS = os.path.join(ROOT, "Trailmap App", "regions")
 
 
+def merge_sections(slugs, table):
+    """One of our trails against SEVERAL Trailforks sections of it -- the user's own rule (2026-08-24).
+
+    Where Trailforks splits a trail we carry whole, picking one section throws away the votes of the other
+    and picks a winner by nothing in particular (Rock'n'Roll: 4,08 from 6 votes against 4,12 from 3). So:
+
+    * the rating is the **vote-weighted mean** -- 6 riders saying 4,08 and 3 saying 4,12 is one trail at
+      4,09, which is what those nine riders actually said;
+    * the votes are **summed**, because they are nine distinct verdicts;
+    * the popularity is the **maximum, not the sum** -- it counts a year of check-ins, and a rider who rides
+      the trail logs every section of it, so adding them counts the same rider twice. The busiest section is
+      the honest figure for the trail.
+    """
+    rows = [(table.get(s) or {}) for s in slugs]
+    rated = [(r, int(r.get("votes") or 0)) for r in rows if r.get("rating_bayesian")]
+    entry = {"slug": list(slugs), "rate": None, "votes": 0, "pop": None}
+    pops = [int(r["popularity_score"]) for r in rows if r.get("popularity_score") is not None]
+    if pops:
+        entry["pop"] = max(pops)
+    if rated:
+        v = sum(n for _, n in rated)
+        entry["rate"] = round(sum(float(r["rating_bayesian"]) * n for r, n in rated) / max(v, 1), 2)
+        entry["votes"] = v
+    return entry
+
+
 def main(argv):
     ap = argparse.ArgumentParser()
     ap.add_argument("region")
@@ -81,6 +107,9 @@ def main(argv):
         if r["verdict"] != "match" or not r["candidates"]:
             continue
         slug = r["candidates"][0]["slug"]
+        if isinstance(slug, list):
+            by_id[r["id"]] = merge_sections(slug, table)
+            continue
         t = table.get(slug) or {}
         # The SLUG is written for every resolved trail, rated or not (fixed 2026-08-24, the user asked
         # whether every trail had kept its id -- 1 428 mapped trails had not). A trail Trailforks knows but

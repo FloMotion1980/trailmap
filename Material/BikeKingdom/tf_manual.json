@@ -1,0 +1,143 @@
+{
+ "bk_703_rock_n_roll": {
+  "slugs": [
+   "rock-n-roll-135722",
+   "rock-n-roll-673737"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: gewichteter Mittelwert, weil Trailforks denselben Trail in zwei Abschnitte teilt (beide heissen 'Rock N Roll 703T', beide liegen zu 1,00 in unseren 2,0 km). 4,08 aus 6 Stimmen und 4,12 aus 3 ergeben 4,09 aus 9."
+ },
+ "bk_708_vertigo": {
+  "slug": "vertigo-129276",
+  "why": "Nutzerentscheidung 2026-08-24. 2 243 m unserer 2 700 m, Deckung 0,98, Endpunkte 173 m auseinander. Das kurze 'vertigo-finale' (146 m, unbewertet) bleibt aussen vor."
+ },
+ "bk_brambrueesch_pradaschier_trail": {
+  "slug": "brambruesch-pradaschier-panorama",
+  "why": "Nutzerentscheidung 2026-08-24. Name praktisch identisch, Deckung 0,71; stand nur auf Platz zwei, weil ein Nachbarstueck (galtialp) geometrisch knapp vorne lag."
+ },
+ "bk_access_fanuellatobel": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'Fanuellatobel #616' (4,37) ist ein Trail, nicht unsere Zufahrt -- Deckung 0,09."
+ },
+ "bk_access_langwies": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. Trailforks fuehrt hier nur eigene 'Secondary Access Road'-Zeilen ohne Bewertung."
+ },
+ "bk_access_mittenberg": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'Chur - Mittenberg (uphill)' ist als Access Road eingestuft und unbewertet; die bewerteten Mittenberg-Zeilen sind andere Trails (Deckung 0,12)."
+ },
+ "bk_access_schoenegg": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'Schoenegg Access Road' ist unbewertet; 'Schoenegg'/'Schoenegg 2' sind die Trails, nicht die Zufahrt."
+ },
+ "bk_aufstieg_praetschli": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'Praetsch 634,635,636' ist als Access Road gefuehrt, 'Praetschalp' ein anderer Trail (Deckung 0,00)."
+ },
+ "bk_lord_steepness": {
+  "slugs": [
+   "lord-steepness-l",
+   "lord-steepness-ll"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide Abschnitte gewichtet. 4,11 aus 3 und 3,84 aus 2 Stimmen, beide zu 1,00 in unseren 600 m (zusammen 375 m)."
+ },
+ "bk_zig_zag_trail": {
+  "slugs": [
+   "zig-zag-trail-252092",
+   "zig-zag-trail-2nd"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide Abschnitte gewichtet. Namen identisch ('Zig Zag Trail' und 'Zig Zag Trail 2nd'), 4,13 aus 9 und 4,11 aus 3."
+ },
+ "bk_schoenegg_trail": {
+  "slugs": [
+   "schonegg",
+   "schonegg-2"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide Abschnitte gewichtet. 'Schoenegg 2' ist unbewertet und traegt nur seine ID bei, damit ein spaeteres Auffrischen sie nicht neu ableiten muss."
+ },
+ "bk_juchs_trail": {
+  "slug": "spundis-juchs-ll",
+  "why": "Nutzerentscheidung 2026-08-24: nur Abschnitt ll (3,94 aus 14). Abschnitt l liegt mit Deckung 0,00 nicht auf unserer Linie und gehoert zu unserem eigenen 'Spundis - Juchs Trail', der ihn schon traegt; das kurze lV (264 m) bleibt aussen vor."
+ },
+ "bk_tschiertschen_praden": {
+  "slug": "butterfly-316648",
+  "why": "Nutzerentscheidung 2026-08-24. Der Geometrie folgen, obwohl der Name widerspricht: 96 % gleiche Laenge, Endpunkte 47 m auseinander, Deckung 1,00. Betreiber und Trailforks benennen denselben Weg unterschiedlich."
+ },
+ "bk_heimfahrtspiste": {
+  "slug": "maran-seilpark",
+  "why": "Nutzerentscheidung 2026-08-24: nur die ID merken. Deckung 0,92, 93 % gleiche Laenge, Endpunkte 126 m -- aber unbewertet, bringt heute also keinen sichtbaren Wert."
+ },
+ "bk_medergen_trail": {
+  "slug": "tiejer-wald",
+  "why": "Nutzerentscheidung 2026-08-24. Keine der fuenf 'Medergen'-Zeilen von Trailforks liegt auf unserer Linie (Deckung 0,00); 'Tiejer Wald' liegt mit 0,94 darauf, zweitbester Kandidat 0,02. Geometrisch eindeutig trotz voellig anderem Namen."
+ },
+ "bk_rongg_trail": {
+  "slug": "medregen-langwies",
+  "why": "Nutzerentscheidung 2026-08-24. Hier ist ihr Trail der laengere: unsere 1,3 km liegen vollstaendig in ihren 2 790 m. Dieselbe Logik wie umgekehrt -- Abschnitt und Ganzes sind derselbe Weg."
+ },
+ "bk_sapuen_trail": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. 'Mederger Alp #633' liegt zwar zu 0,97 auf unserer Linie, ist aber unbewertet; die Zeile namens 'Sapuen' liegt mit 0,00 nicht auf unserem Weg."
+ },
+ "bk_furcletta_connection": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. Trailforks hat dort nur 'Furcletta' (4,54 aus 19), und das ist unser eigener 'Furcletta Trail', der die Bewertung schon traegt -- eine zweite Zuordnung wuerde dieselbe Aussage doppelt machen."
+ },
+ "bk_kaenzeli_malix_trail": {
+  "slugs": [
+   "kanzeli-773869",
+   "malix-stelliwald"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide gewichtet. Unser Name nennt beide Enden, Trailforks fuehrt genau diese zwei Stuecke (419 m und 996 m unserer 2,5 km), beide mit 3,98 aus 2 Stimmen."
+ },
+ "bk_spundiskoepfe": {
+  "slugs": [
+   "spundiskopf-nord-399277",
+   "spundiskopf-sud-399276"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide gewichtet. Unser Plural deckt Nord (3,87 aus 4) und Sued (3,54 aus 3)."
+ },
+ "bk_tgantieni": {
+  "slug": "tgantieni",
+  "why": "Nutzerentscheidung 2026-08-24: nur der gleichnamige Trail (3,24 aus 12, Deckung 1,00). 'Schaefermulde S1' liegt auf derselben Linie, ist aber ein eigener Trail und keine Sektion unseres."
+ },
+ "bk_mittenberg_st_luzi_trail": {
+  "slugs": [
+   "st-luzikapelle",
+   "stluzi-traverse"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: die zwei namensgleichen Stuecke gewichtet (4,26 aus 6; die Traverse ist unbewertet und traegt nur ihre ID bei). Haldenflash und Bletsch Platta liegen auch auf der Linie, heissen aber anders."
+ },
+ "bk_brambrueesch_churwalden_trail": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24, Grundsatz 'nur wo unser Name vorkommt': eine anders benannte Trailforks-Linie wird angehaengt, wenn sie DIE Linie ist (1:1 oder klar dominant, siehe Butterfly und Tiejer Wald) -- nicht wenn sie eines von mehreren Teilstuecken ist, das unsere Linie mitbenutzt. Hier: Schluechtli (4,17/11) und Maiasaess (4,29/7), beide fremd benannt."
+ },
+ "bk_back_to_town": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24, Grundsatz 'nur wo unser Name vorkommt': eine anders benannte Trailforks-Linie wird angehaengt, wenn sie DIE Linie ist (1:1 oder klar dominant, siehe Butterfly und Tiejer Wald) -- nicht wenn sie eines von mehreren Teilstuecken ist, das unsere Linie mitbenutzt. Hier: Aeberwald lower (2,98/4) und upper (3,74/7), beide fremd benannt."
+ },
+ "bk_isla_trail": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24, Grundsatz 'nur wo unser Name vorkommt': eine anders benannte Trailforks-Linie wird angehaengt, wenn sie DIE Linie ist (1:1 oder klar dominant, siehe Butterfly und Tiejer Wald) -- nicht wenn sie eines von mehreren Teilstuecken ist, das unsere Linie mitbenutzt. Hier: Plessur (4,11/5) und Baeraried (unbewertet), beide fremd benannt."
+ },
+ "bk_bual_trail": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24, Grundsatz 'nur wo unser Name vorkommt': eine anders benannte Trailforks-Linie wird angehaengt, wenn sie DIE Linie ist (1:1 oder klar dominant, siehe Butterfly und Tiejer Wald) -- nicht wenn sie eines von mehreren Teilstuecken ist, das unsere Linie mitbenutzt. Hier: Pruel und Camping-Tiefencastel (unbewertet) plus Martschineun (3,84/8), alle fremd benannt."
+ },
+ "bk_scalaeratrail": {
+  "slug": "scalara",
+  "why": "Nutzerentscheidung 2026-08-24: nur der gleichnamige Trail (4,35 aus 14). GnarlyCharlie (4,39/11) und Letziholz liegen ebenfalls auf unserer Linie, sind aber eigene Trails."
+ },
+ "bk_ninos_gold_trail": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. Vier fremd benannte Trails liegen auf unserer Linie (Tgapalotta, Jumpline, Cross Country Suedschlaufe, Heidis Hell) -- ein Mittel darueber beschreibt das Gebiet, nicht unseren Weg. Kein 'Gold' in der ganzen Tabelle."
+ },
+ "bk_got_da_lai": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. Nichts von Trailforks liegt zu mindestens 0,60 auf unserer Linie."
+ },
+ "bk_flow_city_trail": {
+  "slug": null,
+  "why": "Nutzerentscheidung 2026-08-24: kein Gegenstueck. Nur 'Traverse S2' und 'S3' mit je einer Stimme liegen darauf; der bewertete 'Chur Flow' (4,08 aus 20) liegt mit 0,01 nicht auf unserer Linie."
+ }
+}

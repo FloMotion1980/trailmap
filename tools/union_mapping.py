@@ -43,7 +43,7 @@ def main(argv):
     mp = os.path.join(mat, "tf_manual.json")
     if os.path.exists(mp):
         for tid, v in json.load(io.open(mp, encoding="utf-8")).items():
-            slug = v["slug"] if isinstance(v, dict) else v
+            slug = (v.get("slugs") or v.get("slug")) if isinstance(v, dict) else v
             # A null slug is a decision too, and the one that was missing: "we looked, Trailforks has
             # nothing for this trail". Without somewhere to write that down, every re-run puts the case
             # back on the pile and someone decides it a second time.
@@ -62,7 +62,7 @@ def main(argv):
         strict[tid] = slug
     for tid in rejected:
         strict.pop(tid, None)
-    taken = set(strict.values())
+    taken = set(x for x in strict.values() if not isinstance(x, list))
     for r in rows:
         if r.get("verdict") != "match" or not r.get("candidates"):
             continue

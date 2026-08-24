@@ -420,3 +420,34 @@ Brandnertal 9 → 10. Insgesamt 1 717 → 1 731 bewertete Trails.
 **Handentscheidungen stehen in `Material/<Region>/tf_manual.json`** — `{unsere_id: {slug, why}}`, und sie
 überstimmen beide Regeln. Ohne diese Datei würde jeder erneute Lauf einen gemeinsam entschiedenen Fall
 zurück in den Prüfstapel werfen.
+
+### Die Regeln, die beim Durchgehen der Fälle entstanden sind (Paznaun und Bike Kingdom, 2026-08-24)
+
+Die 39 Fälle dieser beiden Regionen einzeln zu entscheiden hat drei Regeln erzeugt, die der Nutzer
+vorgegeben hat und die für jede weitere Region gelten:
+
+1. **Zwei Trailforks-Abschnitte eines unserer Trails werden stimmen-gewichtet zusammengefasst.** Einen
+   auszuwählen wirft die Stimmen des anderen weg und wählt einen Sieger nach nichts Bestimmtem
+   (Rock'n'Roll: 4,08 aus 6 gegen 4,12 aus 3). Der Wert ist das gewichtete Mittel, die Stimmen werden
+   addiert — **die Beliebtheit aber nicht**: sie zählt Check-ins eines Jahres, und wer den Trail fährt,
+   loggt jeden seiner Abschnitte, also zählt eine Summe denselben Fahrer doppelt. Der belebteste Abschnitt
+   ist die ehrliche Zahl. Steht in `merge_sections()`.
+2. **Ein anders benannter Trail wird angehängt, wenn er DIE Linie ist — nicht wenn er eines von mehreren
+   Teilstücken ist.** „Butterfly" gegen unser „Tschiertschen – Praden" hat 96 % gleiche Länge und 47 m
+   Endpunktabstand, „Tiejer Wald" deckt unseren Medergen Trail zu 0,94 bei 0,02 für den Zweitbesten — beide
+   angenommen. Dagegen abgelehnt: vier Fälle, in denen unsere Linie zwei oder drei fremd benannte Trails
+   überfährt (Brambrüesch–Churwalden, Back to town, Isla, Bual). Ein Mittel darüber beschreibt das Gebiet,
+   nicht den Weg. Denselben Grund hat Ninos Gold-Trail, über den vier fremde Trails laufen.
+3. **Eine Zufahrt hat keine Bewertung.** Unsere fünf „Access …"/„Aufstieg …"-Einträge bekommen nichts:
+   Trailforks führt dort entweder eigene „Secondary Access Road"-Zeilen ohne Wert oder benachbarte echte
+   Trails mit anderem Namen (Fanüllatobel #616, 4,37 — ein Trail, keine Zufahrt, Deckung 0,09).
+
+Und ein Befund, der die Zahlen relativiert: `tiejer-wald` und `medregen-langwies` tragen beide exakt 4,23
+bei je 3 Stimmen. Bei so wenigen Stimmen liegt der bayessche Wert fast auf dem Regionsmittel und sagt kaum
+etwas über den einzelnen Trail. Der Nutzer hat entschieden, das vorerst so zu lassen (die Mindest-Stimmenzahl
+war bewusst entfernt worden), aber es ist der Grund, warum solche Werte nicht überinterpretiert werden
+sollten.
+
+Stand nach dem Durchgang: **Paznaun 0 offene Fälle** (4 → 7 bewertet), **Bike Kingdom 0 offene Fälle**
+(56 → 71 bewertet, 77 IDs). Beide Regionen tragen ihre Entscheidungen samt Begründung in
+`Material/<Region>/tf_manual.json`.
