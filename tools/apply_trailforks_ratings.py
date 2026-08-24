@@ -107,6 +107,13 @@ def main(argv):
         if r["verdict"] != "match" or not r["candidates"]:
             continue
         slug = r["candidates"][0]["slug"]
+        # A slug that is not in the table is almost always a TYPO in a hand-written decision, and without
+        # this it fails silently: the lookup returns {}, no rating is attached, and the case looks decided.
+        # It bit once already -- the review report truncates its slug column at 34 characters, and
+        # `flohtrail-2-kinderund-jugendstreck` copied out of it is one character short of the real slug.
+        for one in (slug if isinstance(slug, list) else [slug]):
+            if one not in table:
+                print("  !! Slug nicht in der Tabelle: %s (%s) -- Tippfehler?" % (one, r["id"]))
         if isinstance(slug, list):
             by_id[r["id"]] = merge_sections(slug, table)
             continue

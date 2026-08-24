@@ -21,6 +21,22 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-24 (Abend, später)
+- **Schwarzwald Fall für Fall durchgegangen**: 26 offene Zuordnungen entschieden, 0 offene Fälle,
+  264 → 271 bewertete Trails und 572 gespeicherte IDs. Sechs davon sind reine ID-Merker (das Gegenstück ist
+  unbewertet), sechs echte Absagen. Schönster Fund: unser `deadmansfirstride` ist die englische Übersetzung
+  von Trailforks' „Toter Mann", und unser „Dr. LTW" die Abkürzung von „Dr. Ludwig Thoma".
+- **Ein unbekannter Slug wird jetzt gemeldet, statt still zu scheitern.** Er kam zweimal vor, beide Male
+  weil der Prüfbericht seine Slug-Spalte bei 34 Zeichen abgeschnitten hat und ich den gekürzten Namen
+  übernommen habe (`flohtrail-2-kinderund-jugendstreck` statt `…strecke`,
+  `vierburgenweg-landeckmunding` statt `…mundingen`). Ohne Warnung sieht das aus wie eine erledigte
+  Entscheidung: die Tabellensuche liefert nichts, es wird nichts angehängt, und niemand merkt es. Der
+  Bericht kappt Slugs jetzt nicht mehr.
+- **`review_cases.py --sections`** zeigt für jeden offenen Fall JEDE Trailforks-Linie, die auf unserer
+  liegt. Das ist die Sicht, die einen Fall entscheidbar macht — die Kandidatenliste ist es nicht: ein Trail,
+  über den unsere Linie führt, kommt auf Deckung 1,00, also füllen sich die oberen Plätze mit Nachbarn,
+  während das Stück mit unserem eigenen Namen darunter liegt.
+
 ## 2026-08-24 (Abend)
 - **Paznaun und Bike Kingdom Fall für Fall durchgegangen**, 39 offene Zuordnungen entschieden: Paznaun
   4 → 7 bewertete Trails, Bike Kingdom 56 → 71 (und 77 gespeicherte IDs). Beide Regionen haben jetzt

@@ -7,7 +7,7 @@ bewusst keine eigene Bewertung hat.
 | Region | Trails | bewertet | Anteil | Median | Max | Beliebtheit | Touren | Stand |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
 | `gardasee` | 911 | 387 | 42 % | 3,98 | 4,64 | 387 | 5 | 2026-08-24 |
-| `schwarzwald` | 618 | 261 | 42 % | 3,98 | 4,71 | 261 | 4 | 2026-08-24 |
+| `schwarzwald` | 618 | 271 | 44 % | 3,98 | 4,71 | 271 | 4 | 2026-08-24 |
 | `suedvogesen` | 474 | 158 | 33 % | 3,98 | 4,65 | 158 | 0 | 2026-08-24 |
 | `pfaelzerwald` | 763 | 156 | 20 % | 4,06 | 4,58 | 156 | 42 | 2026-08-24 |
 | `finale` | 219 | 134 | 61 % | 4,03 | 4,77 | 134 | 0 | 2026-08-23 |
@@ -34,7 +34,7 @@ bewusst keine eigene Bewertung hat.
 | `dreilaender` | 29 | 0 | 0 % | – | – | 0 | 0 | – |
 | `serfaus` | 17 | 0 | 0 % | – | – | 0 | 0 | – |
 | `waldmeister` | 20 | 0 | 0 % | – | – | 0 | 1 | – |
-| **Summe** | **4555** | **1744** | **38 %** | | | | | |
+| **Summe** | **4555** | **1754** | **39 %** | | | | | |
 
 ## Bestbewertete Trails je Region
 
