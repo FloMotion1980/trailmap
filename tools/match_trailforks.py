@@ -70,6 +70,7 @@ WEAK_COV = 0.40         # below this, geometry says nothing
 NAME_SIM = 0.75         # "similar name" for the tie-breaking path
 END_NEAR_M = 120.0      # both endpoints within this, in either orientation
 LEN_RATIO = 0.6         # shorter/longer length ratio a 1:1 match must reach
+NAME_TIE_LEAD = 0.30    # how far the winner's name must beat the runner-up's when geometry ties
 CELL = 0.004            # spatial prefilter cell, ~450 m
 TOP_N = 3
 
@@ -90,6 +91,18 @@ def norm_name(s):
         s = stripped
     s = re.sub(r"\b(trail|sentiero|dh)\b", " ", s)
     return re.sub(r"[^a-z0-9]+", " ", s).strip()
+
+
+#: The operator's own trail number, as either side happens to write it: ours in brackets after the name
+#: ("Velill Trail (7134)"), Trailforks' appended with a hash ("Velilltrail #7134"), and both sometimes
+#: leading ("353 - Strada delle Gatelle"). Two digits is enough BECAUSE the rule below also demands real
+#: geometric overlap -- a coincidental "2" on two lines that already share 40 % of their points is not a
+#: coincidence worth worrying about.
+NUM_RE = re.compile(r"#(\d{2,5})|\((\d{2,5})\)|^(\d{2,5})(?![\d])")
+
+
+def catalogue_numbers(name):
+    return set(g for m in NUM_RE.finditer(name or "") for g in m.groups() if g)
 
 
 def coverage(a, b, tol=TOL_M):
@@ -129,7 +142,15 @@ def candidates_for(coords, grid):
 def score_pair(ours, theirs, our_name, their_name, our_len_m, their_len_m):
     cov_ot = coverage(ours, theirs)
     cov_to = coverage(theirs, ours)
+    shared = catalogue_numbers(our_name) & catalogue_numbers(their_name)
     return {
+        # A shared catalogue number is an IDENTITY claim by the two sources, not a similarity score, and it
+        # is the one signal that survives what defeats the other four: Trailforks splits a trail into
+        # sections, so its 2,0 km "Schmuggler Trail #7187" sits inside our 8,5 km trail of the same number
+        # at a length ratio of 0,23 -- while a neighbouring section scores HIGHER on pure coverage. The
+        # number is what tells those two apart. Found because Trailforks turns out to carry Ischgl's own
+        # numbering in its names, which nothing here was looking at.
+        "num": sorted(shared),
         "cov_ours_on_theirs": round(cov_ot, 3),
         "cov_theirs_on_ours": round(cov_to, 3),
         "geo": round(max(cov_ot, cov_to), 3),
@@ -147,6 +168,14 @@ def verdict(best, second):
     """`match` / `review` / `none`, plus the reason. The margin rule lives here."""
     if not best or best["geo"] < WEAK_COV:
         return "none", "no candidate reaches the weak coverage floor"
+    # The catalogue number decides before anything else -- but only ON TOP of real overlap (the floor above),
+    # never on its own, and never when a second candidate carries the same number: two lines both calling
+    # themselves #7187 is precisely the split-into-sections case, and picking one of them by coverage is the
+    # silent guess the margin rule exists to prevent.
+    if best.get("num"):
+        if second and second.get("num") and set(second["num"]) & set(best["num"]):
+            return "review", ("two candidates carry the same trail number %s" % ",".join(best["num"]))
+        return "match", "the operator's own trail number agrees (%s)" % ",".join(best["num"])
     lead = best["geo"] - (second["geo"] if second else 0.0)
     contradicted = []
     if best["name_sim"] < 0.35:
@@ -154,6 +183,15 @@ def verdict(best, second):
     if best["shape"] == "1:1" and best["len_ratio"] < LEN_RATIO:
         contradicted.append("lengths disagree (%.2f)" % best["len_ratio"])
     if second and lead < MARGIN:
+        # A geometric tie is the NORM, not an anomaly, wherever Trailforks splits a trail into sections:
+        # several of its short lines sit inside one of ours, so each scores 1.00 on containment and the
+        # margin rule can never separate them. The name is the only thing left that carries information --
+        # but only when it is decisive on its own AND clearly beats the runner-up's name, which is what
+        # keeps "Schäfersteig" from being decided against "Schäfersteig Continued" (0.83 vs 0.70).
+        if (best["name_sim"] >= NAME_SIM
+                and best["name_sim"] - (second["name_sim"] or 0) >= NAME_TIE_LEAD):
+            return "match", ("geometry ties (%.2f vs %.2f) but the name decides (%.2f vs %.2f)"
+                             % (best["geo"], second["geo"], best["name_sim"], second["name_sim"]))
         return "review", ("two candidates within %.2f of each other (%.2f vs %.2f)"
                           % (MARGIN, best["geo"], second["geo"]))
     if best["geo"] >= STRONG_COV:
@@ -198,7 +236,13 @@ def run(region_key, material, control=None, report_path=None):
             s["slug"] = slug
             s["their_name"] = table.get(slug, {}).get("name") or slug
             scored.append(s)
-        scored.sort(key=lambda x: -x["geo"])
+        # A numbered agreement outranks raw coverage, or the section-inside-our-line case never even gets
+        # LOOKED at: for the Schmuggler Trail the neighbouring section scores 0.99 and the numbered one 0.94,
+        # so sorting by geometry alone hands the verdict to the wrong line before any rule can weigh in.
+        # The name is the third key and it is not cosmetic: with several candidates at exactly 1.00 the
+        # order was decided by dictionary iteration, which put `che-d-mot` ahead of `planer-salaas` on one
+        # run and the other way round on the next -- a verdict that changes without the data changing.
+        scored.sort(key=lambda x: (0 if x.get("num") else 1, -x["geo"], -x["name_sim"]))
         v, why = verdict(scored[0] if scored else None, scored[1] if len(scored) > 1 else None)
         counts[v] += 1
         rows.append({"id": tid, "name": t["name"], "len_km": t["len"], "verdict": v, "why": why,
@@ -217,14 +261,21 @@ def run(region_key, material, control=None, report_path=None):
     for slug, group in claims.items():
         if len(group) < 2:
             continue
-        group.sort(key=lambda r: (-r["candidates"][0]["geo"], -r["candidates"][0]["len_ratio"]))
+        # A NUMBERED claim wins here, before geometry -- otherwise the identity is overruled by a
+        # neighbour that merely overlaps more. Measured: "Velill Trail Expert (7146)" took `velilltrail`
+        # away from our "Velill Trail (7134)", which is the trail whose number that line actually carries.
+        group.sort(key=lambda r: (0 if r["candidates"][0].get("num") else 1,
+                                  -r["candidates"][0]["geo"], -r["candidates"][0]["len_ratio"]))
         keeper = group[0]
         for loser in group[1:]:
             loser["verdict"] = "review"
-            loser["why"] = ("%r also claims %s and fits it better (len_ratio %.2f vs %.2f) -- these two "
-                            "may be the same trail in our own data"
-                            % (keeper["name"], slug, keeper["candidates"][0]["len_ratio"],
-                               loser["candidates"][0]["len_ratio"]))
+            loser["why"] = ("%r also claims %s and has the stronger claim (%s) -- these two may be the "
+                            "same trail in our own data"
+                            % (keeper["name"], slug,
+                               ("trail number %s" % ",".join(keeper["candidates"][0]["num"]))
+                               if keeper["candidates"][0].get("num") else
+                               ("coverage %.2f vs %.2f" % (keeper["candidates"][0]["geo"],
+                                                           loser["candidates"][0]["geo"]))))
             counts["match"] -= 1
             counts["review"] += 1
 

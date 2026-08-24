@@ -388,3 +388,35 @@ unbewertet markieren, und der spätere Lauf, der genau diese Zeilen überspringt
 
 Die Abdeckung je Region steht in **`docs/trail-rating-abdeckung.md`**, erzeugt von
 `tools/rating_report.py` aus den Regionsdateien selbst.
+
+### Die Nummer-Regel (2026-08-24, beim Durchgehen der offenen Fälle gefunden)
+
+Beim ersten offenen Fall — Velill Trail im Paznaun — fiel auf, dass **Trailforks die Trailnummern des
+Betreibers im eigenen Namen führt**: „Velilltrail #7134" gegen unser „Velill Trail (7134)". Das ist kein
+Ähnlichkeitsmaß, sondern eine Identitätsaussage beider Quellen, und sie ist das einzige Signal, das den
+Fall löst, an dem die anderen vier scheitern: Trailforks zerlegt einen Trail in Abschnitte, deren 2,0 km
+„Schmuggler Trail #7187" liegen also mitten in unseren 8,5 km desselben Namens — Längenverhältnis 0,23,
+während ein benachbarter Abschnitt auf reine Deckung **höher** kommt. Die Nummer trennt die beiden.
+
+Drei Dinge waren dafür nötig, jedes davon durch einen konkreten Fall erzwungen:
+
+1. **Die Nummer sortiert vor der Geometrie.** Sonst sieht die Regel den richtigen Kandidaten nie an: beim
+   Schmuggler Trail kommt der Nachbarabschnitt auf 0,99 und der nummerierte auf 0,94.
+2. **Bei einem Doppelanspruch gewinnt die Nummer, nicht die Deckung.** „Velill Trail Expert (7146)" hatte
+   `velilltrail` unserem 7134 weggenommen — der Linie, deren Nummer es trägt.
+3. **Der Name entscheidet, wenn die Geometrie gleichstellt** (`NAME_TIE_LEAD`), und die Sortierung braucht
+   den Namen als dritten Schlüssel. Mehrere Abschnitte in einer langen Linie erreichen alle 1,00, die
+   Margin-Regel kann sie nie trennen — und welcher „erster" war, entschied vorher die Reihenfolge im
+   Wörterbuch: `che-d-mot` in einem Lauf, `planer-salaas` im nächsten. Ein Urteil, das sich ändert, ohne
+   dass sich die Daten ändern.
+
+Die Nummer wirkt nur **zusätzlich zu** echter geometrischer Deckung, nie allein — deshalb genügen zwei
+Ziffern, ohne dass „Trail 2" gegen „#2" zum Problem wird. Belegt durch die Negativkontrolle gegen den
+Gardasee, in der jeder Treffer per Konstruktion falsch wäre: **0 Treffer, 0 zur Prüfung**, unverändert.
+
+Wirkung: Finale 142 → 145 Treffer, Paznaun 6 → 9, Bike Kingdom 61 → 63, Sölden 32 → 33, Bikecircus 40 → 42,
+Brandnertal 9 → 10. Insgesamt 1 717 → 1 731 bewertete Trails.
+
+**Handentscheidungen stehen in `Material/<Region>/tf_manual.json`** — `{unsere_id: {slug, why}}`, und sie
+überstimmen beide Regeln. Ohne diese Datei würde jeder erneute Lauf einen gemeinsam entschiedenen Fall
+zurück in den Prüfstapel werfen.

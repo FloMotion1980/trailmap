@@ -21,6 +21,24 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-24 (Nachmittag)
+- **Die Trailforks-ID steht jetzt an jedem zugeordneten Trail**, nicht nur an den bewerteten: 3 730 von
+  4 555 statt 1 717. Der Schreibschritt hatte eine Zeile ohne Stimmen komplett übersprungen, ID inklusive —
+  und damit die teure Hälfte weggeworfen. Die Zuordnung verfällt nicht, die Stimmen kommen später.
+- **Nummer-Regel im Abgleich**: Trailforks führt die Trailnummern des Betreibers im eigenen Namen
+  („Velilltrail #7134"). Eine geteilte Nummer ist eine Identitätsaussage beider Quellen und löst genau den
+  Fall, an dem die vier bisherigen Signale scheitern — ein 2,0-km-Abschnitt von Trailforks liegt in unseren
+  8,5 km desselben Trails, während ein Nachbarabschnitt auf reine Deckung höher kommt. Dazu zwei
+  Folgeänderungen: bei einem Doppelanspruch gewinnt die Nummer (statt der Deckung), und bei geometrischem
+  Gleichstand entscheidet der Name — der auch als dritter Sortierschlüssel nötig war, weil vorher die
+  Wörterbuch-Reihenfolge bestimmte, welcher von zwei Kandidaten mit 1,00 „erster" ist. Negativkontrolle
+  gegen den Gardasee unverändert bei 0 falschen Treffern. Ergebnis: 1 717 → 1 731 bewertete Trails
+  (Finale 131 → 134, Paznaun 4 → 7, Bike Kingdom 56 → 58, Sölden 29 → 30, Bikecircus 32 → 34).
+- **Handentscheidungen in `Material/<Region>/tf_manual.json`** (`{id: {slug, why}}`), die beide Regeln
+  überstimmen — sonst wirft jeder erneute Lauf einen gemeinsam entschiedenen Fall zurück in den Prüfstapel.
+  Erste Einträge: Paznauns Duty Free Laret (Nutzerentscheidung: anhängen) und Schäfersteig (nur ID merken,
+  noch unbewertet).
+
 ## 2026-08-24 (Nacht)
 - **Bewertungen und Beliebtheit für 23 weitere Regionen** — 1 718 von 4 555 Trails (38 %) tragen jetzt
   einen Wert, gegenüber 131 in einer einzigen Region am Vortag. Die Abdeckung je Region steht in

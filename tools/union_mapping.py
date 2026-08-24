@@ -35,6 +35,17 @@ def main(argv):
     a = ap.parse_args(argv)
     mat = a.material if os.path.isabs(a.material) else os.path.join(ROOT, "Material", a.material)
 
+    # A human decision outranks both rules. `tf_manual.json` is where a case the user and I went through
+    # together is written down -- {our_id: slug} or {our_id: {"slug": ..., "why": ...}} -- so it survives a
+    # re-run of the matcher, which is the whole point: without a file, every re-run would drop it back into
+    # the review pile and someone would decide it again.
+    manual = {}
+    mp = os.path.join(mat, "tf_manual.json")
+    if os.path.exists(mp):
+        for tid, v in json.load(io.open(mp, encoding="utf-8")).items():
+            manual[tid] = v["slug"] if isinstance(v, dict) else v
+        print("Handentscheidungen: %d" % len(manual))
+
     strict, _ = run_strict(a.region, mat, a.geo.split(",") if a.geo else None)
     try:
         rows, _ = run_match(a.region, mat)
@@ -42,6 +53,8 @@ def main(argv):
         print("Fuzzy-Abgleich nicht moeglich: %s" % exc)
         rows = []
     added = 0
+    for tid, slug in manual.items():
+        strict[tid] = slug
     taken = set(strict.values())
     for r in rows:
         if r.get("verdict") != "match" or not r.get("candidates"):
@@ -52,7 +65,8 @@ def main(argv):
         strict[tid] = slug
         taken.add(slug)
         added += 1
-    print("%s: %d streng + %d unscharf = %d Zuordnungen" % (a.region, len(strict) - added, added, len(strict)))
+    print("%s: %d streng/handentschieden + %d unscharf = %d Zuordnungen"
+          % (a.region, len(strict) - added, added, len(strict)))
     out = a.out or os.path.join(mat, "tf_mapping_union.json")
     json.dump({"mapping": strict}, io.open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
     print("geschrieben: %s" % out)
