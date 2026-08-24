@@ -30,7 +30,18 @@ def main(argv):
     mat = a.material if os.path.isabs(a.material) else os.path.join(ROOT, "Material", a.material)
     rows, _ = run_match(a.region, mat)
     table = json.load(io.open(os.path.join(mat, "trailforks_table.json"), encoding="utf-8"))
-    open_rows = [r for r in rows if r["verdict"] == "review"]
+    # Decided cases drop out here rather than being reported again. The matcher runs a stage earlier than
+    # the decisions and cannot know about them, so filtering belongs in the report -- otherwise the pile
+    # never shrinks as we work through it, which is exactly what it looked like after the first session.
+    decided = {}
+    mp = os.path.join(mat, "tf_manual.json")
+    if os.path.exists(mp):
+        decided = json.load(io.open(mp, encoding="utf-8"))
+    open_rows = [r for r in rows if r["verdict"] == "review" and r["id"] not in decided]
+    if decided:
+        zug = sum(1 for v in decided.values() if (v.get("slug") if isinstance(v, dict) else v))
+        print("%s: %d Faelle bereits entschieden (%d zugeordnet, %d ohne Gegenstueck)"
+              % (a.region, len(decided), zug, len(decided) - zug))
     print("%s: %d Faelle zum Pruefen" % (a.region, len(open_rows)))
     print("%-30s %-28s %5s %5s %5s %6s  %-14s %s"
           % ("unser Trail", "Kandidat", "Deck", "Name", "Laen", "Enden", "Bewertung", "Zweiter"))

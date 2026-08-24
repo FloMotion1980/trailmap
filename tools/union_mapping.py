@@ -39,12 +39,17 @@ def main(argv):
     # together is written down -- {our_id: slug} or {our_id: {"slug": ..., "why": ...}} -- so it survives a
     # re-run of the matcher, which is the whole point: without a file, every re-run would drop it back into
     # the review pile and someone would decide it again.
-    manual = {}
+    manual, rejected = {}, set()
     mp = os.path.join(mat, "tf_manual.json")
     if os.path.exists(mp):
         for tid, v in json.load(io.open(mp, encoding="utf-8")).items():
-            manual[tid] = v["slug"] if isinstance(v, dict) else v
-        print("Handentscheidungen: %d" % len(manual))
+            slug = v["slug"] if isinstance(v, dict) else v
+            # A null slug is a decision too, and the one that was missing: "we looked, Trailforks has
+            # nothing for this trail". Without somewhere to write that down, every re-run puts the case
+            # back on the pile and someone decides it a second time.
+            (rejected.add(tid) if slug is None else manual.__setitem__(tid, slug))
+        print("Handentscheidungen: %d zugeordnet, %d als ohne Gegenstueck abgeschlossen"
+              % (len(manual), len(rejected)))
 
     strict, _ = run_strict(a.region, mat, a.geo.split(",") if a.geo else None)
     try:
@@ -55,6 +60,8 @@ def main(argv):
     added = 0
     for tid, slug in manual.items():
         strict[tid] = slug
+    for tid in rejected:
+        strict.pop(tid, None)
     taken = set(strict.values())
     for r in rows:
         if r.get("verdict") != "match" or not r.get("candidates"):

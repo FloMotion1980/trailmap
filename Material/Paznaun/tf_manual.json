@@ -1,6 +1,26 @@
 {
-  "7189": {"slug": "duty-free-ride-laret-samnaun-l",
-    "why": "Nutzerentscheidung 2026-08-24: anhaengen. Ihr Abschnitt I (1,2 km) liegt zu 98 % auf unseren 6,8 km, gleicher Name, drei ihrer Abschnitte auf unserer einen Linie. 3,73 bei 4 Stimmen ist duenn -- der bayessche Wert zieht so etwas ohnehin zum Regionsmittel."},
-  "7194": {"slug": "schafersteig",
-    "why": "Nutzerdurchgang 2026-08-24. Namensaehnlichkeit 0,83 gegen 0,67 des Folgeabschnitts, 0,85 Deckung. Noch unbewertet, hier wird also nur die ID gemerkt, damit ein spaeteres Auffrischen sie nicht neu ableiten muss."}
+ "7189": {
+  "slug": "duty-free-ride-laret-samnaun-l",
+  "why": "Nutzerentscheidung 2026-08-24: anhaengen. Ihr Abschnitt I (1,2 km) liegt zu 98 % auf unseren 6,8 km, gleicher Name, drei ihrer Abschnitte auf unserer einen Linie. 3,73 bei 4 Stimmen ist duenn -- der bayessche Wert zieht so etwas ohnehin zum Regionsmittel."
+ },
+ "7194": {
+  "slug": "schafersteig",
+  "why": "Nutzerdurchgang 2026-08-24. Namensaehnlichkeit 0,83 gegen 0,67 des Folgeabschnitts, 0,85 Deckung. Noch unbewertet, hier wird also nur die ID gemerkt, damit ein spaeteres Auffrischen sie nicht neu ableiten muss."
+ },
+ "7146": {
+  "slug": null,
+  "why": "Nutzerdurchgang 2026-08-24: kein Gegenstueck. Trailforks fuehrt nur velilltrail #7134 (das unser 7134 traegt) und einen 400-m-Zubringer Idalp; die Expert-Variante listet es nicht separat."
+ },
+ "7149": {
+  "slug": null,
+  "why": "Nutzerdurchgang 2026-08-24: kein Gegenstueck. Kein Fimba-Eintrag in den 62 Zeilen aus ischgl und Silvretta Bike Arena Samnaun."
+ },
+ "7150": {
+  "slug": null,
+  "why": "Nutzerdurchgang 2026-08-24: kein Gegenstueck. Nur vesil-acces-road, von Trailforks selbst als 'Access Trail, Road or Doubletrack' eingestuft und unbewertet."
+ },
+ "7190": {
+  "slug": null,
+  "why": "Nutzerdurchgang 2026-08-24: kein Gegenstueck. Nur bike--hike-berglisee, das die Nummer #7170 traegt (nicht 7190) und ebenfalls ein Access Trail ist."
+ }
 }
