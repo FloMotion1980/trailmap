@@ -27,14 +27,14 @@ bewusst keine eigene Bewertung hat.
 | `schladming` | 29 | 12 | 41 % | 4,21 | 4,52 | 12 | 0 | 2026-08-24 |
 | `brandnertal` | 12 | 9 | 75 % | 4,06 | 4,49 | 9 | 0 | 2026-08-24 |
 | `zugspitzarena` | 17 | 9 | 53 % | 3,81 | 4,23 | 9 | 0 | 2026-08-24 |
-| `laax` | 19 | 8 | 42 % | 4,12 | 4,46 | 8 | 5 | 2026-08-24 |
+| `laax` | 19 | 7 | 37 % | 4,12 | 4,46 | 7 | 5 | 2026-08-24 |
 | `naheland` | 14 | 7 | 50 % | 4,08 | 4,53 | 7 | 3 | 2026-08-24 |
 | `paznaun` | 24 | 4 | 17 % | 3,85 | 4,06 | 4 | 2 | 2026-08-24 |
 | `donnersberg` | 40 | 0 | 0 % | – | – | 0 | 1 | – |
 | `dreilaender` | 29 | 0 | 0 % | – | – | 0 | 0 | – |
 | `serfaus` | 17 | 0 | 0 % | – | – | 0 | 0 | – |
 | `waldmeister` | 20 | 0 | 0 % | – | – | 0 | 1 | – |
-| **Summe** | **4555** | **1718** | **38 %** | | | | | |
+| **Summe** | **4555** | **1717** | **38 %** | | | | | |
 
 ## Bestbewertete Trails je Region
 
@@ -63,33 +63,11 @@ bewusst keine eigene Bewertung hat.
 - **naheland** — Lower Flak (31) (4,53, 9 Stimmen), Corona (32) (4,40, 7 Stimmen), Frei-Lauberline Sect. 1 (40) (4,12, 1 Stimmen)
 - **paznaun** — Velill Trail Expert (7146) (4,06, 20 Stimmen), Flimjoch Trail (7106) (3,85, 13 Stimmen), Trider Sattel Trail (7188) (3,65, 11 Stimmen)
 
-## Was die vier Nullen bedeuten
+## Eine Notiz zur Reproduzierbarkeit
 
-`donnersberg`, `dreilaender`, `serfaus` und `waldmeister` haben nichts bekommen, und das ist kein
-offener Punkt, sondern die Antwort: Trailforks kennt diese Gebiete kaum. Der Donnersberg hat dort
-**vier** Trails (drei unter `falkenstein`, einer unter `donnersberg`) gegen unsere vierzig, Nauders und
-Reschenpass zusammen elf, Fiss drei, Birkenfeld fünf. Es wurde in jedem Fall über die automatisch
-abgeleiteten UND eine handgeschriebene Slug-Liste gesucht (siehe `docs/trail-rating-konzept.md`), und für
-diese vier gibt es einfach keine Community-Daten.
-
-Der Anteil in dieser Tabelle misst deshalb nicht, wie gut wir eine Region erfasst haben, sondern **wie
-viel dort geloggt wird**: Madeira 78 %, Livignos 93 % gegen 11 % in den Nordvogesen — dieselbe Pipeline,
-dieselbe Sorgfalt, unterschiedlich viele Fahrer, die bei Trailforks bewerten.
-
-## Was bewusst offen blieb
-
-Wo unsere Linie und die von Trailforks zwei unabhängige Aufzeichnungen sind, entscheidet der unscharfe
-Abgleich, und wenn er sich nicht sicher ist, bleibt der Trail **unbewertet statt geraten**. Diese Fälle
-warten auf einen Menschen, nicht auf mehr Rechenzeit:
-
-| Region | zum Prüfen | typischer Grund |
-|---|---:|---|
-| `schwarzwald` | 27 | zwei Kandidaten zu dicht beieinander |
-| `bikekingdom` | 32 | unsere Geometrie ist die Aufzeichnung des Betreibers, nicht die von Trailforks |
-| `harz` | 14 | dieselbe Lage, zusätzlich zwei Ernten mit verschiedenen Namen |
-| `paznaun` | 9 | Deckung im Mittelfeld: Velill ist bei uns 10,8 km lang, dort 8,0 km |
-
-Der Paznaun-Fall ist der lehrreichste: Name („Velill Trail" gegen „velilltrail", Ähnlichkeit 0,55),
-Deckung (0,68) und Länge (Verhältnis 0,74) zeigen alle in dieselbe Richtung, aber keines davon reicht
-über die Schwelle — vermutlich enthält unsere Linie eine Zufahrt, die deren Linie nicht hat. Das ist
-genau die Sorte Entscheidung, die eine Regel nicht treffen sollte.
+Laax steht hier bei 7 von 24, ein Trail weniger als beim ersten Lauf. Der Grund ist keine Schwankung,
+sondern die konservative Richtung der Margin-Regel: der zweite Durchgang hatte mehr Geometrie aus
+`graubunden` geerntet, und mit mehr Kandidaten in der Nähe fällt eine vorher eindeutige Zuordnung in die
+Mehrdeutigkeit zurück. Mehr Daten können also **weniger** Zuordnungen ergeben — das ist gewollt, denn die
+Alternative wäre, eine Zuordnung zu behalten, die nur deshalb eindeutig aussah, weil der Nachbar noch
+nicht bekannt war.

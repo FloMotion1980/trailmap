@@ -1,0 +1,61 @@
+{
+ "mapping": {
+  "laax_foppa": "foppa-trail",
+  "laax_gronda": "gronda-trail",
+  "laax_crap_masegn": "crap-masegn",
+  "laax_fuorcla": "fuorcla-trail",
+  "laax_uaul_da_mulin": "tarschinas",
+  "laax_sogn_martin": "sogn-martin-674333",
+  "laax_plaun_larisch": "plaun-larisch-156163"
+ },
+ "ambiguous": [
+  [
+   "laax_alp_dadens",
+   "bester Abstand 922 m (alp-dadens), naechster 2442 m"
+  ],
+  [
+   "laax_runca_upper",
+   "bester Abstand 1385 m (muletg), naechster 1598 m"
+  ],
+  [
+   "laax_runca_lower",
+   "bester Abstand 468 m (runca-trail-runca-prau-sura), naechster 1491 m"
+  ],
+  [
+   "laax_segnes",
+   "bester Abstand 885 m (segnes-trail), naechster 1016 m"
+  ],
+  [
+   "laax_nagens",
+   "bester Abstand 1443 m (nagens-trail-scansinas), naechster 1853 m"
+  ],
+  [
+   "laax_green_valley",
+   "bester Abstand 554 m (green-valley-trail-672629), naechster 747 m"
+  ],
+  [
+   "laax_never_end",
+   "bester Abstand 610 m (never-end-trail), naechster 1940 m"
+  ],
+  [
+   "laax_vorab",
+   "bester Abstand 636 m (vorab-trail-lower-130070), naechster 1123 m"
+  ],
+  [
+   "laax_crest_la_siala",
+   "bester Abstand 466 m (crest-la-siala), naechster 1831 m"
+  ],
+  [
+   "laax_laaxer_stoeckli",
+   "bester Abstand 524 m (la-siala), naechster 1529 m"
+  ],
+  [
+   "laax_crest_da_tiarms",
+   "bester Abstand 470 m (crest-da-tiarms-516337), naechster 2825 m"
+  ],
+  [
+   "laax_crap_tgietschen",
+   "bester Abstand 780 m (crap-tgietschen-ll), naechster 942 m"
+  ]
+ ]
+}
