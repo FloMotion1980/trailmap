@@ -185,6 +185,29 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
          block ? block.textContent.replace(/\s+/g, " ").trim() : null, "a lift");
     T.ok("and the chart highlights that stretch", !!content().querySelector("svg rect"), true, true);
 
+    // ...und die Markierung muss beim Umschalten auf rueckwaerts MITWANDERN (2026-08-24, Nutzer: "Wenn man
+    // auf rueckwaerts stellt bleibt die farbige Markierung im Hoehenprofil fuer den Trailabschnitt dort wo
+    // sie ist"). Die Segmentfaerbung darunter hat diese Spiegelung immer gemacht, das Rechteck nicht: es
+    // wird aus denselben Segmentdaten gebaut, die auf der UNGESPIEGELTEN Achse aufgezeichnet sind.
+    // Gemessen wird gegen die Spiegelformel, nicht gegen einen festen Wert -- x' = W - x - Breite.
+    const hlRect = () => {
+      const r = content().querySelector(".ele-chart rect");
+      return r ? { x: +r.getAttribute("x"), w: +r.getAttribute("width") } : null;
+    };
+    const beforeFlip = hlRect();
+    if (beforeFlip) {
+      content().querySelector(".reverse-btn").click();
+      await TM.wait(500);
+      const after = hlRect();
+      const wantX = 240 - beforeFlip.x - beforeFlip.w;   // 240 = buildElevationSvg's fixed viewBox width
+      T.ok("the highlight moves to the mirrored position", !!after && Math.abs(after.x - wantX) < 1.5,
+           after ? [after.x, +wantX.toFixed(1)] : null, "mirrored");
+      T.ok("and keeps its width", !!after && Math.abs(after.w - beforeFlip.w) < 1.5,
+           after ? [after.w, beforeFlip.w] : null, "same width");
+      content().querySelector(".reverse-btn").click();
+      await TM.wait(400);
+    }
+
     // An UPHILL component trail has to carry the ⬆️ here too. It is named in four places -- the sidebar
     // card, the map label, the panel's own heading and this block -- and this was the one that dropped it
     // (user, 2026-08-20). Checked against a real uphill segment of a real Tour rather than a synthetic one,
@@ -465,11 +488,14 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
     const grp = content().querySelector(".ip-btns");
     if (h3.querySelector(".ip-btns")) wrongOrder++;          // must no longer live in the heading
     const g = grp.getBoundingClientRect(), p = panel().getBoundingClientRect();
-    const first = grp.firstElementChild.getBoundingClientRect();
-    const last = grp.lastElementChild.getBoundingClientRect();
+    // Nur die BUTTONS messen: in der Gruppe steht seit dem 2026-08-24 auch das Highlight-Abzeichen, ein
+    // 14px hoher Text -- als "Knopf" mitgezaehlt hat es die Hoehen-Gleichheit sofort widerlegt.
+    const btns = [...grp.querySelectorAll("button")];
+    const first = btns[0].getBoundingClientRect();
+    const last = btns[btns.length - 1].getBoundingClientRect();
     if (Math.abs(first.top - last.top) > 1) worstOverflow = 1e9;   // one row, or the overflow check is moot
     worstOverflow = Math.max(worstOverflow, g.right - p.right);
-    [...grp.children].forEach((b) => sizes.add(Math.round(b.getBoundingClientRect().height)));
+    btns.forEach((b) => sizes.add(Math.round(b.getBoundingClientRect().height)));
     // Ein langer Name DARF umbrechen -- was nicht passieren darf, ist dass der farbige Balken links dabei
     // auf seiner Zeilenhoehe stehen bleibt (Nutzer, 2026-08-24: "Wenn der Trailname zweizeilig wird, waechst
     // der farbige Balken links nicht mit in der Hoehe"). Also wird das Verhaeltnis geprueft, nicht das
