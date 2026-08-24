@@ -552,4 +552,29 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   // where it can be painted); here it is only the count that changed, and a stray fifth child would mean the
   // bar was rendered in both places.
   T.eq("the group is four buttons again", content().querySelectorAll(".ip-btns > button").length, 4);
+
+  T.test("the chart's metre figures are HTML, so the viewBox cannot squash them");
+  // The viewBox is a fixed 240 x 48 with preserveAspectRatio="none", so x and y scale by DIFFERENT factors
+  // -- and on a phone they scaled in opposite directions: the chart measured 313 x 46, so x grew 1.30x while
+  // y SHRANK to 0.96x, and a 7px SVG glyph came out 6.7px tall and 36 % too wide at the same time (user,
+  // 2026-08-24: "gequetscht und winzig"). Nothing inside that viewBox can be typeset honestly, so the two
+  // figures moved out of it. Checked as an ABSENCE plus a real font size, because either half alone passes
+  // against the broken build: SVG text with a bigger font is still stretched, and HTML labels in a 46px box
+  // still sit on a squashed curve.
+  await openFirstTrail();
+  const eleSvg = content().querySelector("svg.ele-chart");
+  T.eq("no <text> left inside the stretched viewBox", eleSvg.querySelectorAll("text").length, 0);
+  const labels = [...content().querySelectorAll(".ele-wrap .ele-label")];
+  T.eq("both figures are there as HTML", labels.length, 2);
+  T.ok("and they read as metres", labels.every((l) => /^\d+ m$/.test(l.textContent.trim())),
+       labels.map((l) => l.textContent.trim()), "n m");
+  const fs = labels.length ? parseFloat(getComputedStyle(labels[0]).fontSize) : 0;
+  T.ok("at a real font size, not 7px", fs >= 10, fs, ">= 10");
+  T.ok("they do not swallow a tap meant for the chart",
+       labels.every((l) => getComputedStyle(l).pointerEvents === "none"),
+       labels.map((l) => getComputedStyle(l).pointerEvents), "none");
+  // The height is what stops the curve itself being squashed: 46px against a 48-unit viewBox is a y scale
+  // BELOW 1, i.e. 1 400 metres of descent compressed into 46 pixels.
+  const touchH = parseFloat(ruleValue(".ele-chart", "height", true) || ruleValue(".ele-chart", "height", false) || "0");
+  T.ok("and the touch chart is not shorter than the viewBox it draws", touchH >= 48, touchH, ">= 48");
 });

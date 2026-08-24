@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=201" />
+<link rel="stylesheet" href="style.css?v=202" />
 </head>
 <body>
 <div id="fatalError">
@@ -5874,21 +5874,32 @@ function buildElevationSvg(profile, highlight, color, trailId, reversed, segment
   const highlightRect = highlight
     ? `<rect x="${x(highlight.distStart).toFixed(1)}" y="0" width="${(x(highlight.distEnd) - x(highlight.distStart)).toFixed(1)}" height="${H}" fill="${highlight.color}" opacity="0.28"></rect>`
     : "";
+  // The two metre figures are HTML, not SVG text (2026-08-24, the user: on a phone they looked "gequetscht
+  // und winzig"). The viewBox is a fixed 240 x H with preserveAspectRatio="none", so x and y scale by
+  // DIFFERENT factors -- and on a phone they scale in opposite directions: measured at 375px the chart is
+  // 313 x 46, so x grows 1.30x while y SHRINKS to 0.96x. A 7px glyph therefore came out 6.7px tall and 36 %
+  // too wide at once. Nothing inside that viewBox can be typeset honestly; the ellipse next door has the
+  // same problem and solves it by re-deriving the scale at hover time, which is not available at build time.
+  // As HTML they sit in a wrapper over the chart at a percentage of its height and keep a normal font.
+  const labelTop = (100 * y(eleMax) / H).toFixed(1);
+  const labelBottom = (100 * (H - y(eleMin)) / H).toFixed(1);
   return `
+    <div class="ele-wrap">
     <svg viewBox="0 0 ${W} ${H}" class="ele-chart" preserveAspectRatio="none"
          data-trail-id="${trailId || ""}" data-reversed="${reversed ? "1" : ""}"
          data-dist-max="${distMax}" data-pad-top="${padTop}" data-pad-bottom="${padBottom}" data-h="${H}"
          data-ele-min="${eleMin}" data-ele-range="${eleRange}" data-profile='${JSON.stringify(profile)}'>
       ${lines}
       ${highlightRect}
-      <text x="2" y="${(y(eleMax) + 8).toFixed(1)}" class="ele-label">${Math.round(eleMax)} m</text>
-      <text x="2" y="${(y(eleMin) - 2).toFixed(1)}" class="ele-label">${Math.round(eleMin)} m</text>
       <!-- An ELLIPSE, not a circle, because this SVG is stretched: the viewBox is a fixed 240 x H and
            preserveAspectRatio="none" scales x and y by different factors, so a circle renders as an egg
            (user, 2026-08-04). The handler sets rx/ry per position from the element's real size, which is
            the only place the scale is known; these are just a sane starting pair. -->
       <ellipse class="ele-hover-dot" rx="4.5" ry="4.5" cx="0" cy="0" style="display:none"></ellipse>
-    </svg>`;
+    </svg>
+    <span class="ele-label ele-label-max" style="top:${labelTop}%">${Math.round(eleMax)} m</span>
+    <span class="ele-label ele-label-min" style="bottom:${labelBottom}%">${Math.round(eleMin)} m</span>
+    </div>`;
 }
 
 // Reverses an elevation profile so it reads as if the trail were ridden in the opposite
@@ -6655,7 +6666,16 @@ function isHighlight(t){
 //: How many trails the current threshold keeps. Shown beside the slider, and it is what makes an absolute
 //: number usable at all: "4,35" means nothing on its own, "4,35 · 27 Trails" does.
 function highlightCount(){
-  return lineTrails.filter(t => activeRegions.has(t.region) && isHighlight(t)).length;
+  // ALLE Filter, nicht nur die Region (2026-08-24, Nutzer: der Regler war "unabhaengig von der
+  // tatsaechlichen Anzahl der Trails durch Regionsfilter und andere Filter"). Die Zahl neben dem Regler ist
+  // ein Versprechen darueber, was gleich zu sehen ist -- steht nur "schwarz" an, nannte sie in Finale 28
+  // Trails, sichtbar waeren 8 gewesen. `trailPassesFilters` ist die einzige Sichtbarkeitsregel, die auch
+  // die Kartenschleife und die Tourenliste benutzen, also stimmt die Zahl damit per Konstruktion.
+  //
+  // Die SPANNE des Reglers folgt den Filtern bewusst NICHT (siehe recomputeHighlightRange): sie bliebe sonst
+  // nicht stehen, waehrend man Chips umschaltet, und der eingestellte Wert koennte aus der neuen Spanne
+  // fallen. Skala stabil, Zahl ehrlich -- das war die Entscheidung des Nutzers.
+  return lineTrails.filter(t => trailPassesFilters(t) && isHighlight(t)).length;
 }
 //: How many of the trails on screen carry a rating. The rating UI is offered as soon as there is ONE --
 //: no density threshold (user, 2026-08-24: "Ich würde übrigens auch erstmal darauf verzichten, das Rating
@@ -8134,6 +8154,9 @@ function buildTrailListDom(trails){
 }
 
 function render(){
+  // Die Trefferzahl am Highlights-Regler haengt jetzt an allen Filtern, also muss sie mit jedem render()
+  // nachgezogen werden -- vorher genuegte der Regionswechsel.
+  if (typeof syncHighlightSlider === "function") syncHighlightSlider();
   listEl.innerHTML = "";
   let shownTrails = 0, totalTrails = 0, shownTours = 0, totalTours = 0;
   // Tallies for the "(n sichtbar)" counts on each region-group/sub-region chip (see
@@ -8487,7 +8510,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v201"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v202"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

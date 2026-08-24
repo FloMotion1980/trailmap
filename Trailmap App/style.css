@@ -716,7 +716,14 @@ html.landscape-compact .search-overlay-summary{
    override this back down further below, unaffected: mobile screen height is the one thing this app has
    never had room to spare. */
 .ele-chart{ display:block; width:100%; height:72px; margin:4px 0 0; }
-.ele-chart .ele-label{ font-size:7px; fill:#4c574d; font-family:Arial, sans-serif; }
+/* Die beiden Meter-Angaben liegen UEBER dem Diagramm, nicht darin: der viewBox-Inhalt wird in x und y
+   unterschiedlich skaliert (am Handy sogar gegenlaeufig, siehe buildElevationSvg), Schrift darin ist also
+   grundsaetzlich verzerrt. pointer-events:none, damit sie den Tipp aufs Diagramm nicht abfangen. */
+.ele-wrap{ position:relative; }
+.ele-wrap .ele-label{ position:absolute; left:3px; font-size:11px; line-height:1.1; color:#4c574d;
+  font-family:Arial, sans-serif; pointer-events:none; text-shadow:0 0 3px #fff, 0 0 3px #fff; }
+.ele-wrap .ele-label-max{ transform:translateY(1px); }
+.ele-wrap .ele-label-min{ transform:translateY(-1px); }
 /* non-scaling-stroke because this SVG is stretched non-uniformly (see the ellipse in buildElevationSvg): without
    it the white halo comes out thicker on the sides than on top, which on a 4.5px dot is visible. The radii
    themselves are set per position by the hover handler. */
@@ -1221,7 +1228,11 @@ html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
   /* Keeps the touch chart at its original size -- the desktop-only bump to 72px (see the base rule) would
      otherwise apply here too, and a phone's vertical space is the one thing this app has never had room
      to spare (2026-08-13). */
-  .ele-chart{ height:46px; }
+  /* 46 -> 72px (2026-08-24, Nutzer: das Profil sah am Handy "sehr klein und gequetscht" aus). Der Panel
+     traegt es: gemessen 209px fuer einen einfachen Trail und 276px fuer die hoechste Tour, bei einem Deckel
+     von min(48vh,370px). Die 46px waren auch der Grund, warum die y-Achse SCHRUMPFTE (46/48 = 0,96) --
+     1 400 Hoehenmeter auf 46px, waehrend die x-Achse um das 1,3-fache gedehnt wurde. */
+  .ele-chart{ height:72px; }
   /* Touch-only; the layout itself is in the base rule. It has to name the same display type as that rule --
      as `grid` it silently overrode a flex column and stretched the control container to the width of the
      widest sibling: 232px instead of 44px, measured. */
@@ -1244,7 +1255,9 @@ html.landscape-compact #infoPanel{
   height: auto !important;
   overflow-y: auto;
 }
-html.landscape-compact .ele-chart{ height:40px; }
+/* Im Querformat war die Stauchung mit 40/48 = 0,83 am staerksten; 56px ist der Kompromiss, den die dortige
+   Hoehe hergibt (Deckel 100vh - 90px). */
+html.landscape-compact .ele-chart{ height:56px; }
 /* A landscape phone has 320-375px of height for a panel capped at 100vh-90px, and the bar arrived on top of
    a heading whose buttons also grew -- measured, the tallest panels there (a Tour with its segment info) end
    up a few px over the cap and scroll, which would put the bar itself below the fold. 44px is the smallest

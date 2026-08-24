@@ -176,6 +176,33 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   await TM.ui.setSwitch("showHighlightsToggle", false);
   await TM.wait(400);
 
+  T.test("the count follows EVERY filter, while the scale stays put");
+  // The slider knew only the region filter: recomputeHighlightRange and highlightCount both asked
+  // activeRegions.has(t.region) and nothing else, so with only "schwarz" switched on the label still
+  // promised 28 trails in Finale while 8 were visible (user, 2026-08-24). The count is a promise about what
+  // is about to be seen, so it goes through trailPassesFilters -- the same rule the map loop and the Tour
+  // list use, which is what makes the number agree with them by construction.
+  // The RANGE deliberately does not follow: it would move under the finger while chips are toggled, and the
+  // dialled-in threshold could fall outside the new span. Both halves are checked, because a version that
+  // filters everything passes the first half and fails here.
+  await TM.ui.setSwitch("showHighlightsToggle", true);
+  await TM.wait(500);
+  const readCount = () => TM.ui.num(TM.$("#highlightSliderValue").textContent.split("·")[1] || "");
+  const before = { n: readCount(), min: sl.min, max: sl.max, value: sl.value };
+  for (const d of ["gruen", "blau", "rot"]) await TM.ui.setDiff(d, false);
+  await TM.wait(500);
+  const after = { n: readCount(), min: sl.min, max: sl.max, value: sl.value };
+  T.ok("switching difficulties off lowers the count", after.n < before.n, [before.n, after.n], "fewer");
+  T.eq("the scale does not move", [after.min, after.max, after.value], [before.min, before.max, before.value]);
+  const listed = TM.ui.trailCards().length;
+  T.ok("and the count never exceeds what is actually listed", after.n <= listed, [after.n, listed],
+       "count <= listed");
+  for (const d of ["gruen", "blau", "rot"]) await TM.ui.setDiff(d, true);
+  await TM.wait(400);
+  T.eq("switching them back restores the count", readCount(), before.n);
+  await TM.ui.setSwitch("showHighlightsToggle", false);
+  await TM.wait(300);
+
   T.test("the Highlights switch dims everything outside the region's own top fifth");
   chip("sort", "rate").click();
   await TM.wait(300);

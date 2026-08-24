@@ -21,6 +21,26 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-24 (zwei Kleinigkeiten)
+- **Das Höhenprofil war am Handy in beiden Achsen falsch skaliert.** Der viewBox ist fest 240 × 48 mit
+  `preserveAspectRatio="none"`, x und y laufen also unabhängig — und am Handy gegenläufig: gemessen bei
+  375px ist das Diagramm 313 × 46, x wächst also auf das 1,30-fache, während y auf 0,96 **schrumpft**. Eine
+  7px-Beschriftung im SVG kam damit gleichzeitig 6,7px hoch und 36 % zu breit heraus („gequetscht und
+  winzig", Nutzer). Zwei Änderungen: die Meter-Angaben sind **HTML statt SVG-Text** (11px, unverzerrt, in
+  einem `.ele-wrap` über dem Diagramm, `pointer-events:none`), und das Diagramm ist am Handy **72px statt
+  46px** hoch — das war auch der Grund für die gestauchte Kurve, 1 400 Höhenmeter auf 46px. Querformat
+  40 → 56px. Der Panel trägt es: gemessen 209px für einen einfachen Trail und 276px für die höchste Tour bei
+  einem Deckel von 370px.
+- **Der Highlights-Regler kannte nur den Regionsfilter.** `highlightCount()` fragte ausschließlich
+  `activeRegions.has(t.region)`, also versprach die Zahl neben dem Regler Trails, die gerade weggefiltert
+  waren — in Finale mit nur „schwarz" 28 statt 8. Die Zahl geht jetzt durch `trailPassesFilters(t)`, dieselbe
+  Regel, die auch die Kartenschleife und die Tourenliste benutzen. Die **Spanne** folgt den Filtern bewusst
+  nicht: sie bliebe sonst nicht stehen, während man Chips umschaltet, und der eingestellte Wert könnte aus
+  der neuen Spanne fallen. Skala stabil, Zahl ehrlich — die Entscheidung des Nutzers.
+- Nebenbei: die Versionsnummer stand auf **201**, nicht auf der Zahl, die ich erhöhen wollte — die erste
+  Erhöhung griff ins Leere, und genau deshalb lieferte der Browser noch die alte CSS aus. Jetzt v202 an allen
+  vier Stellen.
+
 ## 2026-08-24 (zuletzt)
 - **Finale Fall für Fall durchgegangen**: 19 Zuordnungen entschieden, 0 offene Fälle, 134 → 142 bewertete
   Trails (65 %), 154 IDs. Damit hat **keine Region mehr einen Prüfstapel**; gesamt 1 777 bewertete Trails.
