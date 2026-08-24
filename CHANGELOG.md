@@ -21,6 +21,31 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-24 (Nacht)
+- **Bewertungen und Beliebtheit für 23 weitere Regionen** — 1 718 von 4 555 Trails (38 %) tragen jetzt
+  einen Wert, gegenüber 131 in einer einzigen Region am Vortag. Die Abdeckung je Region steht in
+  **`docs/trail-rating-abdeckung.md`** (erzeugt aus den Regionsdateien selbst), das Verfahren in
+  `docs/trail-rating-konzept.md`. Höchste Abdeckung: Livigno 93 %, Sölden 85 %, Madeira 78 %; die größten
+  Blöcke: Gardasee 387, Schwarzwald 261, Südvogesen 158, Pfälzerwald 156.
+- **Zwei Wege statt einem.** Wo die Region AUS Trailforks gebaut wurde, ist die Zuordnung ein Nachschlagen
+  (`tools/map_tf_slugs.py`: id → Name → nächste Linie, jeweils gegen die Endpunkte geprüft) — über 1 606
+  Zuordnungen kein einziger abweichender Name. Wo unsere Geometrie von einem Betreiber oder aus OSM kommt,
+  füllt der unscharfe Abgleich die Lücken (`tools/union_mapping.py`), aber nur mit seinen `match`-Urteilen;
+  ein `review` bleibt unbewertet. Das hebt Sölden von 14 auf 29, Livigno von 0 auf 28 und Bike Kingdom von
+  4 auf 56.
+- **Vier Regionen bekommen nichts, und das ist die Antwort**: Donnersberg, 3-Länder, Serfaus, Waldmeister.
+  Trailforks kennt dort 4, 11, 3 und 5 Trails. Der Anteil in der Tabelle misst, wie viel in einer Region
+  geloggt wird, nicht wie gut wir sie erfasst haben.
+- **Neue Werkzeuge**: `harvest_tf_ratings.py` (nur die Zahlen, für eine Region, deren Geometrie schon da
+  ist), `find_tf_regions.py` + `probe_tf_slugs.py` (Trailforks hat keine brauchbare Suche — ein Slug wird
+  erraten und probiert), `phase_b_run.py`, `merge_tf_tables.py`, `rate_region.py`, `rating_report.py`.
+  Drei Dinge, die mehr wert sind, als sie aussehen: ein **fehlgeschlagener Abruf wird nie als „keine
+  Bewertung" verbucht** (sonst markiert eine Drosselung eine ganze Region als unbewertet, und der
+  Wiederanlauf überspringt genau diese Zeilen); die Bewertung wird an der **eigenen** Trail-id der Seite
+  verankert (die steht in jedem Link der Seite, ein Nachbar einmal — der Modus ist richtig, „erster
+  Treffer" ein Münzwurf); und `--areas` begrenzt eine breite Ernte auf die Gebiete, die zur Region gehören
+  (Laax liegt unter `graubunden`: 2 416 Zeilen über 70 Gebiete, davon 122 relevant).
+
 ## 2026-08-24
 - **Die Zeile ragte 14px in den rechten Rand der Seitenleiste** — ein echter Layoutfehler, kein reines
   Textproblem: als gewöhnliches Flex-Item in `.toggle-row-group` nahm sie ihre **Inhaltsbreite** (331px) in

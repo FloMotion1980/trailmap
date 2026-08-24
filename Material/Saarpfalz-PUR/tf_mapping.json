@@ -1,0 +1,35 @@
+{
+ "mapping": {
+  "sb_zimmel": "zimmel",
+  "sb_rodeo_zimmel": "rodeo-zimmel",
+  "sb_angry_jens": "angry-jens",
+  "sb_canadian": "canadian-339824",
+  "sb_jungle_1": "upper-jungle-169139",
+  "sb_jungle_2": "lower-jungle-mogli-line",
+  "sb_shooter": "shooter-341442",
+  "sb_jump_line": "jump-line-339691",
+  "sb_sailor_moon": "sailor-moon",
+  "sb_wellensittich_1": "wellensittich-part-1",
+  "sb_wellensittich_2": "wellensittich-part-2",
+  "sb_schwarze_5": "schwarze-5",
+  "sb_paulaner": "paulaner-trail",
+  "sb_fliegerstein_1": "fliegerstein-part-1",
+  "sb_fliegerstein_2": "fliegerstein-part-2",
+  "sb_links_rechts_runna": "links-rechts-runna",
+  "sb_ballern_ohne_gewehr": "ballern-ohne-gewehr"
+ },
+ "ambiguous": [
+  [
+   "sb_flow_homburg_easy",
+   "bester Abstand 0 m (easy-line-509114), naechster 14 m"
+  ],
+  [
+   "sb_flow_homburg_flow",
+   "bester Abstand 0 m (flow-line-509112), naechster 7 m"
+  ],
+  [
+   "sb_flow_homburg_hard",
+   "bester Abstand 0 m (hard-line-aka-flugschule), naechster 7 m"
+  ]
+ ]
+}

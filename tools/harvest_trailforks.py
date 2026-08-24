@@ -215,13 +215,18 @@ def parse_trail(html):
     return coords, prof
 
 
-def harvest_geo(table_path, geo_path, limit=None, sleep=0.7, skip_areas=()):
+def harvest_geo(table_path, geo_path, limit=None, sleep=0.7, skip_areas=(), only_areas=()):
     table = json.load(io.open(table_path, encoding="utf-8"))
     geo = json.load(io.open(geo_path, encoding="utf-8")) if os.path.exists(geo_path) else {}
     skip = set(skip_areas)
+    # `only_areas` is what makes a broad seed usable. Laax has no region of its own, so its trails come out
+    # of `graubunden` -- 2 416 rows over 70 areas, of which "Biketrails Flims Laax" and "Flims LAAX" are the
+    # 122 that matter. Fetching the canton to rate 19 trails is an hour of requests for nothing.
+    keep = set(only_areas)
     todo = [s for s, r in sorted(table.items())
             if r.get("diff") and r["diff"] not in ACCESS_DIFF and s not in geo
-            and (r.get("area") or "") not in skip]
+            and (r.get("area") or "") not in skip
+            and (not keep or (r.get("area") or "") in keep)]
     if limit:
         todo = todo[:limit]
     print("%d in the table, %d already harvested, %d to fetch" % (len(table), len(geo), len(todo)))
@@ -281,6 +286,8 @@ def main(argv):
     ap.add_argument("--geo", action="store_true")
     ap.add_argument("--limit", type=int)
     ap.add_argument("--sleep", type=float, default=0.7)
+    ap.add_argument("--areas", help="only fetch pages for these `riding area` names (comma-separated) -- "
+                                     "for a seed that covers far more ground than the region does")
     ap.add_argument("--skip-areas", help="JSON list of `riding area` names not to fetch geometry for. "
                                         "A harvest-COST filter only: what is finally in the region is "
                                         "decided by the build's own anchor rule, which sees only "
@@ -295,7 +302,8 @@ def main(argv):
         harvest_tables([s for s in a.seeds.split(",") if s], table_path)
     if a.geo:
         skip = json.load(io.open(a.skip_areas, encoding="utf-8")) if a.skip_areas else []
-        harvest_geo(table_path, geo_path, a.limit, a.sleep, skip)
+        harvest_geo(table_path, geo_path, a.limit, a.sleep, skip,
+                    [x for x in (a.areas or "").split(",") if x])
 
 
 if __name__ == "__main__":

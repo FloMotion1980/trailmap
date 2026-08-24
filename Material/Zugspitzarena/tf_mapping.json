@@ -1,0 +1,53 @@
+{
+ "mapping": {
+  "zta_fun_trail": "funtrail-biberwier",
+  "zta_singletrail_h_henweg": "singletrail-hohenweg",
+  "zta_m_hlwald_trail": "muhlwaldtrail-573730",
+  "zta_grubigalm_trail": "grubigalm-trail",
+  "zta_wolfratshauser_trail": "wolfratshauser-trail",
+  "zta_lichte_trail": "lichte-trail",
+  "zta_bachtl_trail": "bachtltrail"
+ },
+ "ambiguous": [
+  [
+   "zta_family_trail",
+   "bester Abstand 1170 m (forest-thunder-forest-one), naechster 2546 m"
+  ],
+  [
+   "zta_singletrail_schl_gle",
+   "bester Abstand 532 m (forest-thunder-forest-one), naechster 1396 m"
+  ],
+  [
+   "zta_marienberg_trail",
+   "bester Abstand 538 m (marienberg-trail-part-2), naechster 672 m"
+  ],
+  [
+   "zta_singletrail_forest_aisle",
+   "bester Abstand 1218 m (forest-aisle-forest-2), naechster 1929 m"
+  ],
+  [
+   "zta_fifty_fifty",
+   "bester Abstand 9310 m (wachter-steig), naechster 10740 m"
+  ],
+  [
+   "zta_blue_bird",
+   "bester Abstand 8351 m (wachter-steig), naechster 9784 m"
+  ],
+  [
+   "zta_bare_knuckle",
+   "bester Abstand 8453 m (wachter-steig), naechster 9838 m"
+  ],
+  [
+   "zta_blindsee_trail",
+   "bester Abstand 1587 m (blindseetrail), naechster 1758 m"
+  ],
+  [
+   "zta_barbarasteig_trail",
+   "bester Abstand 175 m (barbarasteig), naechster 369 m"
+  ],
+  [
+   "zta_rauhe_gasse_trail",
+   "bester Abstand 247 m (rauhe-gasse), naechster 793 m"
+  ]
+ ]
+}

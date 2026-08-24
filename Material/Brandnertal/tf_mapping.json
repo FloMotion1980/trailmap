@@ -1,0 +1,45 @@
+{
+ "mapping": {
+  "brt_st05_tschonny_noxwil": "tschonny-noxwil",
+  "brt_st06_tsch_ckie_tschan": "tschackie-tschan",
+  "brt_st07_burtscha_trail": "burtscha-trail"
+ },
+ "ambiguous": [
+  [
+   "brt_st01_tschengla_unchained",
+   "bester Abstand 98 m (funsport-trail), naechster 290 m"
+  ],
+  [
+   "brt_st02_tsch_ck_the_ripper",
+   "bester Abstand 97 m (funsport-trail), naechster 289 m"
+  ],
+  [
+   "brt_st03_tschack_norris",
+   "bester Abstand 91 m (tschack-norris), naechster 91 m"
+  ],
+  [
+   "brt_st04_tscharlie_tsch_plin",
+   "bester Abstand 195 m (tscharlie-tschaplin), naechster 276 m"
+  ],
+  [
+   "brt_st08_alte_statt_trail",
+   "bester Abstand 1242 m (alte-statt-trail), naechster 2006 m"
+  ],
+  [
+   "brt_st09_schmalzb_dile_trail",
+   "bester Abstand 1274 m (tscharlie-tschaplin), naechster 1324 m"
+  ],
+  [
+   "brt_st10_parpfienz_trail",
+   "bester Abstand 1047 m (parpfienz-trail), naechster 2894 m"
+  ],
+  [
+   "brt_st11_upper_tschoy_ride",
+   "bester Abstand 88 m (upper-tschoy-ride), naechster 1011 m"
+  ],
+  [
+   "brt_st12_lower_tschoy_ride",
+   "bester Abstand 173 m (lower-tschoy-ride), naechster 970 m"
+  ]
+ ]
+}

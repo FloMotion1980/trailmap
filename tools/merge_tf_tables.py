@@ -26,9 +26,19 @@ def main(argv):
     ap.add_argument("dir")
     ap.add_argument("--from", dest="src", required=True)
     ap.add_argument("--into", dest="dst", required=True)
+    ap.add_argument("--from-dir", help="read --from out of this directory instead of `dir` -- for pulling a "
+                                        "few areas out of a neighbouring region's broad harvest")
+    ap.add_argument("--areas", help="only rows whose `riding area` is one of these (comma-separated)")
     a = ap.parse_args(argv)
     d = a.dir if os.path.isabs(a.dir) else os.path.join(ROOT, a.dir)
-    src = json.load(io.open(os.path.join(d, a.src), encoding="utf-8"))
+    sd = d
+    if a.from_dir:
+        sd = a.from_dir if os.path.isabs(a.from_dir) else os.path.join(ROOT, a.from_dir)
+    src = json.load(io.open(os.path.join(sd, a.src), encoding="utf-8"))
+    if a.areas:
+        keep = set(x for x in a.areas.split(",") if x)
+        src = {k: v for k, v in src.items() if (v.get("area") or "") in keep}
+        print("gefiltert auf %s: %d Zeilen" % (a.areas, len(src)))
     dp = os.path.join(d, a.dst)
     dst = json.load(io.open(dp, encoding="utf-8")) if os.path.exists(dp) else {}
     new = filled = 0

@@ -1,0 +1,35 @@
+{
+ "mapping": {
+  "nlt_granatentrail": "granatentrail-nlt-20",
+  "nlt_rodelbahn": "rodelbahn-trail-nlt-21",
+  "nlt_grenzstein": "grenzstein-nlt-22",
+  "nlt_upper_flak": "upper-flak-nlt-30",
+  "nlt_lower_flak": "lower-flak-nlt-31",
+  "nlt_corona": "corona-lockdown-nlt-32",
+  "nlt_frei_lauberline": "freilauberline-40",
+  "nlt_dachskopf": "dachskopf-nlt-7",
+  "hardtline_zubringer": "hardtlines-zubringer"
+ },
+ "ambiguous": [
+  [
+   "nlt_popeye",
+   "bester Abstand 111 m (popeye-nlt-33), naechster 542 m"
+  ],
+  [
+   "nlt_worldcup",
+   "bester Abstand 96 m (worldcup-nlt-10), naechster 177 m"
+  ],
+  [
+   "hardtline_bombtrack",
+   "bester Abstand 13 m (hardtlines-bombtrack), naechster 43 m"
+  ],
+  [
+   "hardtline_pickeldy",
+   "bester Abstand 195 m (hardtlines-jumptrail), naechster 338 m"
+  ],
+  [
+   "hardtline_shrederick",
+   "bester Abstand 55 m (hardtlines-blauer-klaus), naechster 72 m"
+  ]
+ ]
+}
