@@ -80,33 +80,43 @@ def main(argv):
     for r in rows:
         if r["verdict"] != "match" or not r["candidates"]:
             continue
-        t = table.get(r["candidates"][0]["slug"]) or {}
-        if not t.get("rating_bayesian"):
-            continue
-        by_id[r["id"]] = {"rate": round(float(t["rating_bayesian"]), 2),
-                          "votes": int(t.get("votes") or 0),
-                          "pop": int(t["popularity_score"]) if t.get("popularity_score") is not None else None,
-                          "slug": r["candidates"][0]["slug"]}
+        slug = r["candidates"][0]["slug"]
+        t = table.get(slug) or {}
+        # The SLUG is written for every resolved trail, rated or not (fixed 2026-08-24, the user asked
+        # whether every trail had kept its id -- 1 428 mapped trails had not). A trail Trailforks knows but
+        # nobody has voted on yet is the case this matters most for: the mapping is the expensive half and it
+        # does not expire, while the votes arrive later. Without the slug, the next refresh would have to
+        # re-derive that mapping from scratch -- and for a region where our geometry is an operator's own
+        # recording, "from scratch" means the fuzzy matcher and another round of review cases.
+        entry = {"slug": slug, "rate": None, "votes": 0, "pop": None}
+        if t.get("rating_bayesian"):
+            entry["rate"] = round(float(t["rating_bayesian"]), 2)
+            entry["votes"] = int(t.get("votes") or 0)
+            entry["pop"] = int(t["popularity_score"]) if t.get("popularity_score") is not None else None
+        by_id[r["id"]] = entry
 
     path = os.path.join(REGIONS, a.region + ".json")
     data = json.load(io.open(path, encoding="utf-8"))
-    applied = 0
+    applied = mapped = 0
     for t in data["lineTrails"]:
         for k in ("rate", "votes", "pop", "tf"):
             t.pop(k, None)
         v = by_id.get(t["id"])
-        if not v or not v["votes"]:
+        if not v:
+            continue
+        t["tf"] = v["slug"]
+        mapped += 1
+        if v["rate"] is None or not v["votes"]:
             continue
         t["rate"] = v["rate"]
         t["votes"] = v["votes"]
         if v["pop"] is not None:
             t["pop"] = v["pop"]
-        t["tf"] = v["slug"]
         applied += 1
 
     rated = [t for t in data["lineTrails"] if t.get("rate")]
-    print("%s: %d von %d Trails mit Bewertung (%.0f %%)"
-          % (a.region, applied, len(data["lineTrails"]), 100.0 * applied / len(data["lineTrails"])))
+    print("%s: %d von %d Trails mit Bewertung (%.0f %%), %d mit gespeicherter Trailforks-ID"
+          % (a.region, applied, len(data["lineTrails"]), 100.0 * applied / len(data["lineTrails"]), mapped))
     if rated:
         best = sorted(rated, key=lambda t: -t["rate"])[:3]
         print("  Beste: " + ", ".join("%s %.2f (%d Stimmen)" % (t["name"], t["rate"], t["votes"])
