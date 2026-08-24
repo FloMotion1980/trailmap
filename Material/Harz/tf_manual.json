@@ -1,0 +1,125 @@
+{
+ "hz_ab_downhill": {
+  "slug": "msbx-6",
+  "why": "Nutzerentscheidung 2026-08-24: 1:1 dieselbe Linie (Laengenverhaeltnis 1,00, Deckung mindestens 0,99), unser Eintrag traegt nur den knapperen Betreibernamen. 4,08 aus 5 Stimmen."
+ },
+ "hz_ab_jump_line": {
+  "slug": "msbxjumpline",
+  "why": "Nutzerentscheidung 2026-08-24: 1:1 dieselbe Linie (Laengenverhaeltnis 1,00, Deckung mindestens 0,99), unser Eintrag traegt nur den knapperen Betreibernamen. 3,98 aus 2 Stimmen."
+ },
+ "hz_sb_bx": {
+  "slug": "schulenberg-bx",
+  "why": "Nutzerentscheidung 2026-08-24: 1:1 dieselbe Linie (Laengenverhaeltnis 1,00, Deckung mindestens 0,99), unser Eintrag traegt nur den knapperen Betreibernamen. 4,10 aus 3 Stimmen."
+ },
+ "hz_sb_downhill": {
+  "slug": "schulenberg-dh-race",
+  "why": "Nutzerentscheidung 2026-08-24: 1:1 dieselbe Linie (Laengenverhaeltnis 1,00, Deckung mindestens 0,99), unser Eintrag traegt nur den knapperen Betreibernamen. 4,29 aus 4 Stimmen."
+ },
+ "hz_ab_flowtrail": {
+  "slugs": [
+   "msbx1-flowtrail",
+   "flowtrail-lower"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide Abschnitte gewichtet (4,11 aus 2 und 4,17 aus 6). 914 m + 1 114 m ergeben genau unsere 2,02 km, beide liegen zu mindestens 0,98 auf unserer Linie."
+ },
+ "hz_ab_funride": {
+  "slugs": [
+   "msbx-north-shore-upper",
+   "msbx-north-shore-lower"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide Abschnitte gewichtet (3,98 aus 2 und 4,19 aus 5). 786 m + 793 m ergeben exakt unsere 1,58 km."
+ },
+ "hz_ab_singletrail": {
+  "slugs": [
+   "msbx2-wurzeltrail-upper",
+   "msbx2-wurzeltrail-lower"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide Abschnitte gewichtet. Gleicher Wert (3,84) auf beiden Seiten, zusammen 1,17 km unserer 1,18 km."
+ },
+ "hz_bl_downhill": {
+  "slugs": [
+   "dh-upper-140882",
+   "downhill-middle-section",
+   "downhill-lower-section"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: alle drei Abschnitte gewichtet (3,73/3, 3,98/2, 3,76/3). 944 + 469 + 1 343 m ergeben 2,76 km, also genau unsere 2,75 km. 'DH upper' heisst anders, ist aber sichtbar derselbe Weg."
+ },
+ "hz_bl_enduro": {
+  "slugs": [
+   "enduro-upper",
+   "enduro-lower"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: die zwei gleichnamigen Abschnitte gewichtet (3,65/3 und 3,84/1), zusammen 3,32 km unserer 3,31 km. Der 'Wurmberg Roller upper DH' liegt zu 0,83 darauf, ist aber ein eigener Trail -- den fuehren wir selbst als 'Wurmberg Roller (oben)'."
+ },
+ "hz_bl_evil_rocks": {
+  "slugs": [
+   "evil-rocks-upper",
+   "singletrail-lower"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide gewichtet (3,98/1 und 3,87/3). Zusammen 2,82 km, genau unsere Laenge -- der fremde Name ist hier die Fortsetzung derselben Abfahrt, nicht ein Nachbartrail."
+ },
+ "hz_bl_freeride": {
+  "slugs": [
+   "freeride-upper",
+   "freeride-lower"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide gewichtet (3,43/4 und 3,89/5), obwohl die Abschnitte deutlich unterschiedlich bewertet sind -- unser Eintrag ist der ganze Trail."
+ },
+ "hz_bt_brunhildenritt": {
+  "slugs": [
+   "brunhildenritt-1",
+   "brunhildenritt-2",
+   "brunhildenritt-4"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: alle Abschnitte mit UNSERER Nummer gewichtet. Trailforks fuehrt im Bodetal die Nummern des Betreibers als '#1'/'#2'/'#4' und zerlegt jeden Trail zusaetzlich in bezifferte Stuecke. Je 3,84 aus 1 Stimme."
+ },
+ "hz_bt_harzer_roller": {
+  "slugs": [
+   "harzer-roller-1",
+   "harzer-roller-2",
+   "harzer-roller-3",
+   "harzer-roller-4"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: alle Abschnitte mit UNSERER Nummer gewichtet. Trailforks fuehrt im Bodetal die Nummern des Betreibers als '#1'/'#2'/'#4' und zerlegt jeden Trail zusaetzlich in bezifferte Stuecke. 3,99 aus 5 plus dreimal 3,84 aus 1."
+ },
+ "hz_bt_rosstrappendownhill": {
+  "slugs": [
+   "rosstrappendownhill-1",
+   "rosstrappendownhill-2",
+   "rosstrappendownhill-3"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: alle Abschnitte mit UNSERER Nummer gewichtet. Trailforks fuehrt im Bodetal die Nummern des Betreibers als '#1'/'#2'/'#4' und zerlegt jeden Trail zusaetzlich in bezifferte Stuecke. 3,98/1, 3,98/1 und 3,76/7."
+ },
+ "hz_hk_downhill": {
+  "slugs": [
+   "dh-middle-hahnenklee",
+   "dh-upper-hahnenklee"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: beide gewichtet (4,29/4 und 4,21/3). 388 + 409 m ergeben 797 m, genau unsere 0,8 km."
+ },
+ "hz_hk_freeride": {
+  "slugs": [
+   "hahnenklee-upper-freeride",
+   "hahnenklee-middle-freeride",
+   "hahnenklee-lower-freeride-to-dh-race"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: alle drei gleichnamigen Abschnitte gewichtet (3,76/3, 3,87/3, 3,76/3), zusammen 1,29 km unserer 1,34 km."
+ },
+ "hz_hk_race_track": {
+  "slugs": [
+   "race-track-upper",
+   "race-track-middle",
+   "race-track-lower"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: alle drei gewichtet (3,73/2, 3,99/4, 3,98/2), zusammen 1,04 km unserer 1,03 km."
+ },
+ "hz_hk_wildpig_enduro": {
+  "slugs": [
+   "wildpig-enduro-upper",
+   "wildpig-enduro-upper-middle",
+   "wildpig-enduro-lower-middle",
+   "wildpig-enduro-lower"
+  ],
+  "why": "Nutzerentscheidung 2026-08-24: die vier gleichnamigen Abschnitte gewichtet (4,26/5, 4,09/4, 3,98/3, 3,76/3). Die 'senduro Entry' liegt zwar zu 1,00 darauf, ist aber ein eigener Zugang."
+ }
+}

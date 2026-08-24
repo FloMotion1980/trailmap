@@ -16,12 +16,12 @@ bewusst keine eigene Bewertung hat.
 | `bikekingdom` | 117 | 71 | 61 % | 4,03 | 4,76 | 71 | 4 | 2026-08-24 |
 | `nordvogesen` | 483 | 55 | 11 % | 4,12 | 4,39 | 55 | 0 | 2026-08-24 |
 | `portesdusoleil` | 79 | 43 | 54 % | 4,21 | 4,66 | 43 | 1 | 2026-08-24 |
+| `harz` | 42 | 36 | 86 % | 3,98 | 4,64 | 36 | 0 | 2026-08-24 |
 | `bikecircus` | 49 | 34 | 69 % | 3,99 | 4,74 | 34 | 2 | 2026-08-24 |
 | `odenwald` | 52 | 33 | 63 % | 4,26 | 4,59 | 33 | 14 | 2026-08-24 |
 | `soelden` | 34 | 30 | 88 % | 3,99 | 4,52 | 30 | 4 | 2026-08-24 |
 | `livigno` | 30 | 28 | 93 % | 4,19 | 4,47 | 28 | 1 | 2026-08-24 |
 | `sauerland` | 67 | 24 | 36 % | 4,05 | 4,37 | 24 | 6 | 2026-08-24 |
-| `harz` | 42 | 21 | 50 % | 3,98 | 4,64 | 21 | 0 | 2026-08-24 |
 | `paganella` | 23 | 17 | 74 % | 4,23 | 4,68 | 17 | 5 | 2026-08-24 |
 | `saarland` | 20 | 15 | 75 % | 4,32 | 4,44 | 15 | 2 | 2026-08-24 |
 | `schladming` | 29 | 13 | 45 % | 4,12 | 4,52 | 13 | 0 | 2026-08-24 |
@@ -34,7 +34,7 @@ bewusst keine eigene Bewertung hat.
 | `dreilaender` | 29 | 0 | 0 % | – | – | 0 | 0 | – |
 | `serfaus` | 17 | 0 | 0 % | – | – | 0 | 0 | – |
 | `waldmeister` | 20 | 0 | 0 % | – | – | 0 | 1 | – |
-| **Summe** | **4555** | **1754** | **39 %** | | | | | |
+| **Summe** | **4555** | **1769** | **39 %** | | | | | |
 
 ## Bestbewertete Trails je Region
 
@@ -48,12 +48,12 @@ bewusst keine eigene Bewertung hat.
 - **bikekingdom** — Älplisee Trail (4,76, 53 Stimmen), Dark side of the moon (4,71, 55 Stimmen), Furcletta Trail (4,54, 19 Stimmen)
 - **nordvogesen** — 4 forestières (4,39, 4 Stimmen), EVS - SPé 1 - Cigogne SPé1 (4,32, 10 Stimmen), EVS - SPé5 - l'Eclipse SPé5 (4,32, 8 Stimmen)
 - **portesdusoleil** — Black Shore (4,66, 17 Stimmen), Hattock (4,58, 15 Stimmen), Air Voltage (4,55, 12 Stimmen)
+- **harz** — Jack the Ripper (4,64, 22 Stimmen), Downhill (4,29, 4 Stimmen), Downhill (4,25, 7 Stimmen)
 - **bikecircus** — Hacklberg-Trail (4,74, 95 Stimmen), Bergstadl-Trail (4,62, 51 Stimmen), X-Line (4,61, 56 Stimmen)
 - **odenwald** — Coffee & Cream (4,59, 15 Stimmen), Einarmiger Bandit (4,56, 13 Stimmen), Zweiarmiger Bandit (4,49, 13 Stimmen)
 - **soelden** — Leiterberg Trail (672) (4,52, 56 Stimmen), Ohn Line (6007) (4,44, 62 Stimmen), Ollweite Line (6010) (4,40, 70 Stimmen)
 - **livigno** — Enduro (4,47, 13 Stimmen), Black Eye (4,44, 7 Stimmen), Downhill World Championship 2005 (4,38, 13 Stimmen)
 - **sauerland** — SRAM Flow Country (4,37, 20 Stimmen), North Shore (4,27, 13 Stimmen), Endless Trees (4,24, 8 Stimmen)
-- **harz** — Jack the Ripper (4,64, 22 Stimmen), Downhill (4,29, 4 Stimmen), Stempelstieg (4,21, 4 Stimmen)
 - **paganella** — Blade Runner by Evoc (22) (4,68, 51 Stimmen), Giada Trail (806) (4,55, 39 Stimmen), Ribs Trail (787) (4,51, 28 Stimmen)
 - **saarland** — Wellensittich - Part 1 (4,44, 6 Stimmen), Jump Line (4,39, 4 Stimmen), Paulaner (4,39, 4 Stimmen)
 - **schladming** — Pro Downhill (403) (4,52, 9 Stimmen), 99 Jumpline (405) (4,49, 17 Stimmen), Worldcup Downhill (410) (4,41, 13 Stimmen)

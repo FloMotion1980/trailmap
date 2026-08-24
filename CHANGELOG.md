@@ -21,6 +21,20 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-24 (Nacht darauf)
+- **Harz Fall für Fall durchgegangen**: 18 Zuordnungen entschieden, 0 offene Fälle, **21 → 36 bewertete
+  Trails (86 %)** und für **alle 42** eine gespeicherte ID. Der Harz ist der reine Bikepark-Fall: Trailforks
+  zerlegt jeden Trail in upper/middle/lower, unser Eintrag ist der ganze — vierzehn der achtzehn
+  Entscheidungen sind gewichtete Abschnitts-Summen, deren Teillängen jeweils genau unsere Traillänge
+  ergeben (Downhill Braunlage: 944 + 469 + 1 343 m gegen unsere 2,75 km).
+- **Die Nummer-Regel vergleicht jetzt numerisch und akzeptiert eine Ziffer**: im Bodetal schreibt Trailforks
+  unsere Nummern als „#1"/„#2"/„#4", wir schreiben „(01)"/„(02)"/„(04)". Beide Hälften waren nötig — die
+  Zwei-Ziffern-Schwelle hat alle drei übersehen, und ein Textvergleich hätte sie wieder übersehen. Eine
+  FÜHRENDE Zahl braucht weiter zwei Ziffern, sonst wäre „4-Burgen-Weg" eine Katalognummer.
+- **Die ältere Harz-Ernte ist in `trailforks_geo.json` eingeflossen** (23 Linien, die der Abgleich vorher
+  gar nicht sah). Das hat den Stapel erst von 15 auf 18 wachsen lassen und dann 24 statt 8 automatische
+  Treffer ergeben — mehr Daten heißt hier mehr Arbeit und ein besseres Ergebnis.
+
 ## 2026-08-24 (Abend, später)
 - **Schwarzwald Fall für Fall durchgegangen**: 26 offene Zuordnungen entschieden, 0 offene Fälle,
   264 → 271 bewertete Trails und 572 gespeicherte IDs. Sechs davon sind reine ID-Merker (das Gegenstück ist

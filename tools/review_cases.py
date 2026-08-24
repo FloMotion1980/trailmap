@@ -75,7 +75,11 @@ def main(argv):
         decided = json.load(io.open(mp, encoding="utf-8"))
     open_rows = [r for r in rows if r["verdict"] == "review" and r["id"] not in decided]
     if decided:
-        zug = sum(1 for v in decided.values() if (v.get("slug") if isinstance(v, dict) else v))
+        # Beide Formen zaehlen: eine Handentscheidung kann EINEN Slug tragen oder mehrere ("slugs",
+        # der gewichtete Abschnittsfall). Nur nach "slug" zu fragen meldete 14 der 18 Harz-Entscheidungen
+        # als "ohne Gegenstueck", obwohl vierzehn davon zugeordnet sind.
+        zug = sum(1 for v in decided.values()
+                  if ((v.get("slugs") or v.get("slug")) if isinstance(v, dict) else v))
         print("%s: %d Faelle bereits entschieden (%d zugeordnet, %d ohne Gegenstueck)"
               % (a.region, len(decided), zug, len(decided) - zug))
     print("%s: %d Faelle zum Pruefen" % (a.region, len(open_rows)))

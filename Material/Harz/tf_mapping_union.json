@@ -25,6 +25,72 @@
   "hz_ab_jump_line": "msbxjumpline",
   "hz_ab_loam_line": "loam-line-221019",
   "hz_bl_wurmberg_roller": "wurmberg-roller-upper-dh",
+  "hz_ab_flowtrail": [
+   "msbx1-flowtrail",
+   "flowtrail-lower"
+  ],
+  "hz_ab_funride": [
+   "msbx-north-shore-upper",
+   "msbx-north-shore-lower"
+  ],
+  "hz_ab_singletrail": [
+   "msbx2-wurzeltrail-upper",
+   "msbx2-wurzeltrail-lower"
+  ],
+  "hz_bl_downhill": [
+   "dh-upper-140882",
+   "downhill-middle-section",
+   "downhill-lower-section"
+  ],
+  "hz_bl_enduro": [
+   "enduro-upper",
+   "enduro-lower"
+  ],
+  "hz_bl_evil_rocks": [
+   "evil-rocks-upper",
+   "singletrail-lower"
+  ],
+  "hz_bl_freeride": [
+   "freeride-upper",
+   "freeride-lower"
+  ],
+  "hz_bt_brunhildenritt": [
+   "brunhildenritt-1",
+   "brunhildenritt-2",
+   "brunhildenritt-4"
+  ],
+  "hz_bt_harzer_roller": [
+   "harzer-roller-1",
+   "harzer-roller-2",
+   "harzer-roller-3",
+   "harzer-roller-4"
+  ],
+  "hz_bt_rosstrappendownhill": [
+   "rosstrappendownhill-1",
+   "rosstrappendownhill-2",
+   "rosstrappendownhill-3"
+  ],
+  "hz_hk_downhill": [
+   "dh-middle-hahnenklee",
+   "dh-upper-hahnenklee"
+  ],
+  "hz_hk_freeride": [
+   "hahnenklee-upper-freeride",
+   "hahnenklee-middle-freeride",
+   "hahnenklee-lower-freeride-to-dh-race"
+  ],
+  "hz_hk_race_track": [
+   "race-track-upper",
+   "race-track-middle",
+   "race-track-lower"
+  ],
+  "hz_hk_wildpig_enduro": [
+   "wildpig-enduro-upper",
+   "wildpig-enduro-upper-middle",
+   "wildpig-enduro-lower-middle",
+   "wildpig-enduro-lower"
+  ],
+  "hz_ab_freeride": "schwarzer-keiler",
   "hz_bt_bodopass": "bodopass",
   "hz_hk_flowtrail": "bockchen--flowtrail"
  }

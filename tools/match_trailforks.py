@@ -98,11 +98,18 @@ def norm_name(s):
 #: leading ("353 - Strada delle Gatelle"). Two digits is enough BECAUSE the rule below also demands real
 #: geometric overlap -- a coincidental "2" on two lines that already share 40 % of their points is not a
 #: coincidence worth worrying about.
-NUM_RE = re.compile(r"#(\d{2,5})|\((\d{2,5})\)|^(\d{2,5})(?![\d])")
+NUM_RE = re.compile(r"#(\d{1,5})|\((\d{1,5})\)|^(\d{2,5})(?![\d])")
 
 
 def catalogue_numbers(name):
-    return set(g for m in NUM_RE.finditer(name or "") for g in m.groups() if g)
+    """Catalogue numbers in a name, compared NUMERICALLY: our "(01)" and their "#1" are the same number.
+
+    Both halves of that mattered in the Harz, where Trailforks writes our own numbering as "#1"/"#2"/"#4"
+    while we write "(01)"/"(02)"/"(04)" -- so a two-digit minimum missed every one of them, and a string
+    comparison would have missed them again. A LEADING number still needs two digits, because a name that
+    merely starts with a digit ("4-Burgen-Weg", "19 Kehren") is not a catalogue reference.
+    """
+    return set(str(int(g)) for m in NUM_RE.finditer(name or "") for g in m.groups() if g)
 
 
 def coverage(a, b, tol=TOL_M):
