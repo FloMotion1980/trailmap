@@ -637,11 +637,16 @@ html.landscape-compact .search-overlay-summary{
      gets more room; its height was bumped in the same change, desktop-only there too. */
   width: 340px;
   max-height: calc(100% - 76px);
-  overflow-y:auto;
+  /* Kein Scrollen im Panel -- ausdruecklich der Nutzer (2026-08-24), nachdem ein innerer Scrollbereich
+     probiert war. Im Querformat teilt sich der RIDE-Knopf stattdessen die Zeile mit den Aktionsknoepfen
+     (siehe die landscape-compact-Regeln weiter unten): das spart die Zeile, die ein Tourenpanel mit seinem
+     Abschnitts-Block ueber die Kante geschoben hat. */
+  display:flex; flex-direction:column;
+  overflow:visible;
   background: rgba(255,255,255,0.97);
   border-radius: 10px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.22);
-  padding: 14px 16px 10px;
+  padding: 9px 16px 10px;
   font-family: Arial, sans-serif;
   display:none;
   z-index: 1000;
@@ -652,11 +657,22 @@ html.landscape-compact .search-overlay-summary{
    its action group, which is what makes them fit behind a longer name. The rule under the name still has to
    reach both edges, so that clearance was padding rather than margin in the first place; there is simply
    nothing left to clear. */
+/* Info-Box 2.0: der Trailname war mit 14px Versalien das unauffaelligste Element im Panel -- kleiner als
+   der RIDE-Knopf darunter. Jetzt 17px in gemischter Schreibweise, ohne Sperrung und ohne Trennlinie; die
+   Knoepfe stehen nicht mehr in dieser Zeile, also kann der Kopf auch nie mehr zweizeilig werden. */
 #infoPanel h3{
-  font-family:'Copperplate','Trebuchet MS',sans-serif; font-size:14px; text-transform:uppercase;
-  letter-spacing:.5px; color:var(--forest-dark); margin:0 0 8px; border-bottom:1px solid #ddd;
-  padding:0 0 6px;
+  font-family:Arial, sans-serif; font-size:17px; font-weight:700; text-transform:none;
+  letter-spacing:0; color:var(--ink); margin:0 0 7px; border-bottom:none; padding:0;
+  display:flex; align-items:center; gap:7px; flex:none; line-height:1.25;
 }
+#infoPanel h3 .ip-name{ min-width:0; }
+/* Die Schwierigkeit bleibt `.badge` mit ihren Klassen und ihrem title (Entscheidung von 2026-08-13), wird
+   hier aber zum Balken -- ein 9px-Punkt neben 17px-Text sieht aus wie ein Aufzaehlungszeichen. */
+/* align-self:stretch statt fester Hoehe: bei einem zweizeiligen Namen blieb der Balken sonst 19px hoch,
+   waehrend die Zeile darunter weiterlief (Nutzer, 2026-08-24). min-height haelt ihn bei einem sehr kurzen
+   Namen trotzdem sichtbar. */
+#infoPanel h3 .badge.ip-diff-bar{ width:4px; height:auto; align-self:stretch; min-height:19px;
+  border-radius:2px; margin-right:0; flex:none; }
 /* The whole action group, and the reason it is inline-flex rather than flex: an inline-flex box is an atomic
    inline, so inline layout itself decides where it goes -- behind the name when the name's last line leaves
    room, on its own line under it when it does not (user, 2026-08-02: "alle Buttons in gleicher Größe als Extra
@@ -664,9 +680,12 @@ html.landscape-compact .search-overlay-summary{
    flex-wrap could not do that: the name would shrink to its longest word and the buttons would stay beside it.
    The resets undo the h3's own type: uppercase is harmless on GPX but the .5px tracking is not, and a heading's
    14px line-height would otherwise set the row's height instead of the buttons doing it. */
-#infoPanel h3 .ip-btns{
-  display:inline-flex; align-items:center; gap:5px; white-space:nowrap; vertical-align:middle;
-  letter-spacing:0; line-height:1;
+/* Eigene Zeile unter dem Hoehenprofil statt inline in der Ueberschrift: das loest "die Ueberschrift klebt
+   an den Buttons" und den zweizeiligen Kopf auf einmal, und der Abstand zum RIDE-Balken wird von dieser
+   Zeile getragen statt von Luft. `flex:none`, damit sie beim Scrollen eines Tourenpanels stehen bleibt. */
+#infoPanel .ip-btns{
+  display:flex; align-items:center; gap:6px; white-space:nowrap;
+  letter-spacing:0; line-height:1; margin-top:6px; flex:none;
 }
 /* One size for all four, which is the other half of the request. GPX is the one that cannot be square -- a
    file format has to be named, an icon cannot say "GPX" -- so it matches on height and shape family instead
@@ -677,21 +696,21 @@ html.landscape-compact .search-overlay-summary{
    as an afterthought next to a 340px panel. The atomic .ip-btns box then drops onto its own line under the
    name more often (measured: on the widest trail names it always did anyway), which is exactly the
    behaviour inline-flex was chosen for. */
-#infoPanel h3 .ip-btns > button{
+#infoPanel .ip-btns > button{
   height:34px; border:none; cursor:pointer; padding:0; margin:0;
   background: var(--forest); color:#fff; line-height:1;
   display:inline-flex; align-items:center; justify-content:center;
 }
-#infoPanel h3 .ip-btns > button:hover{ background: var(--forest-dark); }
-#infoPanel h3 .ip-btns .locate-btn,
-#infoPanel h3 .ip-btns .solo-btn,
-#infoPanel h3 .ip-btns .reverse-btn{ width:34px; border-radius:50%; font-size:16px; }
+#infoPanel .ip-btns > button:hover{ background: var(--forest-dark); }
+#infoPanel .ip-btns .locate-btn,
+#infoPanel .ip-btns .solo-btn,
+#infoPanel .ip-btns .reverse-btn{ width:34px; border-radius:50%; font-size:16px; }
 /* RIDE left this group on 2026-08-20 and is a full-width bar under the elevation chart now (.ip-ride-bar,
    further down) -- it is the most important control on a phone and was the smallest and last thing in the
    row. It only ever makes sense on a phone actually being ridden with, so it stays hidden on desktop
    exactly as it was before the move (2026-08-16, the user's own catch); the group above is four buttons
    again on every layout, which is also what its own comment describes. */
-#infoPanel h3 .ip-btns .gpx-download-btn{
+#infoPanel .ip-btns .gpx-download-btn{
   border-radius:17px; padding:0 11px; font-size:12px; font-family:Arial, sans-serif; font-weight:700;
 }
 /* --highlight (amber/gold), not --select-yellow (2026-08-09, user) -- pure yellow is reserved for trail
@@ -699,12 +718,21 @@ html.landscape-compact .search-overlay-summary{
    unrelated "this toggle is on" state read as visually confusing rather than consistent. --highlight is
    already this app's own colour for exactly that meaning elsewhere (#builderModeBtn.on). Has to beat the
    group's own green fill above. */
-#infoPanel h3 .ip-btns .solo-btn.active,
-#infoPanel h3 .ip-btns .reverse-btn.active{ background: var(--highlight); color: var(--ink); }
+#infoPanel .ip-btns .solo-btn.active,
+#infoPanel .ip-btns .reverse-btn.active{ background: var(--highlight); color: var(--ink); }
 /* No bottom margin: it separated this block from .ip-actions, the row that used to hold the GPX button, and both
    are gone -- so it was 10px of empty panel under the elevation chart, on top of the panel's own 10px of padding
    (user, 2026-08-02: "die InfoBox hat jetzt unten recht viel Whitespace"). */
 #infoPanel .ip-trail{ font-size:12.5px; margin-bottom:0; line-height:1.5; }
+/* Die Metazeile ersetzt "gruener Punkt -> Laenge -> roter Punkt" (Nutzer, 2026-08-24: das las sich wie ein
+   Streckendiagramm, war aber keines). Die Laenge fuehrt, Auf- und Abstieg stehen daneben, die Bewertung
+   rechtsbuendig -- alles in EINER Zeile, seine eigene Vorgabe. flex-wrap, damit ein langer Fall (etwa
+   "noch nicht bewertet") umbricht statt ueberzulaufen. */
+#infoPanel .ip-meta{ display:flex; align-items:baseline; flex-wrap:wrap; gap:2px 14px; }
+#infoPanel .ip-meta .ip-len{ font-size:15px; font-weight:700; color:var(--ink); }
+#infoPanel .ip-meta .ip-updown{ color:#4c574d; }
+#infoPanel .ip-meta .ip-rating{ margin-left:auto; }
+#infoPanel .ip-gap-sm{ display:inline-block; width:8px; }
 /* The separator on the stats line is now just space (user, 2026-08-02: the · and the / "sollte als optischer
    Trenner genügen" without a glyph). An empty inline-block rather than spaces or NBSPs: a run of ordinary spaces
    collapses to one, NBSPs would refuse to break the line if the row ever got long enough to need it, and this
@@ -715,7 +743,7 @@ html.landscape-compact .search-overlay-summary{
    already tracked the panel via 100%, so only height needed a number here. Touch/landscape-compact
    override this back down further below, unaffected: mobile screen height is the one thing this app has
    never had room to spare. */
-.ele-chart{ display:block; width:100%; height:72px; margin:4px 0 0; }
+.ele-chart{ display:block; width:100%; height:72px; margin:6px 0 0; }
 /* Die beiden Meter-Angaben liegen UEBER dem Diagramm, nicht darin: der viewBox-Inhalt wird in x und y
    unterschiedlich skaliert (am Handy sogar gegenlaeufig, siehe buildElevationSvg), Schrift darin ist also
    grundsaetzlich verzerrt. pointer-events:none, damit sie den Tipp aufs Diagramm nicht abfangen. */
@@ -739,7 +767,7 @@ html.landscape-compact .search-overlay-summary{
    state instead (syncRideModeChrome keeps it in step). */
 #infoPanel .ip-ride-bar{
   display:none;
-  width:100%; height:48px; margin-top:9px;
+  width:100%; height:48px; margin-top:8px; flex:none;
   border:none; border-radius:10px; padding:0; cursor:pointer;
   background:var(--highlight); color:var(--ink);
   font-family:Arial, sans-serif; font-size:16px; font-weight:700; line-height:1;
@@ -749,8 +777,7 @@ html.landscape-compact .search-overlay-summary{
 #infoPanel .ip-segment-info b{ font-size:12.5px; }
 /* Base -> top station and height gained, in a lift's own (much sparser) info panel. */
 #infoPanel .ip-lift-stats{ margin-top:6px; font-size:13px; }
-#infoPanel .ip-trail .dot-start{ color:#3fbf5e; font-size:19px; vertical-align:middle; }
-#infoPanel .ip-trail .dot-end{ color:#e0392b; font-size:19px; vertical-align:middle; }
+/* .dot-start/.dot-end sind mit der Punktzeile entfallen (Info-Box 2.0). */
 #infoPanel .ip-trail b{ font-size:13.5px; }
 /* The .ip-link, .ip-trail .gpx-download-btn, .ip-trail .solo-btn/.reverse-btn and h3 .locate-btn rules are gone
    (2026-08-02): all four buttons live in one .ip-btns group in the heading now and are styled together up
@@ -1249,7 +1276,13 @@ html.landscape-compact #infoPanel{
   bottom: auto !important;
   left: auto !important;
   transform: none !important;
-  width: min(34vw, 230px) !important;
+  /* 230 -> 290px (2026-08-24, Nutzer: "im Querformat ist die Info Box einen Tick zu hoch"). Breiter statt
+     kuerzer, seine eigene Korrektur -- das Highlight-Abzeichen bleibt. Gemessen bei 812x375: bei 230px
+     bricht die Bewertungszeile um (36px statt 18) und die Ueberschrift traegt ihre Knoepfe auf einer
+     zweiten Zeile, zusammen 236px Panel; ab 290px sind beide einzeilig und der Panel ist 200px hoch. Ueber
+     290 hinaus aendert sich nichts mehr -- ueber 18 Trails und Touren blieb das Maximum bei 200px. 40vw
+     haelt die Anteile auf schmaleren Querformat-Geraeten (667px -> 267px). */
+  width: min(42vw, 320px) !important;
   max-width: none !important;
   max-height: calc(100vh - 90px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)) !important;
   height: auto !important;
@@ -1262,7 +1295,37 @@ html.landscape-compact .ele-chart{ height:56px; }
    a heading whose buttons also grew -- measured, the tallest panels there (a Tour with its segment info) end
    up a few px over the cap and scroll, which would put the bar itself below the fold. 44px is the smallest
    this may be and still be a full touch target, and it buys back most of that. */
-html.landscape-compact #infoPanel .ip-ride-bar{ height:44px; margin-top:6px; font-size:15px; }
+/* Im Querformat steht der RIDE-Knopf NEBEN den Aktionsknoepfen, nicht darunter (Nutzer, 2026-08-24: "Du
+   koenntest den Ride Button aber im Querformat rechts oder links daneben zeichnen anstatt untendrunter").
+   Das spart eine ganze Zeile -- 44px Knopf plus 8px Abstand -- und genau die hat einem Tourenpanel mit
+   Abschnitts-Block gefehlt, dessen RIDE-Knopf unter die Kante rutschte. Umgesetzt als Raster: Kopf und
+   Inhalt ueber die volle Breite, die letzte Zeile zweispaltig. */
+/* Das Raster sitzt auf #ipContent, NICHT auf #infoPanel: die Inhalte (h3, .ip-trail, .ip-btns, der
+   RIDE-Knopf) haengen alle in diesem Kasten, das Panel selbst hat nur ihn als Kind. Auf dem Panel gesetzt
+   waren die Regeln wirkungslos -- gemessen an einer zweiten Rasterspalte von 0px Breite, waehrend der
+   RIDE-Knopf weiter darunter stand. */
+html.landscape-compact #ipContent{ display:grid; grid-template-columns:1fr auto; align-content:start; }
+/* Die Zeilen sind ausdruecklich gesetzt: bei automatischer Platzierung schiebt das Raster den RIDE-Knopf in
+   eine EIGENE Zeile weiter, statt ihn neben die Knopfzeile zu legen (gemessen -- die Breiten passten
+   laengst, die Zeile stimmte nicht). */
+html.landscape-compact #ipContent h3{ grid-row:1; grid-column:1 / -1; }
+html.landscape-compact #ipContent .ip-trail{ grid-row:2; grid-column:1 / -1; }
+/* justify-self:start ist noetig, sonst dehnt sich die Knopfzeile ueber die ganze erste Spalte (gemessen
+   258px von 258px) und draengt den RIDE-Knopf aus dem Panel. Die Glyphen-Knoepfe sind hier 30px statt 34
+   und der RIDE-Knopf schmaler gesetzt -- gemessen passt beides zusammen nur so in eine Zeile. */
+html.landscape-compact #ipContent .ip-btns{ grid-row:3; grid-column:1; justify-self:start; align-self:center; gap:5px; }
+html.landscape-compact #ipContent .ip-btns .locate-btn,
+html.landscape-compact #ipContent .ip-btns .solo-btn,
+html.landscape-compact #ipContent .ip-btns .reverse-btn{ width:30px; height:30px; font-size:15px; }
+html.landscape-compact #ipContent .ip-btns .gpx-download-btn{ height:30px; padding:0 9px; font-size:11px; }
+/* Das Highlight-Wort entfaellt im Querformat: dort teilen sich Knopfzeile und RIDE-Knopf eine Zeile von
+   288px, und das Wort hat den RIDE-Knopf auf 63px zusammengedrueckt (gemessen). Die Aussage geht nicht
+   verloren -- der Sternwert steht weiter in der Metazeile, und auf der Karte traegt der Trail sein ★. */
+html.landscape-compact #ipContent .ip-btns .ip-rating-badge{ display:none; }
+html.landscape-compact #ipContent .ip-ride-bar{
+  grid-row:3; grid-column:2; justify-self:end; align-self:center; width:auto; height:36px; margin-top:8px;
+  margin-left:8px; font-size:13px; padding:0 10px; gap:5px; border-radius:8px;
+}
 
 /* ---- RIDE mode (2026-08-14) -----------------------------------------------------
    Full-screen riding: header, sidebar drawer and the trail info panel are hidden, and this app's own
@@ -1783,11 +1846,12 @@ header{ position:relative; z-index:1; }
 .tl-star { color: #e0a300; margin-right: 2px; font-size: 11px; }
 /* Die Bewertungszeile im Info-Panel. Die Stimmenzahl ist absichtlich kleiner und grauer als der Wert:
    sie qualifiziert ihn, sie konkurriert nicht mit ihm. */
-.ip-rating { margin-top: 4px; font-size: 12px; color: #2f4a3a; }
+.ip-rating { font-size: 12px; color: #2f4a3a; white-space: nowrap; }
 .ip-rating-star { color: #8a948a; }
 .ip-rating-votes { font-size: 11px; color: #6b7a6b; }
+#infoPanel .ip-btns .ip-rating-badge{ margin-left:auto; }
 .ip-rating-badge { margin-left:6px; font-size:10px; text-transform:uppercase; letter-spacing:.4px;
                     background:#f6e6bd; color:#7a5c00; padding:1px 5px; border-radius:3px; }
 .ip-rating-none { color: #8a948a; font-style: italic; }
-/* Ueberschrift der unbewerteten Gruppe in der Trail-Liste -- gedaempft, weil sie keine Wertung ist. */
-.rating-unrated-title { color: #8a948a !important; margin-top: 8px; }
+/* Die Zwischenueberschrift der unbewerteten Gruppe ist am 2026-08-24 entfallen (Nutzer): die fehlende
+   Flamme bzw. der fehlende Stern in der Kachel sagt es bereits, die Trails haengen einfach hinten an. */

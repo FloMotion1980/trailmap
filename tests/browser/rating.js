@@ -28,7 +28,7 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
        async (T) => {
   const chip = (target, value) => TM.$(`.trail-view-chips[data-target="${target}"] [data-value="${value}"]`);
   const visible = (el) => !!el && getComputedStyle(el).display !== "none";
-  const ratedCards = () => TM.ui.trailCards().filter((c) => !/ohne Bewertung/.test(c.textContent));
+  const ratedCards = () => TM.ui.trailCards().filter((c) => /⭐/.test(c.textContent));
 
   // Put the list into a known state: flat, so ordering is readable in one pass.
   TM.$("#trailViewResetBtn").click();
@@ -45,20 +45,24 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   T.ok("and the Highlights switch is offered", visible(TM.$("#highlightsRow")),
        visible(TM.$("#highlightsRow")), true);
 
-  T.test("sorting by rating is best-first, and unrated trails get their OWN heading, not the bottom");
+  T.test("sorting by rating is best-first, and the unrated simply follow at the end");
+  // Die Zwischenueberschrift ("ohne Bewertung" / "ohne Beliebtheitswert") ist am 2026-08-24 entfallen --
+  // der Nutzer: "Man sieht ja, dass Flamme bzw. Stern fehlt. Einfach unten an die Liste dranhaengen."
+  // Die REIHENFOLGE bleibt damit die einzige Aussage, und genau sie ist hier gepinnt: ohne sie wuerden die
+  // unbewerteten Trails mitsortieren, als haetten sie null Sterne (der Vergleicher gibt fuer sie -1 zurueck),
+  // also mitten zwischen den bewerteten stehen.
   chip("sort", "rate").click();
   await TM.wait(400);
-  const heads = TM.$$("#trailList .rating-unrated-title").map((e) => e.textContent.trim());
-  T.eq("exactly one unrated heading in a flat list", heads.length, 1);
-  T.ok("it says so and counts them", /ohne Bewertung \(\d+\)/.test(heads[0] || ""), heads[0], "ohne Bewertung (n)");
-  const unratedCount = TM.ui.num(heads[0]);
-  T.ok("and that is a real share of the region, not a rounding error", unratedCount > 20,
-       unratedCount, "> 20");
-  // The rated ones lead, in descending order. Read from the cards' own DOM order.
+  T.eq("keine Zwischenueberschrift mehr", TM.$$("#trailList .rating-unrated-title").length, 0);
   const order = TM.ui.names("trailCards");
-  const headIdx = TM.$$("#trailList > .hub-group > *").findIndex((e) =>
-      e.classList && e.classList.contains("rating-unrated-title"));
-  T.ok("the unrated heading sits after the rated cards, not at the top", headIdx > 20, headIdx, "> 20");
+  const hasStar = TM.ui.trailCards().map((c) => /⭐/.test(c.textContent));
+  const lastRated = hasStar.lastIndexOf(true), firstUnrated = hasStar.indexOf(false);
+  T.ok("es gibt beide Sorten in dieser Region", lastRated > -1 && firstUnrated > -1,
+       [lastRated, firstUnrated], "beide vorhanden");
+  T.ok("kein unbewerteter Trail steht zwischen den bewerteten", firstUnrated > lastRated,
+       [firstUnrated, lastRated], "erster unbewerteter nach dem letzten bewerteten");
+  T.ok("und es sind wirklich viele, kein Rundungsfehler", hasStar.filter((r) => !r).length > 20,
+       hasStar.filter((r) => !r).length, "> 20");
   T.eq("the best-rated trail in Finale leads the list", order[0], "Madonna della Guardia");
   T.ok("and the second is one of the other top ones", /Ingegnere|Revenant/.test(order[1] || ""),
        order[1], "Ingegnere/Revenant");
@@ -69,9 +73,10 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   const popOrder = TM.ui.names("trailCards");
   T.ok("popularity produces a different order than rating", popOrder.join("|") !== order.join("|"),
        popOrder.slice(0, 3), "different from " + order.slice(0, 3).join(","));
-  T.ok("its unrated bucket is named for popularity, not rating",
-       /ohne Beliebtheitswert/.test((TM.$("#trailList .rating-unrated-title") || {}).textContent || ""),
-       (TM.$("#trailList .rating-unrated-title") || {}).textContent, "ohne Beliebtheitswert");
+  const popRated = TM.ui.trailCards().map((c) => /🔥/.test(c.textContent));
+  T.ok("auch hier stehen die ohne Wert hinten", popRated.indexOf(false) > popRated.lastIndexOf(true),
+       [popRated.indexOf(false), popRated.lastIndexOf(true)], "ohne Wert zuletzt");
+  T.eq("und ebenfalls ohne Zwischenueberschrift", TM.$$("#trailList .rating-unrated-title").length, 0);
 
   T.test("the slider spans the REAL rating range, not 0..5, and says how many trails it keeps");
   // Finale's Bayesian values run 2.99..4.77, so a 0..5 slider would spend three fifths of its travel doing
@@ -296,12 +301,15 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   const row = TM.$("#ipContent .ip-rating");
   T.ok("a rating row is present", !!row, !!row, true);
   const txt = (row || {}).textContent || "";
-  T.ok("the value, German style and out of 5", /⭐ 4,\d\d von 5/.test(txt), txt.slice(0, 40), "⭐ 4,xx von 5");
+  // Seit der Info-Box 2.0 steht die Bewertung KOMPAKT in der Metazeile statt in einer eigenen Zeile mit
+  // vollem Wortlaut -- auf Wunsch des Nutzers ("Ich bestehe nicht auf dem vollen Text und will lieber alles
+  // in einer Zeile"). Zwei Nachkommastellen wie in der Kachel, damit dieselbe Zahl an beiden Orten gleich
+  // aussieht; geprueft wird weiter, dass die Zahl da ist und deutsch gesetzt ist.
+  T.ok("the value, German style", /⭐ 4,\d\d/.test(txt), txt.slice(0, 40), "⭐ 4,xx");
   // Neither the vote count nor the source appears -- both on the user's instruction, both pinned as an
   // ABSENCE because that is the whole point. `votes` stays in the data; the app itself no longer reads it at all.
   T.ok("no vote count in the panel", !/Stimme/.test(txt), txt, "no Stimmen");
-  T.ok("popularity as its own number, never merged into the stars", /🔥 \d+ von 100/.test(txt), txt,
-       "🔥 n von 100");
+  T.ok("popularity as its own number, never merged into the stars", /🔥 \d+/.test(txt), txt, "🔥 n");
   T.eq("one star glyph and one flame, no doubles",
        [(txt.match(/⭐/g) || []).length, (txt.match(/🔥/g) || []).length], [1, 1]);
   // The harvest date is deliberately absent from the UI (user, 2026-08-23) while staying in the region

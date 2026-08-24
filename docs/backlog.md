@@ -135,10 +135,14 @@ Prüfstapel sind auf null** (101 Fälle einzeln mit dem Nutzer entschieden, Begr
   dann, Radius als Regler mit Trefferzahl, Entfernung als Luftlinie zur nächsten Stelle des Trails, und
   auf dem Handy antwortet die Karte selbst durch Dimmen, weil die Schublade dort die Karte vollständig
   verdeckt. RIDE bleibt unangetastet. **Gebaut wird noch nicht** (Anweisung des Nutzers).
-- **"Abfahrten von dieser Bergstation"** ist **kein eigener Punkt mehr**, sondern der dritte Eingang in die
-  Umgebungssuche: der Anker wird auf die Bergstation gesetzt. Beobachtung des Nutzers ("4 ist eigentlich
-  wie 3"). Die Datenbasis ist inzwischen da — Bike Kingdom (71 bewertete Trails, 12 Lifte), Harz (36/6),
-  Livigno (28/7), Sölden, Paganella.
+- **Vom Lift erreichbare Trail-Einstiege** — beim Antippen eines Lifts zeigen, welche Trails man von dort
+  aus anfahren kann, nach Bewertung sortiert. **Eigenes Feature, kein Teil der Umgebungssuche** (Nutzer,
+  2026-08-24: "Das mit dem Lift würde ich nicht machen. Dann eher wenn man einen Lift anklickt, welche
+  Startpunkte von Trails von dort aus erreichbar sind"). Der Unterschied ist inhaltlich, nicht technisch:
+  die Umgebungssuche fragt "was liegt um diesen Punkt herum" und misst zur nächsten Stelle einer Linie,
+  hier geht es um **Einstiege** und um die Fahrtrichtung — was man von der Bergstation aus hinunterfahren
+  kann. Datenbasis ist da: Bike Kingdom (71 bewertete Trails, 12 Lifte), Harz (36/6), Livigno (28/7),
+  Sölden, Paganella.
 - **Tourenbuilder-Kandidaten ranken** — `junctionCandidates` liefert die Anschlüsse schon, sie nach
   Bewertung zu ordnen ist ein Zweizeiler mit echtem Effekt.
 - **Touren erben die Bewertung ihrer Komponenten** (längengewichtet aus `trailSegments`), damit der

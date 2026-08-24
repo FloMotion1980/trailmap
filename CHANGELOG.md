@@ -21,6 +21,45 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-24 (Info-Box 2.0)
+- **Der Info-Panel ist umgebaut**, nach vier Beobachtungen des Nutzers und drei Entwürfen (Variante A):
+  der **Trailname ist 17px in gemischter Schreibweise** statt 14px Versalien — er war das unauffälligste
+  Element im Panel, kleiner als der RIDE-Knopf darunter; die **vier Aktionsknöpfe stehen unter dem
+  Höhenprofil** statt in der Überschrift, womit nichts mehr am Namen klebt und der Kopf nie wieder
+  zweizeilig wird; die **Punktzeile** („grüner Punkt → Länge → roter Punkt") ist weg, weil sie sich wie ein
+  Streckendiagramm las, ohne eines zu sein — jetzt führt die Länge, Auf- und Abstieg stehen daneben, die
+  **Bewertung kompakt in derselben Zeile**; das Highlight-Wort sitzt bei den Knöpfen. Die Schwierigkeit ist
+  ein Balken statt eines Punkts und **wächst mit einem zweizeiligen Namen mit** (`align-self:stretch`).
+- **Im Querformat steht der RIDE-Knopf NEBEN den Aktionsknöpfen**, nicht darunter — der Vorschlag des
+  Nutzers, nachdem ein innerer Scrollbereich verworfen wurde ("Scrollen in der Infobox. Bitte nicht."). Das
+  spart eine ganze Zeile und behebt den gemeldeten Fehler, dass bei einer Tour mit Abschnitts-Block der
+  RIDE-Knopf unter die Bildkante rutschte: gemessen 275px → **229px** bei einem Deckel von 285px. Das Raster
+  gehört dabei auf `#ipContent`, nicht auf `#infoPanel` — auf dem Panel gesetzt war es wirkungslos, weil
+  alle Inhalte eine Ebene tiefer hängen (zweite Rasterspalte 0px breit).
+- **Der Weißraum im Höhenprofil war innen**: `padTop`/`padBottom` von 5 und 9 der 48 viewBox-Einheiten
+  dehnen sich mit — bei 72px Höhe also 7,5px oben und 13,5px unten leer. Jetzt 3 und 4; den unteren Wert
+  brauchte nur die alte SVG-Beschriftung, die inzwischen HTML ist.
+- **Beim Umschalten auf rückwärts folgte der Hover-Punkt dem alten Profil.** `getEleHoverData` hatte seinen
+  Zwischenspeicher nur nach der Trail-ID benannt; ⏪ baut das Panel mit gespiegeltem `data-profile` neu auf,
+  die ID bleibt aber gleich. Gemessen lag der Punkt bei 25 % der Breite auf cy 11,8, die gezeichnete Kurve
+  dort auf 31,9 — bis zu 20 Einheiten daneben. Der Schlüssel enthält jetzt die Richtung; Abweichung ≤0,1.
+- **Die Zwischenüberschriften „ohne Bewertung" / „ohne Beliebtheitswert" sind weg** (Nutzer: die fehlende
+  Flamme bzw. der fehlende Stern sagt es schon). Die unbewerteten Trails hängen einfach hinten an — die
+  Reihenfolge bleibt die Aussage, sonst würden sie mitsortieren, als hätten sie null Sterne.
+- Nicht meine Änderungen: drei Testfälle zur Tipp-Erkennung auf der Karte scheitern in der Vorschau-Umgebung,
+  weil ein per Skript erzeugtes Touch-Ereignis dort den Abfangmechanismus nicht auslöst — **auf dem alten
+  Stand (v202) scheitern sie genauso**, geprüft durch Zurückstellen. Sie stammen aus einem echten
+  Handy-Bericht und brauchen ein echtes Touch-Gerät.
+
+## 2026-08-24 (Querformat)
+- **Der Info-Panel ist im Querformat breiter: `min(34vw, 230px)` → `min(40vw, 290px)`.** Der Nutzer meldete
+  ihn als „einen Tick zu hoch" und schlug zuerst vor, das goldene Highlight-Abzeichen wegzulassen — dann
+  seine eigene, bessere Korrektur: breiter machen, dann bricht weniger um. Genau das ist die Ursache, kein
+  Platzproblem des Abzeichens: gemessen bei 812×375 nimmt die Bewertungszeile eines Highlight-Trails bei
+  230px **zwei Zeilen** (36px statt 18) und die Überschrift trägt ihre Knöpfe auf eine zweite — zusammen ein
+  236px hoher Panel. Ab 290px sind beide einzeilig und der Panel ist 200px hoch; darüber ändert sich über 18
+  geprüfte Trails und Touren nichts mehr. Das Abzeichen bleibt.
+
 ## 2026-08-24 (zwei Kleinigkeiten)
 - **Das Höhenprofil war am Handy in beiden Achsen falsch skaliert.** Der viewBox ist fest 240 × 48 mit
   `preserveAspectRatio="none"`, x und y laufen also unabhängig — und am Handy gegenläufig: gemessen bei

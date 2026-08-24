@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=202" />
+<link rel="stylesheet" href="style.css?v=206" />
 </head>
 <body>
 <div id="fatalError">
@@ -4089,20 +4089,23 @@ function ratingRowHtml(t){
   const meta = REGION_RATING_META[groupOfSubRegion(t.region)];
   if (!meta && typeof t.rate !== "number") return "";
   if (typeof t.rate !== "number") {
-    return '<div class="ip-rating ip-rating-none">noch nicht bewertet</div>';
+    return '<span class="ip-rating ip-rating-none">noch nicht bewertet</span>';
   }
   // SAME two glyphs and the same order as the card's own meta row, so the panel reads as more detail about
   // the numbers already seen rather than as a second, differently-worded statement. The vote count is the
   // detail the card cannot afford; the highlight badge is the other.
+  // Kompakt, weil die Bewertung seit der Info-Box 2.0 in der Metazeile steht statt in einer eigenen
+  // (2026-08-24, Nutzer: "Ich bestehe nicht auf dem vollen Text und will lieber alles in einer Zeile").
+  // Zwei Nachkommastellen wie in der Kachel -- gleiche Zahl, gleiche Form, an beiden Orten.
   const stars = t.rate.toFixed(2).replace(".", ",");
-  const pop = typeof t.pop === "number"
-      ? `<span class="ip-gap"></span>🔥 ${t.pop}<span class="ip-rating-votes"> von 100</span>` : "";
+  const pop = typeof t.pop === "number" ? `<span class="ip-gap-sm"></span>🔥 ${t.pop}` : "";
   // The harvest date is deliberately NOT shown (user, 2026-08-23: "Nicht den Stand mit dem Datum, aber
   // intern merken macht Sinn"). It stays in the region file's own `ratings` block, so a later run can tell
   // how old a figure is without the panel carrying a date nobody reads.
-  const badge = isHighlight(t) ? '<span class="ip-rating-badge">Highlight</span>' : "";
-  return `<div class="ip-rating">⭐ ${stars}<span class="ip-rating-votes"> von 5</span>` +
-         `${pop}${badge}</div>`;
+  // Das Highlight-Abzeichen steht NICHT hier, sondern in der Knopfzeile (Entwurf A, Nutzer 2026-08-24:
+  // "Die Highlight Schrift sollte doch runter zu den Buttons ... Jetzt sorgt sie fuer einen Umbruch").
+  // In der Metazeile war es das Wort, das die Zeile ueber die Panelbreite geschoben hat.
+  return `<span class="ip-rating">⭐ ${stars}${pop}</span>`;
 }// Both numbers, always, whenever the trail has them -- ⭐ the rating, 🔥 the popularity. Independent of
 // which axis the list is sorted by, at the user's own call ("Zeig das doch einfach immer an. Das wäre viel
 // besser"), and they were right on the facts too: an earlier version showed only the active axis because a
@@ -5846,7 +5849,11 @@ function profileSlice(profile, distStart, distEnd){
 // without needing them threaded through as extra parameters.
 function buildElevationSvg(profile, highlight, color, trailId, reversed, segments){
   if (!profile || profile.length < 2) return "";
-  const W = 240, H = 48, padTop = 5, padBottom = 9;
+  // padTop/padBottom sind der Weissraum INNERHALB des Diagramms, und sie dehnen sich mit: bei 72px Hoehe
+  // waren 5 und 9 von 48 Einheiten 7,5px oben und 13,5px unten leer (Nutzer, 2026-08-24: "whitespace oben
+  // und unten des Hoehenprofils finde ich noch zu hoch"). Der untere Wert war fuer die Beschriftung im SVG
+  // gedacht -- die ist inzwischen HTML ueber dem Diagramm und braucht ihn nicht mehr.
+  const W = 240, H = 48, padTop = 3, padBottom = 4;
   const distMax = profile[profile.length - 1][0] || 1;
   const eles = profile.map(p => p[1]);
   const eleMin = Math.min(...eles), eleMax = Math.max(...eles);
@@ -6115,13 +6122,21 @@ const eleHoverMapMarker = L.circleMarker([0, 0], {
 // Caches the (potentially expensive-ish to compute) cumulative-distance array per trail so it's
 // only recomputed when the hovered chart actually belongs to a different trail, not on every
 // mousemove pixel.
-let eleHoverCache = { trailId: null, coords: null, cumDist: null, profile: null, axis: null };
+let eleHoverCache = { key: null, trailId: null, coords: null, cumDist: null, profile: null, axis: null };
 function getEleHoverData(svg){
   const trailId = svg.dataset.trailId;
-  if (eleHoverCache.trailId !== trailId) {
+  // Der Schluessel enthaelt die RICHTUNG, nicht nur die id (2026-08-24, Nutzer: nach dem Umschalten auf
+  // rueckwaerts lief der Punkt nicht wie vorwaerts). ⏪ baut das Panel mit einem gespiegelten `data-profile`
+  // neu auf, die id bleibt aber dieselbe -- also lieferte der Zwischenspeicher weiter das ALTE Profil, und
+  // die Hoehe kam aus der ungespiegelten Kurve. Gemessen: bei 25 % der Breite lag der Punkt auf cy 11,8,
+  // die gezeichnete Kurve dort auf 31,9. coords, cumDist und die Achse aendern sich beim Umschalten nicht,
+  // nur das Profil -- aber der Schluessel muss trotzdem beides unterscheiden.
+  const key = trailId + (svg.dataset.reversed === "1" ? "|r" : "|f");
+  if (eleHoverCache.key !== key) {
     const coords = TRAIL_GEO[trailId];
     const cumDist = coords ? cumulativeDistanceKm(coords) : null;
     eleHoverCache = {
+      key,
       trailId,
       coords,
       cumDist,
@@ -6349,7 +6364,11 @@ function buildInfoPanelHtml(t){
       segmentInfoHtml = `
         <div class="ip-segment-info" style="border-left:3px solid ${diffColor[segTrail.diff]}">
           <b>${segTrail.name}</b>${categoryBadge(segTrail)}<br>
-          ${segTrail.len} km &middot; ${segTrail.up} m ⬆️ / ${segTrail.down} m ⬇️
+          ${segTrail.len} km &middot; ${segTrail.up} m ⬆️ / ${segTrail.down} m ⬇️${
+            // Stern und Flamme auch hier (Nutzer, 2026-08-24: "In der Erweiterung der Info Box fehlen die
+            // neuen Attribute Flamme und Stern"). Nur wenn es sie gibt -- ein "noch nicht bewertet" waere in
+            // diesem kleinen Block Rauschen, und der Abschnitt nennt ohnehin schon vier Zahlen.
+            typeof segTrail.rate === "number" ? ` &middot; ${ratingRowHtml(segTrail)}` : ""}
         </div>`;
     } else if (seg && segLift && seg.distStart != null) {
       // A clicked LIFT stretch: no difficulty and no up/down to report -- what matters is that this
@@ -6394,20 +6413,33 @@ function buildInfoPanelHtml(t){
   // NOTE: never use a backtick in this comment. It sits inside a JS template literal, where a backtick ends the
   // string: writing a field name in code quotes here silently broke the whole script block, and with it the
   // fatal-error panel, which lives in that same block and so could not report it.
+  // Info-Box 2.0 (2026-08-24, Entwurf A nach vier Beobachtungen des Nutzers). Vier Aenderungen, jede gegen
+  // eine davon:
+  //   * Der NAME ist 17px in gemischter Schreibweise statt 14px Versalien -- er war das unauffaelligste
+  //     Element im Panel, kleiner als der RIDE-Knopf darunter.
+  //   * Die KNOEPFE stehen unter dem Hoehenprofil statt in der Ueberschrift. Damit klebt nichts mehr am
+  //     Namen, und der Kopf kann nie wieder zweizeilig werden -- im Querformat waren das allein 16px.
+  //   * Die PUNKTZEILE (gruen -> Laenge -> rot) ist weg: sie las sich wie ein Streckendiagramm, war aber
+  //     keines. Die Laenge fuehrt jetzt, Auf- und Abstieg stehen daneben.
+  //   * Der Abstand zum RIDE-Knopf traegt jetzt die Knopfzeile statt Luft.
+  // Die BEWERTUNGSZEILE behaelt bewusst ihren vollen Wortlaut ("4,54 von 5"), obwohl der Entwurf sie
+  // verkuerzt in die Metazeile legte -- diese Formulierung hat der Nutzer am Vortag selbst verlangt.
+  // `.badge` behaelt seine Klassen und sein title-Attribut und wird nur zum Balken umgestylt: die
+  // Schwierigkeit im Panel-Kopf ist eine eigene Entscheidung von 2026-08-13, die hier nicht mitkippen soll.
   return `
-    <h3><span class="badge ${t.diff}" title="${DIFF_LABEL[t.diff]}"></span>${t.name}${uphillBadge}${loopBadge} <span class="ip-btns">
+    <h3><span class="badge ${t.diff} ip-diff-bar" title="${DIFF_LABEL[t.diff]}"></span><span class="ip-name">${t.name}</span>${uphillBadge}${loopBadge}</h3>
+    <div class="ip-trail">
+      <div class="ip-meta"><span class="ip-len">${t.len} km</span><span class="ip-updown">${upShown} m ⬆️</span><span class="ip-updown">${downShown} m ⬇️</span>${ratingRowHtml(t)}</div>
+      ${profile ? buildElevationSvg(profile, highlight, diffColor[t.diff], t.id, isReversed, chartSegments) : ""}
+      ${segmentInfoHtml}
+    </div>
+    <span class="ip-btns">
       <button class="locate-btn" data-id="${t.id}" title="Zum Trail springen">📍</button>
       <button class="solo-btn${isSolo ? " active" : ""}" data-id="${t.id}" title="${isSolo ? "Alle wieder anzeigen" : "Nur diesen Trail zeigen"}">👁</button>
       <button class="reverse-btn${isReversed ? " active" : ""}" data-id="${t.id}" title="${isReversed ? "Normale Richtung anzeigen" : "Rückwärts fahren (Start/Ziel tauschen)"}">⏪</button>
       <button class="gpx-download-btn" data-id="${t.id}" title="GPX herunterladen">GPX</button>
-    </span></h3>
-    <div class="ip-trail">
-      <span class="dot-start">●</span> → ${t.len} km → <span class="dot-end">●</span><span
-        class="ip-gap"></span>${upShown} m ⬆️<span class="ip-gap"></span>${downShown} m ⬇️
-      ${ratingRowHtml(t)}
-      ${profile ? buildElevationSvg(profile, highlight, diffColor[t.diff], t.id, isReversed, chartSegments) : ""}
-      ${segmentInfoHtml}
-    </div>
+      ${isHighlight(t) ? '<span class="ip-rating-badge">Highlight</span>' : ""}
+    </span>
     <button class="ride-btn ip-ride-bar${rideMode ? " active" : ""}" data-id="${t.id}" title="${rideMode ? "RIDE-Modus beenden" : "RIDE-Modus für diesen Trail starten"}">🚴‍♂️ ${rideMode ? "RIDE beenden" : "RIDE starten"}</button>`;
 }
 
@@ -8103,18 +8135,12 @@ function appendTrailGroup(list, headingText, headingColor){
   const value = trailSortMode === "pop" ? popOf : ratingOf;
   const rated = rating ? sorted.filter(t => value(t) >= 0) : sorted;
   const unrated = rating ? sorted.filter(t => value(t) < 0) : [];
+  // Die unbewerteten haengen ohne Zwischenueberschrift hinten dran (2026-08-24, Nutzer: "Die Ueberschrift
+  // Ohne Bewertung ... koennen wir uns sparen. Man sieht ja, dass Flamme bzw. Stern fehlt"). Die REIHENFOLGE
+  // bleibt die Aussage -- ohne sie wuerden 88 unbewertete Trails sortieren, als haetten sie null Sterne, weil
+  // der Vergleicher fuer sie -1 zurueckgibt.
   rated.forEach(t => group.appendChild(makeTrailCard(t, t.region)));
-  if (unrated.length) {
-    const sub = document.createElement("div");
-    sub.className = "hub-title rating-unrated-title";
-    sub.textContent = trailSortMode === "pop" ? "ohne Beliebtheitswert" : "ohne Bewertung";
-    const c = document.createElement("span");
-    c.className = "region-count";
-    c.textContent = ` (${unrated.length})`;
-    sub.appendChild(c);
-    group.appendChild(sub);
-    unrated.forEach(t => group.appendChild(makeTrailCard(t, t.region)));
-  }
+  unrated.forEach(t => group.appendChild(makeTrailCard(t, t.region)));
   listEl.appendChild(group);
 }
 function buildTrailListDom(trails){
@@ -8510,7 +8536,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v202"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v206"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

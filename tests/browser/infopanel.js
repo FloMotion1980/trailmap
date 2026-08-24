@@ -450,38 +450,45 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
     T.ok("and no line is left stuck bold", !overlayWeights().some((w) => w > 4), overlayWeights(), "none > 4");
   }
 
-  T.test("all four actions are one unbreakable row of equal-sized buttons");
-  // The layout the user asked for: the group sits behind the name when the name's last line leaves room and drops
-  // WHOLE onto its own line under it when it does not. Both halves are asserted below by walking every trail in
-  // the list -- so a name long enough to force the second line has to exist in the region for this to prove
-  // much, and bikecircus has several ("Connection ..." ones).
-  let behind = 0, ownLine = 0, worstOverflow = -1e9, sizes = new Set();
+  T.test("the four actions are one row UNDER the chart, and the heading is always one line");
+  // Rewritten for the Info Box 2.0 (2026-08-24). The old property -- the group sits behind the name and
+  // drops WHOLE onto its own line when the name is long -- is deliberately gone: the user's report was that
+  // "die Ueberschrift klebt etwas zu sehr an den Buttons", so the group moved out of the heading entirely
+  // and sits between the elevation chart and the RIDE bar. What is worth pinning is what that bought: the
+  // heading can no longer be two lines (16px in landscape), and the gap above RIDE is carried by the
+  // buttons instead of by whitespace.
+  let sizes = new Set(), worstOverflow = -1e9, twoLineHeads = 0, wrongOrder = 0, barTooShort = 0;
   for (const c of TM.ui.trailCards().slice(0, 14)) {
     c.click();
     await TM.until(() => panel().classList.contains("visible") && content().querySelector(".ip-btns"));
-    const h3 = content().querySelector("h3"), grp = h3.querySelector(".ip-btns");
+    const h3 = content().querySelector("h3");
+    const grp = content().querySelector(".ip-btns");
+    if (h3.querySelector(".ip-btns")) wrongOrder++;          // must no longer live in the heading
     const g = grp.getBoundingClientRect(), p = panel().getBoundingClientRect();
     const first = grp.firstElementChild.getBoundingClientRect();
     const last = grp.lastElementChild.getBoundingClientRect();
-    // One row: every button shares the group's own top, and the group's width is the sum of its parts.
-    if (Math.abs(first.top - last.top) > 1) worstOverflow = 1e9;
+    if (Math.abs(first.top - last.top) > 1) worstOverflow = 1e9;   // one row, or the overflow check is moot
     worstOverflow = Math.max(worstOverflow, g.right - p.right);
     [...grp.children].forEach((b) => sizes.add(Math.round(b.getBoundingClientRect().height)));
-    // The h3's FIRST child is the difficulty dot (a span, added 2026-08-13), not the name -- so
-    // `h3.firstChild` measured an element and `.length` on it is undefined, giving an empty Range and no
-    // client rects at all. This check has therefore reported 0 ever since that dot arrived, i.e. it was
-    // failing for a reason that had nothing to do with the layout it is about. Take the first real text node.
-    const nameNode = [...h3.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim().length);
-    const lines = nameNode ? (() => {
-      const r = document.createRange(); r.setStart(nameNode, 0); r.setEnd(nameNode, nameNode.length);
-      return [...r.getClientRects()];
-    })() : [];
-    if (lines.length && Math.abs(g.top - lines[lines.length - 1].top) < 12) behind++; else ownLine++;
+    // Ein langer Name DARF umbrechen -- was nicht passieren darf, ist dass der farbige Balken links dabei
+    // auf seiner Zeilenhoehe stehen bleibt (Nutzer, 2026-08-24: "Wenn der Trailname zweizeilig wird, waechst
+    // der farbige Balken links nicht mit in der Hoehe"). Also wird das Verhaeltnis geprueft, nicht das
+    // Umbrechen: der Balken traegt die volle Hoehe der Ueberschrift.
+    const name = h3.querySelector(".ip-name");
+    const bar = h3.querySelector(".ip-diff-bar");
+    if (name && bar && bar.getBoundingClientRect().height + 1 < name.getBoundingClientRect().height) barTooShort++;
+    if (name && name.getClientRects().length > 1) twoLineHeads++;
+    const chart = content().querySelector(".ele-chart");
+    const ride = content().querySelector(".ip-ride-bar");
+    if (chart && g.top < chart.getBoundingClientRect().bottom - 1) wrongOrder++;
+    if (ride && getComputedStyle(ride).display !== "none" && g.top > ride.getBoundingClientRect().top + 1) wrongOrder++;
   }
   T.ok("every button is the same height", sizes.size === 1, [...sizes], "one height");
   T.ok("the group never leaves the panel", worstOverflow <= 0, Math.round(worstOverflow), "<= 0");
-  T.ok("it sits behind the name where the name leaves room", behind > 0, behind, "> 0");
-  T.ok("and drops to its own line where it does not", ownLine > 0, ownLine, "> 0");
+  T.eq("it is out of the heading and sits between chart and RIDE", wrongOrder, 0);
+  T.eq("the difficulty bar is as tall as the name, wrapped or not", barTooShort, 0);
+  // Nur zur Information -- ein Umbruch ist erlaubt, seit die Knoepfe die Zeile nicht mehr teilen.
+  T.ok("headings measured", true, twoLineHeads + " davon zweizeilig", "kein Kriterium");
 
   T.test("the panel's width does not depend on which trail is open");
   // It was sized by its content (width:max-content), so the same panel came out 320, 338 or 360px wide depending
@@ -532,7 +539,14 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   const bar = content().querySelector(".ip-ride-bar");
   T.ok("the panel has a RIDE bar", !!bar, !!bar, true);
   T.ok("it is not in the glyph group any more", !!bar && !bar.closest(".ip-btns"), true, true);
-  T.ok("it follows the stats/chart block", !!bar && bar.previousElementSibling.classList.contains("ip-trail"), true, true);
+  // Seit der Info-Box 2.0 steht die Knopfzeile zwischen Diagramm und RIDE-Balken -- der Balken folgt also
+  // nicht mehr direkt auf .ip-trail, sondern auf .ip-btns. Beides zusammen ist die Reihenfolge, die den
+  // Abstand ueber dem Balken traegt (frueher Luft).
+  T.ok("it follows the button row, which follows the chart block",
+       !!bar && bar.previousElementSibling.classList.contains("ip-btns")
+             && bar.previousElementSibling.previousElementSibling.classList.contains("ip-trail"),
+       bar ? [bar.previousElementSibling.className, bar.previousElementSibling.previousElementSibling.className] : null,
+       "ip-btns after ip-trail");
   T.ok("it says what it does", !!bar && /RIDE/.test(bar.textContent), bar ? bar.textContent.trim() : null, "names RIDE");
   // handleInfoPanelClick and syncRideModeChrome both find this button by .ride-btn, nothing else -- moving it
   // in the DOM must not move it out of their reach.
@@ -546,12 +560,47 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   // touch block no longer restates it and this returned 0. The property worth pinning was never "the touch
   // block makes them bigger" but "they are a full touch target" -- which is now true on both layouts, and is
   // what a regression to 22px would break.
-  const btnH = parseFloat(ruleValue("#infoPanel h3 .ip-btns > button", "height", false) || "0");
+  // Die Knopfzeile haengt seit der Info-Box 2.0 nicht mehr in der Ueberschrift, sondern steht unter dem
+  // Hoehenprofil -- der Selektor ist entsprechend ohne h3.
+  const btnH = parseFloat(ruleValue("#infoPanel .ip-btns > button", "height", false) || "0");
   T.ok("the glyph buttons are a full touch target, on every layout", btnH >= 34, btnH, ">= 34");
   // The heading's own group must stay ONE row of EQUAL buttons after the move (the case above measures that
   // where it can be painted); here it is only the count that changed, and a stray fifth child would mean the
   // bar was rendered in both places.
   T.eq("the group is four buttons again", content().querySelectorAll(".ip-btns > button").length, 4);
+
+  T.test("the hover dot sits ON the drawn curve, forwards AND reversed");
+  // Der Zwischenspeicher fuer die Hover-Daten war nur nach der Trail-ID benannt. ⏪ baut das Panel mit einem
+  // gespiegelten `data-profile` neu auf, die ID bleibt aber gleich -- also lieferte er weiter das ALTE
+  // Profil, und die Hoehe kam aus der ungespiegelten Kurve (Nutzer, 2026-08-24: "Aber wenn man drueber
+  // hovert ... verlaeuft der blaue Punkt nicht wie wenn der Trail vorwaerts gefahren werden wuerde").
+  // Gemessen war der Punkt bei 25 % der Breite auf cy 11,8, die gezeichnete Kurve dort auf 31,9.
+  // Geprueft wird deshalb der ABSTAND zwischen Punkt und Kurve, nicht der Wert selbst -- der Punkt darf
+  // ueberall stehen, solange er auf der Linie liegt, die man gerade sieht.
+  await openFirstTrail();
+  const curveY = (cx) => {
+    const pl = content().querySelector(".ele-chart polyline");
+    if (!pl) return null;
+    const pts = pl.getAttribute("points").trim().split(/\s+/).map((t) => t.split(",").map(Number));
+    let best = pts[0];
+    for (const q of pts) if (Math.abs(q[0] - cx) < Math.abs(best[0] - cx)) best = q;
+    return best[1];
+  };
+  const hoverAt = (f) => {
+    const svg = content().querySelector(".ele-chart"), r = svg.getBoundingClientRect();
+    svg.dispatchEvent(new MouseEvent("mousemove", { bubbles: true,
+      clientX: r.left + r.width * f, clientY: r.top + r.height / 2 }));
+    const d = svg.querySelector(".ele-hover-dot");
+    return Math.abs(+d.getAttribute("cy") - curveY(+d.getAttribute("cx")));
+  };
+  const fwd = [0.25, 0.75].map(hoverAt);
+  T.ok("forwards the dot is on the curve", Math.max(...fwd) < 2, fwd.map((v) => +v.toFixed(1)), "< 2");
+  content().querySelector(".reverse-btn").click();
+  await TM.wait(500);
+  const rev = [0.25, 0.75].map(hoverAt);
+  T.ok("and reversed it is too", Math.max(...rev) < 2, rev.map((v) => +v.toFixed(1)), "< 2");
+  content().querySelector(".reverse-btn").click();
+  await TM.wait(350);
 
   T.test("the chart's metre figures are HTML, so the viewBox cannot squash them");
   // The viewBox is a fixed 240 x 48 with preserveAspectRatio="none", so x and y scale by DIFFERENT factors
@@ -577,4 +626,35 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
   // BELOW 1, i.e. 1 400 metres of descent compressed into 46 pixels.
   const touchH = parseFloat(ruleValue(".ele-chart", "height", true) || ruleValue(".ele-chart", "height", false) || "0");
   T.ok("and the touch chart is not shorter than the viewBox it draws", touchH >= 48, touchH, ">= 48");
+
+  T.test("in landscape the panel is wide enough that the rating row stays one line");
+  // The landscape panel was min(34vw, 230px) and the user's report was that it sat "einen Tick zu hoch".
+  // The cause is a WRAP, not the content: measured at 812x375, the rating row of a highlighted trail took
+  // two lines at 230px (36px instead of 18) and the heading carried its buttons onto a second line, adding
+  // up to a 236px panel; from 290px both are single lines and the panel is 200px. Their own correction was
+  // to widen rather than drop the Highlight badge, so the badge is what this measures with.
+  // Checked by LAYOUT rather than by reading the rule: a width that is nominally wider still fails if
+  // something inside it grew, and the wrap is the thing that costs the height.
+  const html = document.documentElement;
+  const wasLandscape = html.classList.contains("landscape-compact");
+  html.classList.add("landscape-compact");
+  await TM.wait(200);
+  let rated = null;
+  for (const c of TM.ui.trailCards()) {
+    c.click();
+    await TM.until(() => panel().classList.contains("visible"), 1200);
+    await TM.wait(150);
+    if (content().querySelector(".ip-rating-badge")) { rated = c; break; }
+  }
+  if (!rated) {
+    TM.skip("no highlighted trail in this region -- nothing to measure");
+  } else {
+    const row = content().querySelector(".ip-rating");
+    T.eq("the rating row is a single line", row.getClientRects().length, 1);
+    T.ok("so it stays at one line's height", row.getBoundingClientRect().height < 28,
+         Math.round(row.getBoundingClientRect().height), "< 28");
+    const w = panel().getBoundingClientRect().width;
+    T.ok("and the panel is wider than the 230px that wrapped it", w >= 270, Math.round(w), ">= 270");
+  }
+  if (!wasLandscape) html.classList.remove("landscape-compact");
 });

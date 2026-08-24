@@ -11,14 +11,17 @@ nichts über die Entfernung sagen.
 
 ## Der Anker ist das Feature
 
-Ein Bezugspunkt auf der Karte mit **drei Wegen, ihn zu setzen** — das ist der Kern, und er macht einen
-zweiten Backlog-Punkt gegenstandslos: „Abfahrten von dieser Bergstation" (früher ein eigener Punkt) ist kein
-eigenes Feature, sondern ein dritter Eingang in dieses hier. Die Beobachtung ist die des Nutzers: „4 ist
-eigentlich wie 3."
+Ein Bezugspunkt auf der Karte mit **zwei Wegen, ihn zu setzen**:
 
 1. **Langer Druck auf die Karte** — der eigene Punkt, der Normalfall.
 2. **Die eigene Position** (in der Ankerzeile), wenn eine vorliegt.
-3. **Die Bergstation eines Lifts**, aus dem Lift-Info-Panel.
+
+**Der Lift ist bewusst KEIN dritter Eingang** (Nutzer, 2026-08-24, nachdem er es zunächst so gesehen hatte:
+„Das mit dem Lift würde ich nicht machen. Dann eher wenn man einen Lift anklickt, welche Startpunkte von
+Trails von dort aus erreichbar sind"). Das ist die bessere Frage und eine andere: die Umgebungssuche
+beantwortet „was liegt um diesen Punkt herum" und misst dafür zur nächsten Stelle einer Linie — beim Lift
+geht es um **Einstiege** und um die Fahrtrichtung, also darum, was man von der Bergstation aus überhaupt
+hinunterfahren kann. Steht als eigener Punkt im Backlog.
 
 ## Die Entscheidungen und ihre Gründe
 
@@ -97,5 +100,4 @@ nach Bewertung sinnlos und die Achse müsste auf Entfernung allein zurückfallen
 * **Erreichbare Stelle statt Luftlinie** — die eigentlich richtige Messung, braucht Routing über OSM-Daten.
   Ein Trail, dessen Mitte 200 m entfernt vorbeiführt, dessen Einstieg aber drei Kilometer bergauf liegt, ist
   nicht „in der Nähe" in einem Sinn, der einem Fahrer hilft.
-* **Lift-Eingang** — „Abfahrten von hier" im Lift-Panel, sobald die Grundform steht. Trägt heute Bike
-  Kingdom (71 bewertete Trails, 12 Lifte), Harz (36/6), Livigno (28/7), Sölden und Paganella.
+* Der Lift-Fall ist ein eigenes Feature, kein Ausbau dieses hier — siehe `docs/backlog.md`.
