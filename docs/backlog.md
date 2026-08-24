@@ -129,10 +129,16 @@ Prüfstapel sind auf null** (101 Fälle einzeln mit dem Nutzer entschieden, Begr
   Offene Frage fürs Bauen: Zacken als echte Geometrie (`L.polygon`, in Bildschirm-Pixeln nachskaliert wie
   die Richtungspfeile) oder als `dashArray` auf einem etwas größeren Kreis — Letzteres wäre eine Zeile,
   sieht aber eher nach Strichelung als nach Stern aus. Erst mit `visualize` ansehen, bevor Code entsteht.
-- **"In der Nähe"** — bestbewertete Trails im Radius um die eigene Position, nur sichtbar mit Position.
-- **"Abfahrten von dieser Bergstation"** im Lift-Info-Panel, nach Bewertung sortiert. Trägt jetzt Bike
-  Kingdom (71 bewertete Trails, 12 Lifte), Harz (36/6), Livigno (28/7), Sölden, Paganella — zum Zeitpunkt
-  der Idee gab es dafür noch keine Datenbasis, jetzt schon.
+- **"In der Nähe"** — bestbewertete Trails im Radius um einen **frei wählbaren Punkt**, nicht nur um die
+  eigene Position (Nutzer, 2026-08-24). **Das UX-Konzept steht und ist entschieden:
+  `docs/naehe-konzept.md`** — langer Druck auf die Karte setzt den Anker, die Ankerzeile erscheint erst
+  dann, Radius als Regler mit Trefferzahl, Entfernung als Luftlinie zur nächsten Stelle des Trails, und
+  auf dem Handy antwortet die Karte selbst durch Dimmen, weil die Schublade dort die Karte vollständig
+  verdeckt. RIDE bleibt unangetastet. **Gebaut wird noch nicht** (Anweisung des Nutzers).
+- **"Abfahrten von dieser Bergstation"** ist **kein eigener Punkt mehr**, sondern der dritte Eingang in die
+  Umgebungssuche: der Anker wird auf die Bergstation gesetzt. Beobachtung des Nutzers ("4 ist eigentlich
+  wie 3"). Die Datenbasis ist inzwischen da — Bike Kingdom (71 bewertete Trails, 12 Lifte), Harz (36/6),
+  Livigno (28/7), Sölden, Paganella.
 - **Tourenbuilder-Kandidaten ranken** — `junctionCandidates` liefert die Anschlüsse schon, sie nach
   Bewertung zu ordnen ist ein Zweizeiler mit echtem Effekt.
 - **Touren erben die Bewertung ihrer Komponenten** (längengewichtet aus `trailSegments`), damit der
