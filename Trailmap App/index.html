@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=213" />
+<link rel="stylesheet" href="style.css?v=216" />
 </head>
 <body>
 <div id="fatalError">
@@ -330,6 +330,14 @@
                entry point into riding, so it leads the row; being a permanent mode switch like #bearingBtn,
                not a conditional cell, it can sit anywhere except last (see #locateBtn's own comment). -->
           <button id="rideModeBtn" class="ride-btn" title="RIDE-Modus starten" aria-pressed="false">🚴‍♂️</button>
+          <!-- Umgebungssuche: erst hier tippen, dann auf die Karte (2026-08-25). Ein sichtbarer Knopf statt
+               einer versteckten Geste -- das lange Druecken war nicht auffindbar ("aktuell fehlt noch eine
+               Art Hinweis, dass das ueberhaupt geht") und loeste auf iOS zusaetzlich das Systemmenue aus.
+               ZWEITE Zelle, direkt hinter RIDE: die beiden starten etwas, 🧭 und die Positionszelle gehoeren
+               zusammen (Ausrichtung und Standort), und die Positionszelle bleibt die letzte, weil sie die
+               einzige bedingte ist -- eine erscheinende Zelle darf keine verschieben, auf die man zielt. -->
+          <button id="nearbyPickBtn" title="Trails in der Nähe: Punkt auf der Karte wählen"
+                  aria-pressed="false">📌</button>
           <!-- The north-up / heading-up switch. In this cluster at the user's request ("ein Button dort wo
                auch der Zentrieren Button erscheint", 2026-08-01), and permanently visible, since it is a
                mode and not a reaction to anything. -->
@@ -401,21 +409,38 @@
            um die Antwort zu lesen. Oben LINKS, und das ist kein Geschmack: unten mittig steht
            #offlineBanner, unten rechts die Attribution, unten links die Layer-Warnung, oben rechts der
            Bedienstapel. Im RIDE-Modus ausgeblendet (siehe CSS) -- dort wird nichts geaendert. -->
+      <!-- Gebaut wie die schwebende Suche daneben, und zwar auf Wunsch des Nutzers ("Bei dem neuen Feld
+           wuerde ich mich an der Suche orientieren. Oben das Suchfeld und das X unten die Zusammenfassung"):
+           oben die Pille mit dem Bedienelement und dem ✕, darunter die Zusammenfassung als eigener kleiner
+           Chip. Dieselbe Stelle, dieselben Abstaende, dieselbe Glas-Optik -- und dieselben 16px wie der
+           Bedienstapel oben rechts, damit die drei auf einer Linie liegen. -->
+      <!-- Sagt, was der armierte Modus von einem will, und traegt seinen eigenen Ausgang. Steht an derselben
+           Stelle wie die Zeile, die danach erscheint -- so wandert der Blick nicht. -->
+      <div id="nearbyPickHint">
+        <span>Punkt auf der Karte antippen</span>
+        <button type="button" id="nearbyPickHintClose" class="nearby-summary-btn" title="Abbrechen">✕</button>
+      </div>
       <div id="nearbyBar">
-        <span id="nearbyBarText"></span>
-        <span class="nearby-slider-wrap">
-          <input type="range" id="nearbyRadius" min="0.5" max="15" step="0.5" value="3"
-                 aria-label="Radius der Umgebungssuche">
-          <span class="nearby-slider-value" id="nearbyRadiusValue"></span>
-        </span>
-        <!-- Beide nur auf dem Touch-Layout. Auf dem Schreibtisch tut "Liste" nichts, was man sehen wuerde --
-             die Seitenleiste steht dort dauerhaft neben der Karte -- und eine eigene Position gibt es am
-             Laptop in der Regel nicht (Nutzer, 2026-08-25: "Das Positionslocator wird nicht benoetigt am
-             Desktop", "Ich kann auf Liste klicken und nix passiert"). -->
-        <button type="button" id="nearbyLocateBtn" class="nearby-bar-btn nearby-touch-only"
-                title="Anker auf die eigene Position setzen">📍</button>
-        <button type="button" id="nearbyBarList" class="nearby-bar-btn nearby-touch-only">Liste</button>
-        <button type="button" id="nearbyClearBtn" class="nearby-bar-btn" title="Umgebungssuche beenden">✕</button>
+        <div class="nearby-controls">
+          <!-- Nur auf dem Touch-Layout: eine eigene Position gibt es am Laptop in der Regel nicht
+               (Nutzer, 2026-08-25: "Das Positionslocator wird nicht benoetigt am Desktop"). -->
+          <button type="button" id="nearbyLocateBtn" class="nearby-pill-btn nearby-touch-only"
+                  title="Anker auf die eigene Position setzen">📍</button>
+          <span class="nearby-slider-wrap">
+            <input type="range" id="nearbyRadius" min="0.5" max="15" step="0.5" value="3"
+                   aria-label="Radius der Umgebungssuche">
+            <span class="nearby-slider-value" id="nearbyRadiusValue"></span>
+          </span>
+          <button type="button" id="nearbyClearBtn" class="nearby-pill-btn"
+                  title="Umgebungssuche beenden">✕</button>
+        </div>
+        <div class="nearby-summary">
+          <span id="nearbyBarText"></span>
+          <!-- "Liste" oeffnet die Schublade -- am Schreibtisch steht die Seitenleiste ohnehin dauerhaft
+               daneben, dort tut der Knopf nichts, was man sehen wuerde ("Ich kann auf Liste klicken und nix
+               passiert"). -->
+          <button type="button" id="nearbyBarList" class="nearby-summary-btn nearby-touch-only">Liste</button>
+        </div>
       </div>
       <div id="layerWarning"></div>
       <div id="offlineBanner">📴 Offline-Modus</div>
@@ -3967,6 +3992,7 @@ function toggleRideMode(){
 // docs/backlog.md. `git show 3139745^:'Trailmap App/index.html'` has the removed version if it is ever wanted.
 
 function enterRideMode(){
+  if (typeof disarmNearbyPick === "function") disarmNearbyPick();   // ein armierter Punkt-Modus waere im RIDE unsichtbar aktiv
   if (rideMode) return;
   // Cancels any pan/flyTo animation still in flight before the resize/pan work below runs -- see
   // safeMapStop()'s own comment for why this must go through it rather than a bare map.stop().
@@ -5869,7 +5895,12 @@ function closeInfoPanelAndDeselect(){
 }
 // During RIDE, a focused trail cannot be deselected by tapping empty map space (user, 2026-08-14) --
 // the whole point of the focus is that it survives incidental taps while riding.
-map.on("click", () => { if (!rideMode) closeInfoPanelAndDeselect(); });
+map.on("click", (e) => {
+  // Der armierte Punkt-Modus kommt VOR dem Abwaehlen: waehrend er laeuft, bedeutet ein Tipp auf die Karte
+  // "hier" und nichts anderes -- deshalb kein closeInfoPanelAndDeselect() in diesem Zweig.
+  if (nearbyPickArmed) { disarmNearbyPick(); setNearbyAnchor(e.latlng); return; }
+  if (!rideMode) closeInfoPanelAndDeselect();
+});
 
 // ---- Drive a tap on a trail/lift ourselves, never through the platform's own click (2026-08-04) ---
 // First cut (same day) only retargeted when the touchend position hit tested to something different than the
@@ -5890,50 +5921,17 @@ map.on("click", () => { if (!rideMode) closeInfoPanelAndDeselect(); });
 // map, a button, or a card is left completely alone: only a touchstart landing on a Leaflet interactive vector
 // path triggers this at all, so background taps, buttons and double-tap-zoom on the open map are unaffected.
 let mapTouchStart = null;
-// Der lange Druck der Umgebungssuche haengt an DIESEM Paar von Handlern und nicht an einem eigenen -- sonst
-// setzt ein langer Druck auf einen Trail den Anker UND waehlt den Trail aus, weil touchend hier ohnehin
-// einen Klick auf die getroffene Linie abschickt (siehe die Notiz oben). Die Schwellen sind dieselben, die
-// dieser Code schon benutzt: mehr als 14 px Bewegung ist ein Ziehen, und 500 ms ist die Grenze, ab der es
-// kein Tippen mehr ist -- genau die Marke, hinter der der lange Druck beginnt.
-const NEARBY_LONGPRESS_MS = 500;
-let nearbyLongPressTimer = null;
-function cancelNearbyLongPress(){
-  if (nearbyLongPressTimer) { clearTimeout(nearbyLongPressTimer); nearbyLongPressTimer = null; }
-}
 map.getContainer().addEventListener("touchstart", (e) => {
-  cancelNearbyLongPress();
   if (e.touches.length !== 1) { mapTouchStart = null; return; }   // a pinch/rotate gesture, not a tap
   const t = e.touches[0];
   const target = document.elementFromPoint(t.clientX, t.clientY);
   // Decided HERE, not at touchend: only a path we would otherwise have to hit-test for is worth intercepting.
   const owns = !!target && target.tagName === "path" && target.classList.contains("leaflet-interactive");
-  mapTouchStart = { x: t.clientX, y: t.clientY, target: owns ? target : null, time: Date.now(), longPress: false };
-  const start = mapTouchStart;
-  const pt = map.mouseEventToLatLng({ clientX: t.clientX, clientY: t.clientY });
-  nearbyLongPressTimer = setTimeout(() => {
-    nearbyLongPressTimer = null;
-    // Immer noch derselbe Finger, und er hat sich nicht bewegt? Dann war es ein langer Druck. `longPress`
-    // markiert die Beruehrung als verbraucht, damit touchend keinen Klick mehr abschickt.
-    if (mapTouchStart !== start || rideMode || builderMode) return;
-    start.longPress = true;
-    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (err) { /* kein Feedback, kein Problem */ } }
-    setNearbyAnchor(pt);
-  }, NEARBY_LONGPRESS_MS);
-}, { passive: true });
-map.getContainer().addEventListener("touchmove", (e) => {
-  const start = mapTouchStart;
-  if (!start || !nearbyLongPressTimer || e.touches.length !== 1) { cancelNearbyLongPress(); return; }
-  const t = e.touches[0];
-  if (Math.hypot(t.clientX - start.x, t.clientY - start.y) > 14) cancelNearbyLongPress();
+  mapTouchStart = { x: t.clientX, y: t.clientY, target: owns ? target : null, time: Date.now() };
 }, { passive: true });
 map.getContainer().addEventListener("touchend", (e) => {
   const start = mapTouchStart;
   mapTouchStart = null;
-  cancelNearbyLongPress();
-  // War es ein langer Druck, ist die Beruehrung verbraucht: der Anker steht, und ein Klick auf die Linie
-  // darunter waere die zweite Wirkung derselben Geste. preventDefault auch hier, sonst folgt der
-  // synthetische Klick der Plattform.
-  if (start && start.longPress) { e.preventDefault(); return; }
   if (!start || !start.target || e.touches.length !== 0 || e.changedTouches.length !== 1) return;
   const t = e.changedTouches[0];
   // Only for something that reads as a TAP -- a real drag/pan must sail through untouched. Leaflet's own
@@ -6097,6 +6095,11 @@ let nearbyAnchor = null;                 // [lat, lng] oder null
 let nearbyRadiusKm = NEARBY_DEFAULT_RADIUS_KM;
 let nearbyDistCache = {};                // trailId -> km; gilt fuer genau einen Anker, siehe setNearbyAnchor
 let nearbyAnchorMarker = null, nearbyCircleLayer = null;
+// Sortierung und Gruppierung, wie sie VOR dem ersten Anker standen, plus das, was der Anker daraus gemacht
+// hat. Beides zusammen, weil nur der Vergleich sagt, ob der Nutzer inzwischen selbst umgestellt hat: was er
+// selbst gewaehlt hat, bleibt beim Aufraeumen stehen, und nur was der Anker gesetzt hat, geht zurueck.
+let nearbyViewBefore = null;             // {sortMode, sortDir, groupMode}
+let nearbyViewApplied = null;            // dito, aber das, was wir selbst gesetzt haben
 
 // Entfernung des Ankers zur naechsten Stelle dieses Trails, in km. Einmal je Trail und Anker gerechnet und
 // dann gemerkt: der Radius aendert sich am Regler dauernd, der Anker fast nie, und nur er geht in die Zahl
@@ -6214,6 +6217,7 @@ function setNearbyAnchor(latlng){
   // und dort waere die Bewertungsachse eine leere Behauptung. Nur beim ersten Mal: wer danach selbst
   // umsortiert, soll das behalten, wenn er den Anker verschiebt.
   if (first) {
+    nearbyViewBefore = { sortMode: trailSortMode, sortDir: trailSortDir, groupMode: trailGroupMode };
     trailSortMode = ratedTrailCount() > 0 ? "rate" : "dist";
     trailSortDir = TRAIL_SORT_DEFAULT_DIR[trailSortMode];
     // ...und die Gruppierung fallen lassen, weil sie die Reihenfolge sonst zerlegt: nach Region gruppiert
@@ -6221,6 +6225,7 @@ function setNearbyAnchor(latlng){
     // oben. Eine Umgebungsliste ist eine Rangliste; gemessen kam nach Entfernung sortiert 0,76 / 0,76 /
     // 1,7 / 2,1 / 2,4 -- und dann wieder 0,5 km, weil dort die naechste Hub-Gruppe anfing.
     trailGroupMode = "none";
+    nearbyViewApplied = { sortMode: trailSortMode, sortDir: trailSortDir, groupMode: trailGroupMode };
     syncTrailViewChips();
   }
   drawNearbyAnchor();
@@ -6231,23 +6236,67 @@ function clearNearbyAnchor(){
   if (!nearbyAnchor) return;
   nearbyAnchor = null;
   nearbyDistCache = {};
-  if (trailSortMode === "dist") {
-    trailSortMode = TRAIL_VIEW_DEFAULTS.sortMode;
-    trailSortDir = TRAIL_SORT_DEFAULT_DIR[trailSortMode];
+  // Zurueck auf die URSPRUNGSWERTE, nicht auf die Vorgaben der App (Nutzer, 2026-08-25): wer vor dem Anker
+  // nach Name gruppiert und nach Laenge sortiert hatte, will das danach wieder haben und nicht
+  // Region/Schwierigkeit. Je Achse nur dann, wenn sie noch genau so steht, wie der Anker sie gesetzt hat --
+  // hat der Nutzer inzwischen selbst umgestellt, ist das seine Wahl und bleibt.
+  const before = nearbyViewBefore, applied = nearbyViewApplied;
+  if (before && applied) {
+    if (trailSortMode === applied.sortMode && trailSortDir === applied.sortDir) {
+      trailSortMode = before.sortMode;
+      trailSortDir = before.sortDir;
+    }
+    if (trailGroupMode === applied.groupMode) trailGroupMode = before.groupMode;
   }
-  // Die Gruppierung kommt zurueck, denn ohne Anker ist eine flache Rangliste ohne Rang.
-  if (trailGroupMode === "none") trailGroupMode = TRAIL_VIEW_DEFAULTS.groupMode;
+  // Die Entfernungsachse muss in jedem Fall weg -- ohne Anker gibt es keine Entfernung, nach der man
+  // sortieren koennte. Sie ist der eine Fall, in dem auch eine eigene Wahl des Nutzers nicht bleiben kann.
+  if (trailSortMode === "dist") {
+    trailSortMode = before ? before.sortMode : TRAIL_VIEW_DEFAULTS.sortMode;
+    trailSortDir = before ? before.sortDir : TRAIL_SORT_DEFAULT_DIR[trailSortMode];
+  }
+  nearbyViewBefore = nearbyViewApplied = null;
   syncTrailViewChips();
+  persistTrailListView();
   drawNearbyAnchor();
   applyHighlightDimming();
   render();
 }
-// Am Schreibtisch gibt es keinen langen Druck: dort ist die Geste der Rechtsklick. `contextmenu` war bisher
-// nur auf dem Positionsknopf abgefangen, auf der Karte ist es frei.
-map.on("contextmenu", (e) => {
+// Der Anker kommt aus einem ARMIERTEN Zustand, nicht aus einer versteckten Geste: erst den Knopf, dann
+// tippen (Nutzer, 2026-08-25, nach dem ersten Test am Handy -- "aktuell fehlt noch eine Art Hinweis, dass
+// das ueberhaupt geht", und das lange Druecken loeste ausserdem iOS' eigenes Kontextmenue aus). Ein Knopf
+// ist auffindbar, die Geste danach ist auf Handy und Schreibtisch dieselbe, und das normale Tippen behaelt
+// seine Bedeutung.
+//
+// Waehrend der Modus laeuft, nimmt eine CSS-Regel den Trail-Linien ihre `pointer-events` (siehe
+// .nearby-picking). Das ist der ganze Trick, und er loest zwei Dinge auf einmal: jeder Klick landet auf der
+// KARTE statt auf einer Linie, also braucht `map.on("click")` keine Sonderfaelle -- und unsere eigene
+// Tipp-Abfangung sieht per elementFromPoint keine interaktive Linie mehr und laesst die Beruehrung in Ruhe.
+let nearbyPickArmed = false;
+function syncNearbyPickChrome(){
+  const btn = document.getElementById("nearbyPickBtn");
+  if (btn) { btn.classList.toggle("on", nearbyPickArmed); btn.setAttribute("aria-pressed", String(nearbyPickArmed)); }
+  const hint = document.getElementById("nearbyPickHint");
+  if (hint) hint.classList.toggle("open", nearbyPickArmed);
+  map.getContainer().classList.toggle("nearby-picking", nearbyPickArmed);
+}
+function armNearbyPick(){
   if (rideMode || builderMode) return;
-  setNearbyAnchor(e.latlng);
+  nearbyPickArmed = true;
+  syncNearbyPickChrome();
+}
+function disarmNearbyPick(){
+  if (!nearbyPickArmed) return;
+  nearbyPickArmed = false;
+  syncNearbyPickChrome();
+}
+document.getElementById("nearbyPickBtn").addEventListener("click", () => {
+  if (nearbyPickArmed) disarmNearbyPick(); else armNearbyPick();
 });
+document.getElementById("nearbyPickHintClose").addEventListener("click", disarmNearbyPick);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") disarmNearbyPick(); });
+// Das Kontextmenue des Browsers bleibt auf der Karte unterdrueckt, auch ohne eigene Rechtsklick-Geste: ein
+// langer Druck auf eine Karte soll kein Systemmenue oeffnen, und markierbarer Text gibt es dort nicht.
+map.getContainer().addEventListener("contextmenu", (e) => { e.preventDefault(); });
 document.getElementById("nearbyRadius").addEventListener("input", (e) => {
   nearbyRadiusKm = parseFloat(e.target.value);
   if (nearbyCircleLayer) nearbyCircleLayer.setRadius(nearbyRadiusKm * 1000);
@@ -8922,7 +8971,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v213"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v216"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

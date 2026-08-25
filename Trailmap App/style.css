@@ -284,13 +284,17 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    cosmetic: on a landscape phone the old stretch-to-the-cluster version read as "too wide" (user, 2026-08-09)
    -- capping the width and only anchoring the left edge is what keeps it a compact bar instead of a banner.
    Desktop uses a DIFFERENT class, .floating-fixed below, on purpose -- see its own note for why. */
+/* 16px, und das ist dieselbe Zahl wie bei #locateCluster -- nicht Geschmack: die beiden liegen auf einer
+   Linie, sobald sie es sind, und lagen bis 2026-08-25 6px auseinander (10 gegen 16), was der Nutzer auf dem
+   Handy sofort gesehen hat ("die Abstaende im Vergleich zu dem Locator Widget"). Wer eine dieser Zahlen
+   aendert, aendert die andere mit. */
 .search-field-wrap.floating-on-map{
   position:absolute;
-  top: calc(10px + env(safe-area-inset-top, 0px));
-  left: calc(10px + env(safe-area-inset-left, 0px));
+  top: calc(16px + env(safe-area-inset-top, 0px));
+  left: calc(16px + env(safe-area-inset-left, 0px));
   /* min() still leaves the 68px clearance for the map's own top-right control cluster (44px column + 16px
      offset + a little air) on a narrow screen, where the cap itself has no room to bite. */
-  width: min(320px, calc(100vw - 20px - 68px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  width: min(320px, calc(100vw - 32px - 68px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
   z-index:1300;
   filter: drop-shadow(0 4px 14px rgba(0,0,0,0.3));
 }
@@ -303,7 +307,8 @@ details.filter-section[open] summary::after{ transform: rotate(90deg); }
    than a column, and the phone has far less height to spare in the first place. */
 html.landscape-compact .search-field-wrap.floating-on-map{
   top: calc(3px + env(safe-area-inset-top, 0px));
-  width: min(240px, calc(100vw - 20px - 150px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  left: calc(3px + env(safe-area-inset-left, 0px));
+  width: min(240px, calc(100vw - 6px - 150px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
 }
 /* Desktop's own version of the same idea, and deliberately NOT a reparent (2026-08-09, second pass -- the
    first version floated it exactly like mobile and the user hit a real bug: "es springt einfach hoch und
@@ -622,7 +627,14 @@ html.landscape-compact .search-overlay-summary{
 .tag-geo{ font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; background:#e4ece0; color:var(--forest); padding:1px 5px; border-radius:3px; }
 .tag-approx{ font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; background:#f3e6da; color:var(--rust); padding:1px 5px; border-radius:3px; }
 .map-wrap{ flex:1; position:relative; }
-#map{ position:absolute; inset:0; background:#dfe6d8; }
+/* -webkit-touch-callout:none ist hier kein Detail, sondern der Grund, warum ein langer Druck auf die Karte
+   ueberhaupt eine Geste sein kann: ohne das antwortet iOS Safari mit seinem eigenen Systemmenue (Nutzer,
+   2026-08-25: "bei langen Tippen das Problem, dass dann ein Kontextmenue aufgeht"). Dieselben drei Zeilen
+   traegt der Positionsknopf schon aus demselben Grund. user-select bleibt frei fuer die Tooltips? Nein --
+   auf der Karte gibt es keinen Text, den man markieren wollen wuerde, und eine halb markierte Beschriftung
+   unter dem Finger ist genau das, was hier stoert. */
+#map{ position:absolute; inset:0; background:#dfe6d8;
+  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none; }
 /* Leaflet marks every clickable vector layer (polylines, circleMarkers) with tabindex for keyboard
    accessibility — clicking one gives it browser focus, and the default focus ring follows the
    path's rectangular SVG bounding box rather than its actual (often irregular) shape, showing up
@@ -1904,44 +1916,88 @@ header{ position:relative; z-index:1; }
    line-height ist derselbe Fesselwert wie bei .trail-meta-rating -- ohne ihn wächst die Kachel. */
 .trail-meta-dist { white-space: nowrap; line-height: 12px; color: #8a4a12; }
 
-/* Oben links: unten mittig steht #offlineBanner, unten rechts die Attribution, unten links die
-   Layer-Warnung, oben rechts der Bedienstapel. Die env(safe-area-inset-*)-Terme halten die Zeile von der
-   abgerundeten Ecke weg, wie beim Bedienstapel. flex-wrap, damit auf einem 375px-Schirm der Regler in die
-   zweite Reihe darf statt die Zeile über den Rand zu schieben. */
-#nearbyBar { display: none; position: absolute; z-index: 1200;
-  top: calc(10px + env(safe-area-inset-top, 0px)); left: calc(10px + env(safe-area-inset-left, 0px));
-  align-items: center; gap: 8px; flex-wrap: wrap; padding: 5px 8px; border-radius: 10px;
-  background: rgba(255,255,255,0.94); border: 1px solid #d3d8cd; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
-  font-size: 12px; color: #2c3a2d; max-width: min(360px, calc(100% - 120px)); }
+/* Dieselbe Stelle und dieselbe Geometrie wie die schwebende Suche -- oben links, 16px wie der
+   Bedienstapel, Breite mit derselben 68px-Freihaltung fuer ihn. Die beiden Ueberlagerungen teilen sich
+   diese Zahlen absichtlich in EINEM Selektor: sie stehen uebereinander an derselben Kante, und zwei
+   getrennte Regeln driften auseinander (genau das war der Fehler, den der Nutzer gesehen hat). */
+#nearbyBar { display: none; position: absolute; z-index: 1250;
+  top: calc(16px + env(safe-area-inset-top, 0px)); left: calc(16px + env(safe-area-inset-left, 0px));
+  width: min(320px, calc(100vw - 32px - 68px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  flex-direction: column; align-items: stretch;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.3)); }
 #nearbyBar.open { display: flex; }
-#nearbyBarText { flex-shrink: 0; font-variant-numeric: tabular-nums; }
-.nearby-bar-btn { border: none; background: none; padding: 2px 4px; font-size: 12px; color: var(--forest);
-  cursor: pointer; border-left: 1px solid #dfe4d9; flex-shrink: 0; }
+/* Die Pille: gebaut wie #trailSearchInput -- 1,5px Rahmen, 10px Radius, dieselbe Glas-Fuellung. */
+.nearby-controls { display: flex; align-items: center; gap: 6px; box-sizing: border-box;
+  padding: 5px 8px; border: 1.5px solid #e3e6da; border-radius: 10px;
+  background: rgba(255,255,255,0.68); -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  backdrop-filter: blur(14px) saturate(1.4); }
+.nearby-pill-btn { flex-shrink: 0; border: none; background: none; padding: 4px 2px; font-size: 15px;
+  line-height: 1; color: var(--forest); cursor: pointer; }
+.nearby-pill-btn:active { color: var(--forest-dark); }
 /* Kein Positionsfix vorhanden: der Knopf sagt es, statt stumm nichts zu tun. */
 .nearby-btn-warn { color: var(--rot); }
-/* Der Regler in der Zeile, mit seiner Zahl IN der Bahn -- dieselbe Bauart wie der Highlights-Regler, aus
-   demselben Grund: der Text neben dem Regler hätte die Zeile über die Kartenbreite geschoben. */
-.nearby-slider-wrap { position: relative; display: flex; align-items: center; flex: 1 1 120px;
-  min-width: 92px; }
-#nearbyRadius { flex: 1; min-width: 0; height: 18px; margin: 0; background: transparent;
+/* Der Regler mit seiner Zahl IN der Bahn -- dieselbe Bauart wie der Highlights-Regler, aus demselben Grund:
+   der Text daneben haette die Pille ueber die Kartenbreite geschoben. */
+.nearby-slider-wrap { position: relative; display: flex; align-items: center; flex: 1; min-width: 0; }
+#nearbyRadius { flex: 1; min-width: 0; height: 20px; margin: 0; background: transparent;
   -webkit-appearance: none; appearance: none; }
-#nearbyRadius::-webkit-slider-runnable-track { height: 18px; border-radius: 9px; background: #eef1ea;
+#nearbyRadius::-webkit-slider-runnable-track { height: 20px; border-radius: 10px; background: #eef1ea;
   border: 1px solid #d3d8cd; }
-#nearbyRadius::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -1px;
+#nearbyRadius::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px;
   border-radius: 50%; background: #b3520a; box-shadow: 0 1px 3px rgba(0,0,0,0.35); cursor: pointer; }
-#nearbyRadius::-moz-range-track { height: 18px; border-radius: 9px; background: #eef1ea;
+#nearbyRadius::-moz-range-track { height: 20px; border-radius: 10px; background: #eef1ea;
   border: 1px solid #d3d8cd; }
-#nearbyRadius::-moz-range-thumb { width: 18px; height: 18px; border: none; border-radius: 50%;
+#nearbyRadius::-moz-range-thumb { width: 20px; height: 20px; border: none; border-radius: 50%;
   background: #b3520a; box-shadow: 0 1px 3px rgba(0,0,0,0.35); cursor: pointer; }
-.nearby-slider-value { position: absolute; left: 7px; top: 0; height: 18px; line-height: 18px;
-  font-size: 10px; color: #4c574d; white-space: nowrap; pointer-events: none;
+.nearby-slider-value { position: absolute; left: 8px; top: 0; height: 20px; line-height: 20px;
+  font-size: 11px; color: #4c574d; white-space: nowrap; pointer-events: none;
   font-variant-numeric: tabular-nums; }
-/* Im RIDE-Modus nichts davon: dort wird nichts geändert (Nutzer, zum Konzept). */
+/* Die Zusammenfassung darunter: eigener kleiner Chip, genau wie .search-overlay-summary -- gleicher
+   Abstand, gleicher Radius, gleiche Fuellung, gleiche Schriftgroesse. */
+.nearby-summary { display: flex; align-items: center; gap: 8px; margin-top: 5px; padding: 4px 10px;
+  border-radius: 8px; background: rgba(255,255,255,0.6);
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  font-family: Arial, sans-serif; font-size: 11px; color: var(--forest-dark); }
+#nearbyBarText { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-variant-numeric: tabular-nums; }
+.nearby-summary-btn { flex-shrink: 0; border: none; background: none; padding: 2px 0; font-size: 11px;
+  font-family: inherit; color: var(--forest); cursor: pointer; }
+/* Landscape hat am wenigsten Hoehe: dieselben Werte, die .search-overlay-summary dort schon benutzt. */
+html.landscape-compact #nearbyBar {
+  top: calc(3px + env(safe-area-inset-top, 0px)); left: calc(3px + env(safe-area-inset-left, 0px));
+  width: min(240px, calc(100vw - 6px - 150px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+}
+html.landscape-compact .nearby-summary { margin-top: 3px; padding: 2px 8px; }
+/* Der armierte Punkt-Modus. Die pointer-events-Regel ist der ganze Mechanismus: waehrend er laeuft, nimmt
+   sie den Trail-Linien ihre Klickbarkeit, damit jeder Tipp auf der KARTE landet -- so braucht der
+   Klick-Handler keinen Sonderfall, und unsere eigene Tipp-Abfangung (die per elementFromPoint nach einer
+   interaktiven Linie sucht) laesst die Beruehrung von sich aus in Ruhe. */
+.leaflet-container.nearby-picking { cursor: crosshair; }
+.leaflet-container.nearby-picking .leaflet-interactive { pointer-events: none; }
+/* Der Hinweis steht an derselben Kante wie die Zeile, die er ankuendigt -- 16px, wie #locateCluster und die
+   schwebende Suche. */
+#nearbyPickHint { display: none; position: absolute; z-index: 1250;
+  top: calc(16px + env(safe-area-inset-top, 0px)); left: calc(16px + env(safe-area-inset-left, 0px));
+  align-items: center; gap: 8px; padding: 5px 10px; border-radius: 8px;
+  background: rgba(255,255,255,0.82); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  border: 1.5px solid var(--highlight);
+  font-family: Arial, sans-serif; font-size: 12px; color: var(--forest-dark);
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.3)); }
+#nearbyPickHint.open { display: flex; }
+/* Beides zugleich waere doppelt: solange der Hinweis steht, ist noch kein Punkt gewaehlt. */
+#nearbyPickHint.open ~ #nearbyBar { display: none; }
+html.landscape-compact #nearbyPickHint {
+  top: calc(3px + env(safe-area-inset-top, 0px)); left: calc(3px + env(safe-area-inset-left, 0px));
+}
+html.ride-mode #nearbyPickHint { display: none; }
+/* Im RIDE-Modus nichts davon: dort wird nichts geaendert (Nutzer, zum Konzept). */
 html.ride-mode #nearbyBar { display: none; }
 .nearby-touch-only { display: none; }
 @media (max-width: 768px), (pointer: coarse) {
-  /* 34px hoch wie jedes andere Ziel, das am Lenker getroffen werden muss. */
   .nearby-touch-only { display: inline-block; }
-  #nearbyBar { font-size: 13px; gap: 6px; max-width: calc(100% - 110px); }
-  #nearbyBar .nearby-bar-btn { min-height: 30px; padding: 2px 7px; }
+  /* Am Lenker getroffen werden muessen: 30px Mindesthoehe fuer die beiden Glyphen in der Pille, und die
+     Zusammenfassung eine Spur groesser als die 11px, die am Schreibtisch reichen. */
+  .nearby-pill-btn { min-width: 30px; min-height: 30px; font-size: 16px; }
+  .nearby-summary { font-size: 12px; }
+  .nearby-summary-btn { font-size: 12px; padding: 4px 0 4px 4px; }
 }

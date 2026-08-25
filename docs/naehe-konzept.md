@@ -21,14 +21,29 @@ Drei Punkte, jeder mit dem Grund, weil das Konzept selbst sie offen oder widersp
 3. **Die Kartenzeile zählt Trails und Touren getrennt** („9 Trails · 3 Touren"). Beide liegen im
    Radius, aber in verschiedenen Abschnitten der Schublade — „16 Trails" wäre gelogen, wenn drei davon
    Touren sind (am Gardasee gemessen).
-4. **Nach dem ersten Test am Laptop wanderte die ganze Bedienung auf die Karte** (Nutzer, 2026-08-25:
+4. **Die Geste ist nicht der lange Druck, sondern erst ein Knopf und dann ein Tipp** (Nutzer, 2026-08-25,
+   nach dem Test am Handy). Zwei Gründe, beide von ihm: der lange Druck war nicht auffindbar („aktuell fehlt
+   noch eine Art Hinweis, dass das überhaupt geht"), und iOS antwortete darauf mit seinem eigenen
+   Kontextmenü. 📌 im Bedienstapel schaltet den Modus ein, der Hinweis „Punkt auf der Karte antippen" steht
+   an derselben Kante wie später die Zeile, und der nächste Tipp setzt den Anker. Der ganze Mechanismus ist
+   eine CSS-Regel: während der Modus läuft, haben die Trail-Linien keine `pointer-events`, also landet jeder
+   Tipp auf der Karte — ein Tipp auf eine Linie öffnet den Trail nicht, und die Tipp-Abfangung der App
+   (die per `elementFromPoint` nach einer interaktiven Linie sucht) hält sich von selbst zurück.
+5. **Das Aufräumen stellt Sortierung und Gruppierung auf die Werte VOR dem Anker zurück**, nicht auf die
+   Vorgaben der App — je Achse und nur dort, wo noch der Wert des Ankers steht. Bis dahin ging nur die
+   Gruppierung zurück („Passiert momentan nur bei Gruppieren nicht bei Sortieren").
+6. **Nach dem ersten Test am Laptop wanderte die ganze Bedienung auf die Karte** (Nutzer, 2026-08-25:
    „Generell nix im Menü. Das spielt sich alles auf der Karte ab"). Die Ankerzeile in den Filtern, die
    dieses Dokument unten noch beschreibt, ist ersatzlos weg; Regler, Trefferzahl und ✕ stehen in der Zeile
    oben links. Der Radius steht dabei **im Regler** und die Treffer **daneben** — jede Zahl an genau einer
    Stelle. Zwei Knöpfe sind **touch-only**, weil sie am Schreibtisch nichts tun, was man sieht: „Liste"
    (dort steht die Seitenleiste ohnehin dauerhaft daneben — „Ich kann auf Liste klicken und nix passiert")
-   und 📍 („Das Positionslocator wird nicht benötigt am Desktop"). Gemessen: am Laptop 284x32 px, am
-   375px-Schirm bricht die Zeile auf 265x66 um und bleibt 38 px vom Bedienstapel entfernt.
+   und 📍 („Das Positionslocator wird nicht benötigt am Desktop"). **Und die Zeile ist gebaut wie die schwebende Suche daneben** — oben die Pille mit
+   Regler und ✕, darunter die Zusammenfassung als eigener Chip, auf seinen Wunsch („Bei dem neuen Feld würde
+   ich mich an der Suche orientieren"). Dieselben 16 px Abstand wie `#locateCluster`; die Suche selbst saß
+   bis dahin 6 px höher (10 gegen 16), was er auf dem Handy sofort gesehen hat — beide Zahlen gehören
+   zusammen und werden gemeinsam geändert. Gemessen bei 375 px: Zeile bei (16, 71) wie der Bedienstapel,
+   275 px breit, Pille 42 px, Chip 30 px, 5 px Abstand dazwischen, 22 px Luft zum Stapel.
 
 Was **nicht** gebaut wurde und weiter offen ist: die erreichbare Stelle statt der Luftlinie (braucht
 Routing), und der Lift-Fall („welche Trail-Einstiege sind von dieser Bergstation erreichbar") — der ist ein

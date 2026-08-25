@@ -21,76 +21,30 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
-## 2026-08-25 (Zwei neue Regionen: Elba und Kronplatz, beide aus Trailforks)
-- **Elba: 222 Trails, 5 Sub-Regionen, keine Lifte, 179 mit Trailforks-Bewertung.** Quelle ist Trailforks
-  allein (`isola-d-elba-28064` plus die vier Elba-Gebiete der Provinz `livorno`), geerntet mit
-  `tools/harvest_trailforks.py` und gebaut mit `tools/build_trailforks_region.py` — dasselbe generische Paar
-  wie Madeira und der Gardasee, und dieselbe protokollierte Ausnahme von der Betreiber-Regel: auf der Insel
-  veröffentlicht kein Betreiber eine Schwierigkeit. Alle 235 geholten Seiten trugen Polylinie UND
-  Höhenprofil, also kein einziger Verlust an fehlender Höhe. Details: `docs/elba.md`.
-- **`fetch()` folgt jetzt Weiterleitungen (`curl -L`) — und genau das hat Elba erst sichtbar gemacht.** Ohne
-  `-L` fand die Slug-Probe für Elba 14 Zeilen in drei Dorfregionen; der naheliegende Slug `isola-d-elba`
-  leitet aber auf `isola-d-elba-28064` mit **310 Zeilen** um, und die Weiterleitung las sich als „gibt es
-  nicht". Die Korrektur brauchte sofort eine zweite: mit `-L` landet ein Fehltreffer auf einer 200-OK
-  Fehlerseite, die drei eigene `/trails/`-Links trägt, also „traf" danach jeder erfundene Slug. `fetch()`
-  fragt per `curl -w` die tatsächliche Ziel-URL ab und gibt `""` zurück, wenn sie auf `/error` endet.
-  `probe_tf_slugs.py` und `find_tf_regions.py` erben beides.
-- **Kronplatz: 23 Trails, 4 Lifte, 4 Sub-Regionen, 20 mit Bewertung** — die Region, die seit 2026-07 an der
-  Geometrie hing (`docs/kronplatz-recherche.md` listet vier gescheiterte Wege). Trailforks ist der fünfte
-  und trägt sie. **Schwierigkeit kommt vom Betreiber**, nicht von Trailforks: `kronplatz.com`s dreistufige
-  Skala (easy→blau, medium→rot, difficult→schwarz) für 15 der 18, als neues, generisches `diff_override` in
-  `build_trailforks_region.py` mit der Betreiber-Formulierung neben jeder Farbe. Genau ein Widerspruch
-  (Freeride Piz de Plaies: Trailforks blau, Betreiber medium → rot).
-- **Kronplatz hat VIER Sommerlifte, nicht fünf** — die Betreibertabelle führt Olang 1, Olang 2, Piz de
-  Plaies und Kronplatz 2000. Das korrigiert `docs/kronplatz-recherche.md` und ist wieder der Fall aus
-  `docs/lifts-feature.md`: OSM taggt `Ried` mit `aerialway:bicycle=yes` und `Ruis` mit `bicycle=summer`,
-  beide stehen nicht auf der Liste des Betreibers. Details: `docs/kronplatz.md`.
-- **Abgleich gegen die offizielle Kronplatz-Trailliste (der Nutzer lieferte die URL): 18 der 19 sind drin,
-  fuenf davon erst nach diesem Abgleich.** Crazy Bunny Line und CC Top Line hatte der Bau als
-  Geometriedubletten des Furcia Trails verworfen (78 % / 100 % Ueberdeckung) -- der Betreiber fuehrt sie
-  mit eigener Laenge und Schwierigkeit, also entscheidet er, was ein Trail ist (`keep_overlapping`).
-- **Trailforks' `gassl-trail` ist gar nicht der Gassl Trail, sondern Dragon Trail UND Gassl Trail als eine
-  8,4-km-Linie** -- das erklaert die 30 %, um die seine Laenge die Betreiberangabe verfehlte. Der Nutzer
-  wies auf bike-holidays.com hin, wo beide als **Komoot-Tour** eingebettet sind; Komoots API
-  (`/api/v007/tours/<id>?_embedded=coordinates`) antwortet anonym und liefert die Linie mit echter Hoehe
-  je Punkt. Gemessen, nicht vermutet: Dragon-Ende und Gassl-Anfang liegen 0 m auseinander, und 99 % der
-  Trailforks-Punkte liegen naeher als 25 m an der Vereinigung beider. Jetzt einzeln gebaut, jeder trifft
-  seine Betreiberzahl fast genau (Gassl 6,30 km / 879 Hm gegen 6 400 m / 907 Hm, Dragon 2,00 km / 167 Hm
-  gegen 2 043 m / 197 Hm). Rohdaten in `Material/Kronplatz/komoot/`, ein Neubau braucht also kein Netz.
-  **Die tags zuvor eingebaute DEM-Nachreichung fuer Gassl ist damit wieder raus** -- Komoot traegt echte
-  Hoehen, also gilt die Regel "keine Hoehen-API" wieder unveraendert. Dafuer gibt es zwei neue,
-  generische und pro Trail benannte Felder: `exclude` (eine Linie ist falsch, nicht bloss redundant) und
-  `extra_trails` (der Betreiber hat einen Trail, den Trailforks nicht oder falsch hat).
-  **Mini Furcia Trail fehlt weiterhin**: nicht bei Trailforks, nicht in OSM (101 Overpass-Treffer auf die
-  19 Namen geprueft), nicht bei bike-holidays -- geraten wird nicht.
-- **Ursache behoben statt wieder umgangen: `write_region()` uebernimmt Neben-Keys, statt sie zu loeschen**
-  (auf Nachfrage des Nutzers -- "dass ein weiteres Bauen die Lifte loescht ist nix neues. Das faellt dir
-  immer wieder auf. Kann man das nicht verhindern?"). `places`, `lifts`, `trailSegments` und `ratings`
-  schreibt je ein anderes Werkzeug zu einem anderen Zeitpunkt, und keines davon laesst sich aus den Trails
-  zurueckrechnen -- ein Bau, der sie schlicht nicht erwaehnte, hat sie geloescht. Das hat mindestens
-  dreimal echte Daten gekostet (Commit `b881699` nahm donnersberg.json den kompletten
-  `trailSegments`-Key, `add_region_places.py --force` den `ratings`-Block, ein Kronplatz-Neubau vier
-  Lifte), und rund ein Drittel der 25 Aufrufstellen hatte laengst ein handgeschriebenes
-  `places=d.get("places"), lifts=d.get("lifts")` als Umgehung -- das Zeichen dafuer, dass die
-  Voreinstellung falsch war. Die Regel ist jetzt **fehlt gegen bewusst leer**, dieselbe Unterscheidung wie
-  in `restoreActiveState()`: `lifts=None` heisst "behalte, was da ist", `lifts=[]` heisst "diese Region
-  hat keine". Fuer `ratings` gilt eine Zusatzregel, sonst wuerde der Block Zahlen behaupten, die der
-  Neubau entfernt hat. Drei Mutationen in `tests/MUTATIONS.md`, Faelle in `tests/python/pipeline.py`; die
-  beiden Umgehungen in `build_trailforks_region.py` und `add_region_places.py` sind wieder raus.
-- **Ein Neubau traegt auch das `lifts`-Array weiter** (wie schon `places`) und druckt eine
-  Erinnerung, dass `apply_trailforks_ratings.py` erneut laufen muss -- der Neubau ersetzt jedes
-  Trail-Objekt, die Bewertungsfelder gehen also mit. Ohne beides haette der zweite Kronplatz-Bau seine
-  vier Lifte geloescht.
-- **`build_trailforks_region.py` baut die Tabelle jetzt „längste Linie zuerst" ab.** `duplicate_of` meldet
-  immer die gerade gebaute Linie als Dublette, also entschied bis dahin allein die alphabetische
-  Slug-Reihenfolge, wer von einem überlappenden Paar überlebt — bei Kronplatz hätte das den 4,8 km langen
-  Furcia Trail zugunsten des 329 m langen Fragments `cctop1` verworfen. Madeira ist davon unberührt; ein
-  Neubau des Gardasees würde zwei IDs tauschen, seine Datei wurde deshalb bewusst nicht neu gebaut.
-- **Fehler in `tools/add_region_places.py` behoben: `--force` löschte den `ratings`-Block.** `write_region`
-  schreibt nur, was man ihm übergibt, und die Ortslabels wurden ohne die Bewertungs-Herkunft geschrieben —
-  die Trails behielten ihre Zahlen, die Region verlor Quelle und Datum. Dazu eine `PLACE_RENAME`-Tabelle:
-  Südtirol taggt jede Ortschaft mehrsprachig, St. Vigil kam als 60 Zeichen langes
-  „Al Plan de Mareo - St. Vigil in Enneberg - San Vigilio di Marebbe" auf die Karte.
+## 2026-08-25 (Umgebungssuche, zweiter Durchgang am Gerät)
+- **Die Geste ist jetzt „erst der Knopf, dann tippen"** — 📌 im Bedienstapel schaltet den Punkt-Modus ein,
+  ein Hinweis sagt „Punkt auf der Karte antippen", der nächste Tipp setzt den Anker. Der lange Druck ist weg:
+  er war nicht auffindbar (Nutzer: „aktuell fehlt noch eine Art Hinweis, dass das überhaupt geht") und iOS
+  antwortete darauf mit seinem eigenen Kontextmenü. Der ganze Mechanismus ist **eine CSS-Regel** —
+  `.nearby-picking .leaflet-interactive{pointer-events:none}` — und die löst zwei Dinge auf einmal: jeder
+  Tipp landet auf der Karte statt auf einer Linie, also braucht der Klick-Handler keinen Sonderfall, und die
+  Tipp-Abfangung der App (die per `elementFromPoint` nach einer interaktiven Linie sucht) hält sich von
+  selbst zurück. Dazu bleibt das Kontextmenü auf der Karte unterdrückt und `-webkit-touch-callout:none` auf
+  `#map`: ein langer Druck auf eine Karte soll kein Systemmenü öffnen.
+- **Die Zeile ist gebaut wie die schwebende Suche daneben** (auf seinen Wunsch): oben die Pille mit Regler
+  und ✕, darunter die Zusammenfassung als eigener Chip, gleiche Glas-Optik. **Und die Abstände stimmen
+  jetzt** — beide Überlagerungen sitzen auf denselben 16 px wie `#locateCluster`; die Suche saß bis dahin
+  6 px höher (10 gegen 16), was am Handy sofort auffiel. Gemessen bei 375 px: Zeile bei (16, 71) auf einer
+  Linie mit dem Bedienstapel, 275 px breit, Pille 42, Chip 30, 5 px dazwischen, 22 px Luft zum Stapel.
+- **Das Aufräumen stellt Sortierung UND Gruppierung auf die Werte vor dem Anker zurück**, nicht auf die
+  Vorgaben der App. Vorher ging nur die Gruppierung zurück („Passiert momentan nur bei Gruppieren nicht bei
+  Sortieren"), weil die Sortierung nur im Fall „Entfernung" zurückgesetzt wurde. Je Achse, und nur wo noch
+  der Wert des Ankers steht: was der Nutzer während des Ankers selbst umgestellt hat, bleibt seine Wahl.
+- **Drei Fehlgriffe im eigenen Testfall, alle gemessen statt überlegt**: er las `#infoPanel.open`, während
+  das Panel `.visible` trägt (eine Zusicherung, die nie fehlschlagen konnte); er verglich einen Knoten, den
+  das `render()` danach abgemeldet hatte (ein abgemeldeter Knoten liefert „none" und meldet grün); und er
+  prüfte den ersten Pfad im Overlay-Pane, was der Ring der Umgebungssuche selbst ist — `interactive:false`,
+  also zu Recht „none".
 
 ## 2026-08-25 (Umgebungssuche: „Trails in der Nähe")
 - **Gebaut, nach dem Konzept vom Vortag** (`docs/naehe-konzept.md`, Suite `tests/browser/nearby.js`, 9 Fälle

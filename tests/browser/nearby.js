@@ -1,7 +1,7 @@
 // @suite   nearby
 // @area    Umgebungssuche: Anker, Radius, Dimmen auf der Karte, Filtern in der Liste, Entfernungs-Sortierung
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches nearbyAnchor, nearbyRadiusKm, nearbyDistanceKm, nearbyPasses, nearbyVisibleCount, nearbyDistanceLabel, setNearbyAnchor, clearNearbyAnchor, drawNearbyAnchor, syncNearbyChrome, nearbyBar, nearbyBarText, nearbyRadius, nearbyRadiusValue, nearby-touch-only, nearby-slider-wrap, nearby-available, nearby-chip, trail-meta-dist, baselineLineOpacity, trailPassesFilters, TRAIL_SORT_COMPARE, NEARBY_LONGPRESS_MS, mapTouchStart
+// @touches nearbyAnchor, nearbyRadiusKm, nearbyDistanceKm, nearbyPasses, nearbyVisibleCount, nearbyDistanceLabel, setNearbyAnchor, clearNearbyAnchor, drawNearbyAnchor, syncNearbyChrome, nearbyBar, nearbyBarText, nearbyRadius, nearbyRadiusValue, nearby-touch-only, nearby-slider-wrap, nearby-available, nearby-chip, trail-meta-dist, baselineLineOpacity, trailPassesFilters, TRAIL_SORT_COMPARE, nearbyPickArmed, armNearbyPick, disarmNearbyPick, syncNearbyPickChrome, nearbyPickBtn, nearbyPickHint, nearby-picking
 // @needs   region=finale, builder=off
 //
 // **Braucht FINALE**, wie die rating-Suite und aus verwandtem Grund: die Frage "welche guten Trails sind
@@ -16,9 +16,10 @@
 //   * SOLO GEWINNT, UND DAS SOLO-ENDE FUEHRT ZURUECK IN DEN ANKER-ZUSTAND, nicht auf eine helle Karte.
 //     Dieselbe Konstante hat diesen Fehler in diesem Projekt schon zweimal verursacht (Hover-Ende und
 //     clearSolo), also ist er hier festgenagelt, bevor er ein drittes Mal auftritt.
-//   * EIN LANGER DRUCK AUF EINEN TRAIL SETZT DEN ANKER UND WAEHLT DEN TRAIL NICHT AUS. Der lange Druck
-//     haengt bewusst in demselben touchstart/touchend-Paar, das fuer eine Beruehrung auf einer Linie
-//     ohnehin einen Klick abschickt -- ohne die Markierung "verbraucht" tut eine Geste zwei Dinge.
+//   * ERST DER KNOPF, DANN TIPPEN -- und waehrend der Modus laeuft, ist keine Trail-Linie klickbar. Genau
+//     daran haengt, dass ein Tipp auf eine Linie den Anker setzt statt den Trail zu oeffnen: die CSS-Regel
+//     nimmt den Linien ihre pointer-events, also landet jeder Tipp auf der Karte. Das lange Druecken, das
+//     hier einen Tag lang stand, war nicht auffindbar und loeste auf iOS das Systemmenue aus.
 //
 // Anker-Koordinaten sind hier fest verdrahtet, und das ist Absicht: ein Anker aus `map.getCenter()` waere
 // von der Kartenlage abhaengig, die jede vorher gelaufene Suite verschoben haben kann. [44.17, 8.35] liegt
@@ -141,63 +142,95 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
   if (typeof closeInfoPanelAndDeselect === "function") closeInfoPanelAndDeselect();
   await TM.wait(250);
 
-  T.test("ein langer Druck setzt den Anker -- auch auf einem Trail, ohne ihn auszuwaehlen");
+  T.test("erst der Knopf, dann tippen -- und waehrenddessen ist keine Linie klickbar");
+  // Das lange Druecken gab es einen Tag lang und ist weg (Nutzer, 2026-08-25): es war nicht auffindbar
+  // ("aktuell fehlt noch eine Art Hinweis, dass das ueberhaupt geht") und loeste auf iOS zusaetzlich das
+  // Systemmenue aus. Ein Knopf ist sichtbar, und die Geste danach ist auf beiden Plattformen dieselbe.
   clearNearbyAnchor();
   await TM.wait(350);
-  // Die unsichtbare Trefferlinie eines Trails: genau das Element, fuer das touchend sonst einen Klick
-  // abschickt. Ein scriptbarer TouchEvent erreicht unsere eigenen Handler; was er nicht erzeugt, ist der
-  // synthetische Klick der Plattform -- und den brauchen wir hier gerade nicht.
-  // Der Punkt muss AUF der Linie liegen und nicht in der Mitte ihres Rechtecks: der Handler entscheidet
-  // ueber `document.elementFromPoint`, und bei einer krummen Linie liegt die Rechteckmitte daneben -- dann
-  // ist start.target null, touchend steigt sowieso aus, und der Fall prueft nichts. Also die Linie selbst
-  // abtasten (getPointAtLength + Screen-CTM), bis elementFromPoint wirklich eine Leaflet-Linie liefert.
-  const onLine = (() => {
-    for (const p of TM.map.overlay().filter((q) => (q.getAttribute("stroke-opacity") || "1") === "0")) {
-      const len = p.getTotalLength ? p.getTotalLength() : 0;
-      const m = p.getScreenCTM && p.getScreenCTM();
-      if (!len || !m) continue;
-      for (let f = 0.2; f <= 0.8; f += 0.1) {
-        const pt = p.getPointAtLength(len * f);
-        const x = Math.round(pt.x * m.a + pt.y * m.c + m.e), y = Math.round(pt.x * m.b + pt.y * m.d + m.f);
-        const el = document.elementFromPoint(x, y);
-        if (el && el.tagName === "path" && el.classList.contains("leaflet-interactive")) return { x, y, el };
-      }
-    }
-    return null;
-  })();
-  if (!onLine || typeof TouchEvent !== "function" || typeof Touch !== "function") {
-    T.skip("kein Punkt auf einer Trefferlinie oder keine Touch-Konstruktoren in diesem Browser");
-  } else {
-    const el = TM.$("#map");
-    const touch = new Touch({ identifier: 71, target: onLine.el, clientX: onLine.x, clientY: onLine.y });
-    // touchend traegt die Beruehrung in changedTouches und NICHT in touches -- so sieht ein echtes
-    // touchend aus, und daran haengt hier alles: der Klick-Zweig des Handlers verlangt genau
-    // `changedTouches.length === 1`. Mit einer leeren Liste laeuft er nie, und dann besteht dieser Fall
-    // auch gegen eine Fassung, die den langen Druck NICHT als verbraucht markiert (gemessen).
-    const fire = (type, touches, changed) => el.dispatchEvent(new TouchEvent(type, {
-      bubbles: true, cancelable: true, touches: touches, targetTouches: touches,
-      changedTouches: changed || touches }));
-    fire("touchstart", [touch]);
-    await TM.wait(650);                       // laenger als NEARBY_LONGPRESS_MS
-    const setDuringPress = shown(bar());
-    fire("touchend", [], [touch]);
-    await TM.wait(500);
-    T.ok("der Anker steht, sobald die Zeit um ist", setDuringPress, setDuringPress, true);
-    // `.visible`, nicht `.open`: das ist die Klasse, die das Panel wirklich traegt. Mit `.open` war die
-    // Zusicherung leer -- sie konnte nie fehlschlagen und bestand auch gegen eine Fassung, die den langen
-    // Druck nicht als verbraucht markiert (gemessen, siehe MUTATIONS.md).
-    T.eq("und kein Info-Panel ist aufgegangen", TM.$$("#infoPanel.visible").length, 0);
-    T.eq("und keine Kachel ist ausgewaehlt", TM.$$("#trailList .trail-card.selected").length, 0);
+  const pickBtn = TM.$("#nearbyPickBtn");
+  T.ok("der Knopf steht im Bedienstapel", !!pickBtn && pickBtn.parentElement.id === "mapControls",
+       pickBtn ? pickBtn.parentElement.id : null, "mapControls");
+  pickBtn.click();
+  await TM.wait(400);
+  T.ok("der Hinweis sagt, was zu tun ist", shown(TM.$("#nearbyPickHint")),
+       getComputedStyle(TM.$("#nearbyPickHint")).display, "flex");
+  T.ok("und der Knopf zeigt sich als aktiv", pickBtn.classList.contains("on"), pickBtn.className, "on");
+  // DAS ist der Mechanismus: ohne pointer-events auf den Linien landet jeder Tipp auf der Karte, also
+  // braucht der Klick-Handler keinen Sonderfall -- und unsere eigene Tipp-Abfangung findet per
+  // elementFromPoint keine interaktive Linie und laesst die Beruehrung in Ruhe.
+  const aLine = TM.$$(".leaflet-overlay-pane path.leaflet-interactive")[0];
+  T.eq("keine Trail-Linie ist waehrend des Modus klickbar",
+       aLine ? getComputedStyle(aLine).pointerEvents : null, "none");
+  const el = TM.$("#map"), r = el.getBoundingClientRect();
+  const at = (fx, fy) => ["mousedown", "mouseup", "click"].forEach((t) => el.dispatchEvent(
+    new MouseEvent(t, { bubbles: true, cancelable: true,
+                        clientX: Math.round(r.left + r.width * fx), clientY: Math.round(r.top + r.height * fy) })));
+  at(0.4, 0.5);
+  await TM.wait(900);
+  T.ok("der Tipp setzt den Anker", shown(bar()), getComputedStyle(bar()).display, "flex");
+  T.ok("der Modus ist danach aus", !pickBtn.classList.contains("on") && !shown(TM.$("#nearbyPickHint")),
+       [pickBtn.className, getComputedStyle(TM.$("#nearbyPickHint")).display], "aus");
+  // FRISCH abfragen, nicht `aLine` von vorher: der Anker loest ein render() aus, und ein Trail ausserhalb
+  // des Radius verliert dabei seine Elemente. Ein abgemeldeter Knoten liefert "none" und haette den Fall
+  // gruen gemeldet, obwohl er nichts geprueft hat (gemessen).
+  // ...und eine wirklich INTERAKTIVE Linie: der erste Pfad im Pane ist der Ring der Umgebungssuche selbst
+  // (interactive:false, per bringToBack ganz nach hinten), und der traegt "none" voellig zu Recht. Auch das
+  // gemessen, nicht ueberlegt -- die erste Fassung dieses Vergleichs meldete den Ring als Fehler.
+  const freshLine = TM.$$(".leaflet-overlay-pane path.leaflet-interactive")[0];
+  // "klickbar wieder" heisst: NICHT none. Der genaue Wert gehoert Leaflet und ist je Version "auto" oder
+   // "visiblePainted" -- gemessen kam hier "auto", und ein fester Vergleich haette nur die Version gepruefft.
+  T.ok("und die Karte ist nicht mehr im Punkt-Modus",
+       !TM.$(".leaflet-container").classList.contains("nearby-picking") &&
+       !!freshLine && getComputedStyle(freshLine).pointerEvents !== "none",
+       [TM.$(".leaflet-container").className.indexOf("nearby-picking") > -1,
+        freshLine ? getComputedStyle(freshLine).pointerEvents : null], "kein Modus, Linien klickbar");
+  T.eq("und kein Info-Panel ist dabei aufgegangen", TM.$$("#infoPanel.visible").length, 0);
 
-    T.test("ein kurzer Tipp setzt keinen Anker");
-    clearNearbyAnchor();
-    await TM.wait(350);
-    fire("touchstart", [touch]);
-    await TM.wait(120);
-    fire("touchend", [], [touch]);
-    await TM.wait(400);
-    T.ok("die Zeile bleibt weg", !shown(bar()), getComputedStyle(bar()).display, "none");
-  }
+  T.test("ein Tipp OHNE armierten Modus setzt keinen Anker");
+  clearNearbyAnchor();
+  await TM.wait(350);
+  at(0.45, 0.45);
+  await TM.wait(600);
+  T.ok("die Zeile bleibt weg", !shown(bar()), getComputedStyle(bar()).display, "none");
+
+  T.test("nach dem Aufraeumen stehen Sortierung und Gruppierung wieder auf den URSPRUNGSWERTEN");
+  // Nicht auf den Vorgaben der App (Nutzer, 2026-08-25): wer vorher nach Laenge sortiert und nach
+  // Schwierigkeit gruppiert hatte, will das danach wieder haben. Bis dahin ging nur die Gruppierung zurueck,
+  // weil die Sortierung nur im Fall "dist" zurueckgesetzt wurde -- vom Nutzer gemeldet: "Passiert momentan
+  // nur bei Gruppieren nicht bei Sortieren".
+  const chip = (target, val) => TM.$(".trail-view-chips[data-target='" + target + "'] .chip[data-value='" + val + "']");
+  const viewState = () => [TM.$(".trail-view-chips[data-target='sort'] .chip.active").textContent,
+                           TM.$(".trail-view-chips[data-target='group'] .chip.active").textContent];
+  clearNearbyAnchor();
+  await TM.wait(300);
+  chip("sort", "length").click();
+  await TM.wait(300);
+  chip("group", "diff").click();
+  await TM.wait(400);
+  const ownView = viewState();
+  setNearbyAnchor(ANCHOR);
+  await TM.wait(700);
+  const anchoredView = viewState();
+  T.ok("der Anker stellt beides um", anchoredView[0] !== ownView[0] && anchoredView[1] !== ownView[1],
+       anchoredView, "anders als " + ownView);
+  TM.$("#nearbyClearBtn").click();
+  await TM.wait(700);
+  T.eq("und danach steht beides wieder wie vorher", viewState(), ownView);
+
+  // Die Gegenprobe, damit das Zuruecksetzen nicht zur Bevormundung wird: was der Nutzer WAEHREND des
+  // Ankers selbst umstellt, ist seine Wahl und bleibt stehen.
+  setNearbyAnchor(ANCHOR);
+  await TM.wait(700);
+  chip("sort", "name").click();
+  await TM.wait(400);
+  const chosen = viewState()[0];
+  TM.$("#nearbyClearBtn").click();
+  await TM.wait(700);
+  T.eq("eine eigene Wahl waehrend des Ankers bleibt", viewState()[0], chosen);
+  T.eq("und die unangetastete Achse geht trotzdem zurueck", viewState()[1], ownView[1]);
+  TM.$("#trailViewResetBtn").click();
+  await TM.wait(300);
 
   T.test("was am Schreibtisch nichts tut, ist dort auch nicht zu sehen");
   // "Liste" oeffnet die Schublade -- am Schreibtisch steht sie ohnehin dauerhaft daneben; 📍 setzt den Anker
