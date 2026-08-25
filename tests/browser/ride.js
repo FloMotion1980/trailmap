@@ -191,7 +191,7 @@ TM.add("ride", () => typeof enterRideMode === "function" && typeof applyRideFocu
 
   T.test("...and fills in the focused trail's own name/length/Hm the moment one is selected during RIDE");
   const namedCard = TM.ui.trailCards().find(c => !/🔁/.test(c.textContent));
-  const cardName = namedCard.querySelector(".trail-name").textContent.replace("👁", "").trim();
+  const cardName = namedCard.querySelector(".trail-name").textContent.replace(/[👁👑]/g, "").trim();
   namedCard.click();
   await TM.until(() => namedCard.classList.contains("selected"));
   await TM.wait(300);

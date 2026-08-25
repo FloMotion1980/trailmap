@@ -353,12 +353,24 @@ farbige Punkt im Namen ist dafür entfallen, zwei Anzeigen derselben Sache waren
 
 | Ort | Form |
 |---|---|
-| Kachel | Krone auf dem Schwierigkeitsbalken (4px, volle Kachelhöhe) |
-| Info-Panel | dieselbe Krone auf demselben Balken in der Überschrift |
+| Kachel | Krone **vor dem Namen**, im Textfluss; der Schwierigkeitsbalken bleibt ein reiner Balken über die ganze Kachelhöhe |
+| Info-Panel | dieselbe Krone vor dem Namen in der Überschrift |
 | Kartenlabel | Krone statt des ★ vor dem Namen |
-| Start-/Ziel-/weißer Startpunkt | **goldener Ring** (`#e0a326`, 2,5px statt 1,5px) statt einer Krone — ein Emoji auf einem 5px-Punkt wäre nicht lesbar |
+| Abschnittsblock einer Trailrunde | Krone im Textfluss vor dem Namen, wenn der angeklickte Abschnitt ein gekrönter Komponenten-Trail ist |
+| weißer Startpunkt | **goldener Ring** (`#e0a326`, 2,5px statt 1,5px) statt einer Krone — ein Emoji auf einem 5px-Punkt wäre nicht lesbar |
+| Start und Ziel eines markierten Trails | **nichts** — dort sagt die gelbe Auswahlkontur schon, welcher Trail gemeint ist |
 | Highlights-Regler | der Griff **ist** eine Krone (Inline-SVG), denn er ist die Grenze, ab der etwas eines ist |
 | RIDE-Modus | nichts davon — dort zählt die Linie, nicht die Auszeichnung |
+
+**Vier Korrekturen am Tag danach, alle aus der Benutzung** (2026-08-25, Nutzer): der Strich hat die Krone
+zweimal nicht getragen — *auf* ihm verdeckte sie ihn („Der Strich müsste dann erst unter der Krone losgehen"),
+und mit genug Luft darüber blieben von 52px Kachelhöhe nur 30 für den Strich, im Panel von 21px sogar nur 7.
+Fünf Varianten lagen als Entwurf vor, bevor App-Code entstand; gewählt wurde die Form, die Kartenlabel und
+Abschnittsblock schon hatten: **vor dem Namen, im Textfluss**, mittig zur Schrift ausgerichtet, weil die
+Emoji-Schrift die Krone tief in ihr eigenes Kästchen setzt und sie auf der Grundlinie unter der Schrift hing. Der
+goldene Ring gehört **allein dem weißen Punkt**: ist der Trail markiert, stehen Start und Ziel wieder in ihren
+eigenen Farben, denn der Ring würde dasselbe ein zweites Mal sagen. Und der Abschnittsblock einer Trailrunde
+war die sechste Stelle, die den gekrönten Trail nannte, ohne ihn zu krönen.
 
 **Ein echter Fehler kam dabei heraus, und er ist der Grund, warum die Ringe zu einer Prüfung geführt haben:**
 die Schwelle rastet auf das 0,05-Raster des Reglers ein (`input.value` gelesen, nachdem es gesetzt wurde),

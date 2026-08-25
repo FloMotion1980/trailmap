@@ -26,7 +26,7 @@ TM.add("solo", () => typeof applySolo === "function" && TM.map.tourLiftStretches
   const firstTrail = () => TM.ui.trailCards()[0];
   const trailIdOf = (card) => {
     // The card carries no id; find it through the layer registry the app exposes by function only.
-    const name = card.querySelector(".trail-name").textContent.replace("👁", "").trim();
+    const name = card.querySelector(".trail-name").textContent.replace(/[👁👑]/g, "").trim();
     return name;
   };
 

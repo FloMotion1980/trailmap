@@ -145,7 +145,7 @@
     tourCards: () => TM.$$("#tourList .trail-card"),
     liftCards: () => TM.$$("#liftList .lift-card"),
     cardNamed: (list, re) => TM.ui[list]().find((c) => re.test(c.textContent)),
-    names: (list) => TM.ui[list]().map((c) => c.querySelector(".trail-name").textContent.replace("👁", "").trim()),
+    names: (list) => TM.ui[list]().map((c) => c.querySelector(".trail-name").textContent.replace(/[👁👑]/g, "").trim()),
     hubTitles: (sel) => TM.$$(sel + " .hub-title").map((e) => e.textContent.trim()),
     setSwitch: async function (id, on) {
       const box = TM.$("#" + id);

@@ -232,7 +232,7 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
   const sorted = tourNames.slice().sort((a, b) => a.localeCompare(b, "de", { numeric: true }));
   // Compared per sub-region, since the list is grouped: a global sort would not hold across groups.
   const perHub = TM.$$("#tourList .hub-group").map((g) =>
-    [...g.querySelectorAll(".trail-card .trail-name")].map((e) => e.textContent.replace("👁", "").trim()));
+    [...g.querySelectorAll(".trail-card .trail-name")].map((e) => e.textContent.replace(/[👁👑]/g, "").trim()));
   const unsorted = perHub.filter((names) =>
     String(names) !== String(names.slice().sort((a, b) => a.localeCompare(b, "de", { numeric: true }))));
   T.eq("every hub's Tours are in name order", unsorted, []);
@@ -262,7 +262,7 @@ TM.add("lists", () => typeof renderTourList === "function" && TM.ui.cardNamed("l
 
   T.test("clicking a trail card selects it, opens its panel and marks the card");
   const card = TM.ui.trailCards()[0];
-  const name = card.querySelector(".trail-name").textContent.replace("👁", "").trim();
+  const name = card.querySelector(".trail-name").textContent.replace(/[👁👑]/g, "").trim();
   card.click();
   T.ok("the panel opened", await TM.until(() => TM.$("#infoPanel").classList.contains("visible")), true, true);
   T.ok("it shows that trail", TM.$("#ipContent h3").textContent.indexOf(name.split(" (")[0]) > -1,

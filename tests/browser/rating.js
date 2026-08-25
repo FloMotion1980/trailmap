@@ -263,8 +263,12 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   T.eq("the old ★ is gone from the labels", TM.$$(".trail-label-tooltip .tl-star").length, 0);
   // Dieselbe Krone in der Liste, auf dem Schwierigkeitsbalken der Kachel -- und nur dort, wo sie hingehoert:
   // die Schwelle rastet auf das 0,05-Raster des Reglers ein, und genau daran hing ein Fehler, siehe unten.
-  const cardCrowns = TM.ui.trailCards().filter((c) => c.querySelector(".card-diff-bar .tm-crown"));
-  T.ok("cards carry it on their difficulty bar", cardCrowns.length > 3, cardCrowns.length, "> 3");
+  const cardCrowns = TM.ui.trailCards().filter((c) => c.querySelector(".trail-name .tm-crown"));
+  T.ok("cards carry it before the name", cardCrowns.length > 3, cardCrowns.length, "> 3");
+  // Vor dem Namen, nicht auf dem Schwierigkeitsbalken: die Krone ueber dem Strich war zweimal falsch (auf ihm
+  // verdeckte sie ihn, mit Luft darueber blieben von 52px Kachelhoehe nur 30 fuer den Strich), und im
+  // Textfluss ist es dieselbe Form, die Kartenlabel und Abschnittsblock schon tragen (Nutzer, 2026-08-25).
+  T.eq("and never on the bar itself", TM.$$(".trail-card .card-diff-bar .tm-crown").length, 0);
   const thr = parseFloat(TM.$("#highlightSlider").value);
   const value = (c) => { const m = /⭐\s*([\d,]+)/.exec(c.textContent); return m ? +m[1].replace(",", ".") : null; };
   const wrongCrown = TM.ui.trailCards().filter((c) => {
@@ -291,7 +295,7 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   if (!upCard) {
     T.skip("no uphill trail in the active regions -- nothing to check");
   } else {
-    const upName = upCard.querySelector(".trail-name").textContent.replace(/[👁⬆️]/g, "").trim();
+    const upName = upCard.querySelector(".trail-name").textContent.replace(/[👁👑⬆️]/g, "").trim();
     const upLabel = TM.map.trailLabels().find((e) => e.textContent.indexOf(upName) >= 0);
     T.ok("an uphill trail's label is on the map", !!upLabel, upName, "a label for " + upName);
     T.ok("and it carries the ⬆️ badge", /⬆️/.test((upLabel || {}).textContent || ""),
@@ -342,8 +346,8 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   // Das Highlight steht seit dem 2026-08-24 NICHT mehr als Wort in dieser Zeile, sondern als Krone auf dem
   // Schwierigkeitsbalken der Ueberschrift -- eine Metapher an allen Orten statt eines Worts an einem.
   T.ok("no 'Highlight' wording left in the row", !/Highlight/.test(txt), txt, "kein Wort");
-  T.ok("the crown sits on the heading's difficulty bar instead",
-       !!TM.$("#ipContent h3 .ip-diff-bar .tm-crown"), !!TM.$("#ipContent h3 .tm-crown"), true);
+  T.ok("the crown sits before the name in the heading instead",
+       !!TM.$("#ipContent h3 .ip-name .tm-crown"), !!TM.$("#ipContent h3 .tm-crown"), true);
 
   T.test("an unrated trail says so, and is never shown as a zero");
   chip("sort", "rate").click();

@@ -93,7 +93,7 @@ TM.add("lifts", () => typeof buildLiftLayer === "function" && TM.ui.cardNamed("l
   TM.$("#builderClearBtn").click();
   await TM.wait(200);
   const liftCard = TM.ui.liftCards()[0];
-  const liftName = liftCard.querySelector(".trail-name").textContent.replace("👁", "").replace("🚡", "").trim();
+  const liftName = liftCard.querySelector(".trail-name").textContent.replace(/[👁👑🚡]/g, "").trim();
   liftCard.click();
   await TM.until(() => TM.$$("#builderList .builder-row").length === 1, 2000);
   const rows = TM.$$("#builderList .builder-row");

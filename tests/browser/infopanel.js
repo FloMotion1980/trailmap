@@ -1,7 +1,7 @@
 // @suite   infopanel
 // @area    Info panel: trail, lift, Tour segments, reverse, GPX, elevation chart
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, categoryBadge, badge-uphill, badge-loop, ip-segment-info, ip-btns, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight, DIFF_LABEL, syncRideModeChrome, ip-ride-bar
+// @touches showTrailInfo, showLiftInfo, buildInfoPanelHtml, categoryBadge, badge-uphill, badge-loop, ip-segment-info, ip-btns, handleInfoPanelClick, applyReversedEndpoints, reversedId, selectedSegmentId, selectTourSegment, openTourRidingLift, downloadTrailGpx, buildElevationSvg, getEleHoverData, handleEleChartHover, hideEleHover, hideEleHoverChart, eleHoverMapMarker, eleHoverTouched, flyToTrailBounds, liftClimb, LIFT_TYPE_LABEL, mapTouchStart, closeInfoPanelAndDeselect, resetAllHoverStyles, applyLineWeight, DIFF_LABEL, syncRideModeChrome, ip-ride-bar, tm-crown, isHighlight, applyCrownRing, ip-diff-bar
 // @needs   region=bikekingdom, builder=off
 //
 // The panel is a custom div rather than a Leaflet popup so nothing covers the trail, which means every piece
@@ -122,7 +122,7 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
           widthsProbed++;
           const left = h3.getBoundingClientRect().left + parseFloat(getComputedStyle(h3).paddingLeft || 0);
           if (badge.getBoundingClientRect().left <= left + 3) {
-            offenders.push(c.querySelector(".trail-name").textContent.trim().slice(0, 24) + " @" + w + "px");
+            offenders.push(c.querySelector(".trail-name").textContent.replace(/[👁👑]/g, "").trim().slice(0, 24) + " @" + w + "px");
             break;
           }
         }
@@ -234,6 +234,25 @@ TM.add("infopanel", () => typeof showTrailInfo === "function" && TM.ui.cardNamed
     await TM.wait(400);
     const liftBlock = content().querySelector(".ip-segment-info");
     T.eq("a lift stretch gets no uphill badge", liftBlock ? liftBlock.querySelectorAll(".badge-uphill").length : -1, 0);
+
+    // Und die Krone, aus demselben Grund: ein Highlight ist an fuenf Stellen gekroent, und dieser Block war
+    // die sechste, an der es fehlte (Nutzer, 2026-08-25). Hier steht sie im Textfluss vor dem Namen statt
+    // ueber dem Streifen -- das Hoehenprofil endet direkt darueber. Geprueft wird gegen den Reglerwert und
+    // nicht gegen eine feste Zahl, damit der Fall eine Neuernte der Bewertungen uebersteht.
+    const segCrown = (tourId, segId) => {
+      selectTourSegment({ id: tourId, name: "x", loop: true, diff: "rot", len: 1, up: 1, down: 1 }, segId);
+      const b = content().querySelector(".ip-segment-info");
+      const m = b ? /⭐\s*([\d,]+)/.exec(b.textContent) : null;
+      return { crown: !!(b && b.querySelector(".tm-crown")), rate: m ? +m[1].replace(",", ".") : null };
+    };
+    const thr = parseFloat(TM.$("#highlightSlider").value);
+    const hi = segCrown("bk_tour_616_rot", "bk_alp_staetz");
+    await TM.wait(300);
+    const lo = segCrown("bk_tour_616_rot", "bk_scalottas_june_huette");
+    await TM.wait(300);
+    T.ok("a crowned component trail wears its crown in the segment block too",
+         hi.rate != null && hi.crown === (hi.rate >= thr - 0.001), [hi, thr], "crown iff at/above the threshold");
+    T.ok("and one below the threshold does not", lo.rate != null && !lo.crown, [lo, thr], "no crown");
   }
 
   T.test("the elevation chart stamps everything its map hover-sync needs");

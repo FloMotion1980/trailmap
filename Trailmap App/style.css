@@ -601,11 +601,16 @@ html.landscape-compact .search-overlay-summary{
    seine Farbe und sein title), wird hier aber vom Punkt zum Strich. */
 .trail-card .badge.card-diff-bar{ position:absolute; left:0; top:0; bottom:0; width:4px; height:auto;
   border-radius:6px 0 0 6px; margin:0; }
-/* Die Krone sitzt AUF dem Strich (Nutzerentscheidung). In der Kachel bleibt sie innerhalb der Kante --
-   ueber den Rand hinaus wuerde sie die Kachel darueber ueberdecken. */
-.tm-crown{ position:absolute; left:50%; transform:translateX(-50%); font-size:11px; line-height:1;
-  pointer-events:none; }
-.trail-card .card-diff-bar .tm-crown{ top:2px; }
+/* Die Krone steht IM TEXTFLUSS vor dem Namen -- an allen Orten dieselbe Form (Nutzer, 2026-08-25, nach dem
+   Vergleich von fuenf Entwuerfen). Ueber dem Strich war sie zweimal falsch: auf ihm verdeckte sie ihn, und
+   mit genug Luft darueber blieben von 52px Kachelhoehe nur 30 fuer den Strich. Vor dem Namen kostet sie
+   nichts an Hoehe, braucht keine Feinabstimmung und liest sich wie im Kartenlabel und im Abschnittsblock
+   einer Trailrunde, die sie schon so tragen. */
+/* vertical-align:middle, nicht ein abgezaehltes px: die Emoji-Schrift setzt die Krone tief in ihr eigenes
+   Kaestchen, und bei Grundlinien-Ausrichtung haengt sie dadurch unter der Schrift (Nutzer, 2026-08-25).
+   Mittig ausgerichtet ist es dieselbe Loesung, die .badge-uphill fuer das gleiche Problem schon nutzt --
+   und sie haengt nicht an den Metriken EINER Schrift, was auf iOS sonst wieder daneben liegen wuerde. */
+.tm-crown{ font-size:14px; line-height:1; margin-right:5px; vertical-align:middle; pointer-events:none; }
 .badge.gruen{ background:var(--gruen); }
 .badge.blau{ background:var(--blau); }
 .badge.rot{ background:var(--rot); }
@@ -687,8 +692,8 @@ html.landscape-compact .search-overlay-summary{
   min-height:19px; border-radius:2px; margin-right:0; flex:none; }
 /* Im Panel darf die Krone ueber die Zeile hinausragen -- dafuer bekommt NUR eine gekroente Ueberschrift die
    noetige Kopfhoehe, damit sich bei allen anderen Trails nichts verschiebt. */
-#infoPanel h3 .ip-diff-bar .tm-crown{ top:-12px; font-size:12px; }
-#infoPanel h3.has-crown{ margin-top:9px; }
+/* Im Panel dieselbe Form wie in der Kachel: vor dem Namen, im Textfluss. Der Balken bleibt damit ein reiner
+   Schwierigkeitsbalken ueber die ganze Zeilenhoehe, und die Ueberschrift braucht keine Sonderhoehe. */
 /* The whole action group, and the reason it is inline-flex rather than flex: an inline-flex box is an atomic
    inline, so inline layout itself decides where it goes -- behind the name when the name's last line leaves
    room, on its own line under it when it does not (user, 2026-08-02: "alle Buttons in gleicher Größe als Extra
@@ -1866,7 +1871,12 @@ header{ position:relative; z-index:1; }
 .trail-meta-rating { white-space: nowrap; line-height: 12px; }
 /* Das Kartenlabel trug bis 2026-08-24 ein ★; die Krone ersetzt es, damit ein Highlight ueberall dasselbe
    Zeichen hat. Hier ist sie normaler Textfluss, keine Ueberlagerung -- deshalb position:static. */
-.leaflet-tooltip .tm-crown{ position:static; transform:none; margin-right:3px; font-size:11px; }
+.leaflet-tooltip .tm-crown{ margin-right:3px; font-size:11px; }
+/* Und im Abschnittsblock einer Trailrunde, wo der gekroente Trail ein KOMPONENTEN-Trail ist (Nutzer,
+   2026-08-25). Dort steht sie im Textfluss wie im Kartenlabel und nicht ueber dem Streifen: der farbige
+   Streifen dieses Blocks ist sein linker Rahmen, und eine Krone darueber wuerde in das Hoehenprofil
+   hineinragen, das direkt darueber endet. */
+.ip-segment-info .tm-crown{ margin-right:3px; font-size:12px; }
 /* Die Bewertungszeile im Info-Panel. Die Stimmenzahl ist absichtlich kleiner und grauer als der Wert:
    sie qualifiziert ihn, sie konkurriert nicht mit ihm. */
 .ip-rating { font-size: 12px; color: #2f4a3a; white-space: nowrap; }

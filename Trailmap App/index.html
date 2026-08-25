@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=208" />
+<link rel="stylesheet" href="style.css?v=210" />
 </head>
 <body>
 <div id="fatalError">
@@ -5676,20 +5676,21 @@ function syncHighlightSlider(){
 //: Marker haben ohnehin eine Strichfarbe, und die zu aendern folgt Radius, Verschmelzung und der
 //: RIDE-Vergroesserung von selbst. Im RIDE-Modus bleibt er aus -- dieselbe Entscheidung wie beim frueheren
 //: Stern: dort sind die Punkte schon groesser und der Fokus-Halo markiert den Trail.
-const ENDPOINT_STROKE = { startDot: "#22301f", startMarker: "#0d3d1a", endMarker: "#5c0f0a" };
+// Die Ruhefarbe des weissen Punkts -- die einzige, die zurueckgesetzt werden muss, seit der goldene Ring
+// allein ihm gehoert. Start (gruen) und Ziel (rot) behalten ihre Baufarbe unangetastet.
+const START_DOT_STROKE = "#22301f";
 function applyCrownRing(layer, t){
   if (!layer) return;
   const on = !rideMode && isHighlight(t);
-  // `crowned` ist der Merker, den applyEndpointSize fuer die Strichstaerke liest -- die Farbe setzen wir
-  // hier, die Breite dort, weil jene Funktion sie ohnehin bei jedem Anzeigen neu vergibt.
-  layer.crowned = on;
-  ["startDot", "startMarker", "endMarker"].forEach((k) => {
-    const m = layer[k];
-    if (!m || !m.setStyle) return;
-    m.setStyle(on ? { color: CROWN_RING_COLOR, weight: CROWN_RING_WEIGHT }
-                  : { color: ENDPOINT_STROKE[k], weight: ENDPOINT_WEIGHT });
-  });
-  if (layer.startMarker && map.hasLayer(layer.startMarker)) applyEndpointSize(layer);
+  // NUR der neutrale weisse Punkt bekommt den goldenen Ring (Nutzer, 2026-08-25). Ist der Trail markiert,
+  // stehen dort Start und Ziel in ihren eigenen Farben, und die bleiben normal: die gelbe Auswahlkontur sagt
+  // dann schon, dass genau dieser Trail gemeint ist, und ein Ring wuerde nur ein zweites Mal dasselbe
+  // hervorheben. Damit braucht auch applyEndpointSize keinen Merker mehr -- der Punkt behaelt seinen Stil,
+  // weil syncStartDot() ihn nur an- und abmeldet, nie neu baut.
+  if (layer.startDot && layer.startDot.setStyle) {
+    layer.startDot.setStyle(on ? { color: CROWN_RING_COLOR, weight: CROWN_RING_WEIGHT }
+                               : { color: START_DOT_STROKE, weight: ENDPOINT_WEIGHT });
+  }
 }
 //: Die Schwelle bewegt sich mit dem Regler, also muessen die Ringe genauso nachgezogen werden wie die
 //: Kartenlabel -- beides haengt an isHighlight(), nicht an den Trail-Daten.
@@ -6415,7 +6416,7 @@ function buildInfoPanelHtml(t){
       // dropped (user, 2026-08-20). Outside the <b>, matching the heading's own `${t.name}${uphillBadge}`.
       segmentInfoHtml = `
         <div class="ip-segment-info" style="border-left:3px solid ${diffColor[segTrail.diff]}">
-          <b>${segTrail.name}</b>${categoryBadge(segTrail)}<br>
+          ${isHighlight(segTrail) ? CROWN_HTML : ""}<b>${segTrail.name}</b>${categoryBadge(segTrail)}<br>
           ${segTrail.len} km &middot; ${segTrail.up} m ⬆️ / ${segTrail.down} m ⬇️${
             // Stern und Flamme auch hier (Nutzer, 2026-08-24: "In der Erweiterung der Info Box fehlen die
             // neuen Attribute Flamme und Stern"). Nur wenn es sie gibt -- ein "noch nicht bewertet" waere in
@@ -6491,7 +6492,7 @@ function buildInfoPanelHtml(t){
   // `.badge` behaelt seine Klassen und sein title-Attribut und wird nur zum Balken umgestylt: die
   // Schwierigkeit im Panel-Kopf ist eine eigene Entscheidung von 2026-08-13, die hier nicht mitkippen soll.
   return `
-    <h3${isHighlight(t) ? ' class="has-crown"' : ""}><span class="badge ${t.diff} ip-diff-bar" title="${DIFF_LABEL[t.diff]}">${isHighlight(t) ? CROWN_HTML : ""}</span><span class="ip-name">${t.name}</span>${uphillBadge}${loopBadge}</h3>
+    <h3><span class="badge ${t.diff} ip-diff-bar" title="${DIFF_LABEL[t.diff]}"></span><span class="ip-name">${isHighlight(t) ? CROWN_HTML : ""}${t.name}</span>${uphillBadge}${loopBadge}</h3>
     <div class="ip-trail">
       <div class="ip-meta"><span class="ip-len">${t.len} km</span><span class="ip-updown">${upShown} m ⬆️</span><span class="ip-updown">${downShown} m ⬇️</span>${ratingRowHtml(t)}</div>
       ${profile ? buildElevationSvg(profile, highlight, diffColor[t.diff], t.id, isReversed, chartSegments) : ""}
@@ -6643,8 +6644,9 @@ function applyEndpointSize(layer){
   // Die Strichstaerke gehoert dieser Funktion -- sie setzt sie bei JEDEM Anzeigen neu, also muss der goldene
   // Ring eines Highlights hier entstehen und nicht in applyCrownRing, sonst ueberschreibt der naechste Aufruf
   // ihn wieder auf 1,5 (gemessen: Farbe kam an, Breite nicht).
-  const crowned = !rideMode && !!layer.crowned;
-  const w = rideMode ? RIDE_ENDPOINT_WEIGHT : (crowned ? CROWN_RING_WEIGHT : ENDPOINT_WEIGHT);
+  // Start und Ziel bleiben auch bei einem Highlight normal breit -- der goldene Ring gehoert allein dem
+  // weissen Punkt (siehe applyCrownRing).
+  const w = rideMode ? RIDE_ENDPOINT_WEIGHT : ENDPOINT_WEIGHT;
   const merged = endpointsCollide(layer, r);
   layer.endMarker.setStyle({ radius: r, weight: w });
   layer.startMarker.setStyle({
@@ -8070,8 +8072,8 @@ function makeTrailCard(t, regionKey){
   // No 🔁 badge any more: a Tour is only ever listed in the Touren section, so the badge would be on every
   // card there and on none anywhere else. It stays in the info panel, where a Tour and a trail do meet.
   card.innerHTML = `
-    <span class="badge ${t.diff} card-diff-bar" title="${DIFF_LABEL[t.diff]}">${isHighlight(t) ? CROWN_HTML : ""}</span>
-    <div class="trail-name">${t.name}${categoryBadge(t)}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
+    <span class="badge ${t.diff} card-diff-bar" title="${DIFF_LABEL[t.diff]}"></span>
+    <div class="trail-name">${isHighlight(t) ? CROWN_HTML : ""}${t.name}${categoryBadge(t)}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
     <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span>${ratingMetaHtml(t)}</div>`;
   card.addEventListener("click", (e) => {
     const soloBtn = e.target.closest(".card-solo-btn");
@@ -8608,7 +8610,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v208"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v210"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

@@ -21,6 +21,40 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-25
+- **Die Krone steht jetzt vor dem Namen**, in Kachel und Info-Panel, und der Schwierigkeitsbalken ist wieder
+  ein reiner Balken. Über ihm war sie zweimal falsch: auf ihm liegend verdeckte sie ihn, und mit genug Luft
+  darüber blieben von 52px Kachelhöhe nur 30 für den Strich (im Panel von 21px sogar nur 7). Fünf Varianten
+  lagen dem Nutzer als Entwurf vor, bevor eine Zeile App-Code entstand; gewählt wurde die, die Kartenlabel
+  und Trailrunden-Abschnittsblock **schon** hatten — eine Form an allen sechs Orten. Gemessen: alle 219
+  Finale-Kacheln bleiben 52px hoch, auch die 28 gekrönten, am Schreibtisch wie bei 375px Breite. Die Krone
+  ist mittig zur Schrift ausgerichtet (`vertical-align:middle`) statt auf der Grundlinie, weil die
+  Emoji-Schrift sie tief in ihr eigenes Kästchen setzt — dieselbe Lösung, die `.badge-uphill` schon nutzt.
+- **Der goldene Ring gehört allein dem weißen Startpunkt.** Ist der Trail markiert, stehen Start und Ziel
+  wieder in Grün und Rot bei 1,5px: die gelbe Auswahlkontur sagt schon, welcher Trail gemeint ist. Gemessen
+  in Bike Kingdom: 12 goldene Ringe (`#e0a326`/2,5) gegen 109 neutrale, genau die 12 gekrönten Kacheln.
+- **Monti- und Panorama-Trail: der Anstieg war Aufzeichnungsrauschen, nicht Gelände.** Gespeichert waren
+  81 bzw. 78 Höhenmeter Anstieg auf zwei reinen Abfahrten; offiziell sind es **3 bzw. 12** (Zahlen vom
+  Nutzer). Beide korrigiert, `down` unangetastet, weil dafür keine offizielle Zahl vorlag (441/476 gegen
+  Trailforks' 416/466 — Trailforks führt für beide Trails *keinen* Anstieg, `up: null`). Das ist kein
+  Einzelfall: in derselben Region liegt der gespeicherte Anstieg bei **18 weiteren Abfahrten** über dem, den
+  unser eigenes Profil hergibt, an der Spitze Hacklberg-Trail (124 gegen 30), X-Line (98/19) und Steinberg
+  Line (100/21) — dieselbe Signatur. Noch nicht angefasst, weil jede Korrektur die offizielle Zahl braucht;
+  steht im Backlog.
+- **Monti-Trail (Saalbach): die GPS-Lasso-Schleife ist weg** (gemeldet vom Nutzer als „komischer Loop").
+  Die Linie trug bei Punkt 260–274 eine geschlossene Schleife — Punkt 274 war **bitgleich** mit 260 —, 239 m
+  lang und bis 112 m vom Anfangspunkt entfernt, ein Artefakt der Quellaufzeichnung. Gegen die Trailforks-Linie
+  desselben Trails geprüft: dort gibt es sie nicht, und unsere Linie liegt sonst im Mittel 5,3 m auf deren
+  Linie. Nach dem Schnitt 568 statt 582 Punkte, 3,69 statt 3,93 km, kein Sprung über 60 m, kein doppelter
+  Punkt, kein Rückwärtssprung auf der Trailforks-Achse — die eine verbleibende Selbstannäherung (bei 3,08 km)
+  hat Trailforks an derselben Stelle, es ist eine echte Kehre. **Beide Touren, die den Trail fahren**
+  (THE CHALLENGE, BIG-5), wurden mitgezogen: derselbe Schnitt im Abschnitt, `trailGeo` neu verkettet, alle
+  Abschnittsdistanzen neu gerechnet, Profil um dasselbe Fenster gekürzt, Länge 104,55 → 104,31 bzw.
+  71,20 → 70,96 km. **up/down blieben unangetastet**, mit Grund: die gespeicherten Werte stammen aus
+  dichteren Daten als das 100/200-Punkt-Profil (Monti 81/441 gegen 32/392 aus dem Profil gerechnet), und die
+  Schleife trägt dort 14 m Anstieg — eine Korrektur aus der gröberen Quelle würde Herkunft mischen, um
+  0,3 % zu gewinnen.
+
 ## 2026-08-24 (Die Krone)
 - **Aus dem Wort „Highlight" wurde eine Krone** — der Nutzer wollte statt eines ausgeschriebenen Etiketts an
   einer Stelle eine Metapher an allen Stellen zugleich, und die Krone gewann gegen Flamme, Diamant und
@@ -34,6 +68,12 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   1,5px) statt einer zweiten Krone, weil ein Emoji auf einem 5px-Punkt nicht lesbar wäre; und der
   **Schieberegler-Knopf ist selbst eine Krone** (Inline-SVG auf `var(--highlight)`) — er IST die Grenze,
   ab der etwas eines ist. **Im RIDE-Modus nichts davon**: dort zählt die Linie, nicht die Auszeichnung.
+- **Am Tag danach in drei Punkten nachgezogen, alle aus der Benutzung** (2026-08-25): in der Kachel beginnt
+  der Strich jetzt **unter** der Krone statt von ihr verdeckt zu werden (gemessen: Krone 1–12px, Strich 14–51px
+  einer 52px-Kachel) — im Panel bleibt sie über der Zeile, weil ein eingerückter Strich dort von 21px nur 7
+  übrig lässt; der **goldene Ring gehört allein dem weißen Punkt**, ein markierter Trail zeigt Start und Ziel
+  wieder normal (die gelbe Auswahlkontur sagt schon, welcher Trail gemeint ist); und die Krone erscheint auch
+  im **Abschnittsblock einer Trailrunde**, wenn der angeklickte Abschnitt ein gekrönter Komponenten-Trail ist.
 - **Ein echter Fehler dabei gefunden und behoben**: die Schwelle rastet auf das 0,05-Raster des Reglers ein,
   die Karten-Ebenen und Labels wurden aber mit dem *ungerasteten* Wert gebaut — ein Trail mit 4,32 bei einer
   gerasteten Schwelle von 4,33 trug goldene Ringe, während seine Kachel keine Krone hatte (live an
