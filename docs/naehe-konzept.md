@@ -18,9 +18,17 @@ Drei Punkte, jeder mit dem Grund, weil das Konzept selbst sie offen oder widersp
    wird *innerhalb* jeder Gruppe sortiert, also stand nach Entfernung sortiert 0,76 / 0,76 / 1,7 / 2,1 /
    2,4 km — und dann wieder 0,5 km, weil dort die nächste Hub-Gruppe anfing. Eine Umgebungsliste ist eine
    Rangliste; `trailGroupMode` geht auf „Keine" und beim Aufräumen zurück.
-3. **Die Kartenzeile zählt Trails und Touren getrennt** („3 km · 9 Trails · 3 Touren"). Beide liegen im
+3. **Die Kartenzeile zählt Trails und Touren getrennt** („9 Trails · 3 Touren"). Beide liegen im
    Radius, aber in verschiedenen Abschnitten der Schublade — „16 Trails" wäre gelogen, wenn drei davon
    Touren sind (am Gardasee gemessen).
+4. **Nach dem ersten Test am Laptop wanderte die ganze Bedienung auf die Karte** (Nutzer, 2026-08-25:
+   „Generell nix im Menü. Das spielt sich alles auf der Karte ab"). Die Ankerzeile in den Filtern, die
+   dieses Dokument unten noch beschreibt, ist ersatzlos weg; Regler, Trefferzahl und ✕ stehen in der Zeile
+   oben links. Der Radius steht dabei **im Regler** und die Treffer **daneben** — jede Zahl an genau einer
+   Stelle. Zwei Knöpfe sind **touch-only**, weil sie am Schreibtisch nichts tun, was man sieht: „Liste"
+   (dort steht die Seitenleiste ohnehin dauerhaft daneben — „Ich kann auf Liste klicken und nix passiert")
+   und 📍 („Das Positionslocator wird nicht benötigt am Desktop"). Gemessen: am Laptop 284x32 px, am
+   375px-Schirm bricht die Zeile auf 265x66 um und bleibt 38 px vom Bedienstapel entfernt.
 
 Was **nicht** gebaut wurde und weiter offen ist: die erreichbare Stelle statt der Luftlinie (braucht
 Routing), und der Lift-Fall („welche Trail-Einstiege sind von dieser Bergstation erreichbar") — der ist ein

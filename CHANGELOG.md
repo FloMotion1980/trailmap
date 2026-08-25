@@ -21,12 +21,53 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-25 (Zwei neue Regionen: Elba und Kronplatz, beide aus Trailforks)
+- **Elba: 222 Trails, 5 Sub-Regionen, keine Lifte, 179 mit Trailforks-Bewertung.** Quelle ist Trailforks
+  allein (`isola-d-elba-28064` plus die vier Elba-Gebiete der Provinz `livorno`), geerntet mit
+  `tools/harvest_trailforks.py` und gebaut mit `tools/build_trailforks_region.py` — dasselbe generische Paar
+  wie Madeira und der Gardasee, und dieselbe protokollierte Ausnahme von der Betreiber-Regel: auf der Insel
+  veröffentlicht kein Betreiber eine Schwierigkeit. Alle 235 geholten Seiten trugen Polylinie UND
+  Höhenprofil, also kein einziger Verlust an fehlender Höhe. Details: `docs/elba.md`.
+- **`fetch()` folgt jetzt Weiterleitungen (`curl -L`) — und genau das hat Elba erst sichtbar gemacht.** Ohne
+  `-L` fand die Slug-Probe für Elba 14 Zeilen in drei Dorfregionen; der naheliegende Slug `isola-d-elba`
+  leitet aber auf `isola-d-elba-28064` mit **310 Zeilen** um, und die Weiterleitung las sich als „gibt es
+  nicht". Die Korrektur brauchte sofort eine zweite: mit `-L` landet ein Fehltreffer auf einer 200-OK
+  Fehlerseite, die drei eigene `/trails/`-Links trägt, also „traf" danach jeder erfundene Slug. `fetch()`
+  fragt per `curl -w` die tatsächliche Ziel-URL ab und gibt `""` zurück, wenn sie auf `/error` endet.
+  `probe_tf_slugs.py` und `find_tf_regions.py` erben beides.
+- **Kronplatz: 18 Trails, 4 Lifte, 4 Sub-Regionen, 17 mit Bewertung** — die Region, die seit 2026-07 an der
+  Geometrie hing (`docs/kronplatz-recherche.md` listet vier gescheiterte Wege). Trailforks ist der fünfte
+  und trägt sie. **Schwierigkeit kommt vom Betreiber**, nicht von Trailforks: `kronplatz.com`s dreistufige
+  Skala (easy→blau, medium→rot, difficult→schwarz) für 15 der 18, als neues, generisches `diff_override` in
+  `build_trailforks_region.py` mit der Betreiber-Formulierung neben jeder Farbe. Genau ein Widerspruch
+  (Freeride Piz de Plaies: Trailforks blau, Betreiber medium → rot).
+- **Kronplatz hat VIER Sommerlifte, nicht fünf** — die Betreibertabelle führt Olang 1, Olang 2, Piz de
+  Plaies und Kronplatz 2000. Das korrigiert `docs/kronplatz-recherche.md` und ist wieder der Fall aus
+  `docs/lifts-feature.md`: OSM taggt `Ried` mit `aerialway:bicycle=yes` und `Ruis` mit `bicycle=summer`,
+  beide stehen nicht auf der Liste des Betreibers. Details: `docs/kronplatz.md`.
+- **`build_trailforks_region.py` baut die Tabelle jetzt „längste Linie zuerst" ab.** `duplicate_of` meldet
+  immer die gerade gebaute Linie als Dublette, also entschied bis dahin allein die alphabetische
+  Slug-Reihenfolge, wer von einem überlappenden Paar überlebt — bei Kronplatz hätte das den 4,8 km langen
+  Furcia Trail zugunsten des 329 m langen Fragments `cctop1` verworfen. Madeira ist davon unberührt; ein
+  Neubau des Gardasees würde zwei IDs tauschen, seine Datei wurde deshalb bewusst nicht neu gebaut.
+- **Fehler in `tools/add_region_places.py` behoben: `--force` löschte den `ratings`-Block.** `write_region`
+  schreibt nur, was man ihm übergibt, und die Ortslabels wurden ohne die Bewertungs-Herkunft geschrieben —
+  die Trails behielten ihre Zahlen, die Region verlor Quelle und Datum. Dazu eine `PLACE_RENAME`-Tabelle:
+  Südtirol taggt jede Ortschaft mehrsprachig, St. Vigil kam als 60 Zeichen langes
+  „Al Plan de Mareo - St. Vigil in Enneberg - San Vigilio di Marebbe" auf die Karte.
+
 ## 2026-08-25 (Umgebungssuche: „Trails in der Nähe")
 - **Gebaut, nach dem Konzept vom Vortag** (`docs/naehe-konzept.md`, Suite `tests/browser/nearby.js`, 9 Fälle
   / 38 Checks, zwei geprüfte Mutationen). Ein **Anker** auf der Karte — langer Druck, am Schreibtisch
   Rechtsklick, oder 📍 in der Ankerzeile für die eigene Position — plus ein **Radius-Regler mit Trefferzahl**.
   Gemessen wird die Luftlinie zur nächsten Stelle eines Trails. Nichts davon wird gespeichert; im RIDE-Modus
   ist alles davon aus.
+- **Nach dem ersten Test am Laptop wanderte die ganze Bedienung auf die Karte** und die Ankerzeile in den
+  Filtern ist ersatzlos weg (Nutzer: „Generell nix im Menü. Das spielt sich alles auf der Karte ab"). Die
+  Zeile oben links trägt jetzt Trefferzahl, Regler (mit seinem km-Wert **in** der Bahn, wie beim
+  Highlights-Regler) und ✕; **📍 und „Liste" sind touch-only**, weil beide am Schreibtisch nichts tun, was
+  man sieht — dort steht die Seitenleiste ohnehin daneben, und ein Laptop hat selten eine eigene Position.
+  Gemessen: 284x32 px am Laptop, 265x66 px mit Umbruch am 375px-Schirm, 38 px Abstand zum Bedienstapel.
 - **Die Karte dimmt, die Liste filtert — durch EINE gemeinsame Regel** (`nearbyPasses`). Das löst einen
   Widerspruch im Konzept selbst, das beides verlangte: `trailPassesFilters` räumt die Karte, „gedimmt, nicht
   ausgeblendet" will das Gegenteil. Gebaut ist die Fassung, die der Nutzer sichtbar beschrieben hat — dimmen

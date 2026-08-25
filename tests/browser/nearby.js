@@ -1,7 +1,7 @@
 // @suite   nearby
 // @area    Umgebungssuche: Anker, Radius, Dimmen auf der Karte, Filtern in der Liste, Entfernungs-Sortierung
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches nearbyAnchor, nearbyRadiusKm, nearbyDistanceKm, nearbyPasses, nearbyVisibleCount, nearbyDistanceLabel, setNearbyAnchor, clearNearbyAnchor, drawNearbyAnchor, syncNearbyChrome, nearbyRow, nearbyBar, nearbyBarText, nearbyRadius, nearbyChip, nearby-available, nearby-chip, trail-meta-dist, baselineLineOpacity, trailPassesFilters, TRAIL_SORT_COMPARE, NEARBY_LONGPRESS_MS, mapTouchStart
+// @touches nearbyAnchor, nearbyRadiusKm, nearbyDistanceKm, nearbyPasses, nearbyVisibleCount, nearbyDistanceLabel, setNearbyAnchor, clearNearbyAnchor, drawNearbyAnchor, syncNearbyChrome, nearbyBar, nearbyBarText, nearbyRadius, nearbyRadiusValue, nearby-touch-only, nearby-slider-wrap, nearby-available, nearby-chip, trail-meta-dist, baselineLineOpacity, trailPassesFilters, TRAIL_SORT_COMPARE, NEARBY_LONGPRESS_MS, mapTouchStart
 // @needs   region=finale, builder=off
 //
 // **Braucht FINALE**, wie die rating-Suite und aus verwandtem Grund: die Frage "welche guten Trails sind
@@ -28,9 +28,9 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
 
   const ANCHOR = { lat: 44.17, lng: 8.35 };
   const FAR = { lat: 44.6, lng: 8.9 };
-  const row = () => TM.$("#nearbyRow");
   const bar = () => TM.$("#nearbyBar");
   const barText = () => TM.$("#nearbyBarText").textContent;
+  const radiusText = () => TM.$("#nearbyRadiusValue").textContent;
   const shown = (el) => getComputedStyle(el).display !== "none";
   const ring = () => TM.map.overlay().filter((p) => (p.getAttribute("stroke") || "").toLowerCase() === "#b3520a").length;
   const setRadius = async (km) => {
@@ -46,8 +46,10 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
   T.test("ohne Anker ist von der Umgebungssuche nichts zu sehen");
   // Im Ruhezustand kostet das Feature keine Flaeche -- dieselbe Regel wie beim Highlights-Regler.
   const allCards = TM.ui.trailCards().length;
-  T.ok("die Ankerzeile ist weg", !shown(row()), getComputedStyle(row()).display, "none");
-  T.ok("die Zeile auf der Karte auch", !shown(bar()), getComputedStyle(bar()).display, "none");
+  // Und im Menue steht ueberhaupt nichts davon (Nutzer, 2026-08-25: "Generell nix im Menue. Das spielt sich
+  // alles auf der Karte ab") -- die Ankerzeile in den Filtern gab es einen Tag lang, sie ist ersatzlos weg.
+  T.eq("keine Bedienelemente in der Seitenleiste", TM.$$("aside #nearbyRadius, aside #nearbyBar, #nearbyRow").length, 0);
+  T.ok("die Zeile auf der Karte ist weg", !shown(bar()), getComputedStyle(bar()).display, "none");
   T.ok("und der Entfernungs-Chip", !shown(TM.$(".nearby-chip")), getComputedStyle(TM.$(".nearby-chip")).display, "none");
   T.eq("kein Ring auf der Karte", ring(), 0);
   T.eq("nichts ist gedimmt", TM.map.dimmedTrails(), 0);
@@ -57,11 +59,14 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
   setNearbyAnchor(ANCHOR);
   await TM.wait(500);
   await setRadius(3);
-  T.ok("die Ankerzeile ist da", shown(row()), getComputedStyle(row()).display, "flex");
-  T.ok("die Zeile auf der Karte auch", shown(bar()), getComputedStyle(bar()).display, "flex");
+  T.ok("die Zeile auf der Karte ist da", shown(bar()), getComputedStyle(bar()).display, "flex");
+  T.ok("und sie liegt auf der Karte, nicht in der Seitenleiste",
+       !TM.$("aside").contains(bar()) && TM.$(".map-wrap").contains(bar()), true, true);
   T.ok("und der Entfernungs-Chip", shown(TM.$(".nearby-chip")), getComputedStyle(TM.$(".nearby-chip")).display, "block");
   T.eq("ein Ring liegt auf der Karte", ring(), 1);
-  T.ok("die Zeile nennt Radius und Zahl", /^3 km · \d+ Trail/.test(barText()), barText(), "3 km · n Trails");
+  // Der Radius steht im Regler, die Treffer in der Zeile -- jede Zahl an genau einer Stelle.
+  T.ok("der Regler nennt den Radius", /^3 km$/.test(radiusText()), radiusText(), "3 km");
+  T.ok("die Zeile nennt die Treffer", /^\d+ Trails?/.test(barText()), barText(), "n Trails");
   const nearCards = TM.ui.trailCards().length;
   T.ok("die Liste ist kuerzer als ohne Anker", nearCards > 0 && nearCards < allCards,
        nearCards + " von " + allCards, "> 0 und < " + allCards);
@@ -81,17 +86,17 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
 
   T.test("der Radius ist der Filter, und ein leerer Radius ist ein Ergebnis");
   await setRadius(1);
-  const n1 = TM.ui.trailCards().length, b1 = barText();
+  const n1 = TM.ui.trailCards().length, b1 = radiusText();
   await setRadius(8);
   const n8 = TM.ui.trailCards().length;
   T.ok("groesserer Radius, mehr Treffer", n8 > n1, n1 + " bei 1 km, " + n8 + " bei 8 km", "8 km > 1 km");
-  T.ok("und die Zeile nennt den eingestellten Radius", /^1 km/.test(b1), b1, "beginnt mit 1 km");
+  T.ok("und der Regler nennt den eingestellten Radius", /^1 km$/.test(b1), b1, "1 km");
   setNearbyAnchor(FAR);
   await TM.wait(500);
   await setRadius(3);
   T.eq("weit draussen ist die Liste leer", TM.ui.trailCards().length, 0);
-  // Kein Fehlertext, keine Ursache -- nur die Zahl, die gerade null ist.
-  T.ok("und die Zeile sagt es als Ergebnis", /keiner in 3 km/.test(barText()), barText(), "keiner in 3 km");
+  // Kein Fehlertext, keine Ursache -- nur, dass es gerade keine gibt.
+  T.ok("und die Zeile sagt es als Ergebnis", /keine Treffer/.test(barText()), barText(), "keine Treffer");
 
   T.test("nach Entfernung sortiert steht der naechste oben");
   setNearbyAnchor(ANCHOR);
@@ -194,6 +199,19 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
     T.ok("die Zeile bleibt weg", !shown(bar()), getComputedStyle(bar()).display, "none");
   }
 
+  T.test("was am Schreibtisch nichts tut, ist dort auch nicht zu sehen");
+  // "Liste" oeffnet die Schublade -- am Schreibtisch steht sie ohnehin dauerhaft daneben; 📍 setzt den Anker
+  // auf die eigene Position, die es am Laptop meist nicht gibt. Beides hat der Nutzer nach dem ersten
+  // Versuch gemeldet ("Ich kann auf Liste klicken und nix passiert", "Das Positionslocator wird nicht
+  // benoetigt am Desktop"). Geprueft wird die REGEL, nicht die Breite: auf einem Touch-Layout muessen beide
+  // da sein, und diese Suite laeuft am Schreibtisch.
+  setNearbyAnchor(ANCHOR);
+  await TM.wait(450);
+  const touchLayout = window.matchMedia("(max-width: 768px), (pointer: coarse)").matches;
+  T.eq("Liste und Positionsknopf folgen dem Layout",
+       [shown(TM.$("#nearbyBarList")), shown(TM.$("#nearbyLocateBtn"))], [touchLayout, touchLayout]);
+  T.ok("das ✕ ist immer da", shown(TM.$("#nearbyClearBtn")), getComputedStyle(TM.$("#nearbyClearBtn")).display, "sichtbar");
+
   T.test("das Aufraeumen stellt alles wieder her");
   setNearbyAnchor(ANCHOR);
   await TM.wait(450);
@@ -202,7 +220,6 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
   T.eq("wieder alle Kacheln", TM.ui.trailCards().length, allCards);
   T.eq("nichts gedimmt", TM.map.dimmedTrails(), 0);
   T.eq("kein Ring", ring(), 0);
-  T.ok("keine Ankerzeile", !shown(row()), getComputedStyle(row()).display, "none");
   T.ok("keine Zeile auf der Karte", !shown(bar()), getComputedStyle(bar()).display, "none");
   T.eq("keine Entfernung auf den Kacheln", TM.$$("#trailList .trail-meta-dist").length, 0);
   // Die Entfernungsachse verschwindet mit ihrem Anker: eine Sortierung nach einer Zahl, die es nicht mehr

@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=212" />
+<link rel="stylesheet" href="style.css?v=213" />
 </head>
 <body>
 <div id="fatalError">
@@ -187,24 +187,6 @@
                        aria-label="Mindestbewertung für Highlights">
                 <span class="highlight-slider-value" id="highlightSliderValue"></span>
               </span>
-            </div>
-            <!-- Die Ankerzeile der Umgebungssuche (2026-08-25, docs/naehe-konzept.md). Sie erscheint erst,
-                 wenn ein Punkt gesetzt ist -- wie der Highlights-Regler erst erscheint, wenn es Bewertungen
-                 gibt: im Ruhezustand kostet das Feature keine Flaeche, und um den senkrechten Platz in der
-                 Seitenleiste ist mehrfach gerungen worden. Gesetzt wird der Punkt auf der KARTE (langer
-                 Druck, am Schreibtisch Rechtsklick); 📍 hier verschiebt ihn auf die eigene Position, was der
-                 zweite im Konzept beschriebene Weg ist. Aus demselben Grund wie oben ein div und kein label:
-                 ein Regler in einem label wuerde bei jedem Zug den Schalter daneben umschalten. -->
-            <div class="toggle-row nearby-row" id="nearbyRow"
-                 title="Umgebungssuche: Entfernung in Luftlinie zur naechsten Stelle eines Trails. Der Regler setzt den Radius, die Liste zeigt die Treffer.">
-              <span class="nearby-label">Umgebung</span>
-              <button type="button" id="nearbyLocateBtn" class="nearby-btn" title="Anker auf die eigene Position setzen">📍</button>
-              <span class="highlight-slider-row nearby-slider-row" id="nearbyRadiusRow">
-                <input type="range" id="nearbyRadius" min="0.5" max="15" step="0.5" value="3"
-                       aria-label="Radius der Umgebungssuche">
-                <span class="highlight-slider-value" id="nearbyRadiusValue"></span>
-              </span>
-              <button type="button" id="nearbyClearBtn" class="nearby-btn" title="Umgebungssuche beenden">✕</button>
             </div>
           </div>
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
@@ -421,8 +403,19 @@
            Bedienstapel. Im RIDE-Modus ausgeblendet (siehe CSS) -- dort wird nichts geaendert. -->
       <div id="nearbyBar">
         <span id="nearbyBarText"></span>
-        <button type="button" id="nearbyBarList" class="nearby-bar-btn">Liste</button>
-        <button type="button" id="nearbyBarClose" class="nearby-bar-btn" title="Umgebungssuche beenden">✕</button>
+        <span class="nearby-slider-wrap">
+          <input type="range" id="nearbyRadius" min="0.5" max="15" step="0.5" value="3"
+                 aria-label="Radius der Umgebungssuche">
+          <span class="nearby-slider-value" id="nearbyRadiusValue"></span>
+        </span>
+        <!-- Beide nur auf dem Touch-Layout. Auf dem Schreibtisch tut "Liste" nichts, was man sehen wuerde --
+             die Seitenleiste steht dort dauerhaft neben der Karte -- und eine eigene Position gibt es am
+             Laptop in der Regel nicht (Nutzer, 2026-08-25: "Das Positionslocator wird nicht benoetigt am
+             Desktop", "Ich kann auf Liste klicken und nix passiert"). -->
+        <button type="button" id="nearbyLocateBtn" class="nearby-bar-btn nearby-touch-only"
+                title="Anker auf die eigene Position setzen">📍</button>
+        <button type="button" id="nearbyBarList" class="nearby-bar-btn nearby-touch-only">Liste</button>
+        <button type="button" id="nearbyClearBtn" class="nearby-bar-btn" title="Umgebungssuche beenden">✕</button>
       </div>
       <div id="layerWarning"></div>
       <div id="offlineBanner">📴 Offline-Modus</div>
@@ -6182,8 +6175,6 @@ function drawNearbyAnchor(){
 // Zeile in der Seitenleiste, Zeile auf der Karte und der Entfernungs-Chip haengen alle an einem Zustand.
 function syncNearbyChrome(){
   const on = !!nearbyAnchor;
-  const row = document.getElementById("nearbyRow");
-  if (row) row.classList.toggle("open", on);
   document.querySelectorAll(".nearby-chip").forEach(el => el.classList.toggle("nearby-available", on));
   const input = document.getElementById("nearbyRadius");
   if (input) input.value = String(nearbyRadiusKm);
@@ -6192,8 +6183,11 @@ function syncNearbyChrome(){
   const radiusText = nearbyRadiusKm < 1
     ? Math.round(nearbyRadiusKm * 1000) + " m"
     : String(nearbyRadiusKm).replace(".", ",") + " km";
+  // Der Radius steht IM Regler und sonst nirgends: der Regler ist das Bedienelement, das ihn setzt, also
+  // sagt er auch, was er gerade sagt -- dasselbe Muster wie beim Highlights-Regler. Die Zeile daneben nennt
+  // dafuer nur noch die Treffer, statt die Zahl ein zweites Mal zu fuehren.
   const out = document.getElementById("nearbyRadiusValue");
-  if (out) out.textContent = on ? radiusText + " · " + n : "";
+  if (out) out.textContent = on ? radiusText : "";
   const bar = document.getElementById("nearbyBar");
   const barText = document.getElementById("nearbyBarText");
   if (bar) bar.classList.toggle("open", on);
@@ -6203,8 +6197,8 @@ function syncNearbyChrome(){
   const trailsOnly = n - tours;
   if (barText) {
     barText.textContent = !on ? ""
-      : !n ? "keiner in " + radiusText
-      : radiusText + " · " + trailsOnly + (trailsOnly === 1 ? " Trail" : " Trails")
+      : !n ? "keine Treffer"
+      : trailsOnly + (trailsOnly === 1 ? " Trail" : " Trails")
         + (tours ? " · " + tours + (tours === 1 ? " Tour" : " Touren") : "");
   }
 }
@@ -6278,7 +6272,6 @@ document.getElementById("nearbyLocateBtn").addEventListener("click", () => {
   oneShotLocate();
 });
 document.getElementById("nearbyClearBtn").addEventListener("click", clearNearbyAnchor);
-document.getElementById("nearbyBarClose").addEventListener("click", clearNearbyAnchor);
 // "Liste" ist der Uebergang von der Karte zur Antwort: Schublade auf, Trails-Abschnitt offen, hingescrollt.
 document.getElementById("nearbyBarList").addEventListener("click", () => {
   const sec = document.getElementById("secTrails");
@@ -8929,7 +8922,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v212"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v213"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
