@@ -23,3 +23,8 @@ tests/__pycache__/
 
 # Stray OpenTopoData cache when a script is run from the repo root instead of tools/.
 elevation_cache.json
+
+# Roh-XML der Outdooractive-Ernte: 1 MB fuer 44 Touren, wovon drei Zahlen je Tour gebraucht werden.
+# Die stehen eingekocht in Material/Saalbach/oa_official.json; das Verzeichnis ist nur ein Cache und
+# baut sich mit tools/harvest_oa_official.py von selbst wieder auf.
+Material/*/oa_official/

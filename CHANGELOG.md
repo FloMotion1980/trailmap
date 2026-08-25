@@ -21,6 +21,31 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-25 (Offizielle Zahlen fuer Bikecircus)
+- **34 der 49 Bikecircus-Abfahrten stehen jetzt auf den Zahlen des Betreibers**, nicht mehr auf denen einer
+  Aufzeichnung. `tools/harvest_oa_official.py` holt sie aus dem Outdooractive-Projekt der Betreiber selbst
+  (`api-saalbach`, `api-saalfelden-leogang`) — Projekt und Schlüssel stehen offen im Quelltext ihrer eigenen
+  Detailseiten, es braucht keine Anmeldung. Der Anstieg war der auffällige Posten: X-Line 98 → **0**,
+  12er Sky-Line 89 → 0, Buchegg 97 → 0, Z-Line 71 → 0, fAIRy Line 121 → 4, Hacklberg 124 → 7. Oft korrigiert
+  sich auch der Abstieg (fAIRy Line 381 → 190, Bergstadl 522 → 600, Hochalm 723 → 780) und die Länge.
+- **Drei Zuordnungsregeln, jede aus einem echten Fehlgriff:** die **Katalognummer** entscheidet, nicht der
+  Name (über den Namen hat „Pro-Line" zwölf Treffer — jede Promenade im Tal —, „Z-Line" einunddreißig; die
+  Nummer steht im Trailforks-Namen, „Monti-Trail SH02", und im Betreiber-Slug, `sh-02-…`); **`-runde` und
+  `-tour` sind keine Trails** (Leogangs `le-10-matzalm-trail-tour` ist eine 16,4-km-Runde mit 820 m auf und
+  820 m ab — in Leogang ist die LE-Nummer die des Touren-Katalogs, nicht die des Trails); und **die Richtung
+  kann entgegengesetzt sein** (Vink Link ist bei uns bewusst abwärts gedreht, die Betreibertour läuft
+  aufwärts, 90 m auf / 1 m ab). Dazu zwei Plausibilitätsbremsen: eine Angabe mit auf == ab ist eine Runde,
+  und eine, die den Höhenunterschied der eigenen Linie nicht hergibt, ist keine Angabe (Gateway: 2 m Abstieg
+  für eine Linie, deren Anfang 44 m über ihrem Ende liegt).
+- **15 Trails blieben offen und wurden NICHT geraten** — mit Grund je Trail in `docs/backlog.md`. Einer
+  davon ist keine Zahlenfrage, sondern eine Geometriefrage: **Hot Shots** ist bei uns 2,10 km, beim Betreiber
+  3,07 und bei Trailforks 2,82 — unsere Linie ist die kürzeste von drei Quellen. Fieberbrunn hat überhaupt
+  kein Outdooractive-Projekt, seine drei Trails bleiben unverändert.
+- **Die Krone sitzt höher** (`vertical-align:0.22em` statt `middle`): `middle` richtet Kästchen aus, nicht
+  die Zeichenfläche darin, und die Emoji-Schrift setzt die Krone tief in ihr eigenes Kästchen — sie hing
+  weiter unter der Schrift. In em, damit dieselbe Zahl für alle drei Größen gilt (14px Kachel/Panel, 12px
+  Abschnittsblock, 11px Kartenlabel).
+
 ## 2026-08-25
 - **Die Krone steht jetzt vor dem Namen**, in Kachel und Info-Panel, und der Schwierigkeitsbalken ist wieder
   ein reiner Balken. Über ihm war sie zweimal falsch: auf ihm liegend verdeckte sie ihn, und mit genug Luft

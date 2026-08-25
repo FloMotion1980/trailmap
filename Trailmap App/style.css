@@ -606,11 +606,13 @@ html.landscape-compact .search-overlay-summary{
    mit genug Luft darueber blieben von 52px Kachelhoehe nur 30 fuer den Strich. Vor dem Namen kostet sie
    nichts an Hoehe, braucht keine Feinabstimmung und liest sich wie im Kartenlabel und im Abschnittsblock
    einer Trailrunde, die sie schon so tragen. */
-/* vertical-align:middle, nicht ein abgezaehltes px: die Emoji-Schrift setzt die Krone tief in ihr eigenes
-   Kaestchen, und bei Grundlinien-Ausrichtung haengt sie dadurch unter der Schrift (Nutzer, 2026-08-25).
-   Mittig ausgerichtet ist es dieselbe Loesung, die .badge-uphill fuer das gleiche Problem schon nutzt --
-   und sie haengt nicht an den Metriken EINER Schrift, was auf iOS sonst wieder daneben liegen wuerde. */
-.tm-crown{ font-size:14px; line-height:1; margin-right:5px; vertical-align:middle; pointer-events:none; }
+/* Angehoben um 0.22em, und zwar in em statt in px: die Emoji-Schrift zeichnet die Krone tief in ihrem
+   eigenen Kaestchen, deshalb haengt sie auf der Grundlinie unter der Schrift -- `vertical-align:middle`
+   war der erste Versuch und hat auf dem Geraet des Nutzers nicht gereicht ("sie ist unter der Schrift",
+   2026-08-25), weil `middle` Kaestchen ausrichtet und nicht die Zeichenflaeche darin. Eine em-Verschiebung
+   ist der einzige Hebel dafuer, und in em gilt sie fuer alle drei Groessen (14px Kachel/Panel, 12px
+   Abschnittsblock, 11px Kartenlabel) mit derselben Zahl. */
+.tm-crown{ font-size:14px; line-height:1; margin-right:5px; vertical-align:0.22em; pointer-events:none; }
 .badge.gruen{ background:var(--gruen); }
 .badge.blau{ background:var(--blau); }
 .badge.rot{ background:var(--rot); }

@@ -1,5 +1,27 @@
 # Backlog
 
+## Bikecircus: 15 Trails ohne belastbare Betreiberzahl (2026-08-25)
+
+34 der 49 Abfahrten in `bikecircus` stehen jetzt auf den Zahlen des Betreibers selbst
+(`tools/harvest_oa_official.py`, plus bikepark-leogang.com fuer Hangman I). Diese 15 nicht, und der Grund
+steht je Trail dabei -- ohne offizielle Zahl wird hier nicht geraten:
+
+| Trail | wir | Betreiber | Trailforks | Warum offen |
+|---|---|---|---|---|
+| Blue-Line (SH07) | 2,7 km / 32 / 446 | keine Seite | 3,00 km / -407 | im Tourenverzeichnis des Betreibers nicht vorhanden |
+| Pro-Line (SH42) | 2,2 / 74 / 484 | keine Seite | 1,71 / -339 | dito; Trailforks' Laenge weicht zudem um 22 % ab |
+| Evil Eye Trail | 0,3 / 9 / 72 | keine Seite | 0,17 / -32 | dito |
+| Wurzel-Trail (SH37) | 3,4 / 178 / 104 | 1,52 km / 25 / 0 | 3,40 / -156 | Betreiberseite beschreibt eine 1,5-km-Passage, Trailforks bestaetigt UNSERE Laenge -- zwei Definitionen desselben Namens |
+| Hot Shots | 2,1 / 22 / 321 | 3,07 km | 2,82 km | **unsere Linie ist die kuerzeste von drei Quellen** -- hier ist die Geometrie fraglich, nicht die Zahl |
+| Antonius Trail | 1,25 / 43 / 203 | 2,82 km | 1,24 km | Betreibertour enthaelt die Zufahrt |
+| Matzalm / Forsthof / Schwarzleo / Knappen / AlteSchmiede | | nur `le-NN-...-tour` | Laengen wie unsere | die einzige Betreiberseite ist die RUNDE (auf == ab, bis 16,4 km) |
+| Gateway | 0,55 / 7 / 51 | 0 / 2 | 0,55 / -38 | Betreiberzahl gibt den Hoehenunterschied der eigenen Linie nicht her (2 m gegen 44 m netto) |
+| Schweinestberg / Streuboeden / Iglmoos | | Fieberbrunn hat kein Outdooractive-Projekt | nicht bei Trailforks | einzige Quelle waere die Bikepark-Seite, die keine Zahlen ausweist |
+
+Wer das aufgreift: `up` ist die anfaellige Zahl. Sie stammt bei den Uebriggebliebenen weiter aus der
+Aufzeichnung (GPS-Rauschen), waehrend jede geprueftе Betreiberangabe fuer eine Bikepark-Abfahrt **0** sagt.
+Ein pauschales Nullsetzen ist trotzdem falsch: Wurzel-Trail und Asitz-Trail steigen wirklich.
+
 General, cross-topic backlog for Trailmap — ideas, pending features and open decisions that aren't tied to
 any single file. It travels with `git clone`/`git pull`, so it is the copy that survives switching device;
 the assistant's own local memory notes mirror it, and this file wins if the two ever drift.
