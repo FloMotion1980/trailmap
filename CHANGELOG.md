@@ -21,6 +21,42 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-26 (Sechs neue Regionen in einer Nacht)
+- **Davos Klosters (152 Trails), Vinschgau & Meran (146), Bormio & Valtellina (179), Bayerische Voralpen
+  (358), Aostatal (425), Tarentaise & Vanoise (710)** -- zusammen 1 970 Trails, ausgewaehlt aus der
+  Trailforks-Recherche vom Vortag und zwar nach **Kilometern je Trail**, nicht nach Trailzahl. Alle sechs
+  mit `harvest_trailforks.py` + `build_trailforks_region.py`, alle mit Ortslabels und
+  Trailforks-Bewertungen (32-74 % je Region, alle 1 970 mit gespeichertem Slug). Die App zaehlt jetzt
+  36 Regionen und 6 872 Trails. **Verfahren und gemeinsame Vorbehalte: `docs/sechs-regionen-2026-08.md`**,
+  je Region ein kurzes `docs/<region>.md`.
+- **Die Unterteilung ist in allen sechs unsere eigene, und das ist der eigentliche Aufwand gewesen.**
+  Trailforks fuehrt alle 153 Davos-Linien unter EINEM Gebiet, sein Gebiet "Vinschgau" streut ueber 28 km,
+  und sein "Stelvio Natural Trail Park" liegt in Wahrheit im Valfurva statt am Stilfserjoch. Die Anker
+  sind deshalb aus den Schwerpunkten der geernteten Linien gesetzt und danach gegen die Abfall-Liste des
+  Baus nachgezogen worden -- bei Vinschgau, Aostatal, Voralpen und Tarentaise fielen im ersten Lauf je
+  5-15 echte Trails knapp heraus (Hochuebergaenge, 8-11 km vom naechsten Dorf).
+- **Neu: `tools/scope_tf_table.py`.** Eine Landestabelle zu ziehen kostet 16 Anfragen und zeigt alles; die
+  Geometrie kostet eine Anfrage je Trail. Das Werkzeug schneidet den regionsgrossen Ausschnitt heraus,
+  matcht die Gebiete per REGEX gegen die Strings der Tabelle selbst (mehrere Savoie-Gebietsnamen tragen ein
+  Zero-Width-Space, das keine handgetippte `--areas`-Liste je trifft) und legt den Schnitt als
+  `harvest_scope.json` neben die Daten. 2 101 Geometrie-Seiten geholt, 5 ohne Linie.
+- **Eine Region darf mehr ernten als sie baut.** Die Bayerischen Voralpen tragen Trailforks' Gebiet
+  "Isartrails" (die Muenchner Isar, 28-52 km noerdlich) durch die Ernte und geben ihm KEINEN Anker --
+  die Nachbar-Regel wirft alle 45 selbst heraus und nennt sie im Bericht. Dasselbe Muster haelt das
+  Beaufortain aus der Tarentaise und drei falsch einsortierte Ligurien-Zeilen aus dem Aostatal.
+- **Zwei Nacharbeiten sind ausdruecklich offen** (`docs/backlog.md`, Abschnitt 3b): die Schwierigkeit fuer
+  **Aostatal und Tarentaise** gehoert den Betreibern -- Pila, La Thuile, Cervino, Les Arcs, Tignes,
+  Meribel, Belleville, La Plagne fuehren eigene Trailtabellen, und die stehende Regel gibt ihnen den
+  Vorrang; bis dahin traegt jeder Trail Trailforks' Wert. Und **keine der sechs hat Lifte**, weil die Liste
+  von der Sommerseite des Betreibers kommen muss und nicht aus OSMs Bike-Tag (`docs/lifts-feature.md`).
+- **Die vom Nutzer erinnerte Bormio-Tour ist in den Daten wiedergefunden**: `Bormio 3000 single`
+  (8,0 km, 3 000 -> 2 320 m) und `Le Cune` (3,3 km, auf 1 837 m) liegen mit ihren Enden **3 m**
+  auseinander -- zusammen 11,3 km und -1 163 Hm, endend rund 100 Hm ueber Santa Caterina. Als Trailrunde
+  ist sie NICHT gebaut: das braucht eine Aufzeichnung durch `gpx_map_match.py`, alles andere waere eine
+  Behauptung ueber eine ungemessene Verbindung.
+- **`PLACE_RENAME` deckt jetzt auch Suedtirol ab**: OSM fuehrt dort jede Ortschaft mit allen amtlichen
+  Namen zugleich, "St. Leonhard in Passeier - San Leonardo in Passiria" sind 48 Zeichen Kartenlabel.
+  Gekuerzt wird nur ueber ~20 Zeichen -- "Merano - Meran" bleibt.
 ## 2026-08-25 (Zwei neue Regionen: Elba und Kronplatz, beide aus Trailforks)
 - **Elba: 222 Trails, 5 Sub-Regionen, keine Lifte, 179 mit Trailforks-Bewertung.** Quelle ist Trailforks
   allein (`isola-d-elba-28064` plus die vier Elba-Gebiete der Provinz `livorno`), geerntet mit

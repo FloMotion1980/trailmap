@@ -311,6 +311,15 @@ Portes du Soleil ist gebaut (80 Trails). Daneben liegt sehr viel mehr, als diese
 | **Embrunais / Ubaye** | ~105 | ~180 | Embrun (44/56), Vars (27/64), Orcières (17/44), Les Orres Bike Park (16/30), Risoul (15/26) |
 | Dévoluy / Gap | ~105 | ~130 | Devoluy (47/68), Tallard (33/31), Gap (24/19) |
 
+**Gebaut in der Nacht auf 2026-08-26: die ersten sechs dieser Liste.** Davos Klosters, Vinschgau & Meran,
+Bormio & Valtellina, Bayerische Voralpen, Aostatal und Tarentaise & Vanoise stehen in der App. Das
+gemeinsame Verfahren und was allen sechs noch fehlt: **`docs/sechs-regionen-2026-08.md`**, je Region
+`docs/<region>.md`. **Zwei Nacharbeiten sind ausdrücklich offen und stehen weiter unten im Abschnitt
+„Nacharbeit an den sechs Regionen".** Was aus den Tabellen unten noch NICHT gebaut ist, bleibt gültig:
+Zermatt, Val Surses, Scuol, Tessin, Surselva, Wallis, Primiero, Bergamasker Alpen, Annecy/Aravis,
+Mont-Blanc, Briançonnais, Queyras — und auf deutscher Seite Heidelberg, Schwäbische Alb, Thüringer Wald,
+Erzgebirge, Geißkopf.
+
 **Eine Reihenfolge, falls eine gebraucht wird** — nach „viel Trail je Aufwand", und mit dem, was die App
 schon kann: **1. Bormio** (Nutzerwunsch, ~113 Trails, Lifte vorhanden), **2. Davos Klosters** (153 Trails /
 279 km, die größte einzelne Lücke im Alpenbogen), **3. Bayerische Voralpen** (die größte deutsche Lücke,
@@ -326,6 +335,33 @@ trails and is far denser than any region `tools/gpx_map_match.py` has been valid
 second pass to fire more often — see the tool's own "Tune per region" docstring note, and
 `tools/test_gpx_map_match.py` for the regression-testing pattern to extend before trusting any new
 segmented tour built there.
+
+## 3b. Nacharbeit an den sechs Regionen vom 2026-08-26
+
+Die sechs sind gebaut und fahrbar; zwei Dinge fehlen ihnen allen, und eines davon ist eine echte Schuld
+gegenüber der stehenden Regel.
+
+**1. Die Betreiber-Schwierigkeit für Aostatal und Tarentaise.** Alle sechs tragen Trailforks' Wertung. Für
+Davos, Vinschgau, Bormio und die Voralpen ist das sachlich richtig — gewachsene Trailnetze ohne Betreiber,
+der eine Trailliste führt. Für die anderen beiden ist es das **nicht**: Pila Bikeland, La Thuile Bike World,
+Cervino und Champoluc im Aostatal, Les Arcs, Tignes, Méribel, Belleville, La Plagne und Valmorel in der
+Tarentaise führen eigene Trailtabellen mit eigenen Graden, und nach `CLAUDE.md`s stehender Regel gewinnen
+die. Das Werkzeug dafür steht: `diff_override` in `tools/build_trailforks_region.py` nimmt je Trail die
+Farbe UND die Formulierung des Betreibers, so wie es bei Kronplatz gemacht ist. Es sind zehn
+Betreiberseiten — eine eigene Sitzung, keine Fußnote.
+
+**2. Lifte für alle sechs.** Kein `lifts`-Array, und das ist eine bewusste Auslassung: `docs/lifts-feature.md`
+verlangt die Sommerseite des Betreibers und schließt OSMs `aerialway:bicycle` ausdrücklich aus — bei
+Kronplatz stand das Tag am Vortag bei zwei Bahnen falsch. **Für Davos ist die halbe Arbeit schon getan**
+(siehe `docs/davos.md`): der Betreiber sagt „auf insgesamt sechs Stand- und Luftseilbahnen ist der Transport
+mit dem Mountainbike möglich", nennt sie aber nicht namentlich, und die Live-Liste kommt per JavaScript.
+
+**3. Kleiner, aber konkret: die Tour Bormio 3000 → Santa Caterina.** Der Nutzer erinnert sie aus eigener
+Fahrt, und sie liegt als **zwei aufeinanderfolgende Trails** in den Daten, deren Enden 3 m auseinanderliegen
+(`Bormio 3000 single` 8,0 km von 3 000 auf 2 320 m, dann `Le Cune` 3,3 km auf 1 837 m — zusammen 11,3 km und
+−1 163 Hm). Als Trailrunde ist sie NICHT gebaut: das bräuchte eine Aufzeichnung durch
+`tools/gpx_map_match.py`, und die beiden aneinanderzuhängen wäre sonst eine Behauptung über eine Verbindung,
+die niemand gemessen hat. Mit einem GPX der Fahrt ist es eine kurze Sache.
 
 ## 4. Test-Abdeckung: was noch keine Suite beansprucht
 
@@ -480,22 +516,29 @@ noch nicht. Kann auch mal hinter."*
 
 ---
 
-# Gebaute Regionen (Stand 2026-08-25)
+# Gebaute Regionen (Stand 2026-08-26)
 
-30 Regionen, **4902 Trails, 140 Lifte, 102 Touren**. Jede hat ihr eigenes `docs/<region>.md` bzw. ihr
+36 Regionen, **6872 Trails, 140 Lifte, 102 Touren**. Jede hat ihr eigenes `docs/<region>.md` bzw. ihr
 Build-Skript in `tools/` mit der vollen Quellen-Herkunft; `python tools/validate_region.py` prüft alle.
+Die sechs vom 2026-08-26 teilen sich `docs/sechs-regionen-2026-08.md` für das gemeinsame Verfahren.
 
 | Region | Label | Trails | Lifte | Touren | Sub-Regionen |
 |---|---|---:|---:|---:|---:|
 | `gardasee` | Gardasee & Trentino | 916 | 2 | 5 | 10 |
 | `pfaelzerwald` | Mountainbikepark Pfälzerwald | 805 | 0 | 42 | 9 |
+| `tarentaise` | Tarentaise & Vanoise | 710 | 0 | 0 | 9 |
 | `schwarzwald` | Schwarzwald | 622 | 3 | 4 | 10 |
 | `nordvogesen` | Nordvogesen | 483 | 0 | 0 | 7 |
 | `suedvogesen` | Südvogesen | 474 | 3 | 0 | 12 |
+| `aostatal` | Aostatal | 425 | 0 | 0 | 7 |
+| `voralpen` | Bayerische Voralpen | 358 | 0 | 0 | 8 |
 | `elba` | Elba | 222 | 0 | 0 | 5 |
 | `finale` | Finale Ligure | 219 | 0 | 0 | 12 |
 | `varazze` | Varazze | 195 | 0 | 0 | 7 |
+| `bormio` | Bormio & Valtellina | 179 | 0 | 0 | 6 |
 | `madeira` | Madeira | 158 | 0 | 0 | 6 |
+| `davos` | Davos Klosters | 152 | 0 | 0 | 3 |
+| `vinschgau` | Vinschgau & Meran | 146 | 0 | 0 | 6 |
 | `bikekingdom` | Bike Kingdom | 121 | 12 | 4 | 9 |
 | `portesdusoleil` | Portes du Soleil | 80 | 24 | 1 | 6 |
 | `sauerland` | Sauerland/Upland | 73 | 7 | 6 | 5 |

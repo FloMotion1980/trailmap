@@ -1,0 +1,18 @@
+{
+ "source_table": "C:/Users/flomo/AppData/Local/Temp/claude/D--Trailmap/6bb4a5e7-4577-48a6-8c75-bb7c5a7105e5/scratchpad/research/lombardia.json",
+ "area_pattern": "Valdidentro|Bormio|Stelvio Natural Trail Park|Oga Natural Trails|Valdisotto|Valfurva|Grosio|Tirano|Teglio|Aprica",
+ "areas": {
+  "Valdidentro": 40,
+  "Aprica": 27,
+  "Stelvio Natural Trail Park": 26,
+  "Teglio": 26,
+  "Bormio": 24,
+  "Tirano": 11,
+  "Oga Natural Trails": 10,
+  "Valdisotto": 9,
+  "Grosio": 9,
+  "Valfurva": 4
+ },
+ "rows": 222,
+ "note": "Kostenfilter fuer die Geometrie-Ernte. Was in der Region landet, entscheidet allein die Anker-Regel in tools/build_trailforks_region.py."
+}

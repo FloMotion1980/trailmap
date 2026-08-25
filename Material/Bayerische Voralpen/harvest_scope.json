@@ -1,0 +1,19 @@
+{
+ "source_table": "C:/Users/flomo/AppData/Local/Temp/claude/D--Trailmap/6bb4a5e7-4577-48a6-8c75-bb7c5a7105e5/scratchpad/research/bayern.json",
+ "area_pattern": "Garmisch Area|Tegernsee Kreuth Area|Kochelsee Walchensee Jachenau Area|Isartrails|Schliersee Spitzingsee Bayrischzell Area|Bad T.lz/ Lenggries/ Sylvenstein Area|Ammergauer Alpen Area|Mittenwald/Wallgau Area|F.ssen|Eschenlohe/Ohlstadt Area|Bikepark Oberammergau|Bad Wiessee|Rottach|Achental",
+ "areas": {
+  "Garmisch Area": 84,
+  "Tegernsee Kreuth Area": 63,
+  "Kochelsee Walchensee Jachenau Area": 54,
+  "Isartrails": 42,
+  "Schliersee Spitzingsee Bayrischzell Area": 41,
+  "Bad Tölz/ Lenggries/ Sylvenstein Area": 34,
+  "Ammergauer Alpen Area": 23,
+  "Mittenwald/Wallgau Area": 21,
+  "Füssen": 19,
+  "Eschenlohe/Ohlstadt Area": 19,
+  "Bikepark Oberammergau": 10
+ },
+ "rows": 650,
+ "note": "Kostenfilter fuer die Geometrie-Ernte. Was in der Region landet, entscheidet allein die Anker-Regel in tools/build_trailforks_region.py."
+}

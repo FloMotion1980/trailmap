@@ -92,6 +92,16 @@ FORCE_PLACES = {
 #: audit. Bruneck's own "Bruneck - Brunico" is left alone: bilingual and short is genuinely useful here.
 PLACE_RENAME = {
     "Al Plan de Mareo - St. Vigil in Enneberg - San Vigilio di Marebbe": "St. Vigil",
+    # Vinschgau/Meran, 2026-08-26 -- dieselbe Sache eine Region weiter. Gekuerzt wird nur, wo die
+    # zweisprachige Form ueber ~20 Zeichen geht: "Bruneck - Brunico" und "Merano - Meran" bleiben, weil
+    # kurz UND nuetzlich; "St. Leonhard in Passeier - San Leonardo in Passiria" sind 48 Zeichen auf einer
+    # Karte, die grossteils Berg ist. Behalten wird die Form, die auf den Ortsschildern zuerst steht.
+    "St. Leonhard in Passeier - San Leonardo in Passiria": "St. Leonhard",
+    "St. Walburg - Santa Valburga": "St. Walburg",
+    "Graun im Vinschgau - Curon Venosta": "Graun",
+    "Schlanders - Silandro": "Schlanders",
+    "Glurns - Glorenza": "Glurns",
+    "Naturns - Naturno": "Naturns",
 }
 MIN_VILLAGE_POP = 600     # see the note below
 KNOWN_MAX_KM = 2.0        # for places that carry a wikidata/wikipedia tag but are small

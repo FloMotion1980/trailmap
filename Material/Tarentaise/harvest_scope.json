@@ -1,0 +1,29 @@
+{
+ "source_table": "C:/Users/flomo/AppData/Local/Temp/claude/D--Trailmap/6bb4a5e7-4577-48a6-8c75-bb7c5a7105e5/scratchpad/research/savoie.json",
+ "area_pattern": "Belleville Bikepark|Tignes|Sainte-Foy-Tarentaise|M.ribel Bikepark|Les Arcs Bikepark|Val-d'Is.re|Pralognan-la-Vanoise|Bourg St. Maurice|Champagny en Vanoise|Aigueblanche|Bike Park Tignes - Val d'Is.re|S.ez|Bozel|La Plagne|Courchevel|Aime|Peisey-Nancroix|Montvalezan|Valmorel Bike Park|La L.ch.re|Villaroger|Sainte-Foy|Les Menuires|Val Thorens|Tarentaise",
+ "areas": {
+  "Belleville Bikepark": 95,
+  "Tignes": 92,
+  "Sainte-Foy-Tarentaise": 79,
+  "Méribel Bikepark": 51,
+  "Les Arcs Bikepark": 44,
+  "Val-d'Isère": 43,
+  "Pralognan-la-Vanoise": 37,
+  "Bourg St. Maurice": 37,
+  "Champagny en Vanoise": 31,
+  "Aigueblanche": 28,
+  "Bike Park Tignes - Val d'Isère": 25,
+  "Séez": 24,
+  "Bozel": 24,
+  "La Plagne": 24,
+  "Courchevel": 24,
+  "Aime": 19,
+  "Peisey-Nancroix": 18,
+  "Montvalezan": 18,
+  "Valmorel Bike Park": 18,
+  "La Léchère": 17,
+  "Villaroger": 9
+ },
+ "rows": 1029,
+ "note": "Kostenfilter fuer die Geometrie-Ernte. Was in der Region landet, entscheidet allein die Anker-Regel in tools/build_trailforks_region.py."
+}

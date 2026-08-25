@@ -1,0 +1,9 @@
+{
+ "source_table": "C:/Users/flomo/AppData/Local/Temp/claude/D--Trailmap/6bb4a5e7-4577-48a6-8c75-bb7c5a7105e5/scratchpad/research/graubunden.json",
+ "area_pattern": "Davos Klosters",
+ "areas": {
+  "Davos Klosters": 153
+ },
+ "rows": 204,
+ "note": "Kostenfilter fuer die Geometrie-Ernte. Was in der Region landet, entscheidet allein die Anker-Regel in tools/build_trailforks_region.py."
+}

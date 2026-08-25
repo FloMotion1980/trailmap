@@ -1680,6 +1680,102 @@ const REGION_CATALOG = {
       kp_stvigil:      { label: "St. Vigil",       color: "#7c3aed" },
       kp_pustertal:    { label: "Pustertal Nord",  color: "#1d4ed8" }
     }
+  },
+  davos: {
+    countries: ["CH"], label: "Davos Klosters", file: "regions/davos.json", trailCount: 152,
+    bounds: [[46.68095, 9.68973], [46.92491, 9.98828]],
+    // Trailforks fuehrt alle 153 Linien unter EINEM Gebiet "Davos Klosters"; die drei Schubladen hier sind
+    // unsere eigenen und folgen den Taelern, in denen die Linien wirklich liegen (79/43/30, gemessen).
+    // Landwasser ist das Tal unterhalb von Davos -- Monstein, Wiesen, Filisur. Siehe docs/davos.md.
+    subRegions: {
+      dk_davos:      { label: "Davos",      color: "#0f766e" },
+      dk_klosters:   { label: "Klosters",   color: "#b45309" },
+      dk_landwasser: { label: "Landwasser", color: "#7c3aed" }
+    }
+  },
+  vinschgau: {
+    countries: ["IT"], label: "Vinschgau & Meran", file: "regions/vinschgau.json", trailCount: 146,
+    bounds: [[46.44618, 10.39408], [46.82402, 11.30483]],
+    // Die laengsten Linien im ganzen Vergleichsfeld: 2,7 km je Trail. Trailforks kennt hier nur die
+    // Bezirke "Vinschgau" (Streuung 28 km) und "Burggrafenamt" -- die sechs Taeler sind unsere eigene
+    // Einteilung. max_anchor_km ist 10 statt 8, weil die Trails weit in die Seitentaeler reichen.
+    subRegions: {
+      vg_obervinschgau: { label: "Obervinschgau",   color: "#0f766e" },
+      vg_mitte:         { label: "Vinschgau Mitte", color: "#b45309" },
+      vg_naturns:       { label: "Naturns/Schnals", color: "#4d7c0f" },
+      vg_meran:         { label: "Meran",           color: "#1d4ed8" },
+      vg_ulten:         { label: "Ultental",        color: "#7c3aed" },
+      vg_passeier:      { label: "Passeiertal",     color: "#be185d" }
+    }
+  },
+  bormio: {
+    countries: ["IT"], label: "Bormio & Valtellina", file: "regions/bormio.json", trailCount: 179,
+    bounds: [[46.05781, 10.01285], [46.61384, 10.6024]],
+    // Auf Wunsch des Nutzers, aus eigener Erfahrung. Der Zuschnitt geht bewusst ueber das Bormio-Becken
+    // hinaus bis Tirano/Aprica -- ein Tal, eine Region --, hoert aber vor Sondrio auf (60 km talabwaerts).
+    // Livigno ist nicht dabei, das ist seine eigene Region. Siehe docs/bormio.md.
+    subRegions: {
+      bo_bormio:      { label: "Bormio",         color: "#be185d" },
+      bo_valdidentro: { label: "Valdidentro",    color: "#0f766e" },
+      bo_valfurva:    { label: "Valfurva",       color: "#b45309" },
+      bo_valdisotto:  { label: "Valdisotto/Oga", color: "#4d7c0f" },
+      bo_grosio:      { label: "Grosio/Tirano",  color: "#1d4ed8" },
+      bo_aprica:      { label: "Aprica/Teglio",  color: "#7c3aed" }
+    }
+  },
+  voralpen: {
+    countries: ["DE"], label: "Bayerische Voralpen", file: "regions/voralpen.json", trailCount: 358,
+    bounds: [[47.4016, 10.6422], [47.77176, 12.01505]],
+    // Die groesste deutsche Luecke der Trailforks-Recherche und die einzige mit alpinen Laengen. Acht
+    // Reviere, die geografisch zusammenhaengen, aber keinen gemeinsamen Namen tragen. BEWUSST DRAUSSEN:
+    // Trailforks' Gebiet "Isartrails" ist die Muenchner Isar, 30-50 km noerdlich -- mitgeerntet, ohne
+    // Anker, und damit von der Regel selbst verworfen (45 Zeilen, im Bau-Bericht genannt).
+    subRegions: {
+      bv_garmisch:   { label: "Garmisch",       color: "#0f766e" },
+      bv_mittenwald: { label: "Mittenwald",     color: "#0891b2" },
+      bv_ammergau:   { label: "Ammergau",       color: "#4d7c0f" },
+      bv_fuessen:    { label: "Füssen",         color: "#b45309" },
+      bv_kochel:     { label: "Kochel/Walchen", color: "#1d4ed8" },
+      bv_lenggries:  { label: "Lenggries/Tölz", color: "#7c3aed" },
+      bv_tegernsee:  { label: "Tegernsee",      color: "#be185d" },
+      bv_schliersee: { label: "Schliersee",     color: "#475569" }
+    }
+  },
+  aostatal: {
+    countries: ["IT"], label: "Aostatal", file: "regions/aostatal.json", trailCount: 425,
+    bounds: [[45.54789, 6.80697], [45.96102, 7.92745]],
+    // Sieben Seitentaeler, die alle in dasselbe Haupttal muenden -- die Einteilung folgt ihnen, nicht
+    // Trailforks' 42 Gemeindekaesten. max_anchor_km ist 11, weil die Hochuebergaenge (Col de la Seigne,
+    // Grand Col Ferret, Col Chavannes) 9-11 km vom naechsten Dorf liegen. Siehe docs/aostatal.md.
+    subRegions: {
+      ao_aosta:        { label: "Aosta",         color: "#be185d" },
+      ao_monte_bianco: { label: "Monte Bianco",  color: "#0f766e" },
+      ao_paradiso:     { label: "Gran Paradiso", color: "#4d7c0f" },
+      ao_cervino:      { label: "Cervino",       color: "#1d4ed8" },
+      ao_monterosa:    { label: "Monte Rosa",    color: "#b45309" },
+      ao_bassa_valle:  { label: "Bassa Valle",   color: "#7c3aed" },
+      ao_valpelline:   { label: "Valpelline",    color: "#475569" }
+    }
+  },
+  tarentaise: {
+    countries: ["FR"], label: "Tarentaise & Vanoise", file: "regions/tarentaise.json", trailCount: 710,
+    bounds: [[45.25716, 6.41482], [45.72123, 7.03515]],
+    // Die groesste Region der App nach dem Gardasee. Bewusst nur das Isere-Tal: die Maurienne hinter der
+    // Vanoise (Val Cenis, Aussois, Modane, Valloire) und das Beaufortain noerdlich davon sind eigene
+    // Massive und bleiben draussen. Neun Schubladen, jede ein Skigebiet oder Talabschnitt, den ein Fahrer
+    // als Einheit kennt. ACHTUNG: die Schwierigkeit ist Trailforks' -- hier sitzen aber Bikeparks mit
+    // eigenen Trailtabellen, siehe docs/backlog.md 3b. Details: docs/tarentaise.md.
+    subRegions: {
+      tv_troisvallees: { label: "Les 3 Vallées", color: "#be185d" },
+      tv_tignes:       { label: "Tignes",        color: "#0f766e" },
+      tv_valdisere:    { label: "Val d'Isère",   color: "#0891b2" },
+      tv_saintefoy:    { label: "Sainte-Foy",    color: "#4d7c0f" },
+      tv_bourg:        { label: "Bourg & Séez",  color: "#b45309" },
+      tv_lesarcs:      { label: "Les Arcs",      color: "#1d4ed8" },
+      tv_laplagne:     { label: "La Plagne",     color: "#7c3aed" },
+      tv_valmorel:     { label: "Valmorel",      color: "#475569" },
+      tv_vanoise:      { label: "Vanoise",       color: "#7f1d1d" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;
