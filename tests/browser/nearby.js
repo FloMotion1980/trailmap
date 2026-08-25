@@ -1,7 +1,7 @@
 // @suite   nearby
 // @area    Umgebungssuche: Anker, Radius, Dimmen auf der Karte, Filtern in der Liste, Entfernungs-Sortierung
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches nearbyAnchor, nearbyRadiusKm, nearbyDistanceKm, nearbyPasses, nearbyVisibleCount, nearbyDistanceLabel, setNearbyAnchor, clearNearbyAnchor, drawNearbyAnchor, syncNearbyChrome, nearbyBar, nearbyBarText, nearbyRadius, nearbyRadiusValue, nearby-touch-only, nearby-slider-wrap, nearby-available, nearby-chip, trail-meta-dist, baselineLineOpacity, trailPassesFilters, TRAIL_SORT_COMPARE, nearbyPickArmed, armNearbyPick, disarmNearbyPick, syncNearbyPickChrome, nearbyPickBtn, nearbyPickHint, nearby-picking
+// @touches nearbyAnchor, nearbyRadiusKm, nearbyDistanceKm, nearbyPasses, nearbyVisibleCount, nearbyDistanceLabel, setNearbyAnchor, clearNearbyAnchor, drawNearbyAnchor, syncNearbyChrome, nearbyBar, nearbyBarText, nearbyRadius, nearbyRadiusValue, nearby-touch-only, nearby-slider-wrap, nearby-available, nearby-chip, trail-meta-dist, baselineLineOpacity, trailPassesFilters, TRAIL_SORT_COMPARE, nearbyPickArmed, armNearbyPick, disarmNearbyPick, syncNearbyPickChrome, syncNearbyEntryVisibility, nearbyPickBtn, nearbyPickLabel, nearby-picking, nearby-open, closeMapSearch
 // @needs   region=finale, builder=off
 //
 // **Braucht FINALE**, wie die rating-Suite und aus verwandtem Grund: die Frage "welche guten Trails sind
@@ -149,13 +149,24 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
   clearNearbyAnchor();
   await TM.wait(350);
   const pickBtn = TM.$("#nearbyPickBtn");
-  T.ok("der Knopf steht im Bedienstapel", !!pickBtn && pickBtn.parentElement.id === "mapControls",
-       pickBtn ? pickBtn.parentElement.id : null, "mapControls");
+  // Auf der KARTE und nicht im Bedienstapel: der ist touch-only (#locateCluster steht am Schreibtisch auf
+  // display:none), und genau daran fehlte der Knopf dort erst ganz (Nutzer: "Am Desktop habe ich keinen
+  // Knopf"). Diese Zusicherung ist die Regel dazu -- sie faellt, sobald ihn jemand in den Stapel zuruecklegt.
+  T.ok("der Knopf steht auf der Karte, nicht im Bedienstapel",
+       !!pickBtn && pickBtn.parentElement.classList.contains("map-wrap"),
+       pickBtn ? (pickBtn.parentElement.className || pickBtn.parentElement.id) : null, "map-wrap");
+  T.ok("und ist auch am Schreibtisch sichtbar", shown(pickBtn), getComputedStyle(pickBtn).display, "flex");
   pickBtn.click();
   await TM.wait(400);
-  T.ok("der Hinweis sagt, was zu tun ist", shown(TM.$("#nearbyPickHint")),
-       getComputedStyle(TM.$("#nearbyPickHint")).display, "flex");
-  T.ok("und der Knopf zeigt sich als aktiv", pickBtn.classList.contains("on"), pickBtn.className, "on");
+  // Der Knopf bleibt STEHEN, wird blau und sagt selbst, was er will -- ein zweites Element an derselben
+  // Stelle gab es einen Tag lang und ist weg (Nutzer, 2026-08-25).
+  T.ok("der Knopf bleibt stehen und ist aktiv",
+       shown(pickBtn) && pickBtn.classList.contains("on"),
+       [getComputedStyle(pickBtn).display, pickBtn.className], "sichtbar und on");
+  T.ok("er ist blau hinterlegt", /rgb\(31, 95, 158\)|rgb\(47, 116, 192\)/.test(getComputedStyle(pickBtn).backgroundColor),
+       getComputedStyle(pickBtn).backgroundColor, "blau");
+  T.ok("und sagt selbst, was zu tun ist", /Karte antippen/.test(pickBtn.textContent),
+       pickBtn.textContent.trim(), "Punkt auf der Karte antippen");
   // DAS ist der Mechanismus: ohne pointer-events auf den Linien landet jeder Tipp auf der Karte, also
   // braucht der Klick-Handler keinen Sonderfall -- und unsere eigene Tipp-Abfangung findet per
   // elementFromPoint keine interaktive Linie und laesst die Beruehrung in Ruhe.
@@ -169,8 +180,9 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
   at(0.4, 0.5);
   await TM.wait(900);
   T.ok("der Tipp setzt den Anker", shown(bar()), getComputedStyle(bar()).display, "flex");
-  T.ok("der Modus ist danach aus", !pickBtn.classList.contains("on") && !shown(TM.$("#nearbyPickHint")),
-       [pickBtn.className, getComputedStyle(TM.$("#nearbyPickHint")).display], "aus");
+  T.ok("der Modus ist danach aus", !pickBtn.classList.contains("on"), pickBtn.className, "nicht on");
+  T.ok("und der Knopf ist weg, weil die Zeile seinen Platz hat", !shown(pickBtn),
+       getComputedStyle(pickBtn).display, "none");
   // FRISCH abfragen, nicht `aLine` von vorher: der Anker loest ein render() aus, und ein Trail ausserhalb
   // des Radius verliert dabei seine Elemente. Ein abgemeldeter Knoten liefert "none" und haette den Fall
   // gruen gemeldet, obwohl er nichts geprueft hat (gemessen).
@@ -193,6 +205,28 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
   at(0.45, 0.45);
   await TM.wait(600);
   T.ok("die Zeile bleibt weg", !shown(bar()), getComputedStyle(bar()).display, "none");
+
+  T.test("Suche und Umgebungssuche schalten sich gegenseitig ab");
+  // Sie belegen dieselbe Ecke der Karte, und beide zugleich war "etwas doof" (Nutzer, 2026-08-25). Statt sie
+  // uebereinander zu stapeln -- eine Ordnung, die man sich merken muss -- schaltet das eine das andere ab.
+  clearNearbyAnchor();
+  await TM.wait(300);
+  const input = TM.$("#trailSearchInput");
+  setNearbyAnchor(ANCHOR);
+  await TM.wait(500);
+  input.value = "trail";
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.wait(700);
+  T.ok("ein Suchbegriff beendet die Umgebungssuche", !shown(bar()), getComputedStyle(bar()).display, "none");
+  // Und die Gegenrichtung: der Anker leert das Suchfeld.
+  setNearbyAnchor(ANCHOR);
+  await TM.wait(700);
+  T.eq("und ein neuer Anker leert die Suche", input.value, "");
+  T.ok("die Zeile ist dann wieder da", shown(bar()), getComputedStyle(bar()).display, "flex");
+  // Ein Klick ins LEERE Feld darf einen Anker nicht wegwerfen -- nur ein echter Begriff schaltet ab.
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.wait(500);
+  T.ok("ein leeres Feld laesst den Anker stehen", shown(bar()), getComputedStyle(bar()).display, "flex");
 
   T.test("nach dem Aufraeumen stehen Sortierung und Gruppierung wieder auf den URSPRUNGSWERTEN");
   // Nicht auf den Vorgaben der App (Nutzer, 2026-08-25): wer vorher nach Laenge sortiert und nach

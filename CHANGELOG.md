@@ -92,6 +92,21 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   Südtirol taggt jede Ortschaft mehrsprachig, St. Vigil kam als 60 Zeichen langes
   „Al Plan de Mareo - St. Vigil in Enneberg - San Vigilio di Marebbe" auf die Karte.
 
+## 2026-08-25 (Umgebungssuche, dritter Durchgang)
+- **Der Eingang ist eine Pille auf der Karte, kein Knopf im Bedienstapel** — denn der Stapel ist touch-only
+  (`#locateCluster` steht am Schreibtisch auf `display:none`), weshalb dort erst gar kein Knopf war
+  („Am Desktop habe ich keinen Knopf"). Als eigenes Element steht „📌 In der Nähe" auf beiden Layouts an
+  derselben Kante, an der danach die Zeile erscheint.
+- **Aktiv ist die Pille blau hinterlegt und sagt selbst, was zu tun ist** („Punkt auf der Karte antippen",
+  weiße Schrift auf `--blau`) — auf Wunsch des Nutzers, und damit ist der separate Hinweis, der einen
+  Durchgang lang an derselben Stelle stand, überflüssig geworden: ein Element, zwei Zustände.
+- **Suche und Umgebungssuche schalten sich gegenseitig ab**, statt sich in derselben Ecke zu stapeln
+  („Etwas doof. Suche und Positionsfilter liegen auf der Karte übereinander"). Ein Suchbegriff beendet die
+  Umgebungssuche, ein neuer Anker leert das Suchfeld; ein Klick ins *leere* Feld lässt einen gesetzten Anker
+  in Ruhe. Das kurzlebige Untereinander-Schieben (inklusive live gemessener Suchhöhe) ist damit weg — eine
+  Ordnung, die man sich merken muss, ist keine.
+- Suite `nearby`: **12 Fälle / 56 Checks**, gemessen in 34,8 s.
+
 ## 2026-08-25 (Umgebungssuche, zweiter Durchgang am Gerät)
 - **Die Geste ist jetzt „erst der Knopf, dann tippen"** — 📌 im Bedienstapel schaltet den Punkt-Modus ein,
   ein Hinweis sagt „Punkt auf der Karte antippen", der nächste Tipp setzt den Anker. Der lange Druck ist weg:

@@ -1968,29 +1968,43 @@ html.landscape-compact #nearbyBar {
   width: min(240px, calc(100vw - 6px - 150px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
 }
 html.landscape-compact .nearby-summary { margin-top: 3px; padding: 2px 8px; }
+/* Der Eingang: eine Pille oben links, auf BEIDEN Layouts. Nicht im Bedienstapel, weil der touch-only ist
+   (#locateCluster: display:none am Schreibtisch) -- genau daran fehlte der Knopf dort zuerst ganz. Sie steht
+   an derselben Kante wie Hinweis und Zeile und verschwindet, sobald einer von beiden da ist: drei Dinge
+   uebereinander an einer Stelle waeren zwei zu viel. */
+#nearbyPickBtn { position: absolute; z-index: 1250;
+  top: calc(16px + env(safe-area-inset-top, 0px)); left: calc(16px + env(safe-area-inset-left, 0px));
+  display: flex; align-items: center; gap: 6px; padding: 6px 10px;
+  border: 1.5px solid #e3e6da; border-radius: 10px; background: rgba(255,255,255,0.82);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  font-family: Arial, sans-serif; font-size: 12px; color: var(--forest-dark); cursor: pointer;
+  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.3)); }
+/* Aktiv = blau hinterlegt, auf Wunsch des Nutzers: solange der Knopf blau ist, wartet die Karte auf einen
+   Tipp. Weisse Schrift darauf, und der Text im Knopf wechselt mit (siehe syncNearbyPickChrome). Nicht
+   --highlight wie bei den anderen "an"-Zustaenden, weil dieser hier kein Schalter ist, den man vergisst,
+   sondern eine Aufforderung, die man gleich erfuellt. */
+#nearbyPickBtn.on { border-color: #1f5f9e; background: var(--blau); color: #fff; }
+#nearbyPickBtn:active { background: rgba(238,242,234,0.92); }
+/* Waehrend Hinweis oder Zeile stehen, ist der Eingang erledigt -- ueber eine Klasse, die
+   syncNearbyEntryVisibility() setzt. Nicht per Geschwisterselektor (haengt an der DOM-Reihenfolge) und
+   nicht per `:has()` (kennen aeltere iOS-Fassungen nicht): beides waere still gescheitert und haette den
+   Knopf unter dem Hinweis stehen lassen. */
+.map-wrap.nearby-open #nearbyPickBtn { display: none; }
+html.ride-mode #nearbyPickBtn { display: none; }
+@media (max-width: 768px), (pointer: coarse) {
+  /* Am Lenker: hoeher, und die Schrift eine Spur groesser. */
+  #nearbyPickBtn { padding: 8px 11px; font-size: 13px; }
+}
+/* Kein Verschieben untereinander mehr: Suche und Umgebungssuche schliessen sich AUS (siehe closeMapSearch()
+   und updateSearch()). Der Nutzer hat beide zugleich als "etwas doof" gemeldet, und ein Stapel aus zwei
+   Ueberlagerungen in derselben Ecke ist eine Ordnung, die man sich merken muss -- das Abschalten ist keine. */
+
 /* Der armierte Punkt-Modus. Die pointer-events-Regel ist der ganze Mechanismus: waehrend er laeuft, nimmt
    sie den Trail-Linien ihre Klickbarkeit, damit jeder Tipp auf der KARTE landet -- so braucht der
    Klick-Handler keinen Sonderfall, und unsere eigene Tipp-Abfangung (die per elementFromPoint nach einer
    interaktiven Linie sucht) laesst die Beruehrung von sich aus in Ruhe. */
 .leaflet-container.nearby-picking { cursor: crosshair; }
 .leaflet-container.nearby-picking .leaflet-interactive { pointer-events: none; }
-/* Der Hinweis steht an derselben Kante wie die Zeile, die er ankuendigt -- 16px, wie #locateCluster und die
-   schwebende Suche. */
-#nearbyPickHint { display: none; position: absolute; z-index: 1250;
-  top: calc(16px + env(safe-area-inset-top, 0px)); left: calc(16px + env(safe-area-inset-left, 0px));
-  align-items: center; gap: 8px; padding: 5px 10px; border-radius: 8px;
-  background: rgba(255,255,255,0.82); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-  border: 1.5px solid var(--highlight);
-  font-family: Arial, sans-serif; font-size: 12px; color: var(--forest-dark);
-  filter: drop-shadow(0 4px 14px rgba(0,0,0,0.3)); }
-#nearbyPickHint.open { display: flex; }
-/* Beides zugleich waere doppelt: solange der Hinweis steht, ist noch kein Punkt gewaehlt. */
-#nearbyPickHint.open ~ #nearbyBar { display: none; }
-html.landscape-compact #nearbyPickHint {
-  top: calc(3px + env(safe-area-inset-top, 0px)); left: calc(3px + env(safe-area-inset-left, 0px));
-}
-html.ride-mode #nearbyPickHint { display: none; }
-/* Im RIDE-Modus nichts davon: dort wird nichts geaendert (Nutzer, zum Konzept). */
 html.ride-mode #nearbyBar { display: none; }
 .nearby-touch-only { display: none; }
 @media (max-width: 768px), (pointer: coarse) {

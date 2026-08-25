@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=216" />
+<link rel="stylesheet" href="style.css?v=218" />
 </head>
 <body>
 <div id="fatalError">
@@ -330,14 +330,6 @@
                entry point into riding, so it leads the row; being a permanent mode switch like #bearingBtn,
                not a conditional cell, it can sit anywhere except last (see #locateBtn's own comment). -->
           <button id="rideModeBtn" class="ride-btn" title="RIDE-Modus starten" aria-pressed="false">🚴‍♂️</button>
-          <!-- Umgebungssuche: erst hier tippen, dann auf die Karte (2026-08-25). Ein sichtbarer Knopf statt
-               einer versteckten Geste -- das lange Druecken war nicht auffindbar ("aktuell fehlt noch eine
-               Art Hinweis, dass das ueberhaupt geht") und loeste auf iOS zusaetzlich das Systemmenue aus.
-               ZWEITE Zelle, direkt hinter RIDE: die beiden starten etwas, 🧭 und die Positionszelle gehoeren
-               zusammen (Ausrichtung und Standort), und die Positionszelle bleibt die letzte, weil sie die
-               einzige bedingte ist -- eine erscheinende Zelle darf keine verschieben, auf die man zielt. -->
-          <button id="nearbyPickBtn" title="Trails in der Nähe: Punkt auf der Karte wählen"
-                  aria-pressed="false">📌</button>
           <!-- The north-up / heading-up switch. In this cluster at the user's request ("ein Button dort wo
                auch der Zentrieren Button erscheint", 2026-08-01), and permanently visible, since it is a
                mode and not a reaction to anything. -->
@@ -414,12 +406,13 @@
            oben die Pille mit dem Bedienelement und dem ✕, darunter die Zusammenfassung als eigener kleiner
            Chip. Dieselbe Stelle, dieselben Abstaende, dieselbe Glas-Optik -- und dieselben 16px wie der
            Bedienstapel oben rechts, damit die drei auf einer Linie liegen. -->
-      <!-- Sagt, was der armierte Modus von einem will, und traegt seinen eigenen Ausgang. Steht an derselben
-           Stelle wie die Zeile, die danach erscheint -- so wandert der Blick nicht. -->
-      <div id="nearbyPickHint">
-        <span>Punkt auf der Karte antippen</span>
-        <button type="button" id="nearbyPickHintClose" class="nearby-summary-btn" title="Abbrechen">✕</button>
-      </div>
+      <!-- Der Eingang in die Umgebungssuche, und bewusst NICHT im Bedienstapel: der ist touch-only
+           (#locateCluster steht am Schreibtisch auf display:none), weshalb der Knopf dort zuerst ganz fehlte
+           (Nutzer, 2026-08-25: "Am Desktop habe ich keinen Knopf"). Als eigenes Element steht er auf beiden
+           Layouts an derselben Stelle -- derselben, an der danach Hinweis und Zeile erscheinen, damit der
+           Blick nicht wandert. Weg ist er, sobald einer der beiden da ist (siehe CSS). -->
+      <button type="button" id="nearbyPickBtn" title="Trails in der Nähe: Punkt auf der Karte wählen"
+              aria-pressed="false"><span aria-hidden="true">📌</span> <span id="nearbyPickLabel">In der Nähe</span></button>
       <div id="nearbyBar">
         <div class="nearby-controls">
           <!-- Nur auf dem Touch-Layout: eine eigene Position gibt es am Laptop in der Regel nicht
@@ -1997,6 +1990,14 @@ document.getElementById("showPlacesToggle").addEventListener("change", (e) => {
   // state behind -- term cleared, sections restored, ✕ hidden again.
   function updateSearch(){
     searchTerm = rdNorm(trailSearchEl.value);
+    // Suche und Umgebungssuche belegen dieselbe Ecke der Karte, und beide zugleich waren "etwas doof"
+    // (Nutzer, 2026-08-25). Statt sie uebereinander zu stapeln, schaltet das eine das andere ab -- hier die
+    // Richtung Suche -> Umgebung. Nur bei einem echten Begriff: ein Klick ins leere Feld soll einen
+    // gesetzten Anker nicht wegwerfen.
+    if (searchTerm) {
+      if (typeof disarmNearbyPick === "function") disarmNearbyPick();
+      if (typeof clearNearbyAnchor === "function") clearNearbyAnchor();
+    }
     trailSearchWrapEl.classList.toggle("has-value", trailSearchEl.value.length > 0);
     applySearchSectionExpansion(!!searchTerm);
     syncSearchFieldLocation();
@@ -6194,6 +6195,7 @@ function syncNearbyChrome(){
   const bar = document.getElementById("nearbyBar");
   const barText = document.getElementById("nearbyBarText");
   if (bar) bar.classList.toggle("open", on);
+  if (typeof syncNearbyEntryVisibility === "function") syncNearbyEntryVisibility();
   // Ein leerer Radius ist ein Ergebnis, kein Fehler -- die Zeile nennt die Zahl und nicht die Ursache.
   // Touren zaehlen mit, stehen aber getrennt: sie liegen in ihrem eigenen Abschnitt, und "16 Trails" waere
   // gelogen, wenn drei davon Touren sind (gemessen am Gardasee: 13 Trails und 3 Touren im selben Radius).
@@ -6207,6 +6209,7 @@ function syncNearbyChrome(){
 }
 // Ein neuer Anker macht jede gemerkte Entfernung ungueltig -- sie gilt genau fuer einen Punkt.
 function setNearbyAnchor(latlng){
+  if (typeof closeMapSearch === "function") closeMapSearch();
   const first = !nearbyAnchor;
   nearbyAnchor = [latlng.lat !== undefined ? latlng.lat : latlng[0],
                   latlng.lng !== undefined ? latlng.lng : latlng[1]];
@@ -6274,13 +6277,36 @@ function clearNearbyAnchor(){
 let nearbyPickArmed = false;
 function syncNearbyPickChrome(){
   const btn = document.getElementById("nearbyPickBtn");
+  const label = document.getElementById("nearbyPickLabel");
   if (btn) { btn.classList.toggle("on", nearbyPickArmed); btn.setAttribute("aria-pressed", String(nearbyPickArmed)); }
-  const hint = document.getElementById("nearbyPickHint");
-  if (hint) hint.classList.toggle("open", nearbyPickArmed);
+  // Der Knopf BLEIBT stehen und wird blau, statt zu verschwinden und einen Hinweis an seiner Stelle zu
+  // zeigen (Nutzer, 2026-08-25: "solle blau hinterlegt werden, solange er aktiv ist"). Damit sagt er selbst,
+  // was er von einem will -- ein zweites Element an derselben Stelle braucht es dafuer nicht.
+  if (label) label.textContent = nearbyPickArmed ? "Punkt auf der Karte antippen" : "In der Nähe";
+  if (btn) btn.title = nearbyPickArmed ? "Abbrechen" : "Trails in der Nähe: Punkt auf der Karte wählen";
   map.getContainer().classList.toggle("nearby-picking", nearbyPickArmed);
+  syncNearbyEntryVisibility();
+}
+// Der Eingangsknopf verschwindet, sobald Hinweis oder Zeile an derselben Stelle stehen. Als KLASSE an
+// .map-wrap und nicht per CSS-Geschwisterregel: die haengt an der DOM-Reihenfolge, und `:has()` kennen
+// aeltere iOS-Fassungen nicht -- beides waere still gescheitert und haette den Knopf unter dem Hinweis
+// stehen lassen.
+function syncNearbyEntryVisibility(){
+  const wrap = document.querySelector(".map-wrap");
+  if (wrap) wrap.classList.toggle("nearby-open", !!nearbyAnchor);
+}
+// Die Gegenrichtung zu updateSearch(): wer die Umgebungssuche einschaltet, schaltet die Suche ab -- sie
+// belegen dieselbe Ecke, und der Begriff im Feld ist genau das, was die Suche dort haelt.
+function closeMapSearch(){
+  const input = document.getElementById("trailSearchInput");
+  if (!input || !input.value) return;
+  input.value = "";
+  input.dispatchEvent(new Event("input", { bubbles: true }));   // laeuft durch updateSearch()
+  input.blur();
 }
 function armNearbyPick(){
   if (rideMode || builderMode) return;
+  closeMapSearch();
   nearbyPickArmed = true;
   syncNearbyPickChrome();
 }
@@ -6292,7 +6318,6 @@ function disarmNearbyPick(){
 document.getElementById("nearbyPickBtn").addEventListener("click", () => {
   if (nearbyPickArmed) disarmNearbyPick(); else armNearbyPick();
 });
-document.getElementById("nearbyPickHintClose").addEventListener("click", disarmNearbyPick);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") disarmNearbyPick(); });
 // Das Kontextmenue des Browsers bleibt auf der Karte unterdrueckt, auch ohne eigene Rechtsklick-Geste: ein
 // langer Druck auf eine Karte soll kein Systemmenue oeffnen, und markierbarer Text gibt es dort nicht.
@@ -8971,7 +8996,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v216"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v218"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
