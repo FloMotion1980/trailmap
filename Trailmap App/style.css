@@ -1995,9 +1995,13 @@ html.ride-mode #nearbyPickBtn { display: none; }
   /* Am Lenker: hoeher, und die Schrift eine Spur groesser. */
   #nearbyPickBtn { padding: 8px 11px; font-size: 13px; }
 }
-/* Kein Verschieben untereinander mehr: Suche und Umgebungssuche schliessen sich AUS (siehe closeMapSearch()
-   und updateSearch()). Der Nutzer hat beide zugleich als "etwas doof" gemeldet, und ein Stapel aus zwei
-   Ueberlagerungen in derselben Ecke ist eine Ordnung, die man sich merken muss -- das Abschalten ist keine. */
+/* Kein Verschieben untereinander: Suche und Umgebungssuche schliessen sich AUS (siehe closeMapSearch() und
+   updateSearch()). Der Nutzer hat beide zugleich als "etwas doof" gemeldet, und ein Stapel aus zwei
+   Ueberlagerungen in derselben Ecke ist eine Ordnung, die man sich merken muss -- das Abschalten ist keine.
+   Eine Stufe frueher gilt dasselbe fuer den EINGANG: die Pille steht dauerhaft in dieser Ecke, auch ohne
+   Anker, und die Suche legte sich beim Oeffnen darueber. Also tritt sie zur Seite, solange die Suche
+   schwebt, und ist zurueck, sobald das Feld wieder zu ist. */
+.map-wrap.search-floating #nearbyPickBtn { display: none; }
 
 /* Der armierte Punkt-Modus. Die pointer-events-Regel ist der ganze Mechanismus: waehrend er laeuft, nimmt
    sie den Trail-Linien ihre Klickbarkeit, damit jeder Tipp auf der KARTE landet -- so braucht der

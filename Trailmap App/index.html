@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=218" />
+<link rel="stylesheet" href="style.css?v=219" />
 </head>
 <body>
 <div id="fatalError">
@@ -2411,6 +2411,12 @@ function syncSearchFieldLocation(){
   // (.has-value), so an empty-but-"engaged" field had no way to close at all.
   const isFocused = document.activeElement === document.getElementById("trailSearchInput");
   const shouldFloat = (isFocused || !!searchTerm) && !mobileDrawerOpen;
+  // Beide wollen dieselbe Ecke oben links, und das gegenseitige Abschalten allein reicht dafuer nicht: der
+  // EINGANG der Umgebungssuche steht ja dauerhaft dort, auch ohne Anker, und die Suche legte sich beim
+  // Oeffnen darueber (Nutzer, 2026-08-25: "die Suche ist über dem Button"). Solange die Suche schwebt,
+  // tritt die Pille zur Seite -- dieselbe Regel wie beim Abschalten, nur eine Stufe frueher. Die Klasse
+  // sitzt vor der Verzweigung nach Layout, weil beide Fassungen der schwebenden Suche dieselbe Ecke nutzen.
+  mapWrap.classList.toggle("search-floating", shouldFloat);
 
   if (mobile) {
     wrap.classList.remove("floating-fixed");
@@ -8996,7 +9002,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v218"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v219"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

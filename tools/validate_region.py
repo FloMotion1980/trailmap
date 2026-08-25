@@ -117,12 +117,18 @@ def catalog():
 
 
 def check(key, cat):
-    """Return a list of problem strings for one region (empty means clean)."""
+    """Return (bad, warn) problem-string lists for one region (empty means clean).
+
+    `bad` fails the run; `warn` is printed but not fatal -- for checks where a real region can
+    legitimately be clean (e.g. a loop with no per-segment breakdown at all, see buildTrailLayer's
+    "no TRAIL_SEGMENTS data" branch) but where flagging it is still worth a human glance.
+    """
     path = os.path.join(REGIONS, key + ".json")
     if not os.path.exists(path):
-        return ["regions/%s.json missing (referenced by REGION_CATALOG)" % key]
+        return ["regions/%s.json missing (referenced by REGION_CATALOG)" % key], []
     d = json.load(open(path, encoding="utf-8"))
     bad = []
+    warn = []
     trails = d.get("lineTrails") or []
     geo = d.get("trailGeo") or {}
     prof = d.get("elevationProfiles") or {}
@@ -213,6 +219,17 @@ def check(key, cat):
         # rebuilt anyway, the ranges belong to the concatenated segment line: distStart = cum[offset],
         # distEnd = cum[offset+n-1], 3 decimals, the way tools/build_gardasee_tours.py computes them.
 
+    # A `loop:true` trail with zero trailSegments entries is sometimes legitimate (a route with no
+    # per-stretch breakdown at all draws as one flat-dashed line, see buildTrailLayer's "no TRAIL_SEGMENTS
+    # data" branch) -- but it is also exactly what a region-rebuilding script silently dropping the WHOLE
+    # trailSegments key looks like (regions/donnersberg.json lost it outright in commit b881699, 2026-08-13,
+    # and nothing caught it for several commits until the user noticed "Wasser & Holz" render with no
+    # coloured component-trail stretches). Soft warning, not a hard failure, since both cases are real.
+    for t in trails:
+        if t.get("loop") and not segs.get(t["id"]):
+            warn.append("%s: loop:true but has zero trailSegments entries -- legitimate if it never had a "
+                        "per-segment breakdown, but check it didn't just lose one" % t["id"])
+
     # A region with no place labels is unreadable zoomed out -- and it is a silent failure, because nothing
     # else complains. It happened on 2026-07-30: a rebuild of Bike Kingdom's trail geometry rewrote the region
     # file without its `places`, and the tours script that runs afterwards only restores lifts and tours. Every
@@ -286,7 +303,7 @@ def check(key, cat):
         elif have != want:
             bad.append("regions/version.json hash is stale (%s, file is %s) -- edits will not reach "
                        "cached clients; run tools/update_region_versions.py" % (have, want))
-    return bad
+    return bad, warn
 
 
 def main():
@@ -297,7 +314,7 @@ def main():
         print("? %s is not in REGION_CATALOG" % w)
     failed = bool(unknown)
     for key in [w for w in wanted if w in cats]:
-        problems = check(key, cats[key])
+        problems, warnings = check(key, cats[key])
         if problems:
             failed = True
             print("FAIL %s (%d)" % (key, len(problems)))
@@ -308,6 +325,8 @@ def main():
             print("ok   %-16s %3d trails, %2d lifts, %d sub-regions"
                   % (key, len(d["lineTrails"]), len(d.get("lifts") or []),
                      len(cats[key]["subRegions"])))
+        for w in warnings:
+            print("warn %s: %s" % (key, w))
     return 1 if failed else 0
 
 

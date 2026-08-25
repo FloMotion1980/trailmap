@@ -228,6 +228,20 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
   await TM.wait(500);
   T.ok("ein leeres Feld laesst den Anker stehen", shown(bar()), getComputedStyle(bar()).display, "flex");
 
+  // Und eine Stufe frueher gilt dasselbe fuer den EINGANG: die Pille steht dauerhaft in dieser Ecke, auch
+  // ohne Anker -- die Suche legte sich beim Oeffnen darueber (Nutzer: "die Suche ist über dem Button").
+  clearNearbyAnchor();
+  await TM.wait(400);
+  const pill = TM.$("#nearbyPickBtn");
+  T.ok("ohne Suche steht die Pille da", shown(pill), getComputedStyle(pill).display, "flex");
+  input.value = "trail";
+  input.dispatchEvent(new Event("input", { bubbles: true }));
+  await TM.wait(700);
+  T.ok("mit schwebender Suche tritt sie zur Seite", !shown(pill), getComputedStyle(pill).display, "none");
+  TM.$("#trailSearchClear").click();
+  await TM.wait(800);
+  T.ok("und ist zurueck, sobald das Feld zu ist", shown(pill), getComputedStyle(pill).display, "flex");
+
   T.test("nach dem Aufraeumen stehen Sortierung und Gruppierung wieder auf den URSPRUNGSWERTEN");
   // Nicht auf den Vorgaben der App (Nutzer, 2026-08-25): wer vorher nach Laenge sortiert und nach
   // Schwierigkeit gruppiert hatte, will das danach wieder haben. Bis dahin ging nur die Gruppierung zurueck,

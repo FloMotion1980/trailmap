@@ -105,7 +105,10 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   Umgebungssuche, ein neuer Anker leert das Suchfeld; ein Klick ins *leere* Feld lässt einen gesetzten Anker
   in Ruhe. Das kurzlebige Untereinander-Schieben (inklusive live gemessener Suchhöhe) ist damit weg — eine
   Ordnung, die man sich merken muss, ist keine.
-- Suite `nearby`: **12 Fälle / 56 Checks**, gemessen in 34,8 s.
+- **Und eine Stufe früher gilt dasselbe für den Eingang**: die Pille steht dauerhaft in dieser Ecke, auch
+  ohne Anker — die Suche legte sich beim Öffnen darüber („die Suche ist über dem Button"). Sie tritt jetzt
+  zur Seite, solange die Suche schwebt, und ist zurück, sobald das Feld zu ist.
+- Suite `nearby`: **12 Fälle / 59 Checks**, gemessen in 21,4 s.
 
 ## 2026-08-25 (Umgebungssuche, zweiter Durchgang am Gerät)
 - **Die Geste ist jetzt „erst der Knopf, dann tippen"** — 📌 im Bedienstapel schaltet den Punkt-Modus ein,
