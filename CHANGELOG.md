@@ -21,6 +21,34 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-25 (Umgebungssuche: „Trails in der Nähe")
+- **Gebaut, nach dem Konzept vom Vortag** (`docs/naehe-konzept.md`, Suite `tests/browser/nearby.js`, 9 Fälle
+  / 38 Checks, zwei geprüfte Mutationen). Ein **Anker** auf der Karte — langer Druck, am Schreibtisch
+  Rechtsklick, oder 📍 in der Ankerzeile für die eigene Position — plus ein **Radius-Regler mit Trefferzahl**.
+  Gemessen wird die Luftlinie zur nächsten Stelle eines Trails. Nichts davon wird gespeichert; im RIDE-Modus
+  ist alles davon aus.
+- **Die Karte dimmt, die Liste filtert — durch EINE gemeinsame Regel** (`nearbyPasses`). Das löst einen
+  Widerspruch im Konzept selbst, das beides verlangte: `trailPassesFilters` räumt die Karte, „gedimmt, nicht
+  ausgeblendet" will das Gegenteil. Gebaut ist die Fassung, die der Nutzer sichtbar beschrieben hat — dimmen
+  auf der Karte (dieselbe Mechanik wie „Nur Highlights", beide Linsen zusammen, Solo gewinnt weiter über
+  beide), filtern in der Liste, weil „3 km · 31 Trails" sonst eine Behauptung über eine Liste mit 219
+  Einträgen wäre. Beide Mutationen davon sind geprüft: ohne den Filter behauptet die Zeile 31 und die Liste
+  zeigt 219, ohne das Dimmen verliert die Karte stillschweigend ihre Linse.
+- **Drei Entscheidungen fielen erst beim Bauen**, jede aus einer Messung: der erste Anker **lässt die
+  Gruppierung fallen** (nach Region gruppiert wird innerhalb jeder Gruppe sortiert, nach Entfernung standen
+  0,76 / 0,76 / 1,7 / 2,1 / 2,4 km — und dann wieder 0,5 km, wo die nächste Hub-Gruppe anfing); er legt die
+  **Sortierachse** auf Bewertung, wo es Bewertungen gibt, sonst auf Entfernung; und die Kartenzeile zählt
+  **Trails und Touren getrennt** („3 km · 9 Trails · 3 Touren"), weil beide im Radius liegen, aber in
+  verschiedenen Abschnitten stehen.
+- **Der lange Druck hängt im bestehenden `mapTouchStart`-Paar**, nicht in einem eigenen Handler: dieses Paar
+  schickt für eine Berührung auf einer Trail-Linie ohnehin einen Klick ab, ein zweiter Handler hätte also aus
+  einer Geste zwei Wirkungen gemacht (Anker setzen **und** Trail auswählen). Live geprüft: langer Druck
+  mitten auf eine Linie setzt den Anker, ohne das Info-Panel zu öffnen.
+- **Kosten gemessen, bevor sie jemand merkt**: `nearbyDistanceKm` merkt sich je Anker und filtert über die
+  Bounding-Box vor — 16 ms für Finales 219 Trails, 147 ms für 1130 mit zugeschaltetem Gardasee, 88 ms für
+  einen zweiten Anker. Ring und Ankerpunkt liegen im normalen Overlay-Pane, drehen sich also mit der Karte
+  und kosten keine eigene SVG-Fläche (siehe `eachVectorRenderer`, dort waren es gemessen 40 MB).
+
 ## 2026-08-25 (Offizielle Zahlen fuer Bikecircus)
 - **34 der 49 Bikecircus-Abfahrten stehen jetzt auf den Zahlen des Betreibers**, nicht mehr auf denen einer
   Aufzeichnung. `tools/harvest_oa_official.py` holt sie aus dem Outdooractive-Projekt der Betreiber selbst

@@ -1,7 +1,30 @@
 # „In der Nähe" — Umgebungssuche um einen frei wählbaren Punkt
 
-**UX-Konzept, entschieden mit dem Nutzer am 2026-08-24. Noch nicht gebaut — ausdrücklich seine Anweisung
-("noch nicht bauen").** Gehört zu `docs/backlog.md` Punkt 2 und setzt `docs/trail-rating-konzept.md` voraus.
+**UX-Konzept, entschieden mit dem Nutzer am 2026-08-24 — und am 2026-08-25 auf seine Anweisung („Ja, bau
+das") gebaut.** Suite: `tests/browser/nearby.js`. Gehört zu `docs/backlog.md` Punkt 2 und setzt
+`docs/trail-rating-konzept.md` voraus.
+
+## Was beim Bauen anders entschieden wurde als hier geplant
+
+Drei Punkte, jeder mit dem Grund, weil das Konzept selbst sie offen oder widersprüchlich gelassen hat:
+
+1. **Karte dimmt, Liste filtert.** Weiter unten steht beides — „der Radius gehört in `trailPassesFilters`"
+   *und* „alles außerhalb wird gedimmt, nicht ausgeblendet". Zusammen geht das nicht: `trailPassesFilters`
+   räumt die Karte. Gebaut ist die Fassung, die der Nutzer *sichtbar* beschrieben hat: die Karte dimmt (wie
+   „Nur Highlights", dieselbe Mechanik in `baselineLineOpacity`), die Liste filtert — sonst wäre
+   „3 km · 31 Trails" eine Behauptung, hinter der eine Liste mit 219 Einträgen steht. Damit Karte und Liste
+   nicht auseinanderlaufen, gibt es **eine** Regel, `nearbyPasses()`, die beide fragen.
+2. **Der erste Anker legt die Gruppierung ab.** Nicht geplant, beim Testen gemessen: nach Region gruppiert
+   wird *innerhalb* jeder Gruppe sortiert, also stand nach Entfernung sortiert 0,76 / 0,76 / 1,7 / 2,1 /
+   2,4 km — und dann wieder 0,5 km, weil dort die nächste Hub-Gruppe anfing. Eine Umgebungsliste ist eine
+   Rangliste; `trailGroupMode` geht auf „Keine" und beim Aufräumen zurück.
+3. **Die Kartenzeile zählt Trails und Touren getrennt** („3 km · 9 Trails · 3 Touren"). Beide liegen im
+   Radius, aber in verschiedenen Abschnitten der Schublade — „16 Trails" wäre gelogen, wenn drei davon
+   Touren sind (am Gardasee gemessen).
+
+Was **nicht** gebaut wurde und weiter offen ist: die erreichbare Stelle statt der Luftlinie (braucht
+Routing), und der Lift-Fall („welche Trail-Einstiege sind von dieser Bergstation erreichbar") — der ist ein
+eigenes Feature, siehe unten.
 
 ## Was es beantwortet
 

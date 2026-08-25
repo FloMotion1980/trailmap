@@ -151,12 +151,11 @@ Prüfstapel sind auf null** (101 Fälle einzeln mit dem Nutzer entschieden, Begr
   Offene Frage fürs Bauen: Zacken als echte Geometrie (`L.polygon`, in Bildschirm-Pixeln nachskaliert wie
   die Richtungspfeile) oder als `dashArray` auf einem etwas größeren Kreis — Letzteres wäre eine Zeile,
   sieht aber eher nach Strichelung als nach Stern aus. Erst mit `visualize` ansehen, bevor Code entsteht.
-- **"In der Nähe"** — bestbewertete Trails im Radius um einen **frei wählbaren Punkt**, nicht nur um die
-  eigene Position (Nutzer, 2026-08-24). **Das UX-Konzept steht und ist entschieden:
-  `docs/naehe-konzept.md`** — langer Druck auf die Karte setzt den Anker, die Ankerzeile erscheint erst
-  dann, Radius als Regler mit Trefferzahl, Entfernung als Luftlinie zur nächsten Stelle des Trails, und
-  auf dem Handy antwortet die Karte selbst durch Dimmen, weil die Schublade dort die Karte vollständig
-  verdeckt. RIDE bleibt unangetastet. **Gebaut wird noch nicht** (Anweisung des Nutzers).
+- ~~**"In der Nähe"**~~ — **gebaut am 2026-08-25** (`docs/naehe-konzept.md`, Suite
+  `tests/browser/nearby.js`). Was davon offen BLEIBT, mit Grund: die **erreichbare Stelle statt der
+  Luftlinie** (braucht Routing über OSM-Daten — ein Trail, dessen Mitte 200 m entfernt vorbeiführt, dessen
+  Einstieg aber drei Kilometer bergauf liegt, ist nicht „in der Nähe" in einem Sinn, der hilft), und die
+  **zwei Presets** („Muss man fahren" / „Versteckte Perlen"), die auf derselben Mechanik aufsetzen würden.
 - **Vom Lift erreichbare Trail-Einstiege** — beim Antippen eines Lifts zeigen, welche Trails man von dort
   aus anfahren kann, nach Bewertung sortiert. **Eigenes Feature, kein Teil der Umgebungssuche** (Nutzer,
   2026-08-24: "Das mit dem Lift würde ich nicht machen. Dann eher wenn man einen Lift anklickt, welche

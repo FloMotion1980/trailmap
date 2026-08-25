@@ -1890,3 +1890,48 @@ header{ position:relative; z-index:1; }
 .ip-rating-none { color: #8a948a; font-style: italic; }
 /* Die Zwischenueberschrift der unbewerteten Gruppe ist am 2026-08-24 entfallen (Nutzer): die fehlende
    Flamme bzw. der fehlende Stern in der Kachel sagt es bereits, die Trails haengen einfach hinten an. */
+
+/* ---- Umgebungssuche ("Trails in der Nähe"), 2026-08-25, docs/naehe-konzept.md ------------------------
+   Dieselbe Bauart wie die Bewertungs-Chrome darüber: standardmäßig ausgeblendet, per Klasse eingeblendet,
+   in CSS und nicht per JS-Sichtbarkeit, damit die Reihenfolge im Markup stabil bleibt. Die Ankerzeile
+   erscheint erst, wenn ein Punkt gesetzt ist -- im Ruhezustand kostet das Feature keine Fläche. */
+#nearbyRow, .nearby-chip { display: none; }
+.nearby-chip.nearby-available { display: inline-block; }
+/* flex-basis:100% + min-width:0 aus demselben Grund wie bei #highlightsRow: die Zeile liegt in einem
+   umbrechenden Flex-Container und nahm sonst ihre Inhaltsbreite an, die über den Rand von .filters ragt. */
+#nearbyRow.open { display: flex; gap: 8px; cursor: default; padding: 2px 0 4px;
+  flex-basis: 100%; min-width: 0; align-items: center; }
+.nearby-label { flex-shrink: 0; }
+/* 30px, nicht 22: die Zeile wird am Handy bedient, und beide Knöpfe sind Ziele, die man treffen muss. */
+.nearby-btn { flex-shrink: 0; width: 30px; height: 30px; padding: 0; border: 1px solid #d3d8cd;
+  border-radius: 8px; background: var(--card-bg); font-size: 13px; line-height: 1; cursor: pointer; }
+.nearby-btn:active { background: #eef2ea; }
+/* Kein Positionsfix vorhanden: der Knopf sagt es, statt stumm nichts zu tun. */
+.nearby-btn-warn { border-color: var(--rot); color: var(--rot); }
+#nearbyRadius { flex: 1; min-width: 0; height: 18px; margin: 0; background: transparent;
+  -webkit-appearance: none; appearance: none; }
+#nearbyRadius::-webkit-slider-runnable-track { height: 18px; border-radius: 9px; background: #e7ece4;
+  border: 1px solid #d3d8cd; }
+#nearbyRadius::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; margin-top: -1px;
+  border-radius: 50%; background: #b3520a; box-shadow: 0 1px 3px rgba(0,0,0,0.35); cursor: pointer; }
+#nearbyRadius::-moz-range-track { height: 18px; border-radius: 9px; background: #e7ece4;
+  border: 1px solid #d3d8cd; }
+#nearbyRadius::-moz-range-thumb { width: 18px; height: 18px; border: none; border-radius: 50%;
+  background: #b3520a; box-shadow: 0 1px 3px rgba(0,0,0,0.35); cursor: pointer; }
+/* Die Entfernung in der Kachel: gleichwertig neben Länge und Höhenmetern, nicht als Auszeichnung. Die
+   line-height ist derselbe Fesselwert wie bei .trail-meta-rating -- ohne ihn wächst die Kachel. */
+.trail-meta-dist { white-space: nowrap; line-height: 12px; color: #8a4a12; }
+
+/* Die Antwort auf dem Handy steht AUF der Karte, oben links: unten mittig steht #offlineBanner, unten
+   rechts die Attribution, unten links die Layer-Warnung, oben rechts der Bedienstapel. Die
+   env(safe-area-inset-*)-Terme halten sie von der abgerundeten Ecke weg, wie beim Bedienstapel. */
+#nearbyBar { display: none; position: absolute; z-index: 1200;
+  top: calc(10px + env(safe-area-inset-top, 0px)); left: calc(10px + env(safe-area-inset-left, 0px));
+  align-items: center; gap: 8px; padding: 5px 8px; border-radius: 10px;
+  background: rgba(255,255,255,0.94); border: 1px solid #d3d8cd; box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  font-size: 12px; color: #2c3a2d; max-width: calc(100% - 120px); }
+#nearbyBar.open { display: flex; }
+.nearby-bar-btn { border: none; background: none; padding: 2px 4px; font-size: 12px; color: var(--forest);
+  cursor: pointer; border-left: 1px solid #dfe4d9; }
+/* Im RIDE-Modus nichts davon: dort wird nichts geändert (Nutzer, zum Konzept). */
+html.ride-mode #nearbyBar { display: none; }

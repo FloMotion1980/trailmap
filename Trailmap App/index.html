@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=211" />
+<link rel="stylesheet" href="style.css?v=212" />
 </head>
 <body>
 <div id="fatalError">
@@ -188,6 +188,24 @@
                 <span class="highlight-slider-value" id="highlightSliderValue"></span>
               </span>
             </div>
+            <!-- Die Ankerzeile der Umgebungssuche (2026-08-25, docs/naehe-konzept.md). Sie erscheint erst,
+                 wenn ein Punkt gesetzt ist -- wie der Highlights-Regler erst erscheint, wenn es Bewertungen
+                 gibt: im Ruhezustand kostet das Feature keine Flaeche, und um den senkrechten Platz in der
+                 Seitenleiste ist mehrfach gerungen worden. Gesetzt wird der Punkt auf der KARTE (langer
+                 Druck, am Schreibtisch Rechtsklick); 📍 hier verschiebt ihn auf die eigene Position, was der
+                 zweite im Konzept beschriebene Weg ist. Aus demselben Grund wie oben ein div und kein label:
+                 ein Regler in einem label wuerde bei jedem Zug den Schalter daneben umschalten. -->
+            <div class="toggle-row nearby-row" id="nearbyRow"
+                 title="Umgebungssuche: Entfernung in Luftlinie zur naechsten Stelle eines Trails. Der Regler setzt den Radius, die Liste zeigt die Treffer.">
+              <span class="nearby-label">Umgebung</span>
+              <button type="button" id="nearbyLocateBtn" class="nearby-btn" title="Anker auf die eigene Position setzen">📍</button>
+              <span class="highlight-slider-row nearby-slider-row" id="nearbyRadiusRow">
+                <input type="range" id="nearbyRadius" min="0.5" max="15" step="0.5" value="3"
+                       aria-label="Radius der Umgebungssuche">
+                <span class="highlight-slider-value" id="nearbyRadiusValue"></span>
+              </span>
+              <button type="button" id="nearbyClearBtn" class="nearby-btn" title="Umgebungssuche beenden">✕</button>
+            </div>
           </div>
           <button id="preloadBtn" title="Lädt einen Detail-Streifen um alle aktuell gefilterten Trails (Region/Schwierigkeit oben) über mehrere Zoomstufen, plus den aktuell sichtbaren Kartenausschnitt für den groben Überblick. Filter/Kartenausschnitt vorher einschränken, um Umfang &amp; Datenmenge zu reduzieren.">📥 Trail-Umgebung vorladen</button>
           <!-- Which build is actually running. Added 2026-07-29 after several rounds of "is this fixed or am I
@@ -245,6 +263,10 @@
                    in the Pfälzerwald, where 0-3 % of trails have three votes, it would be all of them. -->
               <button type="button" class="chip rating-chip" data-value="rate">Bewertung</button>
               <button type="button" class="chip rating-chip" data-value="pop">Beliebtheit</button>
+              <!-- Entfernung: nur sichtbar, solange ein Anker gesetzt ist (syncNearbyChrome). Ohne Anker gibt
+                   es keine Entfernung, zu der man sortieren koennte, und eine Achse, die auf Tippen nichts
+                   tut, ist schlimmer als eine, die fehlt. -->
+              <button type="button" class="chip nearby-chip" data-value="dist">Entfernung</button>
             </div>
           </div>
           <button type="button" id="trailViewResetBtn" class="trail-view-reset">↺ Zurücksetzen</button>
@@ -390,6 +412,17 @@
           <span id="rideInfoName"></span>
           <span id="rideInfoStats"></span>
         </div>
+      </div>
+      <!-- Die Antwort der Umgebungssuche steht auf dem Handy AUF DER KARTE, nicht in der Seitenleiste
+           (2026-08-25, docs/naehe-konzept.md): dort ist die Seitenleiste eine Schublade, die die Karte
+           vollstaendig verdeckt -- man setzt also einen Punkt auf der Karte und muesste die Karte zudecken,
+           um die Antwort zu lesen. Oben LINKS, und das ist kein Geschmack: unten mittig steht
+           #offlineBanner, unten rechts die Attribution, unten links die Layer-Warnung, oben rechts der
+           Bedienstapel. Im RIDE-Modus ausgeblendet (siehe CSS) -- dort wird nichts geaendert. -->
+      <div id="nearbyBar">
+        <span id="nearbyBarText"></span>
+        <button type="button" id="nearbyBarList" class="nearby-bar-btn">Liste</button>
+        <button type="button" id="nearbyBarClose" class="nearby-bar-btn" title="Umgebungssuche beenden">✕</button>
       </div>
       <div id="layerWarning"></div>
       <div id="offlineBanner">📴 Offline-Modus</div>
@@ -1593,6 +1626,38 @@ const REGION_CATALOG = {
       gd_rovereto:       { label: "Rovereto",        color: "#b45309" },
       gd_valsugana:      { label: "Valsugana",       color: "#4d7c0f" }
     }
+  },
+  elba: {
+    countries: ["IT"], label: "Elba", file: "regions/elba.json", trailCount: 222,
+    bounds: [[42.71177, 10.10743], [42.87142, 10.43607]],
+    // Trailforks-only, like Madeira and the Gardasee, and for the same recorded reason: no operator on the
+    // island publishes a grade at all. No `lifts` array -- Elba's one cable car, the Monte Capanne
+    // cabinovia, is a standing open basket nobody takes a bike into. Sub-regions are the island's own
+    // geography (the three massifs plus the two harbour basins), NOT Trailforks' `riding area` column,
+    // whose "Marina di Campo" area reaches 9 km west of Marina di Campo itself. See docs/elba.md.
+    subRegions: {
+      eb_capanne:      { label: "Monte Capanne",   color: "#0f766e" },
+      eb_campo:        { label: "Marina di Campo", color: "#b45309" },
+      eb_portoferraio: { label: "Portoferraio",    color: "#1d4ed8" },
+      eb_rio:          { label: "Rio & Cavo",      color: "#7c3aed" },
+      eb_calamita:     { label: "Capoliveri",      color: "#be185d" }
+    }
+  },
+  kronplatz: {
+    countries: ["IT"], label: "Kronplatz", file: "regions/kronplatz.json", trailCount: 18,
+    bounds: [[46.69422, 11.89465], [46.85491, 12.02039]],
+    // Geometry is Trailforks', DIFFICULTY is the operator's own three-step scale wherever kronplatz.com
+    // publishes one (easy->blau, medium->rot, difficult->schwarz, gruen never reached) -- the standing rule,
+    // with the mapping in tools/build_trailforks_region.py's `diff_override`. Four lifts, from the
+    // operator's own summer table, which lists neither Ried nor Ruis even though OSM bike-tags both.
+    // "Pustertal Nord" is the trails on the far side of the valley (Sambock above Bruneck, Huehnerspiel
+    // above Rasen), which belong to none of the mountain's three flanks. See docs/kronplatz.md.
+    subRegions: {
+      kp_reischach:    { label: "Reischach",       color: "#0f766e" },
+      kp_olang:        { label: "Olang",           color: "#b45309" },
+      kp_stvigil:      { label: "St. Vigil",       color: "#7c3aed" },
+      kp_pustertal:    { label: "Pustertal Nord",  color: "#1d4ed8" }
+    }
   }
 };
 const MAX_ACTIVE_REGION_GROUPS = 3;
@@ -1978,7 +2043,7 @@ function persistTrailListView(){
 // chip additionally gets an arrow appended to its own label (↑/↓, from SORT_LABELS' base text) -- the only
 // visible indicator of trailSortDir, since a plain "selected" state can't show a direction at all.
 const SORT_LABELS = { diff: "Schwierigkeit", name: "Name", length: "Länge", up: "Bergauf",
-                      down: "Bergab", rate: "Bewertung", pop: "Beliebtheit" };
+                      down: "Bergab", rate: "Bewertung", pop: "Beliebtheit", dist: "Entfernung" };
 function syncTrailViewChips(){
   document.querySelectorAll(".trail-view-chips").forEach(row => {
     const isSort = row.dataset.target === "sort";
@@ -5832,17 +5897,50 @@ map.on("click", () => { if (!rideMode) closeInfoPanelAndDeselect(); });
 // map, a button, or a card is left completely alone: only a touchstart landing on a Leaflet interactive vector
 // path triggers this at all, so background taps, buttons and double-tap-zoom on the open map are unaffected.
 let mapTouchStart = null;
+// Der lange Druck der Umgebungssuche haengt an DIESEM Paar von Handlern und nicht an einem eigenen -- sonst
+// setzt ein langer Druck auf einen Trail den Anker UND waehlt den Trail aus, weil touchend hier ohnehin
+// einen Klick auf die getroffene Linie abschickt (siehe die Notiz oben). Die Schwellen sind dieselben, die
+// dieser Code schon benutzt: mehr als 14 px Bewegung ist ein Ziehen, und 500 ms ist die Grenze, ab der es
+// kein Tippen mehr ist -- genau die Marke, hinter der der lange Druck beginnt.
+const NEARBY_LONGPRESS_MS = 500;
+let nearbyLongPressTimer = null;
+function cancelNearbyLongPress(){
+  if (nearbyLongPressTimer) { clearTimeout(nearbyLongPressTimer); nearbyLongPressTimer = null; }
+}
 map.getContainer().addEventListener("touchstart", (e) => {
+  cancelNearbyLongPress();
   if (e.touches.length !== 1) { mapTouchStart = null; return; }   // a pinch/rotate gesture, not a tap
   const t = e.touches[0];
   const target = document.elementFromPoint(t.clientX, t.clientY);
   // Decided HERE, not at touchend: only a path we would otherwise have to hit-test for is worth intercepting.
   const owns = !!target && target.tagName === "path" && target.classList.contains("leaflet-interactive");
-  mapTouchStart = { x: t.clientX, y: t.clientY, target: owns ? target : null, time: Date.now() };
+  mapTouchStart = { x: t.clientX, y: t.clientY, target: owns ? target : null, time: Date.now(), longPress: false };
+  const start = mapTouchStart;
+  const pt = map.mouseEventToLatLng({ clientX: t.clientX, clientY: t.clientY });
+  nearbyLongPressTimer = setTimeout(() => {
+    nearbyLongPressTimer = null;
+    // Immer noch derselbe Finger, und er hat sich nicht bewegt? Dann war es ein langer Druck. `longPress`
+    // markiert die Beruehrung als verbraucht, damit touchend keinen Klick mehr abschickt.
+    if (mapTouchStart !== start || rideMode || builderMode) return;
+    start.longPress = true;
+    if (navigator.vibrate) { try { navigator.vibrate(15); } catch (err) { /* kein Feedback, kein Problem */ } }
+    setNearbyAnchor(pt);
+  }, NEARBY_LONGPRESS_MS);
+}, { passive: true });
+map.getContainer().addEventListener("touchmove", (e) => {
+  const start = mapTouchStart;
+  if (!start || !nearbyLongPressTimer || e.touches.length !== 1) { cancelNearbyLongPress(); return; }
+  const t = e.touches[0];
+  if (Math.hypot(t.clientX - start.x, t.clientY - start.y) > 14) cancelNearbyLongPress();
 }, { passive: true });
 map.getContainer().addEventListener("touchend", (e) => {
   const start = mapTouchStart;
   mapTouchStart = null;
+  cancelNearbyLongPress();
+  // War es ein langer Druck, ist die Beruehrung verbraucht: der Anker steht, und ein Klick auf die Linie
+  // darunter waere die zweite Wirkung derselben Geste. preventDefault auch hier, sonst folgt der
+  // synthetische Klick der Plattform.
+  if (start && start.longPress) { e.preventDefault(); return; }
   if (!start || !start.target || e.touches.length !== 0 || e.changedTouches.length !== 1) return;
   const t = e.changedTouches[0];
   // Only for something that reads as a TAP -- a real drag/pan must sail through untouched. Leaflet's own
@@ -5984,6 +6082,210 @@ function cumulativeDistanceKm(coords){
   for (let i = 1; i < coords.length; i++) cum.push(cum[i-1] + haversineM(coords[i-1], coords[i]) / 1000);
   return cum;
 }
+// ---------------------------------------------------------------------------------------------------
+// Umgebungssuche -- "welche guten Trails sind hier in der Naehe?" (2026-08-25, docs/naehe-konzept.md)
+//
+// Der ANKER ist das Feature: ein frei gewaehlter Punkt auf der Karte (langer Druck, am Schreibtisch
+// Rechtsklick) oder die eigene Position. Gemessen wird die Luftlinie zur naechsten Stelle eines Trails --
+// die *erreichbare* Stelle waere richtiger, braucht aber Routing ueber OSM-Daten; so vom Nutzer
+// entschieden ("Fuer den Anfang geht zur naechsten Stelle des Trails").
+//
+// Die Arbeitsteilung zwischen Karte und Liste ist bewusst UNGLEICH, und das loest einen Widerspruch im
+// Konzept selbst: dort steht sowohl "der Radius gehoert in trailPassesFilters" als auch "alles ausserhalb
+// wird gedimmt, nicht ausgeblendet". Beides zugleich geht nicht. Entschieden ist die Fassung, die der
+// Nutzer sichtbar beschrieben hat: die KARTE dimmt (genau wie "Nur Highlights", dieselbe Mechanik, siehe
+// baselineLineOpacity), die LISTE filtert (sonst waere "3 km · 9 Trails" eine Behauptung ohne Liste
+// dahinter). Damit Karte und Liste trotzdem nicht auseinanderlaufen, gibt es genau EINE Regel --
+// nearbyPasses() -- die beide benutzen, und die Zahl in der Zeile sagt jederzeit, wie viele es sind.
+// Nichts davon wird gespeichert: ein Punkt gehoert zu einer Situation, nicht zu einer Einstellung.
+const NEARBY_ANCHOR_COLOR = "#b3520a";   // eigene Farbe -- nie mit dem blauen Positionspunkt zu verwechseln
+const NEARBY_DEFAULT_RADIUS_KM = 3;
+let nearbyAnchor = null;                 // [lat, lng] oder null
+let nearbyRadiusKm = NEARBY_DEFAULT_RADIUS_KM;
+let nearbyDistCache = {};                // trailId -> km; gilt fuer genau einen Anker, siehe setNearbyAnchor
+let nearbyAnchorMarker = null, nearbyCircleLayer = null;
+
+// Entfernung des Ankers zur naechsten Stelle dieses Trails, in km. Einmal je Trail und Anker gerechnet und
+// dann gemerkt: der Radius aendert sich am Regler dauernd, der Anker fast nie, und nur er geht in die Zahl
+// ein. Vorfilter ueber die Bounding-Box der Linie: liegt der Anker weit ausserhalb, genuegt die Ecke der
+// Box als untere Schranke, und die punktweise Schleife entfaellt -- bei 900 Trails einer grossen Region
+// ist das der Unterschied zwischen einem Mal ueber alle Punkte und einem Mal ueber ein Dutzend Linien.
+function nearbyDistanceKm(t){
+  if (!nearbyAnchor || !t) return null;
+  if (nearbyDistCache[t.id] !== undefined) return nearbyDistCache[t.id];
+  const coords = TRAIL_GEO[t.id];
+  if (!coords || !coords.length) { nearbyDistCache[t.id] = Infinity; return Infinity; }
+  const layer = lineLayers[t.id];
+  if (layer && layer.bounds) {
+    const sw = layer.bounds.getSouthWest(), ne = layer.bounds.getNorthEast();
+    const lat = Math.max(sw.lat, Math.min(ne.lat, nearbyAnchor[0]));
+    const lng = Math.max(sw.lng, Math.min(ne.lng, nearbyAnchor[1]));
+    const boxKm = haversineM(nearbyAnchor, [lat, lng]) / 1000;
+    // Die Box-Entfernung ist immer <= der echten. Ist schon sie ueber jedem einstellbaren Radius, taugt
+    // sie als Wert: gezeigt wird die Zahl nur innerhalb des Radius, und sortiert wird dort ebenfalls.
+    if (boxKm > 16) { nearbyDistCache[t.id] = boxKm; return boxKm; }
+  }
+  let best = Infinity;
+  for (let i = 0; i < coords.length; i++) {
+    const d = haversineM(nearbyAnchor, coords[i]);
+    if (d < best) best = d;
+  }
+  best /= 1000;
+  nearbyDistCache[t.id] = best;
+  return best;
+}
+// DIE eine Regel, die Karte (dimmen) und Liste (filtern) gemeinsam benutzen.
+function nearbyPasses(t){
+  if (!nearbyAnchor) return true;
+  const d = nearbyDistanceKm(t);
+  return d !== null && d <= nearbyRadiusKm;
+}
+// Wie viele Trails UND Touren gerade im Radius liegen -- durch alle uebrigen Filter hindurch, damit die
+// Zahl das zaehlt, was die Liste zeigt, und nicht das, was ohne Filter darin waere.
+function nearbyVisibleCount(){
+  if (!nearbyAnchor) return 0;
+  return lineTrails.filter(t => trailPassesFilters(t) && nearbyPasses(t)).length;
+}
+function nearbyDistanceLabel(t){
+  const d = nearbyDistanceKm(t);
+  if (d === null || !isFinite(d)) return "";
+  return (d < 1 ? Math.round(d * 1000) + " m" : d.toFixed(1).replace(".", ",") + " km") + " entfernt";
+}
+// Ring und Ankerpunkt liegen im NORMALEN Overlay-Pane, nicht in einem eigenen: der Rotations-Plugin haengt
+// tilePane und overlayPane in seinen rotatePane um, echte Geometrie dreht sich darin also von selbst mit
+// (siehe ROTATING_PANE) -- und ein eigener Pane kostet eine ganze SVG-Flaeche, was auf dem Handy gemessen
+// 40 MB waren (siehe eachVectorRenderer). Der Ring nach hinten, damit er unter den Trails liegt.
+function drawNearbyAnchor(){
+  if (!nearbyAnchor) {
+    if (nearbyAnchorMarker) { map.removeLayer(nearbyAnchorMarker); nearbyAnchorMarker = null; }
+    if (nearbyCircleLayer) { map.removeLayer(nearbyCircleLayer); nearbyCircleLayer = null; }
+    return;
+  }
+  const ll = L.latLng(nearbyAnchor[0], nearbyAnchor[1]);
+  if (!nearbyCircleLayer) {
+    nearbyCircleLayer = L.circle(ll, { radius: nearbyRadiusKm * 1000, interactive: false,
+                                       color: NEARBY_ANCHOR_COLOR, weight: 1.5, opacity: 0.9,
+                                       dashArray: "6,5", fillColor: NEARBY_ANCHOR_COLOR, fillOpacity: 0.06 }).addTo(map);
+    nearbyCircleLayer.bringToBack();
+  } else {
+    nearbyCircleLayer.setLatLng(ll);
+    nearbyCircleLayer.setRadius(nearbyRadiusKm * 1000);
+  }
+  if (!nearbyAnchorMarker) {
+    nearbyAnchorMarker = L.circleMarker(ll, { radius: 6, interactive: false, color: "#4a2205", weight: 2,
+                                              fillColor: NEARBY_ANCHOR_COLOR, fillOpacity: 1 }).addTo(map);
+  } else {
+    nearbyAnchorMarker.setLatLng(ll);
+  }
+  nearbyAnchorMarker.bringToFront();
+}
+// Zeile in der Seitenleiste, Zeile auf der Karte und der Entfernungs-Chip haengen alle an einem Zustand.
+function syncNearbyChrome(){
+  const on = !!nearbyAnchor;
+  const row = document.getElementById("nearbyRow");
+  if (row) row.classList.toggle("open", on);
+  document.querySelectorAll(".nearby-chip").forEach(el => el.classList.toggle("nearby-available", on));
+  const input = document.getElementById("nearbyRadius");
+  if (input) input.value = String(nearbyRadiusKm);
+  const n = nearbyVisibleCount();
+  const tours = nearbyAnchor ? lineTrails.filter(t => t.loop && trailPassesFilters(t) && nearbyPasses(t)).length : 0;
+  const radiusText = nearbyRadiusKm < 1
+    ? Math.round(nearbyRadiusKm * 1000) + " m"
+    : String(nearbyRadiusKm).replace(".", ",") + " km";
+  const out = document.getElementById("nearbyRadiusValue");
+  if (out) out.textContent = on ? radiusText + " · " + n : "";
+  const bar = document.getElementById("nearbyBar");
+  const barText = document.getElementById("nearbyBarText");
+  if (bar) bar.classList.toggle("open", on);
+  // Ein leerer Radius ist ein Ergebnis, kein Fehler -- die Zeile nennt die Zahl und nicht die Ursache.
+  // Touren zaehlen mit, stehen aber getrennt: sie liegen in ihrem eigenen Abschnitt, und "16 Trails" waere
+  // gelogen, wenn drei davon Touren sind (gemessen am Gardasee: 13 Trails und 3 Touren im selben Radius).
+  const trailsOnly = n - tours;
+  if (barText) {
+    barText.textContent = !on ? ""
+      : !n ? "keiner in " + radiusText
+      : radiusText + " · " + trailsOnly + (trailsOnly === 1 ? " Trail" : " Trails")
+        + (tours ? " · " + tours + (tours === 1 ? " Tour" : " Touren") : "");
+  }
+}
+// Ein neuer Anker macht jede gemerkte Entfernung ungueltig -- sie gilt genau fuer einen Punkt.
+function setNearbyAnchor(latlng){
+  const first = !nearbyAnchor;
+  nearbyAnchor = [latlng.lat !== undefined ? latlng.lat : latlng[0],
+                  latlng.lng !== undefined ? latlng.lng : latlng[1]];
+  nearbyDistCache = {};
+  // Beim ERSTEN Setzen die Sortierung auf die Achse legen, die die Frage beantwortet: nach Bewertung, wenn
+  // die angezeigten Regionen welche haben ("sonst steht der mittelmaessige Trail vor der Haustuer ueber dem
+  // Highlight zwei Kilometer weiter"), sonst nach Entfernung -- in vier Regionen gibt es keine Bewertungen,
+  // und dort waere die Bewertungsachse eine leere Behauptung. Nur beim ersten Mal: wer danach selbst
+  // umsortiert, soll das behalten, wenn er den Anker verschiebt.
+  if (first) {
+    trailSortMode = ratedTrailCount() > 0 ? "rate" : "dist";
+    trailSortDir = TRAIL_SORT_DEFAULT_DIR[trailSortMode];
+    // ...und die Gruppierung fallen lassen, weil sie die Reihenfolge sonst zerlegt: nach Region gruppiert
+    // wird INNERHALB jeder Gruppe sortiert, der naechste Trail steht dann irgendwo in der Mitte und nicht
+    // oben. Eine Umgebungsliste ist eine Rangliste; gemessen kam nach Entfernung sortiert 0,76 / 0,76 /
+    // 1,7 / 2,1 / 2,4 -- und dann wieder 0,5 km, weil dort die naechste Hub-Gruppe anfing.
+    trailGroupMode = "none";
+    syncTrailViewChips();
+  }
+  drawNearbyAnchor();
+  applyHighlightDimming();
+  render();          // ruft syncNearbyChrome() am Ende selbst auf
+}
+function clearNearbyAnchor(){
+  if (!nearbyAnchor) return;
+  nearbyAnchor = null;
+  nearbyDistCache = {};
+  if (trailSortMode === "dist") {
+    trailSortMode = TRAIL_VIEW_DEFAULTS.sortMode;
+    trailSortDir = TRAIL_SORT_DEFAULT_DIR[trailSortMode];
+  }
+  // Die Gruppierung kommt zurueck, denn ohne Anker ist eine flache Rangliste ohne Rang.
+  if (trailGroupMode === "none") trailGroupMode = TRAIL_VIEW_DEFAULTS.groupMode;
+  syncTrailViewChips();
+  drawNearbyAnchor();
+  applyHighlightDimming();
+  render();
+}
+// Am Schreibtisch gibt es keinen langen Druck: dort ist die Geste der Rechtsklick. `contextmenu` war bisher
+// nur auf dem Positionsknopf abgefangen, auf der Karte ist es frei.
+map.on("contextmenu", (e) => {
+  if (rideMode || builderMode) return;
+  setNearbyAnchor(e.latlng);
+});
+document.getElementById("nearbyRadius").addEventListener("input", (e) => {
+  nearbyRadiusKm = parseFloat(e.target.value);
+  if (nearbyCircleLayer) nearbyCircleLayer.setRadius(nearbyRadiusKm * 1000);
+  applyHighlightDimming();
+  render();
+});
+// Doppelklick zurueck auf die Vorgabe -- dasselbe Muster wie am Highlights-Regler.
+document.getElementById("nearbyRadius").addEventListener("dblclick", () => {
+  nearbyRadiusKm = NEARBY_DEFAULT_RADIUS_KM;
+  if (nearbyCircleLayer) nearbyCircleLayer.setRadius(nearbyRadiusKm * 1000);
+  applyHighlightDimming();
+  render();
+});
+// Der zweite Weg, den Anker zu setzen: die eigene Position. Er sitzt IN der Ankerzeile, also erst
+// erreichbar, wenn schon ein Punkt gesetzt ist -- das ist Absicht, die Zeile kostet sonst Flaeche im
+// Ruhezustand. Liegt keine Position vor, sagt der Knopf das statt stumm nichts zu tun.
+document.getElementById("nearbyLocateBtn").addEventListener("click", () => {
+  if (userLocationMarker) { setNearbyAnchor(userLocationMarker.getLatLng()); return; }
+  const btn = document.getElementById("nearbyLocateBtn");
+  btn.classList.add("nearby-btn-warn");
+  setTimeout(() => btn.classList.remove("nearby-btn-warn"), 1200);
+  oneShotLocate();
+});
+document.getElementById("nearbyClearBtn").addEventListener("click", clearNearbyAnchor);
+document.getElementById("nearbyBarClose").addEventListener("click", clearNearbyAnchor);
+// "Liste" ist der Uebergang von der Karte zur Antwort: Schublade auf, Trails-Abschnitt offen, hingescrollt.
+document.getElementById("nearbyBarList").addEventListener("click", () => {
+  const sec = document.getElementById("secTrails");
+  if (sec) sec.open = true;
+  openSidebar();
+  if (sec) setTimeout(() => sec.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+});
 // Interpolated [lat,lon] at `targetKm` along `coords` (using its matching `cumDist`). `reversed`
 // measures from the END of coords instead — the array itself is never physically reordered (see
 // applyReversedEndpoints), so this is the one place that has to account for viewing it backwards.
@@ -6779,7 +7081,7 @@ function highlightCount(){
   // Die SPANNE des Reglers folgt den Filtern bewusst NICHT (siehe recomputeHighlightRange): sie bliebe sonst
   // nicht stehen, waehrend man Chips umschaltet, und der eingestellte Wert koennte aus der neuen Spanne
   // fallen. Skala stabil, Zahl ehrlich -- das war die Entscheidung des Nutzers.
-  return lineTrails.filter(t => trailPassesFilters(t) && isHighlight(t)).length;
+  return lineTrails.filter(t => trailPassesFilters(t) && nearbyPasses(t) && isHighlight(t)).length;
 }
 //: How many of the trails on screen carry a rating. The rating UI is offered as soon as there is ONE --
 //: no density threshold (user, 2026-08-24: "Ich würde übrigens auch erstmal darauf verzichten, das Rating
@@ -6796,11 +7098,15 @@ function ratedTrailCount(){
 }
 function baselineLineOpacity(lid){
   if (!soloId) {
-    // The Highlights switch dims everything below the region's own cut, reusing solo's own dim value
-    // rather than inventing a second one -- it is the same visual question ("show me this, not that").
-    if (showHighlightsOnly) {
+    // Zwei Linsen, eine Mechanik: der Highlights-Schalter dimmt alles unter der Schwelle der Region, der
+    // Anker der Umgebungssuche alles ausserhalb seines Radius -- beide fragen dasselbe ("zeig mir das, nicht
+    // jenes") und benutzen darum denselben Dimmwert wie Solo, statt einen zweiten zu erfinden. Sind beide an,
+    // muss ein Trail BEIDE Bedingungen erfuellen, um hell zu bleiben; Solo bleibt spezifischer als beide und
+    // wird oben schon abgefangen.
+    if (showHighlightsOnly || nearbyAnchor) {
       const t = lineTrails.find(x => x.id === lid);
-      return isHighlight(t) ? 0.9 : SOLO_DIM_OPACITY;
+      const bright = (!showHighlightsOnly || isHighlight(t)) && nearbyPasses(t);
+      return bright ? 0.9 : SOLO_DIM_OPACITY;
     }
     return 0.85;
   }
@@ -8074,7 +8380,10 @@ function makeTrailCard(t, regionKey){
   card.innerHTML = `
     <span class="badge ${t.diff} card-diff-bar" title="${DIFF_LABEL[t.diff]}"></span>
     <div class="trail-name">${isHighlight(t) ? CROWN_HTML : ""}${t.name}${categoryBadge(t)}<button class="card-solo-btn${soloId === t.id ? " active" : ""}" title="${soloId === t.id ? "Alle wieder anzeigen" : (t.loop ? "Nur diese Tour zeigen" : "Nur diesen Trail zeigen")}">👁</button></div>
-    <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span>${ratingMetaHtml(t)}</div>`;
+    <div class="trail-meta"><span>${t.len} km</span><span>${t.up} m ↑ / ${t.down} m ↓</span>${ratingMetaHtml(t)}${
+      // Die Entfernung steht nur da, wenn ein Anker gesetzt ist -- sonst gibt es keine, und eine leere
+      // Spalte in einer Zeile mit gemessenen 96-122px Spielraum ist kein Gewinn.
+      nearbyAnchor ? `<span class="trail-meta-dist">${nearbyDistanceLabel(t)}</span>` : ""}</div>`;
   card.addEventListener("click", (e) => {
     const soloBtn = e.target.closest(".card-solo-btn");
     if (soloBtn) {
@@ -8119,7 +8428,7 @@ function renderTourList(){
     let groupTitleEl = null, groupCount = 0;
     regionKeys.forEach(regionKey => {
       const tours = lineTrails
-        .filter(t => t.loop && t.region === regionKey && trailPassesFilters(t))
+        .filter(t => t.loop && t.region === regionKey && trailPassesFilters(t) && nearbyPasses(t))
         .sort((a, b) => a.name.localeCompare(b.name, "de", { numeric: true }));
       if (!tours.length) return;
       if (!groupTitleEl) {
@@ -8178,12 +8487,16 @@ const TRAIL_SORT_COMPARE = {
   // from 6, and putting them in an arbitrary order throws that away.
   rate: (a, b) => ratingOf(a) - ratingOf(b) || (a.votes || 0) - (b.votes || 0),
   pop: (a, b) => popOf(a) - popOf(b) || ratingOf(a) - ratingOf(b),
+  // Entfernung zum Anker der Umgebungssuche. Ohne Anker gibt es keine -- dann liefert nearbyDistanceKm()
+  // null, alle sind gleich, und die Reihenfolge faellt auf den Namen zurueck statt zufaellig zu werden.
+  dist: (a, b) => (nearbyDistanceKm(a) || 0) - (nearbyDistanceKm(b) || 0) ||
+                  a.name.localeCompare(b.name, "de", { numeric: true }),
 };
 // The direction each chip STARTS at when newly picked (not while already active -- see the chip-click
 // handler for the flip). Difficulty/name/length read naturally ascending; Bergauf/Bergab read naturally
 // biggest-first, the same downhill-first bias the rest of the app already has (Downhill/Uphill/Touren split,
 // "sorted by Höhenmeter" meaning "biggest climbs/descents on top" before this was even two separate chips).
-const TRAIL_SORT_DEFAULT_DIR = { diff: 1, name: 1, length: 1, up: -1, down: -1, rate: -1, pop: -1 };
+const TRAIL_SORT_DEFAULT_DIR = { diff: 1, name: 1, length: 1, up: -1, down: -1, rate: -1, pop: -1, dist: 1 };
 function appendTrailGroup(list, headingText, headingColor){
   if (!list.length) return;
   const compare = TRAIL_SORT_COMPARE[trailSortMode] || TRAIL_SORT_COMPARE.diff;
@@ -8257,6 +8570,7 @@ function render(){
   // Die Trefferzahl am Highlights-Regler haengt jetzt an allen Filtern, also muss sie mit jedem render()
   // nachgezogen werden -- vorher genuegte der Regionswechsel.
   if (typeof syncHighlightSlider === "function") syncHighlightSlider();
+  if (typeof syncNearbyChrome === "function") syncNearbyChrome();
   listEl.innerHTML = "";
   let shownTrails = 0, totalTrails = 0, shownTours = 0, totalTours = 0;
   // Tallies for the "(n sichtbar)" counts on each region-group/sub-region chip (see
@@ -8283,7 +8597,12 @@ function render(){
       regionLineTrails.forEach(t => {
         const layer = lineLayers[t.id];
         const visible = trailPassesFilters(t);
-        if (visible) {
+        // Der Radius der Umgebungssuche ist der eine Filter, der die KARTE nicht raeumt: dort wird gedimmt
+        // (baselineLineOpacity), damit man sieht, was gerade knapp daneben liegt. Fuer die LISTE und jede
+        // Zahl daneben ist er ein Filter wie jeder andere -- sonst waere "3 km · 9 Trails" eine Behauptung,
+        // hinter der eine Liste mit 219 Eintraegen steht. Siehe docs/naehe-konzept.md.
+        const inList = visible && nearbyPasses(t);
+        if (inList) {
           // The chip counts stay "everything visible in this region", Tours included -- a sub-region like
           // "Biketicket 2 Ride" holds nothing else, and a chip reading (0) next to four visible Tours would
           // be a lie. The Trails list's own hub-heading counts are read straight off visibleTrailsForList
@@ -8339,7 +8658,7 @@ function render(){
         }
         // Filtered out, or a Tour: Tours are listed in their own section, built by renderTourList() further
         // down in this same render() -- which is what re-attaches layer.card for them.
-        if (!visible || t.loop) { if (layer) layer.card = null; return; }
+        if (!inList || t.loop) { if (layer) layer.card = null; return; }
         visibleTrailsForList.push(t);
       });
     });
@@ -8610,7 +8929,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v211"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v212"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

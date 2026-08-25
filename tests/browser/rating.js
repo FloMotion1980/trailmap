@@ -230,10 +230,16 @@ TM.add("rating", () => typeof isHighlight === "function" && TM.ui.cardNamed("tra
   // has two resting states now, and the hardcoded one had already caused a real bug in solo mode itself.
   await TM.ui.setSwitch("showHighlightsToggle", true);
   await TM.wait(400);
-  const dimHighlights = TM.map.dimmedTrails();
   const card = TM.ui.cardNamed("trailCards", /Madonna della Guardia/);
   card.click();
-  await TM.wait(500);
+  await TM.wait(700);
+  // Die Grundlinie erst NACH dem Klick: der Klick fliegt die Karte, und dimmedTrails() zaehlt DOM-Pfade --
+  // Leaflet zeichnet nur, was im gepolsterten Ausschnitt liegt. Vor dem Flug gezaehlt haengt die Zahl davon
+  // ab, wo die Karte stand, als die Suite anfing, also davon, welche Suite vorher lief: standalone war der
+  // Fall gruen, im Bund mit vier anderen las er 382 gegen 191 -- genau das Doppelte, weil im zweiten
+  // Ausschnitt doppelt so viele Linien gezeichnet waren. Gemessen und behoben am 2026-08-25; verglichen wird
+  // ueber das Solo hinweg, und das ist die Eigenschaft, um die es geht.
+  const dimHighlights = TM.map.dimmedTrails();
   applySolo(card.dataset.id || "");
   await TM.wait(400);
   T.ok("during solo almost everything is dimmed", TM.map.dimmedTrails() >= dimHighlights,

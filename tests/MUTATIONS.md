@@ -134,6 +134,9 @@ current; a stale count is worse than none, because it looks like evidence.
 | `infopanel` | drop the `${isHighlight(segTrail) ? CROWN_HTML : ""}` from the Tour segment block | "a crowned component trail wears its crown in the segment block too" fails **got {crown:false, rate:4.37} against a threshold of 4.33**. Measured, not reasoned about: this block was the sixth place a crowned trail is named, and the only one that named it without crowning it (user, 2026-08-25). Its companion check (a component BELOW the threshold, 3.65, must stay bare) is what stops the fix from being a crown printed unconditionally |
 | `rating` | give `startMarker`/`endMarker` the gold ring back in `applyCrownRing` | nothing in the suites fails, and that is the point being recorded: the gold ring on the selected trail's own green/red endpoints is a **user decision**, not a correctness property, and no check defends it. Measured live instead — a crowned trail selected in Bike Kingdom shows `#0d3d1a/1.5` and `#5c0f0a/1.5`, while its white resting dot is one of exactly 12 `#e0a326/2.5` against 109 plain ones, matching the 12 crowned cards |
 
+| `nearby` | `const inList = visible` -- den Radius aus dem Listen-Zweig von `render()` nehmen | "und die genannte Trailzahl IST die Laenge der Liste" fällt **got 219, want 31**: die Zeile auf der Karte behauptet 31 Treffer, die Liste zeigt 219. Genau der unehrliche Zustand, den dieses Feature vermeiden muss -- nicht kaputt, nur verlogen |
+| `nearby` | `nearbyPasses(t)` aus `baselineLineOpacity` nehmen | "die Karte raeumt NICHT, sie dimmt" fällt **got 0, want > 0**: die Liste filtert weiter, die Karte verliert stillschweigend ihre Linse, und Karte und Liste laufen auseinander |
+
 **Nicht mutationsgeprüft, und zwar aus einem nennbaren Grund:** „map and list crown the same trails" ist die
 Eigenschaft, die der Rastungs-Fehler vom 2026-08-24 verletzt hat (Kartenlabel und goldene Ringe mit der
 *ungerasteten* Schwelle gebaut, Kacheln mit der gerasteten). Die Nachführung (`lastAppliedHighlightMin`)
@@ -142,6 +145,18 @@ auf dem 0,05-Raster, gemessen: 28 gekrönte Labels gegen 28 gekrönte Kacheln, m
 wurde der Fehler live in Bike Kingdom („Fürhörnli", 4,32 gegen die gerastete Schwelle 4,33: goldene Ringe an
 den Endpunkten, keine Krone auf der Kachel). Die Zusicherung steht trotzdem, weil sie in jeder Region greift,
 in der er auftreten *kann*; als Beweis zählt sie hier nicht.
+
+**Ebenfalls nicht mutationsgeprüft, mit Grund:** `nearby`s "und kein Info-Panel ist aufgegangen". Die
+Absicherung, um die es geht (`start.longPress` markiert die Berührung als verbraucht, `touchend` steigt aus
+und ruft `preventDefault()`), ist in diesem Browser **nicht beobachtbar** — aus zwei unabhängigen Gründen,
+die beide beim Messen herauskamen. Erstens hält das Zeitfenster des Tipp-Zweigs (`> 500 ms` ist kein Tippen
+mehr) einen langen Druck ohnehin von unserem eigenen Klick fern; die Marke ist dieselbe Zahl wie
+`NEARBY_LONGPRESS_MS`. Zweitens ist die Wirkung, die wirklich am `preventDefault()` hängt, der **synthetische
+Klick der Plattform** — und den erzeugt ein gescriptetes `TouchEvent` nicht (steht so in `CLAUDE.md`).
+Zwei Fehlgriffe hat der Fall dabei trotzdem aufgedeckt, beide behoben: er prüfte `#infoPanel.open`, während
+das Panel `.visible` trägt (eine Zusicherung, die nie fehlschlagen konnte), und er drückte auf die Mitte des
+umschließenden RECHTECKS der Linie, was bei einer krummen Linie daneben liegt — dann ist `start.target` null
+und der Handler steigt aus, bevor überhaupt etwas geprüft wird.
 
 
 ## Not yet mutation-checked
