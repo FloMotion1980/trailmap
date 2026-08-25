@@ -92,6 +92,20 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   Südtirol taggt jede Ortschaft mehrsprachig, St. Vigil kam als 60 Zeichen langes
   „Al Plan de Mareo - St. Vigil in Enneberg - San Vigilio di Marebbe" auf die Karte.
 
+## 2026-08-25 (Validator: eine Trailrunde ohne Abschnitte wird gemeldet)
+- **`tools/validate_region.py` warnt jetzt, wenn ein `loop:true`-Trail null `trailSegments`-Eintraege hat.**
+  Der Check lag seit dem 2026-08-13 fertig auf dem Branch `claude/recursing-ritchie-3bdbcc` und war nie
+  gemerged -- gefunden beim Aufraeumen eines uebrig gebliebenen Worktrees unter `.claude/worktrees/`.
+  Er beschreibt genau den Fall, der donnersberg.json in Commit `b881699` den kompletten
+  `trailSegments`-Key gekostet hat, ohne dass irgendetwas es bemerkte, bis der Nutzer "Wasser & Holz"
+  ohne farbige Abschnitte gerendert sah.
+- **Weich, nicht hart**: `check()` gibt jetzt `(bad, warn)` zurueck, und eine Warnung faellt den Lauf
+  nicht. Beide Faelle sind echt -- eine Runde ganz ohne Abschnittsaufteilung zeichnet regulaer als eine
+  gestrichelte Linie (`buildTrailLayer`s "no TRAIL_SEGMENTS data"-Zweig), sieht in der Datei aber
+  identisch aus wie eine, der die Aufteilung abhanden gekommen ist.
+- **15 Warnungen ueber 5 Regionen** (Odenwald 6, Paganella 3, Paznaun 2, Saarland 2, Sauerland 2), und
+  keine davon ist ein Verlust: fuer jede der fuenf Regionen ueber die ganze Commit-Historie geprueft, keine
+  hatte je MEHR `trailSegments`-Eintraege als heute. Nachgerechnet, nicht angenommen.
 ## 2026-08-25 (Umgebungssuche, dritter Durchgang)
 - **Der Eingang ist eine Pille auf der Karte, kein Knopf im Bedienstapel** — denn der Stapel ist touch-only
   (`#locateCluster` steht am Schreibtisch auf `display:none`), weshalb dort erst gar kein Knopf war
