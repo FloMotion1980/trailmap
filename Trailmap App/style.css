@@ -1960,8 +1960,15 @@ header{ position:relative; z-index:1; }
   font-family: Arial, sans-serif; font-size: 11px; color: var(--forest-dark); }
 #nearbyBarText { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   font-variant-numeric: tabular-nums; }
-.nearby-summary-btn { flex-shrink: 0; border: none; background: none; padding: 2px 0; font-size: 11px;
-  font-family: inherit; color: var(--forest); cursor: pointer; }
+/* Ein Knopf mit Flaeche und Rahmen, nicht nur farbiger Text: der reine Text sah nicht danach aus, als
+   koennte man drauftippen (Nutzer, 2026-08-25, nach vier Entwuerfen -- er hat diesen gewaehlt). Das ›
+   sagt, wohin es geht, und die helle Fuellung sagt, dass hier etwas passiert. */
+.nearby-summary-btn { flex-shrink: 0; display: inline-flex; align-items: center; gap: 4px;
+  border: 1px solid #cddcc6; border-radius: 6px; background: #eef4ea; padding: 3px 8px; font-size: 11px;
+  font-family: inherit; color: var(--forest); cursor: pointer; line-height: 1.3; }
+.nearby-summary-btn:active { background: #e2ebdd; }
+/* An = gefuellt, dieselbe Lesart wie ueberall sonst in dieser App fuer "dieser Schalter greift gerade". */
+.nearby-summary-btn.on { background: var(--highlight); border-color: #b8850f; color: #3a2a05; }
 /* Landscape hat am wenigsten Hoehe: dieselben Werte, die .search-overlay-summary dort schon benutzt. */
 html.landscape-compact #nearbyBar {
   top: calc(3px + env(safe-area-inset-top, 0px)); left: calc(3px + env(safe-area-inset-left, 0px));
@@ -2003,6 +2010,19 @@ html.ride-mode #nearbyPickBtn { display: none; }
    schwebt, und ist zurueck, sobald das Feld wieder zu ist. */
 .map-wrap.search-floating #nearbyPickBtn { display: none; }
 
+/* Anker und Radius-Griff sind Marker mit divIcon, damit Leaflet sie von sich aus ziehbar macht. Die Icons
+   sind 22px gross, gezeichnet wird aber nur der innere Punkt -- der Rest ist Trefferflaeche fuer den Finger,
+   denn die Ringlinie selbst ist 1,5px und damit kein Ziel. touch-action:none, sonst scrollt/zoomt die Geste
+   die Seite statt zu ziehen. */
+.nearby-anchor-icon, .nearby-radius-icon { display: flex; align-items: center; justify-content: center;
+  touch-action: none; cursor: grab; }
+.nearby-anchor-icon:active, .nearby-radius-icon:active { cursor: grabbing; }
+.nearby-anchor-icon::after { content: ""; width: 14px; height: 14px; border-radius: 50%;
+  background: #b3520a; border: 2px solid #4a2205; box-shadow: 0 1px 4px rgba(0,0,0,0.4); }
+/* Der Griff ist heller und etwas kleiner als der Anker: er gehoert zum Ring, nicht zum Punkt. */
+.nearby-radius-icon::after { content: ""; width: 12px; height: 12px; border-radius: 50%;
+  background: #fff; border: 2.5px solid #b3520a; box-shadow: 0 1px 4px rgba(0,0,0,0.35); }
+
 /* Der armierte Punkt-Modus. Die pointer-events-Regel ist der ganze Mechanismus: waehrend er laeuft, nimmt
    sie den Trail-Linien ihre Klickbarkeit, damit jeder Tipp auf der KARTE landet -- so braucht der
    Klick-Handler keinen Sonderfall, und unsere eigene Tipp-Abfangung (die per elementFromPoint nach einer
@@ -2017,5 +2037,6 @@ html.ride-mode #nearbyBar { display: none; }
      Zusammenfassung eine Spur groesser als die 11px, die am Schreibtisch reichen. */
   .nearby-pill-btn { min-width: 30px; min-height: 30px; font-size: 16px; }
   .nearby-summary { font-size: 12px; }
-  .nearby-summary-btn { font-size: 12px; padding: 4px 0 4px 4px; }
+  /* Am Lenker: 30px hoch wie jedes andere Ziel, das getroffen werden muss. */
+  .nearby-summary-btn { font-size: 12px; padding: 6px 10px; min-height: 30px; }
 }

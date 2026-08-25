@@ -106,6 +106,35 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
 - **15 Warnungen ueber 5 Regionen** (Odenwald 6, Paganella 3, Paznaun 2, Saarland 2, Sauerland 2), und
   keine davon ist ein Verlust: fuer jede der fuenf Regionen ueber die ganze Commit-Historie geprueft, keine
   hatte je MEHR `trailSegments`-Eintraege als heute. Nachgerechnet, nicht angenommen.
+## 2026-08-25 (Umgebungssuche: anfassbar auf der Karte)
+- **Anker und Ring lassen sich direkt ziehen** (Nutzeridee): der Punkt verschiebt die ganze Suche, ein
+  zweiter Griff auf 3 Uhr zieht den Radius größer und kleiner. Beide sind `L.marker` und keine
+  `circleMarker`, weil Leaflet nur Marker von sich aus ziehbar macht — Marker liegen im `markerPane`, den der
+  Rotations-Plugin nicht dreht, sondern nur neu positioniert: ihre **Lage** bleibt unter jeder Kartendrehung
+  richtig, und ein runder Punkt hat keine Ausrichtung, die mitdrehen müsste. Der Griff darf frei gezogen
+  werden (gemessen wird der Abstand) und springt beim Loslassen auf 3 Uhr zurück, damit er immer dort ist,
+  wo man ihn sucht. Der Regler rastet dafür feiner (`step` 0.1 statt 0.5) — sonst läse er einen gezogenen
+  Radius von 3,7 km als 3,5 zurück, und Griff und Regler stritten um denselben Wert.
+- **Beim Verschieben rechnet die Liste jetzt live mit — solange es billig genug ist.** Der Unterschied war dem
+  Nutzer aufgefallen („Wenn ich vergrößere werden die Trails direkt neu gefiltert. Beim Verschieben erst wenn
+  ich loslasse"), und er hat einen echten Grund: den Radius zu ändern lässt jede gemerkte Entfernung gültig,
+  den Anker zu verschieben macht alle ungültig. Statt es pauschal zu lassen, **misst sich der Code selbst**:
+  dauert ein Durchgang länger als 60 ms, hört er während des Ziehens auf und überlässt es dem Loslassen. In
+  Finale sind das 16 ms (läuft live), mit zugeschaltetem Gardasee 147 ms (fällt zurück) — ohne dass irgendwo
+  eine Regionsgröße hartkodiert wäre.
+- **„Start in Radius"**, ein Schalter neben „Liste" (Nutzeridee): statt „welcher Trail führt hier vorbei" die
+  Frage „welchen kann ich von hier aus anfangen". Beide Maße stehen im selben Cache, umgeschaltet wird nur,
+  welches gilt — Filter, Sortierachse und die Zahl auf der Kachel lesen dieselbe Stelle, damit sie nie
+  verschiedene Entfernungen zeigen. Gemessen in Finale: 31 Trails im 3-km-Radius, davon 23 mit Startpunkt
+  darin. Der Name brauchte drei Anläufe („Einstieg" war fremd, „Start" allein sagte die Bedingung nicht).
+- **„Liste" sieht jetzt aus wie ein Knopf** (Rahmen, helle Fläche, ›) statt wie farbiger Text — der Nutzer
+  hatte gemeldet, dass er nicht antippbar wirkt, und unter vier Entwürfen diesen gewählt.
+- Suite `nearby`: **15 Fälle / 70 Checks**. Zwei Fehlgriffe im Testfall selbst kamen dabei heraus, beide
+  gemessen: eine Ziehgeste über 48 px sagt je nach Zoom gar nichts (tief hineingezoomt bleibt der Radius
+  gerundet gleich — jetzt wird relativ zum aktuellen Abstand gezogen), und Bewegungen an `document` statt an
+  ein Element ließen Leaflets Draggable `document` als `_lastTarget` merken, worauf sein `removeClass` mit
+  „Cannot read properties of undefined (reading 'baseVal')" mitten in der nächsten Prüfung warf.
+
 ## 2026-08-25 (Umgebungssuche, dritter Durchgang)
 - **Der Eingang ist eine Pille auf der Karte, kein Knopf im Bedienstapel** — denn der Stapel ist touch-only
   (`#locateCluster` steht am Schreibtisch auf `display:none`), weshalb dort erst gar kein Knopf war

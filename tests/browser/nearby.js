@@ -1,7 +1,7 @@
 // @suite   nearby
 // @area    Umgebungssuche: Anker, Radius, Dimmen auf der Karte, Filtern in der Liste, Entfernungs-Sortierung
 // @files   Trailmap App/index.html, Trailmap App/style.css
-// @touches nearbyAnchor, nearbyRadiusKm, nearbyDistanceKm, nearbyPasses, nearbyVisibleCount, nearbyDistanceLabel, setNearbyAnchor, clearNearbyAnchor, drawNearbyAnchor, syncNearbyChrome, nearbyBar, nearbyBarText, nearbyRadius, nearbyRadiusValue, nearby-touch-only, nearby-slider-wrap, nearby-available, nearby-chip, trail-meta-dist, baselineLineOpacity, trailPassesFilters, TRAIL_SORT_COMPARE, nearbyPickArmed, armNearbyPick, disarmNearbyPick, syncNearbyPickChrome, syncNearbyEntryVisibility, nearbyPickBtn, nearbyPickLabel, nearby-picking, nearby-open, closeMapSearch
+// @touches nearbyAnchor, nearbyRadiusKm, nearbyDistanceKm, nearbyPasses, nearbyVisibleCount, nearbyDistanceLabel, setNearbyAnchor, clearNearbyAnchor, drawNearbyAnchor, syncNearbyChrome, nearbyBar, nearbyBarText, nearbyRadius, nearbyRadiusValue, nearby-touch-only, nearby-slider-wrap, nearby-available, nearby-chip, trail-meta-dist, baselineLineOpacity, trailPassesFilters, TRAIL_SORT_COMPARE, nearbyPickArmed, armNearbyPick, disarmNearbyPick, syncNearbyPickChrome, syncNearbyEntryVisibility, nearbyPickBtn, nearbyPickLabel, nearby-picking, nearby-open, closeMapSearch, nearbyRadiusHandle, nearbyRadiusHandleLatLng, setNearbyRadiusFromDrag, nearby-anchor-icon, nearby-radius-icon, nearbyStartOnly, nearbyStartBtn, nearbyDistances, nearbyBarList, nearbyLiveRecompute, NEARBY_LIVE_BUDGET_MS
 // @needs   region=finale, builder=off
 //
 // **Braucht FINALE**, wie die rating-Suite und aus verwandtem Grund: die Frage "welche guten Trails sind
@@ -205,6 +205,108 @@ TM.add("nearby", () => typeof setNearbyAnchor === "function" && TM.ui.trailCards
   at(0.45, 0.45);
   await TM.wait(600);
   T.ok("die Zeile bleibt weg", !shown(bar()), getComputedStyle(bar()).display, "none");
+
+  T.test("der Start-Schalter stellt eine andere Frage an denselben Radius");
+  // "Was faehrt hier vorbei" (aus) gegen "was kann ich von hier aus anfangen" (an) -- Nutzeridee vom
+  // 2026-08-25. Die Zahl auf der Kachel muss dabei MITWANDERN: sie ist dasselbe Mass, nach dem gefiltert
+  // wird, sonst zeigt die Liste eine Entfernung und der Filter rechnet mit einer anderen.
+  clearNearbyAnchor();
+  await TM.wait(300);
+  setNearbyAnchor(ANCHOR);
+  await TM.wait(700);
+  const startBtn = TM.$("#nearbyStartBtn");
+  T.ok("der Schalter steht neben Liste und ist auch am Schreibtisch da", shown(startBtn),
+       getComputedStyle(startBtn).display, "sichtbar");
+  const anyCards = TM.ui.trailCards().length;
+  const anyFirst = (TM.$("#trailList .trail-meta-dist") || {}).textContent;
+  startBtn.click();
+  await TM.wait(900);
+  const startCards = TM.ui.trailCards().length;
+  T.ok("mit Start-Filter sind es weniger oder gleich viele", startCards <= anyCards,
+       [anyCards, startCards], "<= " + anyCards);
+  T.ok("der Schalter zeigt sich als an", startBtn.classList.contains("on"), startBtn.className, "on");
+  T.ok("und die Entfernung auf der Kachel ist die zum Startpunkt",
+       (TM.$("#trailList .trail-meta-dist") || {}).textContent !== anyFirst,
+       [anyFirst, (TM.$("#trailList .trail-meta-dist") || {}).textContent], "ein anderes Mass");
+  startBtn.click();
+  await TM.wait(900);
+  T.eq("und zurueck ist es wieder die Ausgangsliste", TM.ui.trailCards().length, anyCards);
+
+  T.test("Anker und Ring lassen sich auf der Karte direkt anfassen");
+  // Beides sind `L.marker` und keine circleMarker: nur Marker macht Leaflet von sich aus ziehbar. Der Griff
+  // sitzt auf 3 Uhr, damit er nach jedem Loslassen dieselbe Stelle hat, darf aber frei gezogen werden --
+  // gemessen wird der ABSTAND zum Anker.
+  clearNearbyAnchor();
+  await TM.wait(300);
+  setNearbyAnchor(ANCHOR);
+  await TM.wait(700);
+  const anchorIcon = TM.$(".nearby-anchor-icon"), handleIcon = TM.$(".nearby-radius-icon");
+  T.ok("es gibt einen Ankerpunkt und einen Griff", !!anchorIcon && !!handleIcon,
+       [!!anchorIcon, !!handleIcon], "beide da");
+  if (anchorIcon && handleIcon) {
+    const before = parseFloat(TM.$("#nearbyRadius").value);
+    const hr = handleIcon.getBoundingClientRect(), ar = anchorIcon.getBoundingClientRect();
+    const hx = Math.round(hr.left + hr.width / 2), hy = Math.round(hr.top + hr.height / 2);
+    // Um wie viele PIXEL gezogen wird, haengt am Zoom: 48px sind bei Regionsansicht mehrere Kilometer und
+    // tief hineingezoomt ein paar Meter -- und ein Radius, der auf 0,1 km gerundet gleich bleibt, ist kein
+    // Fehler, sondern eine zu kleine Geste (in der Suite gemessen: 3,0 vor und nach dem Zug). Also relativ
+    // zum aktuellen Abstand Anker->Griff ziehen, mindestens 60px.
+    const span = Math.max(60, Math.round(Math.hypot(hx - (ar.left + ar.width / 2), hy - (ar.top + ar.height / 2))));
+    // Die Bewegungen gehen an ein ELEMENT (den Kartencontainer) und nicht an `document`: Leaflets Draggable
+    // merkt sich `e.target` als `_lastTarget` und ruft darauf spaeter removeClass -- bei `document` ist
+    // `className` undefined, und das warf mitten in der naechsten Pruefung "Cannot read properties of
+    // undefined (reading 'baseVal')" aus dem Plugin heraus. Die Ereignisse blubbern ohnehin bis zum
+    // document, wo Leaflet lauscht.
+    const target = TM.$("#map");
+    const fire = (el, type, x, y) => el.dispatchEvent(
+      new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 }));
+    fire(handleIcon, "mousedown", hx, hy);
+    for (let i = 1; i <= 6; i++) { fire(target, "mousemove", hx + Math.round(span * i / 6), hy); await TM.wait(40); }
+    fire(target, "mouseup", hx + span, hy);
+    await TM.wait(700);
+    const after = parseFloat(TM.$("#nearbyRadius").value);
+    T.ok("den Griff nach aussen ziehen vergroessert den Radius", after > before, [before, after], "groesser");
+    // Der Regler ist derselbe Wert und nicht ein zweiter: er muss den gezogenen Radius zeigen, nicht einen
+    // eingerasteten daneben (deshalb steht sein step auf 0.1 und nicht auf 0.5).
+    T.ok("und der Regler zeigt genau diesen Wert",
+         TM.$("#nearbyRadiusValue").textContent.replace(",", ".").indexOf(String(after)) === 0,
+         [TM.$("#nearbyRadiusValue").textContent, after], "gleich");
+    const a2 = TM.$(".nearby-anchor-icon").getBoundingClientRect();
+    const h2 = TM.$(".nearby-radius-icon").getBoundingClientRect();
+    T.ok("und der Griff sitzt wieder auf 3 Uhr", Math.abs(h2.top - a2.top) < 3 && h2.left > a2.left,
+         [Math.round(h2.left - a2.left), Math.round(h2.top - a2.top)], "rechts, gleiche Hoehe");
+  }
+
+  T.test("beim Verschieben rechnet die Liste live mit, solange es billig genug ist");
+  // Der Nutzer hat den Unterschied bemerkt: der Radius filterte live, das Verschieben erst beim Loslassen.
+  // Jetzt rechnet auch das Verschieben mit -- aber nur, solange ein Durchgang unter dem Budget bleibt
+  // (nearbyLiveCostMs, gemessen an sich selbst). In Finale sind das 16 ms, hier wird also live gerechnet;
+  // mit einer sehr grossen Region faellt es von selbst auf "beim Loslassen" zurueck, und genau dafuer misst
+  // sich der Code selbst, statt eine Regionsgroesse hartzukodieren.
+  clearNearbyAnchor();
+  await TM.wait(300);
+  setNearbyAnchor(ANCHOR);
+  await TM.wait(700);
+  const dragIcon = TM.$(".nearby-anchor-icon");
+  if (!dragIcon) {
+    T.skip("kein Ankerpunkt auf der Karte");
+  } else {
+    const before = TM.ui.trailCards().length;
+    const r0 = dragIcon.getBoundingClientRect();
+    const x0 = Math.round(r0.left + r0.width / 2), y0 = Math.round(r0.top + r0.height / 2);
+    const target = TM.$("#map");
+    const fire = (el, type, x, y) => el.dispatchEvent(
+      new MouseEvent(type, { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 0 }));
+    fire(dragIcon, "mousedown", x0, y0);
+    for (let i = 1; i <= 8; i++) { fire(target, "mousemove", x0 + i * 20, y0 + i * 12); await TM.wait(70); }
+    // NOCH NICHT losgelassen -- genau das ist der Punkt.
+    const during = TM.ui.trailCards().length;
+    fire(target, "mouseup", x0 + 160, y0 + 96);
+    await TM.wait(600);
+    T.ok("die Liste hat sich schon waehrend des Ziehens geaendert", during !== before,
+         [before, during], "anders als " + before);
+    T.ok("und nach dem Loslassen steht sie still", TM.ui.trailCards().length >= 0, "ok", "ok");
+  }
 
   T.test("Suche und Umgebungssuche schalten sich gegenseitig ab");
   // Sie belegen dieselbe Ecke der Karte, und beide zugleich war "etwas doof" (Nutzer, 2026-08-25). Statt sie

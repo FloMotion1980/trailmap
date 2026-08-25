@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=219" />
+<link rel="stylesheet" href="style.css?v=224" />
 </head>
 <body>
 <div id="fatalError">
@@ -420,7 +420,10 @@
           <button type="button" id="nearbyLocateBtn" class="nearby-pill-btn nearby-touch-only"
                   title="Anker auf die eigene Position setzen">📍</button>
           <span class="nearby-slider-wrap">
-            <input type="range" id="nearbyRadius" min="0.5" max="15" step="0.5" value="3"
+            <!-- step 0.1 und nicht 0.5: der Griff auf dem Ring liefert einen frei gezogenen Radius auf 0,1 km
+               genau, und ein Regler mit groberer Rasterung liest ihn beim Zurueckschreiben verstellt zurueck
+               (3,7 wuerde zu 3,5) -- dann streiten Griff und Regler um denselben Wert. -->
+          <input type="range" id="nearbyRadius" min="0.5" max="15" step="0.1" value="3"
                    aria-label="Radius der Umgebungssuche">
             <span class="nearby-slider-value" id="nearbyRadiusValue"></span>
           </span>
@@ -432,7 +435,15 @@
           <!-- "Liste" oeffnet die Schublade -- am Schreibtisch steht die Seitenleiste ohnehin dauerhaft
                daneben, dort tut der Knopf nichts, was man sehen wuerde ("Ich kann auf Liste klicken und nix
                passiert"). -->
-          <button type="button" id="nearbyBarList" class="nearby-summary-btn nearby-touch-only">Liste</button>
+          <!-- Zwei verschiedene Fragen an denselben Radius: "was faehrt hier vorbei" (aus) und "was kann
+               ich von hier aus anfangen" (an). Auf beiden Layouts sichtbar, anders als "Liste" -- das ist
+               eine Filterfrage und keine Touch-Sache.
+               "Start in Radius" nach zwei Anlaeufen (Nutzer): "Einstieg" war ihm fremd, "Start" allein sagte
+               nicht, was damit geschieht. Das Wort Start kommt aus der App selbst -- der gruene Punkt auf der
+               Karte heisst so, der rote Ziel -- und "in Radius" sagt die Bedingung dazu. -->
+          <button type="button" id="nearbyStartBtn" class="nearby-summary-btn" aria-pressed="false"
+                  title="Nur Trails, deren Startpunkt im Radius liegt">Start in Radius</button>
+          <button type="button" id="nearbyBarList" class="nearby-summary-btn nearby-touch-only">Liste <span aria-hidden="true">›</span></button>
         </div>
       </div>
       <div id="layerWarning"></div>
@@ -6100,8 +6111,14 @@ const NEARBY_ANCHOR_COLOR = "#b3520a";   // eigene Farbe -- nie mit dem blauen P
 const NEARBY_DEFAULT_RADIUS_KM = 3;
 let nearbyAnchor = null;                 // [lat, lng] oder null
 let nearbyRadiusKm = NEARBY_DEFAULT_RADIUS_KM;
-let nearbyDistCache = {};                // trailId -> km; gilt fuer genau einen Anker, siehe setNearbyAnchor
-let nearbyAnchorMarker = null, nearbyCircleLayer = null;
+let nearbyDistCache = {};                // trailId -> {any, start} in km; gilt fuer genau einen Anker
+// "Nur Trails, deren STARTPUNKT im Radius liegt" (Nutzer, 2026-08-25). Zwei verschiedene Fragen, und beide
+// sind berechtigt: die naechste Stelle einer Linie beantwortet "was faehrt hier in der Naehe vorbei", der
+// Startpunkt beantwortet "was kann ich von hier aus anfangen". Nicht gespeichert, wie alles an diesem
+// Feature.
+let nearbyStartOnly = false;
+let nearbyAnchorMarker = null, nearbyCircleLayer = null, nearbyRadiusHandle = null;
+const NEARBY_MIN_RADIUS_KM = 0.5, NEARBY_MAX_RADIUS_KM = 15;
 // Sortierung und Gruppierung, wie sie VOR dem ersten Anker standen, plus das, was der Anker daraus gemacht
 // hat. Beides zusammen, weil nur der Vergleich sagt, ob der Nutzer inzwischen selbst umgestellt hat: was er
 // selbst gewaehlt hat, bleibt beim Aufraeumen stehen, und nur was der Anker gesetzt hat, geht zurueck.
@@ -6113,11 +6130,15 @@ let nearbyViewApplied = null;            // dito, aber das, was wir selbst geset
 // ein. Vorfilter ueber die Bounding-Box der Linie: liegt der Anker weit ausserhalb, genuegt die Ecke der
 // Box als untere Schranke, und die punktweise Schleife entfaellt -- bei 900 Trails einer grossen Region
 // ist das der Unterschied zwischen einem Mal ueber alle Punkte und einem Mal ueber ein Dutzend Linien.
-function nearbyDistanceKm(t){
+function nearbyDistances(t){
   if (!nearbyAnchor || !t) return null;
-  if (nearbyDistCache[t.id] !== undefined) return nearbyDistCache[t.id];
+  if (nearbyDistCache[t.id]) return nearbyDistCache[t.id];
   const coords = TRAIL_GEO[t.id];
-  if (!coords || !coords.length) { nearbyDistCache[t.id] = Infinity; return Infinity; }
+  if (!coords || !coords.length) return (nearbyDistCache[t.id] = { any: Infinity, start: Infinity });
+  // Der STARTPUNKT ist der erste Punkt der Linie -- ausser der Trail wird gerade rueckwaerts betrachtet, dann
+  // ist es der letzte (die Koordinaten werden dabei nie umgedreht, siehe applyReversedEndpoints).
+  const startPt = reversedId === t.id ? coords[coords.length - 1] : coords[0];
+  const start = haversineM(nearbyAnchor, startPt) / 1000;
   const layer = lineLayers[t.id];
   if (layer && layer.bounds) {
     const sw = layer.bounds.getSouthWest(), ne = layer.bounds.getNorthEast();
@@ -6126,16 +6147,20 @@ function nearbyDistanceKm(t){
     const boxKm = haversineM(nearbyAnchor, [lat, lng]) / 1000;
     // Die Box-Entfernung ist immer <= der echten. Ist schon sie ueber jedem einstellbaren Radius, taugt
     // sie als Wert: gezeigt wird die Zahl nur innerhalb des Radius, und sortiert wird dort ebenfalls.
-    if (boxKm > 16) { nearbyDistCache[t.id] = boxKm; return boxKm; }
+    if (boxKm > 16) return (nearbyDistCache[t.id] = { any: boxKm, start: start });
   }
   let best = Infinity;
   for (let i = 0; i < coords.length; i++) {
     const d = haversineM(nearbyAnchor, coords[i]);
     if (d < best) best = d;
   }
-  best /= 1000;
-  nearbyDistCache[t.id] = best;
-  return best;
+  return (nearbyDistCache[t.id] = { any: best / 1000, start: start });
+}
+// DIE Zahl, die gerade gilt: je nachdem, welche Frage der Schalter stellt. Alles andere -- Filter,
+// Sortierachse, die Zahl auf der Kachel -- liest sie hier, damit die drei nie verschiedene Masse zeigen.
+function nearbyDistanceKm(t){
+  const d = nearbyDistances(t);
+  return d ? (nearbyStartOnly ? d.start : d.any) : null;
 }
 // DIE eine Regel, die Karte (dimmen) und Liste (filtern) gemeinsam benutzen.
 function nearbyPasses(t){
@@ -6158,10 +6183,61 @@ function nearbyDistanceLabel(t){
 // tilePane und overlayPane in seinen rotatePane um, echte Geometrie dreht sich darin also von selbst mit
 // (siehe ROTATING_PANE) -- und ein eigener Pane kostet eine ganze SVG-Flaeche, was auf dem Handy gemessen
 // 40 MB waren (siehe eachVectorRenderer). Der Ring nach hinten, damit er unter den Trails liegt.
+// Anker und Radius sind auf der Karte ANFASSBAR (2026-08-25, auf Wunsch des Nutzers): der Punkt laesst sich
+// ziehen, und ein zweiter Griff auf dem Ring zieht ihn groesser und kleiner. Beide sind `L.marker` und keine
+// `circleMarker`, weil Leaflet nur Marker von sich aus ziehbar macht -- Marker liegen im markerPane, den der
+// Rotations-Plugin nicht dreht, sondern nur neu positioniert: ihre LAGE bleibt unter jeder Kartendrehung
+// richtig, und ein runder Punkt hat keine Ausrichtung, die mitdrehen muesste.
+//
+// Der Unterschied im Aufwand entscheidet, was waehrend des Ziehens passiert: den RADIUS zu aendern laesst
+// jede gemerkte Entfernung gueltig (nur die Schwelle wandert), das kostet ein render() und laeuft live mit.
+// Den ANKER zu verschieben macht jede Entfernung ungueltig -- 16 ms in Finale, 147 ms mit zugeschaltetem
+// Gardasee -- und das waere bei 60 Bildern je Sekunde ein Ruckler; also folgt beim Ziehen nur der Ring, und
+// gerechnet wird beim Loslassen.
+function nearbyRadiusHandleLatLng(){
+  // Auf 3 Uhr: eine feste Himmelsrichtung, damit der Griff nach jedem Loslassen wieder dieselbe Stelle hat.
+  const p = destinationPoint(nearbyAnchor[0], nearbyAnchor[1], 90, nearbyRadiusKm * 1000);
+  return L.latLng(p[0], p[1]);
+}
+// Beim Verschieben mitrechnen, SOLANGE es sich lohnt -- der Nutzer hat den Unterschied bemerkt: "Wenn ich
+// vergroessere werden die Trails direkt neu gefiltert. Beim Verschieben erst wenn ich loslasse". Der Grund
+// dafuer ist echt: den Radius zu aendern laesst jede gemerkte Entfernung gueltig, den Anker zu verschieben
+// macht alle ungueltig. Statt es pauschal zu lassen, MISST sich diese Funktion selbst: dauert ein Durchgang
+// laenger als NEARBY_LIVE_BUDGET_MS, rechnet sie waehrend des Ziehens nicht mehr mit und ueberlaesst es dem
+// Loslassen. In Finale (219 Trails) sind das 16 ms und es laeuft live mit; mit zugeschaltetem Gardasee
+// (1130) waren es 147 ms, und dort bleibt es beim Loslassen -- ohne dass jemand eine Regionsgroesse
+// hartkodiert haette.
+const NEARBY_LIVE_BUDGET_MS = 60, NEARBY_LIVE_INTERVAL_MS = 120;
+let nearbyLiveCostMs = 0, nearbyLiveLastRun = 0;
+function nearbyLiveRecompute(at){
+  if (nearbyLiveCostMs > NEARBY_LIVE_BUDGET_MS) return;
+  const now = Date.now();
+  if (now - nearbyLiveLastRun < NEARBY_LIVE_INTERVAL_MS) return;
+  nearbyLiveLastRun = now;
+  const t0 = performance.now();
+  nearbyAnchor = [at.lat, at.lng];
+  nearbyDistCache = {};
+  applyHighlightDimming();
+  render();
+  nearbyLiveCostMs = performance.now() - t0;
+}
+function setNearbyRadiusFromDrag(latlng, commit){
+  // Der Anker kann waehrend eines Ziehens verschwinden -- das ✕, ein Suchbegriff, ein Regionswechsel. Dann
+  // sind die Marker abgemeldet, und Leaflets eigenes dragend faellt danach noch ein: ohne diese Wache wirft
+  // es im Plugin ("Cannot read properties of undefined"), gemessen in der Suite.
+  if (!nearbyAnchor) return;
+  const km = haversineM(nearbyAnchor, [latlng.lat, latlng.lng]) / 1000;
+  nearbyRadiusKm = Math.max(NEARBY_MIN_RADIUS_KM, Math.min(NEARBY_MAX_RADIUS_KM, Math.round(km * 10) / 10));
+  if (nearbyCircleLayer) nearbyCircleLayer.setRadius(nearbyRadiusKm * 1000);
+  applyHighlightDimming();
+  render();
+  if (commit && nearbyRadiusHandle) nearbyRadiusHandle.setLatLng(nearbyRadiusHandleLatLng());
+}
 function drawNearbyAnchor(){
   if (!nearbyAnchor) {
-    if (nearbyAnchorMarker) { map.removeLayer(nearbyAnchorMarker); nearbyAnchorMarker = null; }
-    if (nearbyCircleLayer) { map.removeLayer(nearbyCircleLayer); nearbyCircleLayer = null; }
+    [["nearbyAnchorMarker", nearbyAnchorMarker], ["nearbyCircleLayer", nearbyCircleLayer],
+     ["nearbyRadiusHandle", nearbyRadiusHandle]].forEach(([, layer]) => { if (layer) map.removeLayer(layer); });
+    nearbyAnchorMarker = nearbyCircleLayer = nearbyRadiusHandle = null;
     return;
   }
   const ll = L.latLng(nearbyAnchor[0], nearbyAnchor[1]);
@@ -6175,12 +6251,33 @@ function drawNearbyAnchor(){
     nearbyCircleLayer.setRadius(nearbyRadiusKm * 1000);
   }
   if (!nearbyAnchorMarker) {
-    nearbyAnchorMarker = L.circleMarker(ll, { radius: 6, interactive: false, color: "#4a2205", weight: 2,
-                                              fillColor: NEARBY_ANCHOR_COLOR, fillOpacity: 1 }).addTo(map);
+    nearbyAnchorMarker = L.marker(ll, { draggable: true, keyboard: false, zIndexOffset: 900,
+      icon: L.divIcon({ className: "nearby-anchor-icon", iconSize: [22, 22], iconAnchor: [11, 11] }) }).addTo(map);
+    nearbyAnchorMarker.on("drag", (e) => {
+      if (!nearbyAnchor) return;
+      const at = e.target.getLatLng();
+      if (nearbyCircleLayer) nearbyCircleLayer.setLatLng(at);
+      if (nearbyRadiusHandle) {
+        const p = destinationPoint(at.lat, at.lng, 90, nearbyRadiusKm * 1000);
+        nearbyRadiusHandle.setLatLng(L.latLng(p[0], p[1]));
+      }
+      nearbyLiveRecompute(at);
+    });
+    nearbyAnchorMarker.on("dragend", (e) => { if (nearbyAnchor) setNearbyAnchor(e.target.getLatLng()); });
   } else {
     nearbyAnchorMarker.setLatLng(ll);
   }
-  nearbyAnchorMarker.bringToFront();
+  if (!nearbyRadiusHandle) {
+    nearbyRadiusHandle = L.marker(nearbyRadiusHandleLatLng(), { draggable: true, keyboard: false, zIndexOffset: 901,
+      title: "Radius ziehen",
+      icon: L.divIcon({ className: "nearby-radius-icon", iconSize: [22, 22], iconAnchor: [11, 11] }) }).addTo(map);
+    // Frei in jede Richtung ziehbar und nicht auf den Strahl gefesselt: gemessen wird der ABSTAND, und der
+    // Finger soll dorthin duerfen, wo er hin will. Beim Loslassen springt der Griff auf 3 Uhr zurueck.
+    nearbyRadiusHandle.on("drag", (e) => setNearbyRadiusFromDrag(e.target.getLatLng(), false));
+    nearbyRadiusHandle.on("dragend", (e) => setNearbyRadiusFromDrag(e.target.getLatLng(), true));
+  } else {
+    nearbyRadiusHandle.setLatLng(nearbyRadiusHandleLatLng());
+  }
 }
 // Zeile in der Seitenleiste, Zeile auf der Karte und der Entfernungs-Chip haengen alle an einem Zustand.
 function syncNearbyChrome(){
@@ -6198,6 +6295,14 @@ function syncNearbyChrome(){
   // dafuer nur noch die Treffer, statt die Zahl ein zweites Mal zu fuehren.
   const out = document.getElementById("nearbyRadiusValue");
   if (out) out.textContent = on ? radiusText : "";
+  const startBtn = document.getElementById("nearbyStartBtn");
+  if (startBtn) {
+    startBtn.classList.toggle("on", nearbyStartOnly);
+    startBtn.setAttribute("aria-pressed", String(nearbyStartOnly));
+    startBtn.title = nearbyStartOnly
+      ? "Zeigt nur Trails, deren Startpunkt im Radius liegt -- antippen für alle, die hier vorbeiführen"
+      : "Nur Trails, deren Startpunkt im Radius liegt";
+  }
   const bar = document.getElementById("nearbyBar");
   const barText = document.getElementById("nearbyBarText");
   if (bar) bar.classList.toggle("open", on);
@@ -6216,6 +6321,7 @@ function syncNearbyChrome(){
 // Ein neuer Anker macht jede gemerkte Entfernung ungueltig -- sie gilt genau fuer einen Punkt.
 function setNearbyAnchor(latlng){
   if (typeof closeMapSearch === "function") closeMapSearch();
+  nearbyLiveCostMs = 0;   // frisch messen: die Kosten haengen daran, wie viele Trails gerade geladen sind
   const first = !nearbyAnchor;
   nearbyAnchor = [latlng.lat !== undefined ? latlng.lat : latlng[0],
                   latlng.lng !== undefined ? latlng.lng : latlng[1]];
@@ -6245,6 +6351,7 @@ function clearNearbyAnchor(){
   if (!nearbyAnchor) return;
   nearbyAnchor = null;
   nearbyDistCache = {};
+  nearbyStartOnly = false;
   // Zurueck auf die URSPRUNGSWERTE, nicht auf die Vorgaben der App (Nutzer, 2026-08-25): wer vor dem Anker
   // nach Name gruppiert und nach Laenge sortiert hatte, will das danach wieder haben und nicht
   // Region/Schwierigkeit. Je Achse nur dann, wenn sie noch genau so steht, wie der Anker sie gesetzt hat --
@@ -6331,6 +6438,9 @@ map.getContainer().addEventListener("contextmenu", (e) => { e.preventDefault(); 
 document.getElementById("nearbyRadius").addEventListener("input", (e) => {
   nearbyRadiusKm = parseFloat(e.target.value);
   if (nearbyCircleLayer) nearbyCircleLayer.setRadius(nearbyRadiusKm * 1000);
+  // Der Griff auf dem Ring gehoert zum selben Wert und wandert mit -- in beide Richtungen, sonst zeigen
+  // Regler und Karte verschiedene Radien.
+  if (nearbyRadiusHandle && nearbyAnchor) nearbyRadiusHandle.setLatLng(nearbyRadiusHandleLatLng());
   applyHighlightDimming();
   render();
 });
@@ -6338,6 +6448,7 @@ document.getElementById("nearbyRadius").addEventListener("input", (e) => {
 document.getElementById("nearbyRadius").addEventListener("dblclick", () => {
   nearbyRadiusKm = NEARBY_DEFAULT_RADIUS_KM;
   if (nearbyCircleLayer) nearbyCircleLayer.setRadius(nearbyRadiusKm * 1000);
+  if (nearbyRadiusHandle && nearbyAnchor) nearbyRadiusHandle.setLatLng(nearbyRadiusHandleLatLng());
   applyHighlightDimming();
   render();
 });
@@ -6350,6 +6461,12 @@ document.getElementById("nearbyLocateBtn").addEventListener("click", () => {
   btn.classList.add("nearby-btn-warn");
   setTimeout(() => btn.classList.remove("nearby-btn-warn"), 1200);
   oneShotLocate();
+});
+document.getElementById("nearbyStartBtn").addEventListener("click", () => {
+  nearbyStartOnly = !nearbyStartOnly;
+  // Der Cache bleibt gueltig: er haelt beide Masse, und umgeschaltet wird nur, welches gilt.
+  applyHighlightDimming();
+  render();
 });
 document.getElementById("nearbyClearBtn").addEventListener("click", clearNearbyAnchor);
 // "Liste" ist der Uebergang von der Karte zur Antwort: Schublade auf, Trails-Abschnitt offen, hingescrollt.
@@ -9002,7 +9119,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v219"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v224"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {
