@@ -167,3 +167,58 @@ def run(t):
         t.ok("at least 10 trails were actually rebuilt", rebuilt >= 10, rebuilt, ">= 10")
         t.eq("every rebuilt trail matches the committed data", mismatch, [])
         t.eq("geometry and profile identical for all of them", checked, rebuilt)
+
+    # ---------------------------------------------------------------- write_region carries side keys
+    # Regression for a bug class, not a bug: `places`, `lifts`, `trailSegments` and `ratings` are each
+    # written by a different tool at a different time and none is recomputable from the trails, so a build
+    # that simply does not mention them used to DELETE them. It happened at least three times (commit
+    # b881699 dropped donnersberg's whole trailSegments key; add_region_places --force dropped a ratings
+    # block; a Kronplatz rebuild dropped four lifts), and a third of the call sites had grown a
+    # hand-written `places=d.get("places"), lifts=d.get("lifts")` to route around it.
+    t.case("write_region carries every side key forward, and tells missing from deliberately empty")
+    import tempfile
+    from trailmap_pipeline import write_region, REGION_SIDE_KEYS
+
+    trails = [{"id": "x_a", "name": "A", "region": "x_one", "diff": "rot", "len": 1.0, "up": 0, "down": 10}]
+    geo = {"x_a": [[46.0, 11.0], [46.001, 11.001]]}
+    profs = {"x_a": [[0.0, 100.0], [0.1, 90.0]]}
+    tmp = os.path.join(tempfile.mkdtemp(), "x.json")
+
+    first = write_region(tmp, trails, geo, profs, places=[{"name": "P", "lat": 46.0, "lng": 11.0}],
+                         lifts=[{"id": "l1"}, {"id": "l2"}],
+                         trail_segments={"x_a": [{"trailId": None}]},
+                         ratings={"source": "trailforks", "asOf": "2026-08-25"}, verbose=False)
+    t.eq("all four side keys are written when passed", sorted(k for k in REGION_SIDE_KEYS if k in first),
+         sorted(REGION_SIDE_KEYS))
+
+    # a rating block only survives while some trail still carries a rating -- otherwise it describes
+    # trails that no longer have the numbers, which is worse than not having it
+    rated = [dict(trails[0], rate=4.2, votes=9)]
+    write_region(tmp, rated, geo, profs, places=[{"name": "P", "lat": 46.0, "lng": 11.0}],
+                 lifts=[{"id": "l1"}, {"id": "l2"}], trail_segments={"x_a": [{"trailId": None}]},
+                 ratings={"source": "trailforks", "asOf": "2026-08-25"}, verbose=False)
+
+    # the whole point: a rebuild that mentions NONE of them must not lose them
+    again = write_region(tmp, rated, geo, profs, verbose=False)
+    t.eq("a rebuild passing none of them keeps the places", len(again.get("places") or []), 1)
+    t.eq("... keeps the lifts", len(again.get("lifts") or []), 2)
+    t.ok("... keeps the trailSegments", "trailSegments" in again, "trailSegments" in again, True)
+    t.eq("... keeps the ratings block", (again.get("ratings") or {}).get("asOf"), "2026-08-25")
+
+    # and a rebuild that drops the per-trail ratings must NOT keep a block claiming they exist
+    unrated = write_region(tmp, trails, geo, profs, verbose=False)
+    t.ok("a rebuild without per-trail ratings drops the block", "ratings" not in unrated,
+         "ratings" in unrated, False)
+    t.eq("... but still keeps the lifts", len(unrated.get("lifts") or []), 2)
+
+    # missing is not the same statement as empty -- [] really clears
+    cleared = write_region(tmp, trails, geo, profs, lifts=[], verbose=False)
+    t.eq("lifts=[] deliberately clears them", len(cleared.get("lifts") or []), 0)
+    t.eq("... without touching places", len(cleared.get("places") or []), 1)
+
+    # a fresh path has nothing to carry, and must not invent anything
+    fresh = os.path.join(tempfile.mkdtemp(), "y.json")
+    blank = write_region(fresh, trails, geo, profs, verbose=False)
+    t.eq("a brand-new region file carries nothing", [k for k in REGION_SIDE_KEYS if blank.get(k)], [])
+    t.eq("... and still has the three built keys plus an empty places",
+         sorted(blank.keys()), sorted(["lineTrails", "trailGeo", "elevationProfiles", "places"]))

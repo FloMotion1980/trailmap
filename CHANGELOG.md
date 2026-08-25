@@ -35,7 +35,7 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   Fehlerseite, die drei eigene `/trails/`-Links trägt, also „traf" danach jeder erfundene Slug. `fetch()`
   fragt per `curl -w` die tatsächliche Ziel-URL ab und gibt `""` zurück, wenn sie auf `/error` endet.
   `probe_tf_slugs.py` und `find_tf_regions.py` erben beides.
-- **Kronplatz: 18 Trails, 4 Lifte, 4 Sub-Regionen, 17 mit Bewertung** — die Region, die seit 2026-07 an der
+- **Kronplatz: 23 Trails, 4 Lifte, 4 Sub-Regionen, 20 mit Bewertung** — die Region, die seit 2026-07 an der
   Geometrie hing (`docs/kronplatz-recherche.md` listet vier gescheiterte Wege). Trailforks ist der fünfte
   und trägt sie. **Schwierigkeit kommt vom Betreiber**, nicht von Trailforks: `kronplatz.com`s dreistufige
   Skala (easy→blau, medium→rot, difficult→schwarz) für 15 der 18, als neues, generisches `diff_override` in
@@ -45,6 +45,42 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   Plaies und Kronplatz 2000. Das korrigiert `docs/kronplatz-recherche.md` und ist wieder der Fall aus
   `docs/lifts-feature.md`: OSM taggt `Ried` mit `aerialway:bicycle=yes` und `Ruis` mit `bicycle=summer`,
   beide stehen nicht auf der Liste des Betreibers. Details: `docs/kronplatz.md`.
+- **Abgleich gegen die offizielle Kronplatz-Trailliste (der Nutzer lieferte die URL): 18 der 19 sind drin,
+  fuenf davon erst nach diesem Abgleich.** Crazy Bunny Line und CC Top Line hatte der Bau als
+  Geometriedubletten des Furcia Trails verworfen (78 % / 100 % Ueberdeckung) -- der Betreiber fuehrt sie
+  mit eigener Laenge und Schwierigkeit, also entscheidet er, was ein Trail ist (`keep_overlapping`).
+- **Trailforks' `gassl-trail` ist gar nicht der Gassl Trail, sondern Dragon Trail UND Gassl Trail als eine
+  8,4-km-Linie** -- das erklaert die 30 %, um die seine Laenge die Betreiberangabe verfehlte. Der Nutzer
+  wies auf bike-holidays.com hin, wo beide als **Komoot-Tour** eingebettet sind; Komoots API
+  (`/api/v007/tours/<id>?_embedded=coordinates`) antwortet anonym und liefert die Linie mit echter Hoehe
+  je Punkt. Gemessen, nicht vermutet: Dragon-Ende und Gassl-Anfang liegen 0 m auseinander, und 99 % der
+  Trailforks-Punkte liegen naeher als 25 m an der Vereinigung beider. Jetzt einzeln gebaut, jeder trifft
+  seine Betreiberzahl fast genau (Gassl 6,30 km / 879 Hm gegen 6 400 m / 907 Hm, Dragon 2,00 km / 167 Hm
+  gegen 2 043 m / 197 Hm). Rohdaten in `Material/Kronplatz/komoot/`, ein Neubau braucht also kein Netz.
+  **Die tags zuvor eingebaute DEM-Nachreichung fuer Gassl ist damit wieder raus** -- Komoot traegt echte
+  Hoehen, also gilt die Regel "keine Hoehen-API" wieder unveraendert. Dafuer gibt es zwei neue,
+  generische und pro Trail benannte Felder: `exclude` (eine Linie ist falsch, nicht bloss redundant) und
+  `extra_trails` (der Betreiber hat einen Trail, den Trailforks nicht oder falsch hat).
+  **Mini Furcia Trail fehlt weiterhin**: nicht bei Trailforks, nicht in OSM (101 Overpass-Treffer auf die
+  19 Namen geprueft), nicht bei bike-holidays -- geraten wird nicht.
+- **Ursache behoben statt wieder umgangen: `write_region()` uebernimmt Neben-Keys, statt sie zu loeschen**
+  (auf Nachfrage des Nutzers -- "dass ein weiteres Bauen die Lifte loescht ist nix neues. Das faellt dir
+  immer wieder auf. Kann man das nicht verhindern?"). `places`, `lifts`, `trailSegments` und `ratings`
+  schreibt je ein anderes Werkzeug zu einem anderen Zeitpunkt, und keines davon laesst sich aus den Trails
+  zurueckrechnen -- ein Bau, der sie schlicht nicht erwaehnte, hat sie geloescht. Das hat mindestens
+  dreimal echte Daten gekostet (Commit `b881699` nahm donnersberg.json den kompletten
+  `trailSegments`-Key, `add_region_places.py --force` den `ratings`-Block, ein Kronplatz-Neubau vier
+  Lifte), und rund ein Drittel der 25 Aufrufstellen hatte laengst ein handgeschriebenes
+  `places=d.get("places"), lifts=d.get("lifts")` als Umgehung -- das Zeichen dafuer, dass die
+  Voreinstellung falsch war. Die Regel ist jetzt **fehlt gegen bewusst leer**, dieselbe Unterscheidung wie
+  in `restoreActiveState()`: `lifts=None` heisst "behalte, was da ist", `lifts=[]` heisst "diese Region
+  hat keine". Fuer `ratings` gilt eine Zusatzregel, sonst wuerde der Block Zahlen behaupten, die der
+  Neubau entfernt hat. Drei Mutationen in `tests/MUTATIONS.md`, Faelle in `tests/python/pipeline.py`; die
+  beiden Umgehungen in `build_trailforks_region.py` und `add_region_places.py` sind wieder raus.
+- **Ein Neubau traegt auch das `lifts`-Array weiter** (wie schon `places`) und druckt eine
+  Erinnerung, dass `apply_trailforks_ratings.py` erneut laufen muss -- der Neubau ersetzt jedes
+  Trail-Objekt, die Bewertungsfelder gehen also mit. Ohne beides haette der zweite Kronplatz-Bau seine
+  vier Lifte geloescht.
 - **`build_trailforks_region.py` baut die Tabelle jetzt „längste Linie zuerst" ab.** `duplicate_of` meldet
   immer die gerade gebaute Linie als Dublette, also entschied bis dahin allein die alphabetische
   Slug-Reihenfolge, wer von einem überlappenden Paar überlebt — bei Kronplatz hätte das den 4,8 km langen

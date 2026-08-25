@@ -84,6 +84,15 @@ MAX_PLACES_BY_REGION = {
 FORCE_PLACES = {
     "gardasee": ("Riva del Garda", "Torbole"),
 }
+#: Shorter map label for a place whose OSM `name` is a multilingual chain. South Tyrol tags every settlement
+#: with all of its official names at once, so Kronplatz's St. Vigil arrived as "Al Plan de Mareo - St. Vigil
+#: in Enneberg - San Vigilio di Marebbe" -- 60 characters across a map that is mostly mountain. Only the
+#: LABEL changes; the coordinate and the ranking are untouched, so nothing about which places get picked
+#: depends on this. Keyed by exact OSM name so a rename is visible rather than a substring rule nobody can
+#: audit. Bruneck's own "Bruneck - Brunico" is left alone: bilingual and short is genuinely useful here.
+PLACE_RENAME = {
+    "Al Plan de Mareo - St. Vigil in Enneberg - San Vigilio di Marebbe": "St. Vigil",
+}
 MIN_VILLAGE_POP = 600     # see the note below
 KNOWN_MAX_KM = 2.0        # for places that carry a wikidata/wikipedia tag but are small
 RANK = {"city": 0, "town": 1, "village": 2, "hamlet": 3}
@@ -303,10 +312,13 @@ def main(argv):
                       for p in picked)))
         if dry or not picked:
             continue
-        data["places"] = [{"name": p["name"], "lat": p["lat"], "lng": p["lng"]} for p in picked]
+        data["places"] = [{"name": PLACE_RENAME.get(p["name"], p["name"]),
+                           "lat": p["lat"], "lng": p["lng"]} for p in picked]
         write_region(os.path.join(REGIONS, key + ".json"), data["lineTrails"], data["trailGeo"],
                      data["elevationProfiles"], places=data["places"],
-                     lifts=data.get("lifts"), trail_segments=data.get("trailSegments"))
+                     # Only `places` is passed: write_region carries `lifts`, `trailSegments` and
+                     # `ratings` forward from the file itself now (see its docstring).
+                     )
         touched.append(key)
         time.sleep(2)            # be a good Overpass citizen between regions
     if touched:

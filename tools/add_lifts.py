@@ -103,6 +103,33 @@ LIFTS = {
     # Brandnertal (Vorarlberg). Source: bikepark-brandnertal.at/betriebszeiten -- it names exactly three
     # lifts as the ones serving the park and the trails, all three running 14.5.-1.11.2026.
     # ---------------------------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------------------------
+    # Kronplatz / Plan de Corones, 2026-08-25. The operator's OWN summer-lift page
+    # (kronplatz.com/de/der-kronplatz/pisten-anlagen/aufstiegsanlagen-sommer, season 16.05.-08.11.2026)
+    # lists exactly FOUR cable cars: Olang 1 (Nr. 301), Olang 2 (302), Piz de Plaies (202) and
+    # Kronplatz 2000 (102). It is a live status table, so a closed lift would still be listed -- four is
+    # the whole summer list, not the currently-open subset.
+    #
+    # This CORRECTS `docs/kronplatz-recherche.md`, which recorded five (Ried and Ruis as well) in
+    # 2026-07. Both of those are exactly the trap `docs/lifts-feature.md` is about: OSM tags Ried
+    # `aerialway:bicycle=yes` and Ruis `bicycle=summer`, and neither is on the operator's list.
+    # ---------------------------------------------------------------------------------------------
+    "kronplatz": dict(bbox="46.65,11.85,46.86,12.06", lifts=[
+        dict(id="lift_kp_kronplatz2000", name="Kronplatz 2000", region="kp_reischach",
+             osm=r"^Kronplatz 2000$",
+             note="Nr. 102; from Reischach straight to the summit -- the bike park's main lift"),
+        dict(id="lift_kp_olang1", name="Olang 1", region="kp_olang", osm=r"^Olang I$",
+             note="Nr. 301; valley station at Geiselsberg/Olang"),
+        dict(id="lift_kp_olang2", name="Olang 2", region="kp_olang", osm=r"^Olang II$",
+             note="Nr. 302; the second section, mid-station to the summit"),
+        dict(id="lift_kp_piz_de_plaies", name="Piz de Plaies", region="kp_stvigil",
+             osm=r"^Piz de Plaies$", note="Nr. 202; St. Vigil's own lift, serves the Piz de Plaies trail"),
+    ], excluded=[
+        ("Ried", "OSM says aerialway:bicycle=yes, but the operator's summer lift table does not list it"),
+        ("Ruis", "OSM says bicycle=summer, same story -- not on the operator's summer list"),
+        ("Gipfelbahn / Kronplatz I / Kronplatz II", "bike-tagged in OSM, not on the operator's summer list"),
+    ]),
+
     "brandnertal": dict(bbox="47.09,9.68,47.17,9.80", lifts=[
         dict(id="lift_bnt_loischkopfbahn", name="Loischkopfbahn", region="tschengla",
              osm=r"^Loischkopfbahn$",

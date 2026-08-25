@@ -47,6 +47,8 @@ UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like
 #: Every difficulty code Trailforks knows. Leaving 10 out drops the entire black tier without a word.
 ALL_DIFF = "3,4,9,5,1,7,2,6,8,10,11,12"
 PAGE_ROWS = 100
+#: Sentinel curl writes the final URL behind, so `fetch` can tell a real page from the error page.
+FINAL_MARK = "@@tf-final@@"
 #: Rows carrying these instead of a real grade are fireroads/uplift, not rated descents -- the same
 #: exclusion Bike Kingdom's fire roads and the Schwarzwald sweep already follow.
 ACCESS_DIFF = {"Access Trail, Road or Doubletrack", "Secondary Access Road/Trail",
@@ -54,10 +56,30 @@ ACCESS_DIFF = {"Access Trail, Road or Doubletrack", "Secondary Access Road/Trail
 
 
 def fetch(url, tries=3):
+    """Fetch one Trailforks page, FOLLOWING REDIRECTS (`-L`).
+
+    Without `-L` a slug that Trailforks 301s to its canonical, numeric-suffixed form comes back as a few
+    hundred bytes of redirect body -- which every caller here reads as "no such region". That is how Elba
+    stayed hidden until 2026-08-25: `isola-d-elba` redirects to `isola-d-elba-28064` and holds 310 trails,
+    while the slugs that answered directly (`capoliveri`, `porto-azzurro`, `cavo-65916`) are village-sized
+    corners of the same island totalling 14 rows. A region can therefore look like a 14-trail backwater and
+    be a 300-trail one. `tools/probe_tf_slugs.py` and `tools/find_tf_regions.py` both go through here, so
+    both inherit the fix; a probe that reports "-- none --" now really means the slug does not exist.
+    """
     html = ""
     for attempt in range(tries):
-        p = subprocess.run(["curl", "-s", "-A", UA, url], capture_output=True)
+        # `url_effective` is appended and stripped again, because following redirects means a MISS now
+        # arrives as a full, 200-OK error page instead of a short redirect body -- and that page carries
+        # three `/trails/` links of its own, which a probe counting those reads as three trails. Every
+        # nonexistent slug then "hits". Asking where curl actually ended up is the only unambiguous answer.
+        wfmt = "\n" + FINAL_MARK + "%{url_effective}"
+        p = subprocess.run(["curl", "-sL", "-A", UA, "-w", wfmt, url], capture_output=True)
         html = p.stdout.decode("utf-8", "replace")
+        i = html.rfind(FINAL_MARK)
+        if i >= 0:
+            final, html = html[i + len(FINAL_MARK):].strip(), html[:i]
+            if "/error" in final:
+                return ""
         if len(html) > 5000:
             return html
         time.sleep(2 + 3 * attempt)

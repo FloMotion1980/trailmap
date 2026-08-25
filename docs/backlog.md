@@ -188,63 +188,137 @@ Prüfstapel sind auf null** (101 Fälle einzeln mit dem Nutzer entschieden, Begr
 
 ## 3. Regionen, die noch offen sind
 
-Three left; everything else on the original request list is built (table at the end).
+**Elba und Kronplatz sind am 2026-08-25 gebaut** (222 bzw. 23 Trails, siehe `docs/elba.md` und
+`docs/kronplatz.md`) und stehen deshalb nicht mehr hier. Kronplatz war seit 2026-07 an der Geometrie
+hängengeblieben — der fünfte Beschaffungsweg, Trailforks, trägt sie; die vier gescheiterten stehen weiter
+in `docs/kronplatz-recherche.md`, damit sie niemand wiederholt. **Offen bei Kronplatz bleibt genau einer der 19 offiziellen Trails**, der Mini Furcia Trail (210 m): weder bei Trailforks noch in OSM noch bei bike-holidays gibt es eine Linie. Nächster Ansatz wäre eine eigene Aufzeichnung. Dragon und Gassl kamen über Komoot dazu — siehe `docs/kronplatz.md`, das Verfahren taugt für jede Region, in der ein Betreiber auf Komoot verlinkt.
 
-6. **Kronplatz** / Plan de Corones (Südtirol, IT) — **researched 2026-07-30, not built: no reachable
-   geometry source.** All 19 trails with official difficulties, the three areas and the 5 bike lifts
-   are written up in `docs/kronplatz-recherche.md`, together with the four sourcing routes already
-   tried, so don't repeat them.
+Offen sind jetzt **Geißkopf** und **Bormio**, plus die Vorschlagsliste aus der Trailforks-Recherche
+weiter unten.
 
-    Geißkopf (Bodenmais, Bayerischer Wald) is geographically separate from Freiburg/Todtnau (both
-    Schwarzwald) — do NOT assume these three form one region group like Sauerland/Upland; decide the
-    grouping when picked up based on actual distance, same judgement call as Livigno/Waldmeister's
-    "does this deserve its own bounding box" question. Sources:
-    - https://mtbzone-bikepark.com/geisskopf/strecken — Geißkopf trail overview (same
-      `mtbzone-bikepark.com` site as Willingen's — check if it has direct GPX for this park, since it
-      did NOT for Willingen).
-    - https://www.mountainbike-freiburg.com/trails/#trails — Freiburg-area trails. **Used**: the page's
-      own `window.mtb_trails` blob carries per-trail GPX *and* the club's own difficulty colours.
-    - https://2-cycle.de/pages/bikepark-todtnau-strecken — Bikepark Todtnau. **Used** for the three runs'
-      names, grades and figures; it has no GPX at all, hence OSM/Trailforks for the geometry.
-    - https://www.trailforks.com/trails/all/?association=12404&activitytype=0 — the club's own Trailforks
-      association, given by the user 2026-08-20. **Used**: 25 trails, of which six were not on the club's
-      own site and three existed nowhere else.
-    - https://trailguide.net/html/Germany/Baden-W%C3%BCrttemberg/Freiburg — added 2026-08-11. **Used, and
-      it turned out to be a bulk source, not a click-per-trail one**: Trailguide has an anonymous JSON API
-      (two calls, documented in `docs/schwarzwald.md`) that returns every trail's full geometry WITH
-      per-point elevation, so no headless browser and no DEM lookups were needed. Reuse it for any future
-      region Trailguide covers. Original note, still accurate about the listing page: a bigger
-      Freiburg trail list than mountainbike-freiburg.com's official one, with **overlap** (some of the
-      same trails appear on both) plus several extra ones. GPX is reachable per-trail but needs a second
-      click-through on the trail's own subpage (not a direct link from the list view) — check whether
-      trailguide.net is scrapeable with a plain fetch before assuming a headless-Chromium workaround is
-      needed. When this is picked up, reconcile the two Freiburg sources by name before building (don't
-      double-build trails that appear on both).
+**Bormio und Umland** — vom Nutzer am 2026-08-25 gewünscht, aus eigener Erfahrung: *"Da war ich schon mal im
+Bikepark und ganz oben ging auch eine epische Tour los… Bormio 3000 nach Sankt Katharina oder so"*. Das ist
+die **Bormio 3000 → Santa Caterina Valfurva**-Abfahrt über das Valfurva, und sie ist der eigentliche Grund
+für die Region: eine Tour, nicht nur ein Park. Was vor dem Bauen zu klären ist:
+- **Zuschnitt.** Bormio, Valdidentro, Valdisotto, Valfurva und Santa Caterina sind ein zusammenhängendes
+  Becken; Livigno ist bereits eine eigene Region und liegt nur den Foscagno-Pass entfernt, Aprica und
+  Teglio/Valtellina hängen talabwärts an. Ob Bormio allein steht oder als „Alta Valtellina" mit Aprica und
+  dem Valtellina-Sonnenhang zusammengeht, ist eine Entscheidung wie damals Livigno gegen Waldmeister.
+- **Lifte.** Bormio 2000/3000, Bormio-Talstation und die Bahnen in Santa Caterina — nach der Regel aus
+  `docs/lifts-feature.md` von der Sommerseite des Betreibers, nicht aus OSM-Tags.
+- **Quelle.** Trailforks hat die Ecke unter `lombardia`; ob der Bikepark eigene GPX mit eigener
+  Schwierigkeit veröffentlicht, ist ungeprüft — Betreiber zuerst, Trailforks als Rückfall.
+- **Die epische Tour selbst** ist am ehesten ein Fall für `tools/gpx_map_match.py` oder den Tourenbuilder,
+  nicht für den Trailforks-Bau: sie besteht aus mehreren Abschnitten plus Verbindern.
 
-16. **Elba** (IT) — requested by the user 2026-08-20. **They have ridden there themselves**, so the same rule
-    as Madeira applies: their own account of the trails beats a scraped rating, and it is the fastest route to
-    a sub-region split that matches how the island is actually ridden. Nothing researched yet, and
-    deliberately little written here — what follows is the shape of the questions, not findings:
-    - **Sub-regions almost certainly follow the island's three massifs**, which are separated by real
-      distance rather than by a naming convention: Monte Capanne in the west, the Monte Calamita peninsula in
-      the south-east (the old iron-mining area), and the Volterraio/Rio ridge in the east. Confirm against
-      where the harvested trails actually fall, the same way the Schwarzwald's seven were decided.
-    - **Check whether any lift takes bikes before assuming one does.** The Monte Capanne cabinovia from
-      Marciana is a standing open-basket type, which is not a plausible bike carrier — but that is exactly the
-      kind of assumption `docs/lifts-feature.md` says to settle from the operator's own summer page rather
-      than from OSM's `aerialway:bicycle` tag or from reasoning. If nothing carries bikes, the region gets no
-      `lifts` array at all, like Odenwald and Donnersberg, and the entry should say so rather than leave it
-      unaccounted for.
-    - **Sources: unknown, and worth ten minutes before committing to a method.** Trailforks has an Elba tree;
-      whether the local operators publish per-trail GPX with an official grade is untested. Follow the
-      standing order below — operator first, Trailforks only where no grade is published.
+**Geißkopf** (Bodenmais, Bayerischer Wald) ist geografisch von Freiburg/Todtnau (beide Schwarzwald)
+getrennt — NICHT annehmen, dass die drei eine Regionsgruppe bilden wie Sauerland/Upland; die Gruppierung
+beim Aufgreifen nach echter Entfernung entscheiden, dieselbe Abwägung wie bei Livigno/Waldmeister. Quellen:
+- https://mtbzone-bikepark.com/geisskopf/strecken — Trail-Übersicht (dieselbe Seite wie Willingens; prüfen,
+  ob sie für diesen Park direkte GPX hat, für Willingen hatte sie keine).
+- Trailforks führt `mtb-zone-bikepark-geisskopf` als eigene Region, und der Landkreis-Blick auf Bayern
+  (unten) zeigt „Lamer Winkel" mit 28 Trails / 54 km gleich daneben.
 
-Sourcing order for each of these: **try the operator's own site for direct per-trail GPX before
-falling back to OSM + a rate-limited elevation API.** Austrian/Swiss resort sites in particular have
-repeatedly turned out to expose per-trail GPX with real elevation, which beats the OSM path. See
-`docs/data-sourcing-general.md` for the full method, including the Trailforks-specific workarounds
-(logged-in-Chrome embedded-polyline extraction, and the lighter `/widgets/trail/` embed for pages that
-now render from Mapbox vector tiles).
+### Trailforks-Recherche DE/AT/CH/IT/FR (2026-08-25, auf Wunsch des Nutzers)
+
+**Methode, damit die Zahlen einzuordnen sind:** je Bundesland/Kanton/Region die komplette
+Trailforks-Trailtabelle geholt (`tools/harvest_trailforks.py --tables`) und nach der eigenen
+`riding area`-Spalte gruppiert; Zufahrten, Forststraßen und Lifte (`ACCESS_DIFF`) sind rausgerechnet.
+Die Zahl ist also **bewertete Trails**, und die Kilometer sind Trailforks' eigene Längen. Gemessen:
+Österreich, Bayern, Baden-Württemberg, NRW, Sachsen, Hessen, Niedersachsen, Thüringen, Graubünden, Wallis,
+Tessin, Aostatal, Trentino-Südtirol, Lombardei, Savoie, Haute-Savoie, Hautes-Alpes.
+
+Zwei Vorbehalte, bevor jemand eine Zahl für bare Münze nimmt: die Gebietsspalte ist ein
+**Verwaltungskasten**, kein Revier (siehe Elba und Gardasee), und eine hohe Trailzahl bei kleiner
+Kilometersumme heißt „viele kurze Linien" — 163 Trails auf 79 km im Landkreis Regensburg sind ein
+Stadtwald, keine Enduro-Region. **Die Kilometer je Trail sind das bessere Signal als die reine Anzahl.**
+
+#### Deutschland — die große Lücke sind die Bayerischen Voralpen
+
+| Kandidat | Trails | km | Gebiete |
+|---|---:|---:|---|
+| **Bayerische Voralpen** | ~360 | ~640 | Garmisch (84/167), Tegernsee-Kreuth (63/109), Kochelsee-Walchensee-Jachenau (54/95), Schliersee-Spitzingsee (41/51), Bad Tölz/Lenggries (34/70), Ammergauer Alpen (23/44), Mittenwald/Wallgau (21/37), Füssen (19/39) |
+| **Heidelberg / Bergstraße** | ~350 | ~200 | Königstuhl (162/71), Weißer Stein (56/45), Neckargemünd (39), Neckarsteinach (38), Kleiner Odenwald (29), Heidelberg (23) — grenzt direkt an den gebauten Odenwald |
+| **Bergisches Land / Rheinland** | ~400 | ~230 | Düsseldorf (98), Aaper & Grafenberger Wald (87), Ratingen (62), Burscheid (52), Erkrath (50), Lindlar (37), Bergisch Gladbach (31) |
+| **Chiemgau / Berchtesgaden** | ~210 | ~150 | Bad Reichenhall (63/38), Berchtesgadener Land (39/32), Südl. Rupertiwinkel (35), Samerberg (25), Kampenwand (24), Lkr. Rosenheim (23) |
+| **Schwäbische Alb** | ~200 | ~160 | Bad Urach (42/44), Balingen (32/40), Schönbuch (27), Tübingen (25), Geislingen (24), Lkr. Esslingen (24) |
+| **Thüringer Wald** | ~150 | ~110 | Ilmenau (58/35), Ilm-Kreis (36), Suhl (31), Inselsberg (11), Bike Park Oberhof (11) |
+| **Erzgebirge** | ~120 | ~90 | Aue-Bad Schlema (36), Trailcenter Rabenberg (25), Stollberg (20), Zwönitz (13), Lauter-Bernsbach (11) |
+| Bayerischer Wald (= Geißkopf, oben) | ~90 | ~120 | Regen (39/37), Lamer Winkel (28/54) plus die Bikepark-Region selbst |
+| Siegerland | ~85 | ~50 | Siegen (58/29), Kreuztal (27/15) |
+
+Nicht empfohlen, obwohl die Zahlen groß sind: **Landkreis Regensburg (163/79) und Naabdelta (120/81)** —
+das sind ~0,5–0,7 km je Trail, also Stadt- und Flussauenwege. Dieselbe Rechnung sortiert Leipzig (87/56)
+und Düsseldorfs Aaper Wald (87/26) aus, falls jemand nach Trailzahl statt nach Kilometern sucht.
+
+#### Österreich — nichts Großes mehr, aber mehrere gute mittlere
+
+Acht österreichische Regionen sind gebaut. Was in der Landestabelle noch heraussticht:
+
+| Kandidat | Trails | km | Gebiete |
+|---|---:|---:|---|
+| **Innsbruck** | 145 | — | eigene Trailforks-Region (`innsbruck`); Nordkette, Mutterer Alm, Arzler Alm, Bike-Republic-Umfeld |
+| **Vorarlberger Rheintal** | ~130 | ~120 | Dornbirn (37/40), Rankweil (27), Bregenz (20/23), Götzis (16), Feldkirch (15), Bludenz (12/24) — ergänzt das gebaute Brandnertal |
+| **Wagrain-Kleinarl** | 62 | — | eigene Region (`wagrain`), Pongau |
+| **Kärntner Seen** | ~85 | ~60 | Trailcenter Faaker See (26/19), Turracher Höhe (22/11), Ossiacher See (17/15), Simonhöhe (16/7) |
+| **Wienerwald & Wiener Alpen** | ~100 | ~110 | Trail-Area Wien Nord (20/27), Wexl Trails (16/28), Trailarea Göttweig (14), Anninger (11), Trailcenter Wien (11), Semmering (11/9), Alpen Bikepark Schneeberg (9) |
+| **Steiermark Süd/Ost** | ~110 | ~80 | Bad Gleichenberg (28/25), Kapfenberg (28/26), Lannach (12), Graz (10), Schöckl (8), Judenburg (9) |
+| Osttirol/Lienz | ~36 | — | `osttirol` (28) + `lienz` (8) |
+| Bad Gastein / Lungau | ~46 | — | `bad-gastein` (23), `lungau` (23) |
+
+#### Schweiz — Davos ist der offensichtlichste Kandidat des ganzen Alpenbogens
+
+| Kandidat | Trails | km | Anmerkung |
+|---|---:|---:|---|
+| **Davos Klosters** | 153 | 279 | größte unerschlossene Einzelregion in GR; direkt neben dem gebauten Bike Kingdom (153/179) |
+| **Zermatt – Matterhorn** | 152 | 128 | eigene Trailforks-Region, dazu Saas-Fee/Saastal (35/46) und Grächen (39/40) |
+| **Val Surses** | 130 | 131 | Savognin/Bivio, hängt an Bike Kingdom und Albula |
+| **Scuol – Pure Alpine Trails** | 111 | 121 | Unterengadin, plus Val Müstair (88/104) direkt daneben |
+| **Verbier / Val de Bagnes** | ~105 | ~85 | Verbier (67/46), Bruson (37/34) |
+| **Surselva / Rheinquelle** | ~150 | ~160 | Rheinquelle (94/85), Obersaxen Mundaun (27), Sumvitg (26), Breil/Brigels (23) — nördlich von Laax |
+| **Oberengadin** | ~140 | ~170 | Engadin (62/80), Bergün Filisur (38/70), Pontresina (22/31), S-chanf (20/35) |
+| **Wallis Mittelland** | ~280 | ~230 | Moosalp (100/82), Ovronnaz (76/41), Fully (68/41), Chamoson (64/40), Visperterminen (58/65), Leuk (57/39) |
+| **Goms / Obergoms** | ~140 | ~140 | Goms (91/95), Obergoms (48/55), Fiesch (33/41), Blatten-Belalp (36/27) |
+| **Crans-Montana + Val d'Anniviers** | ~160 | ~150 | Crans-Montana (72/77), St-Luc (51/54), Grimentz (35/39) |
+| **Tessin** | ~350 | ~400 | Cardada Cimetta (59/60), Bellinzona (54/77), Monte San Giorgio (50/50), Valle di Muggio (47/62), Valle di Blenio (46/58), Monte Bar (44/66), Airolo (31/39), Monte Tamaro (22/42) |
+| **Valposchiavo** | 79 | 109 | eigenes Tal südlich des Berninapasses, grenzt an Livigno |
+
+#### Italien — Bormio steht oben, weil der Nutzer es bestellt hat
+
+| Kandidat | Trails | km | Gebiete |
+|---|---:|---:|---|
+| **Alta Valtellina / Bormio** | ~113 | ~275 | Valdidentro (40/164), Stelvio Natural Trail Park (26/98), Bormio (24/61), Oga Natural Trails (10/16), Valdisotto (9/26), Valfurva (4/4) |
+| … talabwärts erweiterbar | +114 | +290 | Sondrio (41/170), Aprica (27/71), Teglio (26/51), Tirano (11/19), Grosio (9/40) |
+| **Aostatal** | ~300 | ~600 | Aosta (70/132), Introd (36/73), Courmayeur (36/65), Val d'Ayas (34/71), Pila Bikeland (27/47 plus Pila 18/23), Brusson (25/46), Cervino (19/49), La Thuile Bike World (18/44) |
+| **Vinschgau / Meran** | ~134 | ~345 | Vinschgau (63/198), Burggrafenamt (50/111), Latsch (21/36) — Südtiroler Nachbar von Kronplatz |
+| **Primiero / San Martino** | ~135 | ~254 | Comunità di Primiero (84/134), Vanoi (29/63), San Martino di Castrozza (22/57) |
+| **Val di Sole** | 50 | 148 | eigene Region (`val-di-sole-bike-land`), Weltcup-Bikepark Commezzadura |
+| **Bergamasker Alpen** | ~240 | ~430 | Castione della Presolana (50/108), Monte Resegone (49/84), Zogno (48/80), Bergamo (45/90), Grigna Meridionale (44/48) |
+| Dolomiten-Rest | ~45 | ~75 | Fassa Bike District (30/40), Selva Val Gardena (13/24) — ergänzt Paganella und Kronplatz |
+| Bozen / Eisacktal | ~115 | ~390 | Bolzano (45/163), Tramin (38/74), Brixen (18/138), Eppan (14/13) |
+
+#### Frankreich — drei sehr große Blöcke, alle unangetastet
+
+Portes du Soleil ist gebaut (80 Trails). Daneben liegt sehr viel mehr, als diese eine Region hergibt:
+
+| Kandidat | Trails | km | Gebiete |
+|---|---:|---:|---|
+| **Tarentaise / Vanoise** | ~450 | ~800 | Belleville Bikepark (95/198), Tignes (92/97, dazu Bike Park Tignes-Val d'Isère 25/50), Sainte-Foy-Tarentaise (79/101), Val Cenis (70/125), Méribel Bikepark (51/86), Les Arcs Bikepark (44/78), Val-d'Isère (43/91), Bourg St. Maurice (37/59) |
+| **Annecy / Aravis** | ~450 | ~360 | Talloires (88/71), Le Semnoz (84/42), Thônes (65/62), Faverges-Seythenex (46/40), Mont Salève (45/47), Le Grand Bornand (43/50), Doussard (42/34), La Clusaz Bike Park (40/39) |
+| **Mont-Blanc / Chamonix** | ~220 | ~250 | Chamonix (71/98), Les Houches (49/47), Passy (36/43), Saint-Gervais (34/68), Vallorcine (28/23), Megève (28/26) |
+| **Briançonnais** | ~190 | ~290 | Névache (48/83), Serre Chevalier Bike Park (46/69), Briançon (30/44), Puy-Saint-André (25/27), Le Monêtier-les-Bains (21/46), La Grave (17/30) |
+| **Queyras** | ~140 | ~250 | Arvieux (45/90), Château-Ville-Vieille (23/52), Abriès-Ristolas (22/51 plus Abries Bike Park 16/23), Ceillac (16/40), Aiguilles (15/42) |
+| **Embrunais / Ubaye** | ~105 | ~180 | Embrun (44/56), Vars (27/64), Orcières (17/44), Les Orres Bike Park (16/30), Risoul (15/26) |
+| Dévoluy / Gap | ~105 | ~130 | Devoluy (47/68), Tallard (33/31), Gap (24/19) |
+
+**Eine Reihenfolge, falls eine gebraucht wird** — nach „viel Trail je Aufwand", und mit dem, was die App
+schon kann: **1. Bormio** (Nutzerwunsch, ~113 Trails, Lifte vorhanden), **2. Davos Klosters** (153 Trails /
+279 km, die größte einzelne Lücke im Alpenbogen), **3. Bayerische Voralpen** (die größte deutsche Lücke,
+~360/640), **4. Tarentaise** (~450/800, aber lauter Bikeparks mit eigenen Betreiberangaben, also die
+meiste Zusatzrecherche), **5. Aostatal** (~300/600).
+
+Die Rohtabellen der Recherche sind nicht eingecheckt — sie sind mit einem `--tables`-Lauf je Region in
+Minuten reproduzierbar, und eingefroren würden sie nur veralten.
 
 **Pfälzerwald note (for whenever Trailforks trails are added there)**: this region already has 437
 trails and is far denser than any region `tools/gpx_map_match.py` has been validated against so far
@@ -406,9 +480,9 @@ noch nicht. Kann auch mal hinter."*
 
 ---
 
-# Gebaute Regionen (Stand 2026-08-21)
+# Gebaute Regionen (Stand 2026-08-25)
 
-28 Regionen, **4 657 Trails, 136 Lifte, 102 Touren**. Jede hat ihr eigenes `docs/<region>.md` bzw. ihr
+30 Regionen, **4902 Trails, 140 Lifte, 102 Touren**. Jede hat ihr eigenes `docs/<region>.md` bzw. ihr
 Build-Skript in `tools/` mit der vollen Quellen-Herkunft; `python tools/validate_region.py` prüft alle.
 
 | Region | Label | Trails | Lifte | Touren | Sub-Regionen |
@@ -418,6 +492,7 @@ Build-Skript in `tools/` mit der vollen Quellen-Herkunft; `python tools/validate
 | `schwarzwald` | Schwarzwald | 622 | 3 | 4 | 10 |
 | `nordvogesen` | Nordvogesen | 483 | 0 | 0 | 7 |
 | `suedvogesen` | Südvogesen | 474 | 3 | 0 | 12 |
+| `elba` | Elba | 222 | 0 | 0 | 5 |
 | `finale` | Finale Ligure | 219 | 0 | 0 | 12 |
 | `varazze` | Varazze | 195 | 0 | 0 | 7 |
 | `madeira` | Madeira | 158 | 0 | 0 | 6 |
@@ -435,9 +510,10 @@ Build-Skript in `tools/` mit der vollen Quellen-Herkunft; `python tools/validate
 | `paganella` | Dolomiti Paganella | 28 | 10 | 5 | 4 |
 | `paznaun` | Silvretta Bike Arena | 26 | 8 | 2 | 3 |
 | `laax` | Flims Laax Falera | 24 | 6 | 5 | 2 |
+| `kronplatz` | Kronplatz | 23 | 4 | 0 | 4 |
 | `saarland` | Saarland | 22 | 0 | 2 | 2 |
 | `waldmeister` | RadLust Waldmeister | 21 | 0 | 1 | 1 |
-| `zugspitzarena` | Tiroler Zugspitz Arena | 17 | 8 | 0 | 3 |
-| `serfaus` | Serfaus-Fiss-Ladis | 17 | 8 | 0 | 2 |
 | `naheland` | Bad Kreuznach | 17 | 0 | 3 | 2 |
+| `serfaus` | Serfaus-Fiss-Ladis | 17 | 8 | 0 | 2 |
+| `zugspitzarena` | Tiroler Zugspitz Arena | 17 | 8 | 0 | 3 |
 | `brandnertal` | Bikepark Brandnertal | 12 | 3 | 0 | 2 |

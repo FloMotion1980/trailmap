@@ -544,24 +544,76 @@ def build_trail(trail_id, name, region, diff, raw_points, *, uphill=False,
     return entry, coords, prof
 
 
+#: The keys a region file carries BESIDES the three a build produces. Each is written by a different tool
+#: at a different time -- `places` by add_region_places.py, `lifts` by add_lifts.py, `trailSegments` by the
+#: Tour builds and close_loop_gaps.py, `ratings` by apply_trailforks_ratings.py -- and none of them is
+#: recomputable from the trails alone. See write_region's own docstring for why they are carried, not asked for.
+REGION_SIDE_KEYS = ("places", "lifts", "trailSegments", "ratings")
+
+
+def carried_names(carried):
+    """`["lifts (2)", ...]` -> `{"lifts", ...}`; see write_region's ratings rule."""
+    return {c.split(" ")[0] for c in carried}
+
+
 def write_region(path, line_trails, trail_geo, elevation_profiles, places=None, lifts=None,
-                 trail_segments=None, ratings=None):
+                 trail_segments=None, ratings=None, verbose=True):
     """Write a regions/<key>.json in the app's own shape and formatting.
 
     The separators match the existing files, so a rebuild produces a readable diff rather than one giant
     changed line.
 
-    `ratings` is the optional provenance block for the community numbers on the trails themselves
-    ({source, asOf, matched, trails}) -- see tools/apply_trailforks_ratings.py for why it carries a date.
+    **A side key the caller does not pass is CARRIED FORWARD from the file being overwritten, not dropped.**
+    This function used to write only what it was handed, and that is a footgun that has cost this project
+    real data more than once: commit `b881699` silently removed donnersberg.json's entire `trailSegments`
+    key (nobody noticed until a user reported a Trailrunde rendering with no coloured component stretches),
+    `add_region_places.py --force` removed a region's `ratings` block while leaving the per-trail numbers
+    in place, and a plain rebuild deleted a region's `lifts`. Roughly a third of the 25 call sites had
+    already grown a hand-written `places=d.get("places"), lifts=d.get("lifts")` to route around it -- which
+    is the tell that the default was wrong, since every new caller has to rediscover the same workaround.
+
+    The distinction is **missing vs. deliberately empty**, the same one `restoreActiveState()` draws in the
+    app: `lifts=None` (or omitted) means "I have nothing to say about lifts, keep what is there", while
+    `lifts=[]` means "this region has no lifts" and really clears them.
+
+    `ratings` gets one extra rule, because carrying it blindly would be a lie: a rebuild replaces every
+    trail object, so the per-trail `rate`/`votes`/`pop` go with them. If none of the trails being written
+    carries a rating, the block is dropped even when the old file had one -- and `verbose` says so, since
+    the fix is to re-run tools/apply_trailforks_ratings.py.
     """
+    prev = {}
+    if os.path.exists(path):
+        try:
+            prev = json.load(open(path, encoding="utf-8"))
+        except Exception:
+            prev = {}
+    incoming = {"places": places, "lifts": lifts, "trailSegments": trail_segments, "ratings": ratings}
+    kept = {}
+    carried = []
+    for key in REGION_SIDE_KEYS:
+        if incoming[key] is not None:
+            kept[key] = incoming[key]
+            continue
+        if prev.get(key):
+            kept[key] = prev[key]
+            carried.append("%s (%d)" % (key, len(prev[key])))
+    # Only a CARRIED ratings block is second-guessed. One the caller passed explicitly is its own statement
+    # -- apply_trailforks_ratings.py writes the block and the per-trail numbers in the same call, and a
+    # rounding rule here must not overrule that.
+    if "ratings" in carried_names(carried) and not any(t.get("rate") for t in line_trails):
+        kept.pop("ratings", None)
+        carried = [c for c in carried if not c.startswith("ratings")]
+        if verbose:
+            print("  write_region: `ratings` verworfen -- kein Trail traegt mehr eine Bewertung. "
+                  "tools/apply_trailforks_ratings.py erneut laufen lassen.")
+    if verbose and carried:
+        print("  write_region: uebernommen aus der alten Datei: %s" % ", ".join(carried))
+    # The key ORDER is part of the file's shape: three built keys, then places, then the optional rest.
     data = {"lineTrails": line_trails, "trailGeo": trail_geo,
-            "elevationProfiles": elevation_profiles, "places": places or []}
-    if trail_segments:
-        data["trailSegments"] = trail_segments
-    if lifts:
-        data["lifts"] = lifts
-    if ratings:
-        data["ratings"] = ratings
+            "elevationProfiles": elevation_profiles, "places": kept.get("places") or []}
+    for key in ("trailSegments", "lifts", "ratings"):
+        if kept.get(key):
+            data[key] = kept[key]
     json.dump(data, open(path, "w", encoding="utf-8"), ensure_ascii=False,
               separators=(", ", ": "))
     return data

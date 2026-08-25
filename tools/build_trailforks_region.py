@@ -68,6 +68,30 @@ TF_DIFF = {
 SAME_NAME_KM = 5.0
 MIN_TRAIL_M = 80.0
 
+#: Two further per-region escape hatches, both DATA and both deliberately narrow. Neither may be reached for
+#: to make a number look better -- each one needs an OPERATOR statement behind it, named in the region's doc.
+#:
+#: * `keep_overlapping`: Trailforks slugs exempt from the geometry-duplicate drop. `duplicate_of` is right
+#:   that these lines share ground with a longer one; the operator is right that they are separate trails
+#:   with their own name, grade and length. Kronplatz has three (Crazy Bunny, CCTop1, CCTop2, all inside the
+#:   Furcia Trail's corridor) and its own trail table names each of them.
+#: * `exclude`: Trailforks slugs to drop outright, with the reason in the comment beside them. For a line
+#:   that is WRONG, not merely redundant -- Kronplatz's `gassl-trail` is the Dragon Trail and the Gassl
+#:   Trail recorded as one 8.4 km line, which is why its length disagreed with the operator by 30 %.
+#: * `extra_trails`: trails the OPERATOR publishes that Trailforks does not have, or has wrong. Each names
+#:   a points file under the region's `Material/` directory (`{points: [[lat, lng, ele], ...]}` plus its own
+#:   provenance fields), so the source travels with the data and a rebuild needs no network. Real per-point
+#:   elevation is required -- this is not a way round the "no elevation API" rule at the top of the file,
+#:   it is a second source that has its own heights.
+#:
+#: Per-region, per-trail difficulty overrides: `{tf_slug: (our_diff, "operator's own wording")}`.
+#: This is the standing rule, not an exception to it -- `CLAUDE.md`: the OPERATOR's own published grade
+#: always wins, and Trailforks' rating is the fallback for trails whose operator publishes none. Madeira
+#: and the Gardasee needed no such table because neither has an operator publishing grades at all;
+#: Kronplatz does, so its 19 published trails are graded from `kronplatz.com`'s own table and only the
+#: rest fall back to Trailforks. The operator's wording is stored next to the colour so the mapping
+#: stays auditable without re-fetching the pages -- also `CLAUDE.md`'s own requirement.
+
 #: Paved cycle INFRASTRUCTURE, dropped by name. Trailforks' `Access Trail, Road or Doubletrack` grade is
 #: what normally keeps fireroads and uplift out, but a municipal cycle path is not graded that way -- it
 #: gets a real "Easiest / White Circle" and sails through. At the Gardasee that is 48 entries: Trento's
@@ -93,6 +117,138 @@ def sid(prefix, tf_slug):
 #: Gardasee alone. Keep the name a rider would type (it is also the region dialog's search haystack) and put
 #: the full place list in the region's doc instead.
 CONFIGS = {
+    # Elba, 2026-08-25. The user has ridden there, so their own account of the island beats anything
+    # scraped -- but they asked for it "von Trailforks", and no operator publishes grades for the island's
+    # trails at all, so Trailforks' own rating stands, the same recorded exception Madeira and the
+    # Gardasee were built under. Like Madeira it is a shuttle island: no `lifts` array -- the island's one
+    # cable car, the Monte Capanne cabinovia from Marciana, is a standing open basket a rider cannot take a
+    # bike into. That is the ONLY lift on Elba, so there is nothing else to check; see `docs/elba.md`.
+    #
+    # The five sub-regions follow the island's own geography rather than Trailforks' `riding area` column,
+    # which is an administrative box here as everywhere: its "Marina di Campo" area reaches to lon 10.127,
+    # 9 km WEST of Marina di Campo itself and well inside the Monte Capanne massif.
+    "elba": dict(
+        prefix="eb", label="Elba", countries=["IT"], material="Elba",
+        max_anchor_km=6.0,
+        subregions=[
+            ("eb_capanne",     "Monte Capanne",   "#0f766e"),
+            ("eb_campo",       "Marina di Campo", "#b45309"),
+            ("eb_portoferraio", "Portoferraio",   "#1d4ed8"),
+            ("eb_rio",         "Rio & Cavo",      "#7c3aed"),
+            ("eb_calamita",    "Capoliveri",      "#be185d"),
+        ],
+        anchors=[
+            (42.7930, 10.1740, "eb_capanne", "Marciana"),
+            (42.8060, 10.1950, "eb_capanne", "Marciana Marina"),
+            (42.7860, 10.1830, "eb_capanne", "Poggio"),
+            (42.7660, 10.1750, "eb_capanne", "Monte Capanne"),
+            (42.7690, 10.2130, "eb_capanne", "Sant'Ilario"),
+            (42.7620, 10.2140, "eb_capanne", "San Piero"),
+            (42.7420, 10.1250, "eb_capanne", "Pomonte"),
+            (42.7500, 10.1130, "eb_capanne", "Chiessi"),
+            (42.7380, 10.1610, "eb_capanne", "Seccheto"),
+            (42.7350, 10.1450, "eb_capanne", "Fetovaia"),
+            (42.7770, 10.1300, "eb_capanne", "Colle d'Orano"),
+            (42.7440, 10.2320, "eb_campo", "Marina di Campo"),
+            (42.7530, 10.2440, "eb_campo", "La Pila"),
+            (42.7750, 10.2650, "eb_campo", "Colle Reciso"),
+            (42.7590, 10.3010, "eb_campo", "Lacona"),
+            (42.7400, 10.1830, "eb_campo", "Cavoli"),
+            (42.8130, 10.3260, "eb_portoferraio", "Portoferraio"),
+            (42.7930, 10.2440, "eb_portoferraio", "Procchio"),
+            (42.8000, 10.2790, "eb_portoferraio", "Biodola"),
+            (42.7940, 10.3170, "eb_portoferraio", "San Martino"),
+            (42.8080, 10.3560, "eb_portoferraio", "Magazzini"),
+            (42.8250, 10.3700, "eb_portoferraio", "Bagnaia"),
+            (42.8060, 10.4110, "eb_rio", "Rio nell'Elba"),
+            (42.8140, 10.4270, "eb_rio", "Rio Marina"),
+            (42.8620, 10.4230, "eb_rio", "Cavo"),
+            (42.8290, 10.3810, "eb_rio", "Nisporto"),
+            (42.8080, 10.3830, "eb_rio", "Volterraio"),
+            (42.8420, 10.4130, "eb_rio", "Porticciolo"),
+            (42.7440, 10.3960, "eb_calamita", "Capoliveri"),
+            (42.7640, 10.3970, "eb_calamita", "Porto Azzurro"),
+            (42.7250, 10.4090, "eb_calamita", "Monte Calamita"),
+            (42.7460, 10.4150, "eb_calamita", "Naregno"),
+            (42.7360, 10.4020, "eb_calamita", "Morcone"),
+            (42.7580, 10.3800, "eb_calamita", "Mola"),
+        ],
+    ),
+    # Kronplatz / Plan de Corones, 2026-08-25. Researched in 2026-07 and shelved for want of geometry
+    # (`docs/kronplatz-recherche.md` lists the four sourcing routes that failed) -- Trailforks is the fifth
+    # and it works. Difficulty is the OPERATOR's, from that same research doc's table, wherever the operator
+    # publishes one; the four trails it does not name fall back to Trailforks. See `diff_override` below.
+    # Sub-regions are the three flanks the operator itself distinguishes, plus the trails on the NORTH side
+    # of the Pustertal (Sambock above Bruneck, Huehnerspiel above Rasen), which belong to no flank at all.
+    "kronplatz": dict(
+        prefix="kp", label="Kronplatz", countries=["IT"], material="Kronplatz",
+        max_anchor_km=8.0,
+        subregions=[
+            ("kp_reischach",  "Reischach",      "#0f766e"),
+            ("kp_olang",      "Olang",          "#b45309"),
+            ("kp_stvigil",    "St. Vigil",      "#7c3aed"),
+            ("kp_pustertal",  "Pustertal Nord", "#1d4ed8"),
+        ],
+        anchors=[
+            (46.7794, 11.9542, "kp_reischach", "Reischach"),
+            (46.7970, 11.9370, "kp_reischach", "Bruneck"),
+            (46.7660, 11.9450, "kp_reischach", "Ried/Ruis"),
+            (46.7570, 11.9560, "kp_reischach", "Herrnsteig-Nordflanke"),
+            (46.7570, 12.0000, "kp_olang", "Geiselsberg"),
+            (46.7480, 12.0270, "kp_olang", "Olang"),
+            (46.7495, 11.9700, "kp_olang", "Kronplatz Ostflanke"),
+            (46.7378, 11.9553, "kp_stvigil", "Kronplatz Gipfel"),
+            (46.7250, 11.9600, "kp_stvigil", "Furkelpass"),
+            (46.6900, 11.9200, "kp_stvigil", "St. Vigil"),
+            (46.8400, 11.9050, "kp_pustertal", "Sambock"),
+            (46.8250, 11.9200, "kp_pustertal", "Sambock unten"),
+            (46.8280, 12.0050, "kp_pustertal", "Huehnerspiel"),
+        ],
+        #: kronplatz.com's own three-step scale (easy/medium/difficult) onto our four colours, the same
+        #: mapping Saalbach's three-step scale uses: easy->blau, medium->rot, difficult->schwarz, and
+        #: `gruen` simply never reached. Only ONE of these disagrees with Trailforks -- Piz de Plaies,
+        #: which Trailforks rates Blue and the operator calls medium -- but all of them are listed, so the
+        #: table can be checked against the operator's page without guessing which ones mattered.
+        diff_override={
+            "freeride-trail-herrnsteig": ("rot", "medium"),
+            "gassl-trail": ("rot", "medium"),
+            "telle-line": ("rot", "medium"),
+            "sigi": ("rot", "medium"),
+            "uschi": ("rot", "medium"),
+            "spitzhorn-672806": ("rot", "medium"),
+            "franz": ("schwarz", "difficult"),
+            "christian": ("schwarz", "difficult"),
+            "hans-trail": ("schwarz", "difficult"),
+            "furcia-trail": ("rot", "medium"),
+            "crazy-bunny": ("rot", "medium"),
+            "cctop1": ("rot", "medium"),
+            "cctop2": ("rot", "medium"),
+            "richardanton": ("rot", "medium"),
+            "freeride-piz-de-plaies": ("rot", "medium"),
+            "korer-trail": ("schwarz", "difficult"),
+            "andreas-trail": ("schwarz", "difficult"),
+            "alex-trail": ("schwarz", "difficult"),
+        },
+        #: Alle drei fuehrt kronplatz.com als eigene Trails mit eigener Laenge und Schwierigkeit; ihre
+        #: Trailforks-Linien liegen im Korridor des 4,8 km langen Furcia Trails (100 %, 100 %, 78 %).
+        #: Der Betreiber entscheidet, was ein Trail IST -- also gebaut, nicht verworfen.
+        keep_overlapping=("crazy-bunny", "cctop1", "cctop2"),
+        #: `gassl-trail` bei Trailforks ist NICHT der Gassl Trail des Betreibers, sondern Dragon Trail und
+        #: Gassl Trail als eine 8,4-km-Linie -- gemessen, nicht vermutet: das Ende des Komoot-Dragon und der
+        #: Anfang des Komoot-Gassl liegen 0 m auseinander, und 99 % der Punkte der Trailforks-Linie liegen
+        #: naeher als 25 m an der Vereinigung der beiden. Daher raus und durch `extra_trails` ersetzt.
+        exclude=("gassl-trail",),
+        #: Beide von Komoot, verlinkt auf bike-holidays.com (Quelle vom Nutzer). Sie tragen echte Hoehen je
+        #: Punkt, und ihre Laengen treffen die Betreiberangabe fast genau (Gassl 6 376 gegen 6 400 m,
+        #: Dragon 2 016 gegen 2 043 m) -- die Trailforks-Linie tat das um 30 % nicht. Die Rohdaten liegen
+        #: in Material/Kronplatz/komoot/, ein Neubau braucht also kein Netz.
+        extra_trails=[
+            dict(id="gassl_trail", name="Gassl Trail", sub="kp_olang", diff="rot",
+                 file="komoot/gassl-trail.json", source="Komoot 780771680 via bike-holidays.com"),
+            dict(id="dragon_trail", name="Dragon Trail", sub="kp_olang", diff="blau",
+                 file="komoot/dragon-trail.json", source="Komoot 1068195473 via bike-holidays.com"),
+        ],
+    ),
     # Madeira: a shuttle island, not a lift island -- every classic descent starts from a van drop, so
     # there is deliberately NO `lifts` array, the same as Odenwald/Pfälzerwald/Donnersberg.
     "madeira": dict(
@@ -263,16 +419,42 @@ def build(key, dry_run=False):
     trails, geo, profs = [], {}, {}
     by_norm, index = {}, {}
     stats = {"built": 0, "far": [], "nogeo": [], "notharvested": [], "noprofile": [], "tiny": [],
-             "unknown_diff": [], "dupe_name": [], "dupe_geo": [], "hidden": [], "cyclepath": []}
-    for tf_slug, row in sorted(table.items()):
+             "unknown_diff": [], "dupe_name": [], "dupe_geo": [], "hidden": [], "cyclepath": [],
+             "operator_diff": [], "kept_overlapping": [], "excluded": [], "extra": []}
+    def harvested_len(tf_slug):
+        """Metres of the harvested line, 0 if there is none -- only used to ORDER the loop."""
+        g = tf_geo.get(tf_slug) or {}
+        if g.get("p") and len(g["p"]) >= 2:
+            return line_len_m([[q[2], q[3]] for q in g["p"]])
+        if g.get("c") and len(g["c"]) >= 2:
+            return line_len_m(g["c"])
+        return 0.0
+
+    # NOTE for a REBUILD of an already-shipped region: this ordering changed on 2026-08-25 and it decides
+    # which member of an overlapping pair survives. Madeira is byte-identical either way (no geometry
+    # duplicates at all); the GARDASEE is not -- `gd_bike_park_pergine_1_719942` becomes
+    # `gd_bike_park_pergine_2_719941` and `gd_strada_forestale_malghetta` becomes
+    # `..._80595719`, the longer line of each pair. Its shipped file was NOT rebuilt, because a trail id
+    # is what its ratings and its Touren' `trailSegments` point at. Rebuild it only deliberately.
+    #
+    # LONGEST FIRST, not alphabetically. `duplicate_of` reports the line being built as the duplicate of
+    # whatever was built before it, so build order alone decides which of an overlapping pair survives --
+    # and by slug that is arbitrary. At Kronplatz it dropped the 4.9 km Furcia Trail because the 329 m
+    # `cctop1`, a fragment lying inside it, happened to sort first. Longest-first makes the surviving line
+    # the one that contains the other, which is the only reading that is right in general.
+    for tf_slug, row in sorted(table.items(), key=lambda kv: (-harvested_len(kv[0]), kv[0])):
         diff = row.get("diff")
         if not diff or diff in ACCESS_DIFF:
             continue
         name = row.get("name") or tf_slug
+        if tf_slug in cfg.get("exclude", ()):
+            stats["excluded"].append(name)
+            continue
         if EXCLUDE_NAME_RE.search(name):
             stats["cyclepath"].append(name)
             continue
-        if diff not in TF_DIFF:
+        override = cfg.get("diff_override", {}).get(tf_slug)
+        if not override and diff not in TF_DIFF:
             stats["unknown_diff"].append("%s (%s)" % (name, diff))
             continue
         if tf_slug not in tf_geo:
@@ -287,6 +469,7 @@ def build(key, dry_run=False):
         elif g.get("c") and len(g["c"]) >= 2:
             # Skipped, not built: without the ElevationChart there is no elevation for this line and
             # inventing one from a DEM would put a different source's numbers next to Trailforks' own.
+            # If the trail matters, give it a real second source through `extra_trails`.
             stats["noprofile"].append(name)
             continue
         else:
@@ -307,11 +490,17 @@ def build(key, dry_run=False):
             stats["dupe_name"].append("%s = %s" % (name, near_same_name[0]))
             continue
         dup = duplicate_of(coords_only, geo, index)
-        if dup:
+        if dup and tf_slug not in cfg.get("keep_overlapping", ()):
             stats["dupe_geo"].append("%s = %s (%.0f%%)" % (name, dup[0], dup[1] * 100))
             continue
+        if dup:
+            stats["kept_overlapping"].append("%s liegt zu %.0f%% auf %s" % (name, dup[1] * 100, dup[0]))
         up = looks_uphill(pts)
-        entry, coords, prof = build_trail(sid(cfg["prefix"], tf_slug), name, sub, TF_DIFF[diff], pts,
+        our_diff = override[0] if override else TF_DIFF[diff]
+        if override and TF_DIFF.get(diff) != our_diff:
+            stats["operator_diff"].append("%s: %s -> %s (Betreiber: %s)"
+                                          % (name, TF_DIFF.get(diff, diff), our_diff, override[1]))
+        entry, coords, prof = build_trail(sid(cfg["prefix"], tf_slug), name, sub, our_diff, pts,
                                           uphill=up, descend=not up)
         trails.append(entry)
         geo[entry["id"]] = coords
@@ -322,14 +511,31 @@ def build(key, dry_run=False):
         if row.get("hidden"):
             stats["hidden"].append(name)
 
+    for ex in cfg.get("extra_trails", ()):
+        raw = json.load(io.open(os.path.join(material, ex["file"]), encoding="utf-8"))
+        pts = [[p[0], p[1], p[2]] for p in raw["points"]]
+        tid = "%s_%s" % (cfg["prefix"], ex["id"])
+        entry, coords, prof = build_trail(tid, ex["name"], ex["sub"], ex["diff"], pts,
+                                          uphill=ex.get("uphill", False),
+                                          descend=not ex.get("uphill", False))
+        trails.append(entry)
+        geo[tid] = coords
+        profs[tid] = prof
+        stats["extra"].append("%s (%s)" % (ex["name"], ex.get("source", ex["file"])))
+        # counted with the rest, or the report's "N built" disagrees with the summary's own trail count
+        stats["built"] += 1
+
     out = os.path.join(REGIONS_DIR, "%s.json" % key)
     # A rebuild must not throw away the place labels tools/add_region_places.py wrote last time.
-    places = (json.load(io.open(out, encoding="utf-8")).get("places")
-              if os.path.exists(out) else []) or []
+    # `places`, `lifts`, `trailSegments` and `ratings` are NOT passed on purpose: write_region carries every
+    # side key forward from the file it overwrites (see its docstring -- dropping them silently was a
+    # recurring bug, not a one-off). The dry run has no file to carry from, so it reads the old one itself.
     if dry_run:
-        data = {"lineTrails": trails, "trailGeo": geo, "elevationProfiles": profs, "places": places}
+        prev = json.load(io.open(out, encoding="utf-8")) if os.path.exists(out) else {}
+        data = {"lineTrails": trails, "trailGeo": geo, "elevationProfiles": profs,
+                "places": prev.get("places") or []}
     else:
-        data = write_region(out, trails, geo, profs, places=places)
+        data = write_region(out, trails, geo, profs)
     summary = region_summary(data)
     print(json.dumps(summary, ensure_ascii=False, indent=1))
     print("\n%d built, %d name duplicates, %d geometry duplicates, %d outside the region, "
@@ -346,6 +552,10 @@ def build(key, dry_run=False):
                      ("tiny", "dropped, too short"),
                      ("unknown_diff", "dropped, difficulty title not in TF_DIFF"),
                      ("cyclepath", "dropped, paved cycle infrastructure by name"),
+                     ("operator_diff", "difficulty taken from the operator, not Trailforks"),
+                     ("kept_overlapping", "built although it shares ground -- the operator lists it separately"),
+                     ("extra", "built from a second source (see `extra_trails`)"),
+                     ("excluded", "dropped by `exclude` -- see the reason in CONFIGS"),
                      ("hidden", "built, but Trailforks marks it a hidden trail")):
         if stats[k]:
             # Truncated, because one of these lists runs to 575 names and a report nobody reads is not a
