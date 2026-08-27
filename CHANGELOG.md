@@ -75,6 +75,33 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   "liegt dieser Punkt auf jener Linie" fragt, braucht eine auf t in [0,1] geklammerte Punkt-zu-Segment-
   Distanz.
 
+## 2026-08-26 (Der Bikepark Bormio wird eine eigene Sub-Region)
+- **Neu: `sub_override` in `tools/build_trailforks_region.py`** -- eine Zuordnung von Hand fuer den Fall,
+  dass die Sub-Region durch etwas entschieden wird, das die Geometrie nicht sehen kann. Wunsch des Nutzers:
+  der Bikepark Bormio ist durch die LISTE DES BETREIBERS definiert, und seine Pisten fielen nach reiner
+  Nachbarschaft in zwei verschiedene Taeler (vier nach Valdisotto, eine nach Valfurva -- jede fuer sich
+  korrekt, in der Summe nutzlos). Greift NACH der Entfernungspruefung, damit eine Handzuordnung nicht
+  zugleich heimlich die Regionsgrenze aufweicht, und steht im Bau-Bericht.
+- **Die Grade der fuenf Pisten kommen jetzt vom Betreiber** (`diff_override`, italienische Skala blu/rossa/
+  nera mit der Formulierung daneben). Genau einer widersprach Trailforks: **Viper ist blau, nicht rot**.
+- **Autobahn und Zombie bleiben eine Linie, und das ist eine gepruefte Aussage, keine Bequemlichkeit.**
+  Vier Quellen: beide Betreiberseiten nennen dieselben Zahlen -- und Autobahns 548 Hm auf 800 m (68 %)
+  widersprechen der eigenen Angabe "max 19 Grad" (34 %); die Summen passen nicht (2 200 gegen unsere
+  2 593 m, 801 gegen 496 Hm); unser Profil laeuft mit 14-25 % ohne Bruchstelle durch; OSM kennt keine der
+  sieben Pisten namentlich; und die Bikepark-Karte des Betreibers ist ein Rasterbild mit den Namen nur in
+  der Legende. An irgendeinem Meter zu schneiden waere eine erfundene Grenze.
+- **Die Wegnummern der Freeride-Tour (S541, S518, S523, S549, S522) stehen NUR beim Betreiber.** Overpass
+  ueber den ganzen Tourkorridor findet 207 Wege und davon 11 ueberhaupt beschriftet -- Strassennamen, der
+  "Sentiero di Grande Guerra" und "Bormio 3000 Bikepark Downhill", keine einzige S-Nummer. Als
+  Geometriequelle taugen sie also nicht; gut, dass die bergfex-Spur da war.
+- **Der Bau warnt jetzt, wenn eine Region mit Touren neu gebaut wird**: lineTrails wird komplett ersetzt,
+  der Toureneintrag ist also weg, waehrend `write_region` die `trailSegments` weitertraegt -- verwaiste
+  Segmente, die validate_region erst hinterher meldet. Beim Bormio-Neubau hat der Hinweis genau das getan.
+- **Zwei Testluecken geschlossen**, beide durch Mutation gefunden: `sub_override` im Bau zu ignorieren liess
+  die ganze Suite gruen (die Invariante prueft nur die Konfiguration) -- dafuer gibt es jetzt einen
+  Verhaltensfall, der den Trockenbau laufen laesst und die fuenf Linien im Bikepark nachzaehlt. Und die
+  Invariante selbst kennt `sub_override` als ZWEITEN Weg, eine Sub-Region zu fuellen; vorher war eine
+  Sub-Region ohne Anker unmoeglich und der Test schlug zu Recht an.
 ## 2026-08-26 (Die Freeride-Tour Bormio 3000 - Santa Caterina ist gebaut)
 - **Die Tour, die der Nutzer aus eigener Fahrt kannte, steht als Trailrunde in Bormio.** Der Betreiber
   fuehrt sie mit Zahlen und Wegnummern, aber ohne GPX; die Spur kam auf seinen Hinweis von **bergfex**

@@ -359,29 +359,18 @@ mit dem Mountainbike möglich", nennt sie aber nicht namentlich, und die Live-Li
 **Stand 2026-08-26 nach dem ersten Blick des Nutzers auf die live gegangene Region:** Bormio hat seine
 **drei Lifte** (Betreibertabelle, siehe unten), die anderen fünf noch nicht.
 
-**Bormio: der Bikepark ist zu 5/7 drin, aber er sieht nicht danach aus.** Der Betreiber
-(`bormioski.eu/estate/bike-park/`) führt **sieben Downhill-Pisten am Monte Vallecetta**, Cima Bianca
-(3 017 m) bis Bormio 2000 (1 945 m), jede mit eigener Seite und eigener „Scheda tecnica":
+**Bormio: der Bikepark ist eine eigene Sub-Region (2026-08-26, Wunsch des Nutzers), die Grade stehen auf
+den Betreiberangaben.** Fünf der sieben Pisten sind gebaut, `Viper` von rot auf blau korrigiert. Neu dafür:
+`sub_override` in `tools/build_trailforks_region.py` — der Bikepark ist durch die Betreiberliste definiert,
+nicht durch Geografie, und seine Linien fielen nach Nachbarschaft in zwei Täler. Es bleiben **zwei offene
+Punkte**, beide ohne Quelle und deshalb nicht geraten:
 
-| Piste | Betreiber | Länge / Hm | bei uns |
-|---|---|---|---|
-| Paul Newman | rossa/blu | 1 800 m / 356 | ✓ rot, 1,81 km / 352 Hm |
-| Viper | blu | 2 100 m / 400 | ✓ aber als **rot** — Betreiber sagt blau |
-| Autobahn | rossa | 800 m / 548 | ✗ mit Zombie zu **einer** Trailforks-Linie verschmolzen |
-| Zombie | rossa/blu | 1 400 m / 253 | ✗ dito |
-| Golf Club | blu | 1 700 m / 349 | ✓ blau, 1,47 km / 298 Hm |
-| Panther | blu | 300 m / 40 | **fehlt ganz** — Trailforks kennt sie nicht |
-| Hell Rocks | nera | 400 m / 100 | ✓ schwarz, 0,30 km / 89 Hm |
-
-Also drei Aufgaben, alle mit vorhandenem Werkzeug: **`diff_override`** für die sieben Grade (Viper ist
-nachweislich falsch), **`exclude` + `extra_trails`** für Autobahn/Zombie — derselbe Fall wie Kronplatz'
-GASSL trail, wo Trailforks zwei Betreibertrails als eine Linie führt —, und eine Quelle für **Panther**
-(300 m, weder bei Trailforks noch geprüft in OSM). Nebenbei: die Betreiberangabe für Autobahn (800 m Länge,
-548 Hm Gefälle = 68 %) ist selbst unplausibel und sollte vor dem Übernehmen hinterfragt werden.
-
-Ein Gestaltungspunkt dazu: die fünf gebauten Bikepark-Linien liegen verstreut in `bo_valdisotto` und
-`bo_valfurva`, weil die Ankerregel geografisch entscheidet. Ein Fahrer sucht sie aber als „Bormio Bike
-Park". Eine eigene Sub-Region wäre eine Nutzerentscheidung, kein Automatismus.
+* **Panther fehlt** (blu, 300 m / 40 Hm) — nicht bei Trailforks, nicht in OSM, nicht bei bike-holidays.
+* **Autobahn und Zombie sind eine Linie.** Vier Quellen geprüft und keine trennt sie: beide Betreiberseiten
+  nennen dieselben Zahlen (und Autobahns 548 Hm auf 800 m widersprechen der eigenen Angabe „max 19°"), die
+  Summen passen nicht (2 200 gegen 2 593 m, 801 gegen 496 Hm), unser Profil läuft mit 14–25 % ohne
+  Bruchstelle durch, OSM kennt keine der sieben Pisten namentlich, und die Bikepark-Karte des Betreibers ist
+  ein Rasterbild mit den Namen nur in der Legende. Lösen würde es eine Aufzeichnung einer der beiden.
 
 **3. ~~Die Tour Bormio 3000 → Santa Caterina~~ — gebaut am 2026-08-26.** Der Nutzer lieferte die
 bergfex-URL (Tour 2861858); deren GPX-Download braucht kein Konto, nur einen `Referer`. Gegen die

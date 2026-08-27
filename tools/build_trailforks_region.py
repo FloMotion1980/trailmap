@@ -75,6 +75,12 @@ MIN_TRAIL_M = 80.0
 #:   that these lines share ground with a longer one; the operator is right that they are separate trails
 #:   with their own name, grade and length. Kronplatz has three (Crazy Bunny, CCTop1, CCTop2, all inside the
 #:   Furcia Trail's corridor) and its own trail table names each of them.
+#: * `sub_override`: `{tf_slug: sub_region_key}` for trails whose sub-region is decided by something the
+#:   geometry cannot see. The nearest-anchor rule is right about WHERE a line is and says nothing about what
+#:   it BELONGS to -- Bormio's seven bike-park pistes are defined by the operator's own list and fall into
+#:   three different valleys by pure geography (user, 2026-08-26: "Bikepark Bormio sollte uebrigens eine
+#:   eigene Subregion sein"). Keep it for cases with an external definition like that, never to tidy up a
+#:   drop the anchors got right.
 #: * `exclude`: Trailforks slugs to drop outright, with the reason in the comment beside them. For a line
 #:   that is WRONG, not merely redundant -- Kronplatz's `gassl-trail` is the Dragon Trail and the Gassl
 #:   Trail recorded as one 8.4 km line, which is why its length disagreed with the operator by 30 %.
@@ -336,6 +342,7 @@ CONFIGS = {
         prefix="bo", label="Bormio & Valtellina", countries=["IT"], material="Bormio",
         max_anchor_km=9.0,
         subregions=[
+            ("bo_bikepark",    "Bikepark Bormio", "#7f1d1d"),
             ("bo_bormio",      "Bormio",         "#be185d"),
             ("bo_valdidentro", "Valdidentro",    "#0f766e"),
             ("bo_valfurva",    "Valfurva",       "#b45309"),
@@ -372,6 +379,29 @@ CONFIGS = {
             (46.1500, 10.0500, "bo_aprica", "Tresenda"),
             (46.1600, 10.2400, "bo_aprica", "Corteno Golgi"),
         ],
+        #: Der Bikepark ist durch die LISTE DES BETREIBERS definiert, nicht durch Geografie -- seine sieben
+        #: Pisten am Monte Vallecetta laufen von der Cima Bianca (3 017 m) nach Bormio 2000 (1 945 m) und
+        #: fallen nach reiner Nachbarschaft in drei verschiedene Taeler (Valdisotto, Valfurva). Wunsch des
+        #: Nutzers, 2026-08-26. NICHT dabei: `bormio-2000-dh`, das ist die Talabfahrt Bormio 2000 -> Bormio
+        #: (1 892 -> 1 204 m) und steht auf keiner der sieben Pistenseiten.
+        sub_override={
+            "paul-newman": "bo_bikepark",
+            "viper-689495": "bo_bikepark",
+            "autobahn--zombie": "bo_bikepark",
+            "golf-club": "bo_bikepark",
+            "hell-rocks": "bo_bikepark",
+        },
+        #: bormioski.eu fuehrt je Piste eine eigene Seite mit "Scheda tecnica". Die italienische Skala
+        #: uebersetzt wie ueberall: blu -> blau, rossa -> rot, nera -> schwarz. Wo der Betreiber zwei Stufen
+        #: nennt ("rossa/blu"), gilt die haertere -- dieselbe Richtung, in die schon der `max()` eines
+        #: zusammengesetzten Trails rundet. Nur VIPER widerspricht Trailforks (das rot sagt).
+        diff_override={
+            "paul-newman": ("rot", "rossa/blu"),
+            "viper-689495": ("blau", "blu"),
+            "autobahn--zombie": ("rot", "Autobahn rossa + Zombie rossa/blu"),
+            "golf-club": ("blau", "blu"),
+            "hell-rocks": ("schwarz", "nera"),
+        },
     ),
     # Vinschgau & Meran, 2026-08-26. Suedtiroler Nachbar des Kronplatz und die laengsten Linien im ganzen
     # Vergleichsfeld (148 Trails auf 394 km, also 2,7 km je Trail). Sechs Taeler, und die Grenzen sind
@@ -768,7 +798,8 @@ def build(key, dry_run=False):
     by_norm, index = {}, {}
     stats = {"built": 0, "far": [], "nogeo": [], "notharvested": [], "noprofile": [], "tiny": [],
              "unknown_diff": [], "dupe_name": [], "dupe_geo": [], "hidden": [], "cyclepath": [],
-             "operator_diff": [], "kept_overlapping": [], "excluded": [], "extra": []}
+             "operator_diff": [], "kept_overlapping": [], "excluded": [], "extra": [],
+             "sub_forced": []}
     def harvested_len(tf_slug):
         """Metres of the harvested line, 0 if there is none -- only used to ORDER the loop."""
         g = tf_geo.get(tf_slug) or {}
@@ -828,6 +859,12 @@ def build(key, dry_run=False):
         if km > cfg["max_anchor_km"]:
             stats["far"].append("%s (%.0f km from %s)" % (name, km, anchor))
             continue
+        # NACH der Entfernungspruefung, nicht davor: eine Zuordnung von Hand soll nicht zugleich heimlich
+        # die Regionsgrenze aufweichen. Was zu weit weg liegt, fliegt weiter heraus.
+        forced = cfg.get("sub_override", {}).get(tf_slug)
+        if forced and forced != sub:
+            stats["sub_forced"].append("%s: %s -> %s" % (name, sub, forced))
+            sub = forced
         coords_only = [[q[0], q[1]] for q in pts]
         if line_len_m(coords_only) < MIN_TRAIL_M:
             stats["tiny"].append(name)
@@ -878,8 +915,16 @@ def build(key, dry_run=False):
     # `places`, `lifts`, `trailSegments` and `ratings` are NOT passed on purpose: write_region carries every
     # side key forward from the file it overwrites (see its docstring -- dropping them silently was a
     # recurring bug, not a one-off). The dry run has no file to carry from, so it reads the old one itself.
+    prev = json.load(io.open(out, encoding="utf-8")) if os.path.exists(out) else {}
+    # Eine Region mit Touren braucht nach dem Neubau ihren Tourenbau erneut: lineTrails wird komplett
+    # ersetzt, der Toureneintrag ist also weg -- waehrend write_region `trailSegments` weitertraegt.
+    # validate_region meldet das danach als verwaiste Segmente, aber erst, wenn jemand hinschaut.
+    tours = [t for t in prev.get("lineTrails", []) if t.get("loop")]
+    if tours:
+        print("HINWEIS: %s hatte %d Tour(en) -- %s. Nach dem Neubau den Tourenbau der Region erneut "
+              "laufen lassen, sonst bleiben ihre trailSegments ohne Trail zurueck."
+              % (key, len(tours), ", ".join(t["name"] for t in tours)))
     if dry_run:
-        prev = json.load(io.open(out, encoding="utf-8")) if os.path.exists(out) else {}
         data = {"lineTrails": trails, "trailGeo": geo, "elevationProfiles": profs,
                 "places": prev.get("places") or []}
     else:
@@ -901,6 +946,7 @@ def build(key, dry_run=False):
                      ("unknown_diff", "dropped, difficulty title not in TF_DIFF"),
                      ("cyclepath", "dropped, paved cycle infrastructure by name"),
                      ("operator_diff", "difficulty taken from the operator, not Trailforks"),
+                     ("sub_forced", "sub-region set by hand (see `sub_override`)"),
                      ("kept_overlapping", "built although it shares ground -- the operator lists it separately"),
                      ("extra", "built from a second source (see `extra_trails`)"),
                      ("excluded", "dropped by `exclude` -- see the reason in CONFIGS"),

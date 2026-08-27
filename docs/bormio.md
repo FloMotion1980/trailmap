@@ -1,6 +1,6 @@
 # Bormio & Valtellina — gebaut 2026-08-26
 
-179 Trails + **1 Tour**, 6 Sub-Regionen, 74 mit Trailforks-Bewertung, **3 Lifte** (Betreibertabelle).
+179 Trails + **1 Tour**, 7 Sub-Regionen, 74 mit Trailforks-Bewertung, **3 Lifte** (Betreibertabelle).
 Verfahren, Quelle und die Vorbehalte dazu: **`docs/sechs-regionen-2026-08.md`** — hier steht nur, was für
 diese Region eigen ist.
 
@@ -96,7 +96,46 @@ Richtung, nachdem sie bei Kronplatz zwei falsch-positive geliefert hatte. Die ü
 Kasten (Valbella–Bormio 3000, Ciuk–Laghetti, Pian dei Larici, Schlepplifte, Förderbänder, Projekte) stehen
 nicht auf der Sommerliste; sie sind mit Begründung in `add_lifts.py`s `excluded`.
 
-## Der Bikepark: 5 von 7 Pisten sind drin, aber unter der Oberfläche
+## Der Bikepark ist eine eigene Sub-Region
+
+Auf Wunsch des Nutzers (2026-08-26). Der entscheidende Punkt: **der Bikepark ist durch die Liste des
+Betreibers definiert, nicht durch Geografie.** Seine Pisten laufen von der Cima Bianca (3 017 m) nach
+Bormio 2000 (1 945 m) und fallen nach reiner Nachbarschaft in *zwei verschiedene Täler* — die Ankerregel
+hatte vier nach Valdisotto und eine nach Valfurva sortiert, jede für sich korrekt und in der Summe nutzlos.
+Dafür gibt es jetzt `sub_override` in `tools/build_trailforks_region.py`: eine Zuordnung von Hand, die
+**nach** der Entfernungsprüfung greift, damit sie nicht zugleich heimlich die Regionsgrenze aufweicht.
+
+| Piste | Betreiber | gebaut |
+|---|---|---|
+| Paul Newman | rossa/blu, 1 800 m / 356 Hm | rot, 1,81 km |
+| Viper | **blu**, 2 100 m / 400 Hm | **blau** — Trailforks sagte rot |
+| Autobahn + Zombie | zwei Pisten, 800 + 1 400 m | rot, 2,59 km — **eine Linie**, siehe unten |
+| Golf Club | blu, 1 700 m / 349 Hm | blau, 1,47 km |
+| Hell Rocks | nera, 400 m / 100 Hm | schwarz, 0,30 km |
+| Panther | blu, 300 m / 40 Hm | **fehlt** |
+
+Die Grade stehen als `diff_override` mit der italienischen Formulierung daneben (blu → blau, rossa → rot,
+nera → schwarz; bei „rossa/blu" gilt die härtere Stufe). **Nicht** im Bikepark: `Bormio 2000 DH` — das ist
+die Talabfahrt Bormio 2000 → Bormio (1 892 → 1 204 m) und steht auf keiner der sieben Pistenseiten.
+
+### Autobahn und Zombie lassen sich nicht trennen — vier Quellen geprüft
+
+Trailforks führt beide als eine Linie „Autobahn + Zombie". Sie zu teilen wäre naheliegend, ist aber mit
+nichts zu begründen, was ich habe:
+
+* **Beide Betreiberseiten** (bormioski.eu und bormiostay.com) nennen dieselben Zahlen — und **Autobahns sind
+  in sich widersprüchlich**: 548 Hm auf 800 m sind 68 % im Mittel, während dieselbe Seite „max 19°" (34 %)
+  angibt. Zombies 253 Hm auf 1 400 m (18 %, max 23°) sind dagegen stimmig.
+* **Die Summen passen nicht**: 2 200 m gegen unsere 2 593 m, und 801 Hm gegen unsere 496.
+* **Unser eigenes Profil hat keine Bruchstelle**: 14 bis 25 % Gefälle durchgehend über alle 13 Abschnitte.
+* **OSM kennt keine der sieben Pisten** namentlich (Overpass über den ganzen Bikepark-Kasten).
+* **Die Bikepark-Karte des Betreibers** (`Sentieri_ITA.pdf`) ist ein Rasterbild; die sieben Namen stehen
+  nur in der Legende, es gibt keine Geometrie darin.
+
+An irgendeinem Meter zu schneiden wäre eine erfundene Grenze. Der Name „Autobahn + Zombie" ist Trailforks'
+eigener und sagt ehrlich, was die Linie ist. Was es lösen würde: eine Aufzeichnung einer der beiden Pisten.
+
+## Der Bikepark: alte Gegenüberstellung
 
 Der Betreiber führt **sieben Downhill-Pisten am Monte Vallecetta**. Fünf sind gebaut (Paul Newman, Viper,
 Golf Club, Hell Rocks, plus Autobahn und Zombie als EINE Trailforks-Linie „Autobahn + Zombie"),

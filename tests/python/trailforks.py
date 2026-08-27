@@ -188,12 +188,44 @@ def run(t):
     t.eq("a numeric suffix survives", B.sid("md", "antenas-24864"), "md_antenas_24864")
     t.eq("odd characters collapse to one underscore", B.sid("gd", "601--Pernici/Trail"), "gd_601_pernici_trail")
 
+    t.case("sub_override actually moves a trail, and only the ones it names")
+    # Die Invariante darunter prueft nur die KONFIGURATION. Eine Mutation, die `sub_override` im Bau
+    # komplett ignoriert (`forced = None`), liess die ganze Suite gruen -- das Verhalten war ungeprueft.
+    # Also hier: der Bau selbst, trocken, gegen die eingecheckten Material-Dateien.
+    mat = os.path.join(ROOT, "Material", "Bormio")
+    if not os.path.isdir(mat):
+        t.ok("uebersprungen: Material/Bormio fehlt", True, "skip", "skip")
+    else:
+        # Der Bau druckt seinen ganzen Bericht; hier interessiert nur das Ergebnis.
+        with contextlib.redirect_stdout(io.StringIO()):
+            data = B.build("bormio", dry_run=True)
+        cfg = B.CONFIGS["bormio"]
+        want = set(B.sid(cfg["prefix"], slug) for slug, sub in cfg["sub_override"].items()
+                   if sub == "bo_bikepark")
+        got = set(x["id"] for x in data["lineTrails"] if x["region"] == "bo_bikepark")
+        t.eq("genau die benannten Linien liegen im Bikepark", sorted(got), sorted(want))
+        t.ok("und es sind wirklich fuenf", len(got) == 5, len(got), 5)
+        # Die Gegenprobe, die die Mutation oben haette fangen muessen: ohne den Override waeren dieselben
+        # Trails nach reiner Nachbarschaft auf zwei ANDERE Taeler verteilt.
+        by = dict((x["id"], x) for x in data["lineTrails"])
+        t.ok("ohne Override laegen sie nicht zusammen",
+             len(set(cfg["sub_override"].values())) == 1 and all(i in by for i in want),
+             sorted(set(cfg["sub_override"].values())), ["bo_bikepark"])
+
     t.case("every configured region's anchors name a declared sub-region, and vice versa")
     for key, cfg in sorted(B.CONFIGS.items()):
         declared = set(k for k, _label, _color in cfg["subregions"])
-        used = set(a[2] for a in cfg["anchors"])
-        t.eq("%s: no anchor points at an undeclared sub-region" % key, sorted(used - declared), [])
-        t.eq("%s: no sub-region without an anchor to fill it" % key, sorted(declared - used), [])
+        anchored = set(a[2] for a in cfg["anchors"])
+        # `sub_override` is the SECOND way a sub-region gets filled, and it exists precisely for the case
+        # that has no anchor: Bormio's Bikepark is defined by the operator's own piste list, and its five
+        # lines fall into two different valleys geographically. So the invariant is "reachable at all",
+        # not "has an anchor" -- but both halves still have to name something declared, which is what
+        # actually catches a typo (2026-08-26).
+        forced = set((cfg.get("sub_override") or {}).values())
+        used = anchored | forced
+        t.eq("%s: no anchor points at an undeclared sub-region" % key, sorted(anchored - declared), [])
+        t.eq("%s: no sub_override points at an undeclared sub-region" % key, sorted(forced - declared), [])
+        t.eq("%s: no sub-region nothing can ever fill" % key, sorted(declared - used), [])
         t.ok("%s: colours are distinct within the group" % key,
              len(set(c for _k, _l, c in cfg["subregions"])) == len(cfg["subregions"]),
              len(set(c for _k, _l, c in cfg["subregions"])), len(cfg["subregions"]))
