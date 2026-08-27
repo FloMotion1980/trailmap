@@ -75,6 +75,26 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   "liegt dieser Punkt auf jener Linie" fragt, braucht eine auf t in [0,1] geklammerte Punkt-zu-Segment-
   Distanz.
 
+## 2026-08-26 (Bormio bekommt seine Lifte, und der Bikepark wird nachgezaehlt)
+- **Drei Lifte fuer Bormio, aus der Betreibertabelle** -- und ein Musterbeispiel fuer die Regel aus
+  `docs/lifts-feature.md` in der anderen Richtung: `bormioski.eu/estate/impianti-aperti-in-estate/` fuehrt
+  im Sommer GENAU DREI Anlagen (Kabinenbahn Bormio-Bormio 2000, Pendelbahn auf die Cima Bianca, Sessel
+  nach Cimino), und **alle drei OSM-Wege tragen ueberhaupt kein Bike-Tag**. Wer sich auf
+  `aerialway:bicycle` verlassen haette, haette hier null gefunden -- nachdem dasselbe Tag bei Kronplatz
+  tags zuvor zwei falsch-positive geliefert hatte.
+- **Der Bormio-Bikepark ist zu 5 von 7 Pisten drin, sieht aber nicht danach aus.** Der Betreiber fuehrt
+  sieben Downhill-Pisten am Monte Vallecetta, jede mit eigener Seite und eigener Scheda tecnica. Gebaut
+  sind Paul Newman, Viper, Golf Club, Hell Rocks und Autobahn+Zombie als EINE Trailforks-Linie. **Panther
+  fehlt ganz**, und **Viper traegt bei uns rot, wo der Betreiber blau sagt**. Autobahn/Zombie ist
+  derselbe Fall wie Kronplatz' GASSL trail: Trailforks fuehrt zwei Betreibertrails als eine Linie.
+  Werkzeug steht bereit (`diff_override`, `exclude`, `extra_trails`); die Gegenueberstellung samt der
+  unplausiblen Betreiberangabe fuer Autobahn (800 m Laenge auf 548 Hm = 68 %) steht in
+  `docs/backlog.md` 3b.
+- **Die Tour des Nutzers hat der Betreiber selbst**: "Itinerario Freeride MTB Bormio 3000 - Santa
+  Caterina Valfurva", 12,3 km, +254 / -1 482 Hm, 3 017 -> 1 738 m, ueber die Wegnummern S541, S518, S523,
+  S549, S522. PDF und Kartenbild, **kein GPX**. Unsere Zweierkette aus `Bormio 3000 single` + `Le Cune`
+  ist mit 11,3 km / -1 163 Hm also NICHT dieselbe Linie und endet 100 Hm zu hoch. Naechster Schritt:
+  entweder die fuenf Wegnummern aus OSM verketten oder ein GPX des Nutzers.
 ## 2026-08-26 (Sechs neue Regionen in einer Nacht)
 - **Davos Klosters (152 Trails), Vinschgau & Meran (146), Bormio & Valtellina (179), Bayerische Voralpen
   (358), Aostatal (425), Tarentaise & Vanoise (710)** -- zusammen 1 970 Trails, ausgewaehlt aus der

@@ -356,12 +356,49 @@ Kronplatz stand das Tag am Vortag bei zwei Bahnen falsch. **Für Davos ist die h
 (siehe `docs/davos.md`): der Betreiber sagt „auf insgesamt sechs Stand- und Luftseilbahnen ist der Transport
 mit dem Mountainbike möglich", nennt sie aber nicht namentlich, und die Live-Liste kommt per JavaScript.
 
+**Stand 2026-08-26 nach dem ersten Blick des Nutzers auf die live gegangene Region:** Bormio hat seine
+**drei Lifte** (Betreibertabelle, siehe unten), die anderen fünf noch nicht.
+
+**Bormio: der Bikepark ist zu 5/7 drin, aber er sieht nicht danach aus.** Der Betreiber
+(`bormioski.eu/estate/bike-park/`) führt **sieben Downhill-Pisten am Monte Vallecetta**, Cima Bianca
+(3 017 m) bis Bormio 2000 (1 945 m), jede mit eigener Seite und eigener „Scheda tecnica":
+
+| Piste | Betreiber | Länge / Hm | bei uns |
+|---|---|---|---|
+| Paul Newman | rossa/blu | 1 800 m / 356 | ✓ rot, 1,81 km / 352 Hm |
+| Viper | blu | 2 100 m / 400 | ✓ aber als **rot** — Betreiber sagt blau |
+| Autobahn | rossa | 800 m / 548 | ✗ mit Zombie zu **einer** Trailforks-Linie verschmolzen |
+| Zombie | rossa/blu | 1 400 m / 253 | ✗ dito |
+| Golf Club | blu | 1 700 m / 349 | ✓ blau, 1,47 km / 298 Hm |
+| Panther | blu | 300 m / 40 | **fehlt ganz** — Trailforks kennt sie nicht |
+| Hell Rocks | nera | 400 m / 100 | ✓ schwarz, 0,30 km / 89 Hm |
+
+Also drei Aufgaben, alle mit vorhandenem Werkzeug: **`diff_override`** für die sieben Grade (Viper ist
+nachweislich falsch), **`exclude` + `extra_trails`** für Autobahn/Zombie — derselbe Fall wie Kronplatz'
+GASSL trail, wo Trailforks zwei Betreibertrails als eine Linie führt —, und eine Quelle für **Panther**
+(300 m, weder bei Trailforks noch geprüft in OSM). Nebenbei: die Betreiberangabe für Autobahn (800 m Länge,
+548 Hm Gefälle = 68 %) ist selbst unplausibel und sollte vor dem Übernehmen hinterfragt werden.
+
+Ein Gestaltungspunkt dazu: die fünf gebauten Bikepark-Linien liegen verstreut in `bo_valdisotto` und
+`bo_valfurva`, weil die Ankerregel geografisch entscheidet. Ein Fahrer sucht sie aber als „Bormio Bike
+Park". Eine eigene Sub-Region wäre eine Nutzerentscheidung, kein Automatismus.
+
 **3. Kleiner, aber konkret: die Tour Bormio 3000 → Santa Caterina.** Der Nutzer erinnert sie aus eigener
 Fahrt, und sie liegt als **zwei aufeinanderfolgende Trails** in den Daten, deren Enden 3 m auseinanderliegen
 (`Bormio 3000 single` 8,0 km von 3 000 auf 2 320 m, dann `Le Cune` 3,3 km auf 1 837 m — zusammen 11,3 km und
 −1 163 Hm). Als Trailrunde ist sie NICHT gebaut: das bräuchte eine Aufzeichnung durch
 `tools/gpx_map_match.py`, und die beiden aneinanderzuhängen wäre sonst eine Behauptung über eine Verbindung,
-die niemand gemessen hat. Mit einem GPX der Fahrt ist es eine kurze Sache.
+die niemand gemessen hat.
+
+**Der Betreiber führt genau diese Tour selbst**, unter „Itinerario Freeride MTB Bormio 3000 – Santa Caterina
+Valfurva" (`bormioski.eu/itinerario-freeride-mtb/`): **12,3 km, +254 / −1 482 Hm, 3 017 → 1 738 m**, und er
+nennt die Wegnummern: **S541** von der Cima Bianca zu den Bei Laghetti und zur Bocca di Profa, dort links
+auf **S518** für ~3 km, dann **S523**, **S549** und **S522** nach Santa Caterina. Es gibt ein PDF und ein
+Kartenbild, aber **kein GPX**. Unsere Zweierkette ist mit 11,3 km / −1 163 Hm also NICHT dieselbe Linie und
+endet 100 Hm zu hoch. Zwei gangbare Wege: die fünf Wegnummern über Overpass aus OSM ziehen und verketten
+(dieselbe Technik wie `chain_ways` bei Kronplatz-Recherche und Donnersberg), oder ein GPX des Nutzers.
+Der zweite ist der verlässlichere -- `docs/finale-ligure.md` sagt genau das über wiederholt gescheiterte
+Fernbeschaffung.
 
 ## 4. Test-Abdeckung: was noch keine Suite beansprucht
 

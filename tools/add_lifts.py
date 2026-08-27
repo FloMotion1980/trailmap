@@ -104,6 +104,33 @@ LIFTS = {
     # lifts as the ones serving the park and the trails, all three running 14.5.-1.11.2026.
     # ---------------------------------------------------------------------------------------------
     # ---------------------------------------------------------------------------------------------
+    # Bormio, 2026-08-26. Die erste der sechs Regionen vom Vortag, die ihre Lifte bekommt -- und ein
+    # Musterbeispiel fuer die Regel aus docs/lifts-feature.md: bormioski.eu/estate/impianti-aperti-in-estate/
+    # fuehrt eine Tabelle "Situazione impianti" mit GENAU DREI Anlagen im Sommer (04.07.-06.09.2026, Bike
+    # Park ab 18.07., montags zu), und die OSM-Wege dazu tragen ALLE DREI ueberhaupt kein Bike-Tag. Wer sich
+    # auf `aerialway:bicycle` verlassen haette, haette hier null Lifte gefunden.
+    # Die uebrigen 20 Anlagen im Kasten sind Winterlifte (Schlepplifte, Foerderbaender, die Sesselbahnen
+    # Valbella, Ciuk, Pian dei Larici) oder Projekte -- keine davon steht auf der Sommerliste.
+    # ---------------------------------------------------------------------------------------------
+    "bormio": dict(bbox="46.42,10.28,46.52,10.42", lifts=[
+        dict(id="lift_bo_cabinovia", name="Bormio - Bormio 2000", region="bo_bormio",
+             osm=r"^Bormio - Bormio 2000$",
+             note="Kabinenbahn aus dem Ort, 1200 -> 1945 m; der Zubringer ins ganze Gebiet"),
+        dict(id="lift_bo_cima_bianca", name="Bormio 2000 - Cima Bianca", region="bo_bormio",
+             osm=r"^Bormio 2000 - Cima Bianca$",
+             note="Pendelbahn auf 3017 m; oben starten die sieben Downhill-Pisten UND der Freeride-"
+                  "Itinerar nach Santa Caterina"),
+        dict(id="lift_bo_cimino", name="Bormio 2000 - Cimino", region="bo_bormio",
+             osm=r"^Bormio 2000 - Cimino$",
+             note="Vierersessel auf 2630 m, laut Betreiber erst ab 18.07. und montags geschlossen"),
+    ], excluded=[
+        ("Valbella - Bormio 3000", "Sesselbahn, steht nicht auf der Sommerliste des Betreibers"),
+        ("Ciuk - Laghetti / Bormio 2000 - Pian dei Larici", "dito"),
+        ("Isolaccia - Pian della Mota", "Valdidentro, im Sommer nicht in Betrieb"),
+        ("Schlepplifte und Foerderbaender", "Winterbetrieb"),
+    ]),
+
+    # ---------------------------------------------------------------------------------------------
     # Kronplatz / Plan de Corones, 2026-08-25. The operator's OWN summer-lift page
     # (kronplatz.com/de/der-kronplatz/pisten-anlagen/aufstiegsanlagen-sommer, season 16.05.-08.11.2026)
     # lists exactly FOUR cable cars: Olang 1 (Nr. 301), Olang 2 (302), Piz de Plaies (202) and
