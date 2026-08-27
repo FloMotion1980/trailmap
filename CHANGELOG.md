@@ -21,6 +21,18 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-27 (Region-Dialog: Fokus im Suchfeld, am Desktop)
+- **Ein Klick auf "＋ Region hinzufügen" oder auf den Header-Button setzt den Cursor direkt ins Suchfeld --
+  am Desktop, nicht am Handy** (Nutzerwunsch). Dort würde der Fokus die Bildschirmtastatur über genau die
+  Liste legen, die die Suche eingrenzen soll. Die drei Öffnungsstellen laufen jetzt durch ein gemeinsames
+  `openRegionDialog({focusSearch})` statt durch drei Kopien derselben zwei Zeilen; boot()s Auto-Öffnen beim
+  ersten Besuch übergibt bewusst kein `focusSearch`. Unterschieden wird mit `isMobileLayout()`, dem
+  JS-Zwilling der Media Query, auf die das Touch-Layout selbst gekeyed ist -- ein Touchscreen-Laptop mit
+  Maus bekommt den Fokus also weiterhin. Das Feld wird zusätzlich `select()`ed, damit ein Suchbegriff von
+  vorhin durch Tippen ersetzt und nicht ergänzt wird. Ein Fall in `tests/browser/regions.js`, vier
+  Mutationen in `tests/MUTATIONS.md` -- eine davon ausdrücklich als NICHT gefangen dokumentiert, weil
+  Chromes `select()` den Fokus selbst mitzieht.
+
 ## 2026-08-27 (Saalbach: zwei zu lange Trails, vor Ort gemeldet)
 - **Hochalm-Trail von 6,91 km auf 1,85 km gekuerzt** (780 -> 263 Hm ab, Geometrie 195 -> 75 Punkte).
   Der Singletrail endet an der Forstweg-Einmuendung; unsere Linie fuhr danach noch 5 km Forstweg bis ins

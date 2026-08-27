@@ -1978,10 +1978,7 @@ function rebuildRegionChips(){
   addBtn.title = atCap
     ? `Es können höchstens ${MAX_ACTIVE_REGION_GROUPS} Regionen gleichzeitig geladen sein — zuerst eine mit ✕ schließen.`
     : "Weitere Region laden";
-  addBtn.addEventListener("click", () => {
-    renderRegionDialog();
-    regionDialogEl.classList.add("visible");
-  });
+  addBtn.addEventListener("click", () => openRegionDialog({ focusSearch: true }));
   regionChipRow.appendChild(addBtn);
 }
 
@@ -8139,10 +8136,28 @@ regionSearchEl.addEventListener("keydown", (e) => {
   }
 });
 
-document.getElementById("regionsBtn").addEventListener("click", () => {
+// One dialog, three entry points (the header button, the section's "＋ Region hinzufügen", and boot()'s
+// first-ever-visit auto-open), so opening it lives in one place rather than three copies of the same two
+// lines. `focusSearch` is true only for the two DELIBERATE clicks and only away from the touch layout
+// (user, 2026-08-27: "Am Desktop wenn man auf region hinzufügen klickt setze bitte direkt den fokus auf
+// das Suchfeld. Am Handy will ich das aber nicht") -- on a phone the focus summons the on-screen keyboard,
+// which covers the very list the search is meant to narrow, and the auto-open is something you read before
+// you type. The test is `isMobileLayout()`, already used by closeSidebarIfMobile(): it is the JS twin of
+// the `(max-width:768px),(pointer:coarse)` media query the touch layout itself is keyed on, so the focus is
+// off exactly where that layout is on -- including a touchscreen laptop with a mouse, which reports
+// `pointer:fine` and does want the focus.
+function openRegionDialog({ focusSearch = false } = {}){
   renderRegionDialog();
   regionDialogEl.classList.add("visible");
-});
+  if (focusSearch && !isMobileLayout()) {
+    regionSearchEl.focus();
+    // A term left over from a previous search is replaced by typing rather than appended to -- the field
+    // keeps its value when the dialog closes (regionSearchTerm is session state, see its own note).
+    regionSearchEl.select();
+  }
+}
+
+document.getElementById("regionsBtn").addEventListener("click", () => openRegionDialog({ focusSearch: true }));
 document.getElementById("regionDialogClose").addEventListener("click", () => {
   regionDialogEl.classList.remove("visible");
 });
@@ -9093,8 +9108,7 @@ async function boot(){
   // First-ever visit (nothing saved yet) — open the region picker right away so the user
   // consciously chooses their region(s) instead of just landing on the Paznaun default unasked.
   if (!saved) {
-    renderRegionDialog();
-    regionDialogEl.classList.add("visible");
+    openRegionDialog(); // no focusSearch: on a first visit the list is to be read, not filtered
   }
 }
 // The catch matters: everything past boot()'s first `await` is asynchronous, so the top-level try{} at the

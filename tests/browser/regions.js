@@ -1,7 +1,7 @@
 // @suite   regions
 // @area    Activating/deactivating region groups, persistence, the boot sequence
 // @files   Trailmap App/index.html, Trailmap App/regions/version.json
-// @touches activateRegionGroup, deactivateRegionGroup, MAX_ACTIVE_REGION_GROUPS, REGION_CATALOG, REGION_GROUPS, REGIONS, activeRegionGroups, renderRegionDialog, rebuildRegionChips, updateHeaderRegionsLabel, persistActiveState, restoreActiveState, loadRegionVersions, versionedRegionUrl, boot, applyPlaceVisibility, syncBuilderModeChrome
+// @touches openRegionDialog, isMobileLayout, activateRegionGroup, deactivateRegionGroup, MAX_ACTIVE_REGION_GROUPS, REGION_CATALOG, REGION_GROUPS, REGIONS, activeRegionGroups, renderRegionDialog, rebuildRegionChips, updateHeaderRegionsLabel, persistActiveState, restoreActiveState, loadRegionVersions, versionedRegionUrl, boot, applyPlaceVisibility, syncBuilderModeChrome
 // @needs   region=bikekingdom, builder=off, SLOW (fetches regions and boots iframes)
 //
 // This is the core scaling mechanism: a bug here empties the map. It is also the slowest suite, because every
@@ -229,6 +229,60 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
       await closeDialog();
     } else {
       T.skip("at the cap — the click-through is checked when fewer than three are active");
+    }
+  }
+
+  // Opening the dialog by a DELIBERATE click puts the caret in the search box, but only away from the touch
+  // layout (user, 2026-08-27): on a phone that focus summons the on-screen keyboard over the very list the
+  // search is there to narrow. A single-viewport suite cannot check both halves, so the expectation is keyed
+  // on isMobileLayout() itself -- run at a desktop width this pins the focus, run at a phone width it pins
+  // the absence of it, and the two mutations below are each caught by one of the two.
+  T.test("a deliberate open focuses the search box, the automatic one does not");
+  {
+    const search = () => TM.$("#regionSearch");
+    const focused = () => document.activeElement === search();
+    const touch = isMobileLayout();
+    await closeDialog();
+    search().blur();
+
+    // The boot-time auto-open path: openRegionDialog() with no argument must never take the focus.
+    // Mutation: default focusSearch to true -> this fails at every viewport.
+    openRegionDialog();
+    await TM.until(() => dialog().classList.contains("visible"), 1000);
+    T.ok("the automatic open leaves the focus alone", !focused(),
+         document.activeElement.id || document.activeElement.tagName, "not the search box");
+    await closeDialog();
+    search().blur();
+
+    // Both real entry points, through their own click handlers rather than openRegionDialog directly.
+    // Mutation: drop the `!isMobileLayout()` term -> fails at a phone width. Drop the .focus() call
+    // -> fails at a desktop width.
+    for (const [label, id] of [["the header button", "#regionsBtn"], ["＋ Region hinzufügen", "#addRegionBtn"]]) {
+      const btn = TM.$(id);
+      if (!btn || btn.disabled) { T.skip(label + " is not available right now"); continue; }
+      btn.click();
+      await TM.until(() => dialog().classList.contains("visible"), 1000);
+      T.eq(label + (touch ? " does NOT focus the search box" : " focuses the search box"), focused(), !touch);
+      await closeDialog();
+      search().blur();
+    }
+
+    // A term left from an earlier search is selected, so typing replaces it instead of appending to it.
+    // Mutation: drop the .select() call -> fails at a desktop width.
+    if (!touch) {
+      TM.$("#regionsBtn").click();
+      await TM.until(() => dialog().classList.contains("visible"), 1000);
+      search().value = "Saalbach";
+      await closeDialog();
+      search().blur();
+      TM.$("#regionsBtn").click();
+      await TM.until(() => dialog().classList.contains("visible"), 1000);
+      T.eq("a leftover search term is selected, not appended to",
+           [search().selectionStart, search().selectionEnd].join("-"), "0-8");
+      search().value = "";
+      await closeDialog();
+    } else {
+      T.skip("the leftover-term selection only applies where the focus is set at all");
     }
   }
 
