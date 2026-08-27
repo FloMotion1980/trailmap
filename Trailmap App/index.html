@@ -35,7 +35,7 @@
      served cache-first (deliberately -- this app runs offline), so without a fresh URL a new index.html
      could be paired with an old style.css, which for a newly added element means it has no rules at all,
      loses position:absolute and paints behind the map, i.e. disappears. Bump both on every CSS change. -->
-<link rel="stylesheet" href="style.css?v=224" />
+<link rel="stylesheet" href="style.css?v=225" />
 </head>
 <body>
 <div id="fatalError">
@@ -7964,6 +7964,13 @@ const regionActivationErrors = {};
 // activation, and a filter that reset itself mid-search would be worse than no filter.
 let regionSearchTerm = "";
 
+// Which result row the arrow keys have marked, held as a groupKey rather than an index (2026-08-27): the list
+// is rebuilt from scratch on every keystroke, activation and deactivation, so an index would point at a
+// different region -- or past the end -- the moment the filter changed. `null` means nothing is marked, which
+// is the state after every edit of the search term: the first ArrowDown then starts at the top, and Enter
+// before that does nothing rather than activating a region the user never looked at.
+let regionHighlightKey = null;
+
 function renderRegionSlots(){
   regionSlotsEl.innerHTML = "";
   const active = Object.keys(REGION_CATALOG).filter(k => activeRegionGroups.has(k));
@@ -8033,12 +8040,78 @@ function renderRegionDialog(){
     byCountry[code].sort((a, b) => a[1].label.localeCompare(b[1].label, "de", { numeric: true }))
                    .forEach(([groupKey, entry]) => buildRegionRow(groupKey, entry, atLimit));
   });
+
+  // A marked region the current filter no longer shows stops being marked, so Enter can never reach a row
+  // nobody can see. Done after the rows are built rather than inside the filter, because a deactivation
+  // rebuilds through here too.
+  if (regionHighlightKey && !regionRowByKey(regionHighlightKey)) regionHighlightKey = null;
+  syncRegionHighlightAria();
+}
+
+// ---- Arrow-key navigation of the result list (2026-08-27, user: "Ich möchte mit den Pfeiltasten durch die
+// Ergebnisse navigieren können ohne den Fokus im Suchfeld zu verlieren und mit Enter aktivieren können") ----
+// The caret never leaves the search box, so the marked row cannot be expressed as focus and gets its own
+// `.is-highlighted` state instead. Desktop only, like the focus that makes it reachable in the first place.
+function regionRowEls(){
+  return Array.from(regionDialogListEl.querySelectorAll(".region-dialog-row"));
+}
+
+function regionRowByKey(key){
+  return regionRowEls().find(r => r.dataset.group === key) || null;
+}
+
+function syncRegionHighlightAria(){
+  // Tells a screen reader which row the search box is pointing at -- the visible highlight alone says nothing
+  // to one, since no focus ever moves.
+  if (regionHighlightKey) regionSearchEl.setAttribute("aria-activedescendant", "rd-row-" + regionHighlightKey);
+  else regionSearchEl.removeAttribute("aria-activedescendant");
+}
+
+// The sticky country heading covers the top strip of the list, so scrollIntoView({block:"nearest"}) considers a
+// row hidden behind it to be visible and scrolls nothing. Hence the explicit maths, with the heading's own
+// measured height as the top inset.
+function scrollRegionRowIntoView(row){
+  const list = regionDialogListEl;
+  const r = row.getBoundingClientRect();
+  const l = list.getBoundingClientRect();
+  const head = list.querySelector(".rd-country");
+  const inset = head ? head.getBoundingClientRect().height : 0;
+  if (r.top < l.top + inset) list.scrollTop -= (l.top + inset - r.top);
+  else if (r.bottom > l.bottom) list.scrollTop += (r.bottom - l.bottom);
+}
+
+// `delta` is +1 for ArrowDown, -1 for ArrowUp. Wraps at both ends, and starts at the first row (the last one,
+// going up) when nothing is marked yet. EVERY row is reachable, including one whose button is disabled at the
+// cap: a row that refuses to be marked reads as broken, and the greyed "Aktivieren" plus the slot row above
+// already say why Enter does nothing there.
+function moveRegionHighlight(delta){
+  const rows = regionRowEls();
+  if (!rows.length) return;
+  const keys = rows.map(r => r.dataset.group);
+  const at = regionHighlightKey ? keys.indexOf(regionHighlightKey) : -1;
+  const next = at === -1
+    ? (delta > 0 ? 0 : rows.length - 1)
+    : (at + delta + rows.length) % rows.length;
+  regionHighlightKey = keys[next];
+  rows.forEach((r, i) => {
+    r.classList.toggle("is-highlighted", i === next);
+    if (i === next) r.id = "rd-row-" + r.dataset.group;
+    else if (r.id) r.removeAttribute("id");
+  });
+  syncRegionHighlightAria();
+  scrollRegionRowIntoView(rows[next]);
 }
 
 function buildRegionRow(groupKey, entry, atLimit){
   {
     const row = document.createElement("div");
     row.className = "region-dialog-row";
+    // Read by the arrow-key navigation to find this row again after a rebuild, and by its own test.
+    row.dataset.group = groupKey;
+    if (groupKey === regionHighlightKey) {
+      row.classList.add("is-highlighted");
+      row.id = "rd-row-" + groupKey; // for aria-activedescendant on the search box
+    }
 
     const info = document.createElement("div");
     info.className = "rd-info";
@@ -8125,9 +8198,30 @@ function buildRegionRow(groupKey, entry, atLimit){
 
 regionSearchEl.addEventListener("input", () => {
   regionSearchTerm = regionSearchEl.value;
+  // Editing the term drops the mark: the row it pointed at is rarely still the one under it, and an Enter
+  // meant to finish typing must not activate whatever happened to be marked before.
+  regionHighlightKey = null;
   renderRegionDialog();
 });
 regionSearchEl.addEventListener("keydown", (e) => {
+  if (!isMobileLayout()) {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      // preventDefault, or the caret jumps to the start/end of the term on every step -- which is exactly the
+      // "ohne den Fokus im Suchfeld zu verlieren" this exists for, one keystroke at a time.
+      e.preventDefault();
+      moveRegionHighlight(e.key === "ArrowDown" ? 1 : -1);
+      return;
+    }
+    if (e.key === "Enter" && regionHighlightKey) {
+      e.preventDefault();
+      const row = regionRowByKey(regionHighlightKey);
+      const btn = row && row.querySelector(".rd-toggle");
+      // A disabled button is left alone rather than reported: at the cap every inactive row has one, and the
+      // slot row above already names the limit.
+      if (btn && !btn.disabled) btn.click();
+      return;
+    }
+  }
   if (e.key !== "Escape") return;
   // Escape clears the filter first and only closes the dialog on a second press -- losing a whole dialog to a
   // key meant for the text field is the kind of thing that makes a search box feel dangerous.
@@ -8135,6 +8229,7 @@ regionSearchEl.addEventListener("keydown", (e) => {
     e.stopPropagation();
     regionSearchEl.value = "";
     regionSearchTerm = "";
+    regionHighlightKey = null;
     renderRegionDialog();
   }
 });
@@ -8150,6 +8245,7 @@ regionSearchEl.addEventListener("keydown", (e) => {
 // off exactly where that layout is on -- including a touchscreen laptop with a mouse, which reports
 // `pointer:fine` and does want the focus.
 function openRegionDialog({ focusSearch = false } = {}){
+  regionHighlightKey = null; // a mark left from the last time the dialog was open would be a stale Enter target
   renderRegionDialog();
   regionDialogEl.classList.add("visible");
   if (focusSearch && !isMobileLayout()) {
@@ -9232,7 +9328,7 @@ preloadBtn.addEventListener("click", async () => {
   preloadBtn.textContent = `📥 Prüfe Cache (0/${total})… (Tippen zum Abbrechen)`;
 
   // Skip tiles we already have — only fetch what's genuinely missing.
-  const PRELOAD_CACHE_NAME = "trailmap-v224"; // must match CACHE_NAME in sw.js
+  const PRELOAD_CACHE_NAME = "trailmap-v225"; // must match CACHE_NAME in sw.js
   let toFetch = tileCoords.map(tc => activeLayer.getTileUrl(tc));
   if ("caches" in window) {
     try {

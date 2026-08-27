@@ -1242,6 +1242,15 @@ html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
   display:flex; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid #eceee4;
 }
 .region-dialog-row:last-child{ border-bottom:none; }
+/* The row the arrow keys have marked (2026-08-27). It is deliberately NOT expressed as :focus -- the caret
+   stays in the search box the whole time, which is the point of the feature, so nothing here is ever focused.
+   Both properties are layout-free (a background and an INSET shadow), because the same rule the trail cards
+   follow applies here: a marked row must be exactly the size of an unmarked one, or the list shifts under the
+   key that marked it. The 3px bar reads as "you are here" without competing with .rd-toggle.active's own
+   filled pill to its right. */
+.region-dialog-row.is-highlighted{
+  background:#eef3ea; box-shadow: inset 3px 0 0 var(--forest);
+}
 .rd-info{ flex:1; min-width:0; }
 /* Wraps instead of clipping (2026-08-17, user: "Der Name einer Region sollte komplett angezeigt werden") --
    a region's full label matters more here than a tidy single line, and .rd-info is already flex:1 with its

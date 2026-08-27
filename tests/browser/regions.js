@@ -1,7 +1,7 @@
 // @suite   regions
 // @area    Activating/deactivating region groups, persistence, the boot sequence
 // @files   Trailmap App/index.html, Trailmap App/regions/version.json
-// @touches openRegionDialog, isMobileLayout, activateRegionGroup, deactivateRegionGroup, MAX_ACTIVE_REGION_GROUPS, REGION_CATALOG, REGION_GROUPS, REGIONS, activeRegionGroups, renderRegionDialog, rebuildRegionChips, updateHeaderRegionsLabel, persistActiveState, restoreActiveState, loadRegionVersions, versionedRegionUrl, boot, applyPlaceVisibility, syncBuilderModeChrome
+// @touches openRegionDialog, isMobileLayout, moveRegionHighlight, scrollRegionRowIntoView, regionRowByKey, regionHighlightKey, activateRegionGroup, deactivateRegionGroup, MAX_ACTIVE_REGION_GROUPS, REGION_CATALOG, REGION_GROUPS, REGIONS, activeRegionGroups, renderRegionDialog, rebuildRegionChips, updateHeaderRegionsLabel, persistActiveState, restoreActiveState, loadRegionVersions, versionedRegionUrl, boot, applyPlaceVisibility, syncBuilderModeChrome
 // @needs   region=bikekingdom, builder=off, SLOW (fetches regions and boots iframes)
 //
 // This is the core scaling mechanism: a bug here empties the map. It is also the slowest suite, because every
@@ -284,6 +284,137 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     } else {
       T.skip("the leftover-term selection only applies where the focus is set at all");
     }
+  }
+
+  // Arrow keys walk the result list while the caret stays in the search box, Enter activates the marked row
+  // (user, 2026-08-27). Desktop only, like the focus that makes it reachable, so the expectation is keyed on
+  // isMobileLayout() the same way the focus case above is.
+  T.test("the arrow keys walk the results without the caret leaving the search box");
+  {
+    const search = () => TM.$("#regionSearch");
+    const list = () => TM.$("#regionDialogList");
+    const rowEls = () => TM.$$("#regionDialogList .region-dialog-row");
+    const marked = () => {
+      const r = list().querySelector(".region-dialog-row.is-highlighted");
+      return r ? r.dataset.group : null;
+    };
+    // A real keydown on the field, and the return value says whether the app claimed the key -- which is the
+    // whole mechanism: an unclaimed ArrowDown moves the caret instead.
+    const press = (key) => {
+      const e = new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true });
+      search().dispatchEvent(e);
+      return e.defaultPrevented;
+    };
+    const touch = isMobileLayout();
+
+    await openDialog();
+    search().value = "";
+    search().dispatchEvent(new Event("input", { bubbles: true }));
+    T.eq("nothing is marked before a key is pressed", marked(), null);
+    T.ok("there are rows to walk", rowEls().length >= 3, rowEls().length, ">= 3");
+
+    if (touch) {
+      // Mutation: drop the !isMobileLayout() gate -> these three fail at a phone width.
+      press("ArrowDown");
+      T.eq("ArrowDown marks nothing on a touch layout", marked(), null);
+      T.eq("and does not claim the key", press("ArrowDown"), false);
+      T.eq("Enter does not claim it either", press("Enter"), false);
+      T.skip("the walking, wrapping and Enter cases need the desktop layout");
+    } else {
+      // Mutation: remove e.preventDefault() from the arrow branch -> "claims the key" and the caret check
+      // both fail, and the caret really does jump to the end of the term on every step.
+      T.eq("ArrowDown claims the key", press("ArrowDown"), true);
+      const first = rowEls()[0].dataset.group;
+      T.eq("and marks the first row", marked(), first);
+      T.ok("the caret is still in the search box", document.activeElement === search(),
+           document.activeElement.id || document.activeElement.tagName, "regionSearch");
+      T.eq("exactly one row is marked", list().querySelectorAll(".is-highlighted").length, 1);
+      T.eq("aria-activedescendant names it", search().getAttribute("aria-activedescendant"), "rd-row-" + first);
+
+      press("ArrowDown");
+      T.eq("a second ArrowDown moves on", marked(), rowEls()[1].dataset.group);
+      press("ArrowUp");
+      T.eq("ArrowUp comes back", marked(), first);
+      press("ArrowUp");
+      T.eq("and wraps to the last row from the top", marked(), rowEls().slice(-1)[0].dataset.group);
+
+      // The caret must not move, which is the literal ask. NOTE this check alone cannot prove it: a synthetic
+      // KeyboardEvent never moves the caret in the first place (measured -- with preventDefault removed the
+      // caret still read 1-1), so what actually pins the behaviour is the "claims the key" check above. This
+      // one still earns its place by catching the app moving the caret ITSELF, e.g. a focus()/select() finding
+      // its way into the navigation path.
+      // The filter is built from the MARKED region's own label, so that region is guaranteed to still be in the
+      // results afterwards. That matters: with any old term the marked row usually drops out of the list, and
+      // then renderRegionDialog's own "a marked row nobody can see stops being marked" cleanup produces the
+      // same null -- which made a first version of this check pass against a build with the reset removed.
+      const markedLabel = TM.$("#regionDialogList .is-highlighted .rd-label").textContent.trim();
+      search().value = markedLabel.slice(0, 4);
+      search().dispatchEvent(new Event("input", { bubbles: true }));
+      T.ok("the marked region is still in the results", !!TM.$("#regionDialogList .region-dialog-row"),
+           rowEls().length, ">= 1");
+      T.eq("editing the term drops the mark anyway", marked(), null);
+      search().setSelectionRange(1, 1);
+      press("ArrowDown");
+      press("ArrowDown");
+      T.eq("the caret stayed where it was", [search().selectionStart, search().selectionEnd].join("-"), "1-1");
+
+      // The sticky country heading covers the top strip of the list, so a row scrolled to just under the
+      // list's top edge would sit BEHIND it. It takes BOTH directions to prove the scrolling, and that is not
+      // a belt-and-braces double check: walking DOWN only ever exercises the bottom edge, so dropping the
+      // heading's height from scrollRegionRowIntoView's inset is completely invisible to a downward pass
+      // (measured -- the mutation scored a clean 0 there). Walking back UP is what catches it, at -27, which
+      // is exactly the heading's own height.
+      search().value = "";
+      search().dispatchEvent(new Event("input", { bubbles: true }));
+      list().scrollTop = 0;
+      const clearances = () => {
+        const row = list().querySelector(".is-highlighted");
+        const r = row.getBoundingClientRect(), l = list().getBoundingClientRect();
+        const head = list().querySelector(".rd-country");
+        const headBottom = head ? head.getBoundingClientRect().bottom : l.top;
+        return [r.top - headBottom, l.bottom - r.bottom];
+      };
+      const steps = Math.min(14, rowEls().length);
+      let worstTop = 1e9, worstBottom = 1e9, scrolled = 0;
+      for (let i = 0; i < steps; i++) {
+        press("ArrowDown");
+        const [top, bottom] = clearances();
+        worstTop = Math.min(worstTop, top);
+        worstBottom = Math.min(worstBottom, bottom);
+        scrolled = Math.max(scrolled, list().scrollTop);
+      }
+      T.ok("walking down, the list scrolled to keep up", scrolled > 0, Math.round(scrolled), "> 0");
+      let upTop = 1e9;
+      for (let i = 0; i < steps - 2; i++) {
+        press("ArrowUp");
+        upTop = Math.min(upTop, clearances()[0]);
+      }
+      T.ok("every marked row stays clear of the sticky heading", Math.min(worstTop, upTop) >= -1,
+           Math.round(Math.min(worstTop, upTop)), ">= -1");
+      T.ok("and inside the list's bottom edge", worstBottom >= -1, Math.round(worstBottom), ">= -1");
+
+      // Enter with nothing marked must NOT activate anything -- otherwise finishing a search by habit loads a
+      // region nobody chose. Mutation: drop the `&& regionHighlightKey` term -> this fails.
+      search().value = "";
+      search().dispatchEvent(new Event("input", { bubbles: true }));
+      T.eq("Enter does not claim the key while nothing is marked", press("Enter"), false);
+
+      // Enter on the marked row clicks that row's own toggle. Intercepted in the capture phase so the region
+      // is not really (de)activated -- this suite is slow enough, and the activation path has its own cases.
+      press("ArrowDown");
+      const row = TM.$$("#regionDialogList .region-dialog-row").find((r) => r.dataset.group === marked());
+      const btn = row.querySelector(".rd-toggle");
+      let clicked = 0;
+      const spy = (e) => { clicked++; e.stopImmediatePropagation(); e.preventDefault(); };
+      btn.addEventListener("click", spy, true);
+      const claimed = press("Enter");
+      btn.removeEventListener("click", spy, true);
+      T.eq("Enter claims the key when a row is marked", claimed, true);
+      T.eq("and clicks that row's own toggle", clicked, 1);
+    }
+    await closeDialog();
+    search().value = "";
+    search().dispatchEvent(new Event("input", { bubbles: true }));
   }
 
   T.test("the dialog groups by country and can be searched");

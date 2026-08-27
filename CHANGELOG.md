@@ -21,6 +21,23 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-27 (Region-Dialog: Tastaturnavigation)
+- **Pfeiltasten laufen durch die Trefferliste, Enter aktiviert die markierte Region -- der Cursor bleibt
+  dabei im Suchfeld, und das Ganze nur am Desktop** (Nutzerwunsch, gleiche Begruendung wie beim Fokus
+  einen Eintrag weiter unten). Die Markierung ist ein `groupKey` und kein Index, weil die Liste bei jedem
+  Tastenanschlag neu gebaut wird; sie ist bewusst KEIN `:focus` (es ist ja nichts ausser dem Eingabefeld
+  fokussiert) sondern eine eigene Klasse `.is-highlighted`, layoutfrei gestylt, damit die Liste nicht unter
+  der Taste verrutscht, die gerade markiert hat. Enter ohne Markierung tut absichtlich nichts, statt den
+  ersten Treffer zu nehmen. Eigene Scroll-Rechnung statt `scrollIntoView`, weil die Laender-Ueberschrift
+  `position:sticky` ist und der Browser eine dahinter liegende Zeile fuer sichtbar haelt.
+  Ein Fall in `tests/browser/regions.js`, fuenf Mutationen in `tests/MUTATIONS.md`.
+  **Drei davon hat eine erste Fassung des Falls nicht gesehen**, jede aus einem eigenen Grund: ein
+  synthetischer `KeyboardEvent` bewegt den Cursor ohnehin nie (also sichert `defaultPrevented` das
+  Verhalten, nicht die Cursorposition); ein beliebiger Filterbegriff wirft die markierte Region aus der
+  Liste, worauf die Aufraeumlogik dasselbe `null` liefert wie der geloeschte Reset; und eine reine
+  Abwaertsnavigation prueft nur die untere Kante, waehrend der Sticky-Header an der oberen haengt.
+  CSS-Aenderung, daher `style.css?v=`, `STYLE_URL`, `CACHE_NAME` und `PRELOAD_CACHE_NAME` auf v225.
+
 ## 2026-08-27 (Region-Dialog: Fokus im Suchfeld, am Desktop)
 - **Ein Klick auf "＋ Region hinzufügen" oder auf den Header-Button setzt den Cursor direkt ins Suchfeld --
   am Desktop, nicht am Handy** (Nutzerwunsch). Dort würde der Fokus die Bildschirmtastatur über genau die
