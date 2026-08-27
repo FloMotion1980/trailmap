@@ -75,6 +75,25 @@ script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here
   "liegt dieser Punkt auf jener Linie" fragt, braucht eine auf t in [0,1] geklammerte Punkt-zu-Segment-
   Distanz.
 
+## 2026-08-26 (Die Freeride-Tour Bormio 3000 - Santa Caterina ist gebaut)
+- **Die Tour, die der Nutzer aus eigener Fahrt kannte, steht als Trailrunde in Bormio.** Der Betreiber
+  fuehrt sie mit Zahlen und Wegnummern, aber ohne GPX; die Spur kam auf seinen Hinweis von **bergfex**
+  (Tour 2861858). **Der GPX-Download dort braucht kein Konto, nur einen `Referer`** --
+  `/downloads/gps/?id=<id>&fileType=gpx` antwortet anonym mit `application/gpx+xml`, sobald die Tourseite
+  als Referer mitgeht, sonst kommt die HTML-Seite zurueck. Dieselbe Klasse von Huerde wie Trailforks' 403
+  gegen urllib. Die Datei liegt im Repo, ein Neubau braucht kein Netz.
+- **Erst gegen die Betreiberzahlen geprueft, dann gebaut**: 12,29 gegen 12,3 km, beide Endhoehen auf 20 m
+  genau. Gebaut sind die Zahlen des Betreibers, nicht die der Spur -- aufsummiertes GPS-Rauschen gegen
+  eine geglaettete Verlagsangabe.
+- **Und dabei fiel meine eigene Vermutung vom Vortag.** Im Changelog stand, die Tour sei
+  `Bormio 3000 single` + `Le Cune`, weil deren Enden 3 m auseinanderliegen und die Summe ungefaehr passte.
+  `tools/gpx_map_match.py` zeigt: sie faehrt ueber `Panoramico Le Cune`, die panoramische Variante, und
+  beruehrt vom `Le Cune` nur die letzten 750 m. Zwei Linien, die am selben Punkt beginnen, sind mit blossem
+  Endpunktvergleich nicht zu unterscheiden. 91 % der Linie liegen auf benannten Trails; die 880 m Auslauf
+  ins Dorf bleiben ein ehrlicher Verbinder.
+- Neu: `tools/build_bormio_tour.py`. Bormio in `tests/python/segments_expected.json` eingetragen -- der
+  Waechter dort verlangt das fuer jede Region mit Abschnitten, und genau dieser Moment der Aufmerksamkeit
+  ist der Zweck der Liste.
 ## 2026-08-26 (Bormio bekommt seine Lifte, und der Bikepark wird nachgezaehlt)
 - **Drei Lifte fuer Bormio, aus der Betreibertabelle** -- und ein Musterbeispiel fuer die Regel aus
   `docs/lifts-feature.md` in der anderen Richtung: `bormioski.eu/estate/impianti-aperti-in-estate/` fuehrt

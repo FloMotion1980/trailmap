@@ -383,22 +383,12 @@ Ein Gestaltungspunkt dazu: die fünf gebauten Bikepark-Linien liegen verstreut i
 `bo_valfurva`, weil die Ankerregel geografisch entscheidet. Ein Fahrer sucht sie aber als „Bormio Bike
 Park". Eine eigene Sub-Region wäre eine Nutzerentscheidung, kein Automatismus.
 
-**3. Kleiner, aber konkret: die Tour Bormio 3000 → Santa Caterina.** Der Nutzer erinnert sie aus eigener
-Fahrt, und sie liegt als **zwei aufeinanderfolgende Trails** in den Daten, deren Enden 3 m auseinanderliegen
-(`Bormio 3000 single` 8,0 km von 3 000 auf 2 320 m, dann `Le Cune` 3,3 km auf 1 837 m — zusammen 11,3 km und
-−1 163 Hm). Als Trailrunde ist sie NICHT gebaut: das bräuchte eine Aufzeichnung durch
-`tools/gpx_map_match.py`, und die beiden aneinanderzuhängen wäre sonst eine Behauptung über eine Verbindung,
-die niemand gemessen hat.
-
-**Der Betreiber führt genau diese Tour selbst**, unter „Itinerario Freeride MTB Bormio 3000 – Santa Caterina
-Valfurva" (`bormioski.eu/itinerario-freeride-mtb/`): **12,3 km, +254 / −1 482 Hm, 3 017 → 1 738 m**, und er
-nennt die Wegnummern: **S541** von der Cima Bianca zu den Bei Laghetti und zur Bocca di Profa, dort links
-auf **S518** für ~3 km, dann **S523**, **S549** und **S522** nach Santa Caterina. Es gibt ein PDF und ein
-Kartenbild, aber **kein GPX**. Unsere Zweierkette ist mit 11,3 km / −1 163 Hm also NICHT dieselbe Linie und
-endet 100 Hm zu hoch. Zwei gangbare Wege: die fünf Wegnummern über Overpass aus OSM ziehen und verketten
-(dieselbe Technik wie `chain_ways` bei Kronplatz-Recherche und Donnersberg), oder ein GPX des Nutzers.
-Der zweite ist der verlässlichere -- `docs/finale-ligure.md` sagt genau das über wiederholt gescheiterte
-Fernbeschaffung.
+**3. ~~Die Tour Bormio 3000 → Santa Caterina~~ — gebaut am 2026-08-26.** Der Nutzer lieferte die
+bergfex-URL (Tour 2861858); deren GPX-Download braucht kein Konto, nur einen `Referer`. Gegen die
+Betreiberzahlen geprüft (12,29 gegen 12,3 km, beide Endhöhen auf 20 m), als Trailrunde mit
+`tools/gpx_map_match.py` zerlegt: 91 % der Linie auf benannten Trails, sechs Abschnitte. **Dabei fiel die
+Vermutung vom Vortag:** die Tour fährt `Panoramico Le Cune`, nicht `Le Cune` — von dem berührt sie nur die
+letzten 750 m. Details in `docs/bormio.md`.
 
 ## 4. Test-Abdeckung: was noch keine Suite beansprucht
 

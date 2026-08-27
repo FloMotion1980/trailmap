@@ -1,6 +1,6 @@
 # Bormio & Valtellina — gebaut 2026-08-26
 
-179 Trails, 538 km, 6 Sub-Regionen, 74 mit Trailforks-Bewertung, **3 Lifte** (Betreibertabelle).
+179 Trails + **1 Tour**, 6 Sub-Regionen, 74 mit Trailforks-Bewertung, **3 Lifte** (Betreibertabelle).
 Verfahren, Quelle und die Vorbehalte dazu: **`docs/sechs-regionen-2026-08.md`** — hier steht nur, was für
 diese Region eigen ist.
 
@@ -30,28 +30,54 @@ Ein Befund, der die Gebietsspalte wieder als Verwaltungskasten entlarvt: Trailfo
 Trail Park"** (19 Trails) liegt mit Schwerpunkt 46,406 / 10,496 im **Valfurva** bei Santa Caterina — nicht
 am Stilfserjoch, wie der Name nahelegt.
 
-## Die Tour des Nutzers, wiedergefunden
+## Die Tour des Nutzers — gebaut, und die erste Vermutung war falsch
 
-Sie steht als **zwei aufeinanderfolgende Trails** in den Daten, deren Enden **3 m** auseinanderliegen:
+Der Nutzer ist sie gefahren, hat sie aber nicht aufgezeichnet. Der **Betreiber** führt sie als „Itinerario
+Freeride MTB Bormio 3000 - Santa Caterina Valfurva" mit Zahlen und Wegnummern (S541 → S518 → S523 → S549 →
+S522), aber **ohne GPX** — nur PDF und Kartenbild. Die Spur kam am Ende von **bergfex** (Tour 2861858), auf
+den Hinweis des Nutzers hin.
 
-| | Länge | Höhe |
-|---|---:|---|
-| Bormio 3000 single | 8,0 km | 3 000 → 2 320 m |
-| Le Cune | 3,3 km | 2 313 → 1 837 m |
-| **zusammen** | **11,3 km** | **3 000 → 1 837 m, −1 163 Hm** |
+**Der GPX-Download braucht dort kein Konto, nur einen Referer.** `/downloads/gps/?id=<id>&fileType=gpx`
+antwortet anonym mit `application/gpx+xml`, sobald die Tourseite als `Referer` mitgeht; ohne ihn kommt die
+HTML-Seite zurück. Dieselbe Klasse von Hürde wie Trailforks' 403 gegen urllib — keine Anmeldung, nur eine
+Erwartung an den Aufrufer. Die Datei liegt als `Material/Bormio/freeride-bormio3000-santa-caterina.gpx` im
+Repo.
 
-Das Ende liegt rund 100 Höhenmeter über Santa Caterina Valfurva (1 740 m) und 3,5 km westlich davon — der
-Rest ist Talweg. `Le Cune` ist mit 4,55 aus 14 Stimmen der zweitbestbewertete Trail der ganzen Region.
+**Gegen die Betreiberzahlen geprüft, bevor gebaut wurde:**
 
-**Als Trailrunde ist sie NICHT gebaut.** Dafür bräuchte es eine Aufzeichnung, die durch
-`tools/gpx_map_match.py` läuft — die beiden Linien aneinanderzuhängen wäre eine Behauptung über eine
-Verbindung, die ich nicht gemessen habe. Wenn der Nutzer ein GPX der Fahrt hat, ist das eine kurze Sache.
+| | Länge | Höhenmeter | von → bis |
+|---|---|---|---|
+| Betreiber | 12,3 km | +254 / −1 482 | 3 017 → 1 738 m |
+| bergfex-Spur | 12,29 km | +294 / −1 561 | 2 997 → 1 730 m |
 
-## Ausgeschieden
+Länge auf 10 m genau, beide Endhöhen auf 20 m. Gebaut sind die Zahlen des **Betreibers**, nicht die der
+Spur — aufsummiertes GPS-Rauschen gegen eine geglättete Verlagsangabe, und offizielle Zahlen gewinnen.
 
-6 Zeilen im **Val di Scalve** (Passo Vivione, Passo Venerocolo, Lago Belviso, Rif. Tagliaferri, Passo
-Demigone) — Provinz Bergamo, jenseits des Passes, 10–29 km vom nächsten Anker. Dazu eine Namensdublette
-(`Valentina Trail`).
+### Was die Abschnitte sagen
+
+`tools/gpx_map_match.py` gegen Bormios eigene 179 Trails und 3 Lifte, **91 % der Linie auf benannten
+Trails**:
+
+| Abschnitt | Länge |
+|---|---:|
+| Bormio 3000 single | 8,04 km |
+| *Verbinder* | 0,04 km |
+| Panoramico Le Cune | 2,80 km |
+| *Verbinder* | 0,13 km |
+| Le Cune | 0,75 km |
+| *Verbinder* (Auslauf ins Dorf) | 0,88 km |
+
+**Das widerlegt, was hier am Vortag stand.** Die Vermutung war `Bormio 3000 single` + `Le Cune`, weil deren
+Enden 3 m auseinanderliegen und die Summe ungefähr passte. Tatsächlich führt die Tour über
+**`Panoramico Le Cune`**, die panoramische Variante, und berührt vom `Le Cune` nur die letzten 750 m. Zwei
+Linien, die am selben Punkt beginnen, sind mit blossem Endpunktvergleich nicht zu unterscheiden — genau
+dafür gibt es den Matcher und nicht das Augenmass.
+
+Die 0,88 km am Schluss bleiben ein ehrlicher **Verbinder**: der Auslauf nach Santa Caterina, den unsere
+Daten nicht als Trail führen. Ihn auf die nächstliegende Linie zu ziehen wäre die stille Zurechtbiegung,
+die dieses Projekt nicht macht.
+
+Gebaut von `tools/build_bormio_tour.py`; ein Neubau braucht kein Netz.
 
 ## Lifte: drei, und OSM hätte null gefunden
 
