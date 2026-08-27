@@ -21,6 +21,48 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-27 (Saalbach: zwei zu lange Trails, vor Ort gemeldet)
+- **Hochalm-Trail von 6,91 km auf 1,85 km gekuerzt** (780 -> 263 Hm ab, Geometrie 195 -> 75 Punkte).
+  Der Singletrail endet an der Forstweg-Einmuendung; unsere Linie fuhr danach noch 5 km Forstweg bis ins
+  Tal. Ursache ist die Quelle selbst -- die offizielle Outdooractive-GPX des Tourismusverbands
+  ("SH 43 Hochalm-Trail", `Material/Saalbach/`) beschreibt die ganze *Tour* inklusive Talausfahrt und gibt
+  selbst 6 911 m / 780 Hm an; unsere Geometrie war diese GPX 1:1. Schnitt bei Punkt 74 (km 1,85 /
+  1 637 m), belegt durch drei unabhaengige Indizien: Trailforks' `hochalm-trail`-Track endet 3 m von
+  genau diesem Punkt, Trailforks' eigene Hoehenangabe (1 937 - 298,7 = 1 638 m) trifft ihn auf 1,5 m, und
+  OSM fuehrt km 0,00-1,86 durchgehend als `highway=path` mit Namen "Spielecktrail" und ab km 1,86
+  durchgehend als `highway=track` (grade2-4, teils "Spieleckweg"). Dazu bricht die Kurvigkeit dort von
+  2,23 auf 1,02 ein. Laenge/Hoehenmeter neu aus der GPX gerechnet, da der Betreiber fuer den Trailteil
+  allein keine Zahlen veroeffentlicht.
+- **fAIRy Line von 2,23 km auf 1,91 km gekuerzt** (190 -> 174 Hm ab, Geometrie 243 -> 176 Punkte).
+  Sie lief ueber die Einmuendung der Vink Link hinaus weiter; laut Nutzer endet sie dort, und Trailforks
+  gibt fuer fAIRy Line und Vink Link den richtigen Verlauf. Schnitt bei Punkt 175, wo unsere Linie 5 m
+  vom Vink-Link-Start liegt -- Trailforks' `fairy-line` endet 38 m davon entfernt, was bei seinen 35 m
+  Punktabstand dieselbe Stelle ist. **Die Geometrie ist nur abgeschnitten, nicht neu gebaut**: die alte
+  fAIRy-Linie stammt nicht aus der heutigen Pipeline (`build_trail` haette sie zusaetzlich von 176 auf
+  106 Punkte vereinfacht), und ihr Verlauf ist bis zum Schnitt korrekt -- die Trailforks-Linie liegt auf
+  ihren ganzen 1 678 m innerhalb von 20 m unserer Linie. Hoehen fuer das neue Profil aus dem alten
+  interpoliert, da es fuer diese Geometrie keine `<ele>`-Quelle gibt (die Outdooractive-XML beschreibt
+  einen anderen Verlauf, `Material/Saalbach/oa_official/oa_800002949.xml`).
+- **Methodenhinweis fuer den naechsten Laengen-Audit: `len` gegen Trailforks vergleichen findet diese
+  Fehlerklasse NICHT.** `len` kommt meist aus der offiziellen Betreiberangabe und beschreibt die
+  Geometrie nicht -- Sheepy-Hollow lag im `len`-Vergleich bei Faktor 1,09 und hat trotzdem 290 m
+  Geometrie hinter dem Trailende. Der Test, der es findet: **wo auf unserer Linie liegt der Endpunkt der
+  Trailforks-Geometrie, und wie viel Linie kommt danach noch.** Ueber alle 23 Saalbach-Trails mit
+  Trailforks-Geometrie meldete der Test noch zwei Verdaechtige, **Pro-Line** (321 m hinter dem TF-Ende,
+  Kurvigkeit faellt 2,09 -> 1,32, unser Endpunkt liegt 0 m vom Blue-Line-Start -- dasselbe Muster wie
+  fAIRy Line) und **Sheepy-Hollow** (290 m, Kurvigkeit 1,71 -> 1,05) -- **beide vom Nutzer vor Ort als in
+  Ordnung bestaetigt und nicht angefasst**, ebenso die uebrigen Saalbach-Trails. Der Test hat also eine
+  Falsch-Positiv-Rate, die eine Ortskenntnis nicht ersetzt; er taugt zum Eingrenzen, nicht zum
+  Entscheiden. Wurzel-Trail ist ein weiteres Falsch-Positiv (Trailforks-Track entgegengesetzt
+  aufgezeichnet).
+- Katalog-`bounds` der Region neu gerechnet; sie waren im Norden schon vorher 0,008 Grad zu klein.
+- **Werkzeugfalle, kostete eine Fehlanalyse:** `perp_distance_m` aus `tools/trailmap_pipeline.py` misst
+  den Abstand zur *unendlichen Geraden* durch ein Segment, nicht zum Segment. Das ist fuer
+  Douglas-Peucker richtig (dort ist a-b die Sehne) und fuer jede Nachbarschaftssuche falsch: ein Punkt
+  895 m neben einem 100-m-Segment, aber auf seiner Verlaengerung, kommt als 0 m zurueck. Wer damit
+  "liegt dieser Punkt auf jener Linie" fragt, braucht eine auf t in [0,1] geklammerte Punkt-zu-Segment-
+  Distanz.
+
 ## 2026-08-26 (Sechs neue Regionen in einer Nacht)
 - **Davos Klosters (152 Trails), Vinschgau & Meran (146), Bormio & Valtellina (179), Bayerische Voralpen
   (358), Aostatal (425), Tarentaise & Vanoise (710)** -- zusammen 1 970 Trails, ausgewaehlt aus der
