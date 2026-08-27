@@ -1166,8 +1166,18 @@ html.landscape-compact #liveStatusChip{ border-radius:13px 0 0 13px; }
   font-family: Arial, sans-serif;
 }
 #regionDialog.visible{ display:flex; }
+/* A FIXED height, not a max-height (2026-08-27, user: "Ich würde nur die Größe (Höhe) des Dialogs nicht
+   verkleinern, wenn es wenige Suchergebnisse gibt. Das wirkt unruhig"). With max-height the box shrank to its
+   content on every keystroke that narrowed the results -- and because the dialog is vertically CENTRED, that
+   moved its top edge too, so the heading and the search box itself slid down while you were typing into it:
+   measured at this viewport, 688px tall with 36 results and 258px with one, the top edge dropping 215px on the
+   way. The list already scrolls, so a fixed height changes nothing about the full state (36 regions overflow
+   80vh many times over) and only stops the collapse. max-height:100% keeps it inside the overlay's own padded
+   box on a short viewport, where 80vh could otherwise exceed what is left. Note this would read as an
+   oversized dialog if the catalog ever became small enough to fit inside 80vh -- not a case that can occur
+   while regions only get added. */
 #regionDialog .box{
-  width:100%; max-width:420px; max-height:80vh;
+  width:100%; max-width:420px; height:80vh; max-height:100%;
   background:#fff; border-radius:12px; padding:20px 22px 16px;
   box-shadow:0 10px 30px rgba(0,0,0,0.3); position:relative;
   display:flex; flex-direction:column;

@@ -21,6 +21,18 @@ existing region's trails/lifts. One clause is usually enough ("Trailforks' own e
 logged-in Chrome"); the full sourcing method, caveats and edge cases belong in the region's own build
 script docstring or `CLAUDE.md`'s `Material/<region>/` bullet, not repeated here.
 
+## 2026-08-27 (Region-Dialog: feste Hoehe)
+- **Der Dialog behaelt eine Hoehe, egal wie wenige Treffer eine Suche uebrig laesst** (Nutzerwunsch: "Das
+  wirkt unruhig"). Vorher eine `max-height`, also schrumpfte die Box bei jedem Tastenanschlag auf ihren
+  Inhalt -- und weil der Dialog vertikal ZENTRIERT ist, wanderte dabei auch seine Oberkante, sodass
+  Ueberschrift und Suchfeld nach unten rutschten, waehrend man hineingetippt hat. Diese zweite Haelfte ist
+  der eigentliche Grund, warum es unruhig wirkt, und deshalb ist die Loesung eine feste Hoehe und keine
+  Animation. Gemessen bei 1280x860: 688px bei 36 Treffern, 258px bei einem, Oberkante 215px tiefer. Die
+  Liste scrollt ohnehin, am ungefilterten Zustand aendert sich also nichts. `max-height:100%` haelt die Box
+  auf flachen Viewports im Overlay -- greift wirklich, unterhalb von etwa 240px Hoehe (gemessen: 162px bei
+  812x210). Ein Fall in `tests/browser/regions.js`, eine Mutation in `tests/MUTATIONS.md`. `style.css` auf
+  v226 an allen vier Stellen; die `regions`-Suite beansprucht jetzt auch `style.css`.
+
 ## 2026-08-27 (Region-Dialog: Tastaturnavigation)
 - **Pfeiltasten laufen durch die Trefferliste, Enter aktiviert die markierte Region -- der Cursor bleibt
   dabei im Suchfeld, und das Ganze nur am Desktop** (Nutzerwunsch, gleiche Begruendung wie beim Fokus

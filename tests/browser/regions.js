@@ -1,6 +1,6 @@
 // @suite   regions
 // @area    Activating/deactivating region groups, persistence, the boot sequence
-// @files   Trailmap App/index.html, Trailmap App/regions/version.json
+// @files   Trailmap App/index.html, Trailmap App/style.css, Trailmap App/regions/version.json
 // @touches openRegionDialog, isMobileLayout, moveRegionHighlight, scrollRegionRowIntoView, regionRowByKey, regionHighlightKey, activateRegionGroup, deactivateRegionGroup, MAX_ACTIVE_REGION_GROUPS, REGION_CATALOG, REGION_GROUPS, REGIONS, activeRegionGroups, renderRegionDialog, rebuildRegionChips, updateHeaderRegionsLabel, persistActiveState, restoreActiveState, loadRegionVersions, versionedRegionUrl, boot, applyPlaceVisibility, syncBuilderModeChrome
 // @needs   region=bikekingdom, builder=off, SLOW (fetches regions and boots iframes)
 //
@@ -415,6 +415,47 @@ TM.add("regions", () => typeof deactivateRegionGroup === "function", async (T) =
     await closeDialog();
     search().value = "";
     search().dispatchEvent(new Event("input", { bubbles: true }));
+  }
+
+  // The dialog keeps ONE height while you type (user, 2026-08-27: "Das wirkt unruhig"). Its `.box` used to
+  // carry a max-height, so it shrank to its content on every keystroke that narrowed the results -- and since
+  // the dialog is vertically centred, the top edge moved with it and slid the search box down under the
+  // fingers still typing into it. Measured before the fix at a 1280x860 viewport: 688px tall with 36 results,
+  // 258px with one, the top edge dropping 215px.
+  T.test("the dialog keeps its height and position however few results a search leaves");
+  {
+    const box = () => TM.$("#regionDialog .box");
+    const list = () => TM.$("#regionDialogList");
+    const search = () => TM.$("#regionSearch");
+    const setTerm = (t) => {
+      search().value = t;
+      search().dispatchEvent(new Event("input", { bubbles: true }));
+      const r = box().getBoundingClientRect();
+      return { term: t || "(leer)", hits: TM.$$("#regionDialogList .region-dialog-row").length,
+               h: Math.round(r.height), top: Math.round(r.top), bottom: Math.round(r.bottom) };
+    };
+
+    await openDialog();
+    // "S"/"Sa"/"Saa" are the intermediate states of typing one region's name, which is exactly when the
+    // collapse was visible; the last term matches nothing at all, the widest case of the same bug.
+    const shots = ["", "S", "Sa", "Saa", "Saalbach", "zzzznone", ""].map(setTerm);
+    const heights = [...new Set(shots.map((s) => s.h))];
+    const tops = [...new Set(shots.map((s) => s.top))];
+    T.eq("one height across every result count", heights.length, 1);
+    T.eq("and one vertical position", tops.length, 1);
+    T.ok("the result counts really did vary", new Set(shots.map((s) => s.hits)).size >= 4,
+         shots.map((s) => s.hits).join("/"), ">= 4 distinct");
+    // A fixed height is only acceptable while the list still scrolls -- otherwise it would be hiding rows.
+    setTerm("");
+    T.ok("the full list still scrolls inside it", list().scrollHeight > list().clientHeight,
+         [list().scrollHeight, list().clientHeight], "scrollHeight > clientHeight");
+    // max-height:100% is what keeps 80vh inside the overlay's own padded box on a short viewport.
+    const r = box().getBoundingClientRect();
+    T.ok("and the box stays inside the viewport", r.top >= -1 && r.bottom <= window.innerHeight + 1,
+         [Math.round(r.top), Math.round(r.bottom), window.innerHeight], "within the viewport");
+    search().value = "";
+    search().dispatchEvent(new Event("input", { bubbles: true }));
+    await closeDialog();
   }
 
   T.test("the dialog groups by country and can be searched");
